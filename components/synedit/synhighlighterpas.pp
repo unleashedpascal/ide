@@ -1058,6 +1058,7 @@ type
     procedure SetD4syntax(const Value: boolean);
 
     function CanApplyExtendedDeclarationAttribute(AMode: TSynPasTypeAttributeMode): boolean; inline;
+    function IsLabelColonAfterRun: boolean; // ":" (not ":=") after optional "[...]" index
     function GetCustomSymbolToken(ATokenID: TtkTokenKindEx; ALen: integer;
              out ACustomMarkup: TLazEditHighlighterAttributesModifier;
              APeekOnly: boolean = False
@@ -6596,6 +6597,23 @@ begin
             ;
 end;
 
+function TSynPasSyn.IsLabelColonAfterRun: boolean;
+var
+  i: integer;
+begin
+  i := Run;
+  if (i < fLineLen) and (LinePtr[i] = '[') then begin
+    repeat
+      inc(i);
+    until (i >= fLineLen) or (LinePtr[i] = ']');
+    if i >= fLineLen then
+      exit(False);
+    inc(i);
+  end;
+  Result := (i < fLineLen) and (LinePtr[i] = ':') and
+            ( (i + 1 >= fLineLen) or (LinePtr[i + 1] <> '=') );
+end;
+
 function TSynPasSyn.GetCustomSymbolToken(ATokenID: TtkTokenKindEx; ALen: integer; out
   ACustomMarkup: TLazEditHighlighterAttributesModifier; APeekOnly: boolean): boolean;
 var
@@ -6874,8 +6892,7 @@ begin
              ( ( (tfb in PascalStatementBlocks) and
                  (FTokenState = tsAtBeginOfStatement) and
                  (not (rsAtCaseLabel in fRange) ) and
-                 (run < fLineLen) and (LinePtr[run] = ':') and
-                 ( (Run = fLineLen) or (LinePtr[Run+1] <>'=') )
+                 IsLabelColonAfterRun
                ) or
                ( (tfb in [cfbtLabelBlock, cfbtLocalLabelBlock]) and
                  (FTokenState in [tsNone, tsAtExpressionEnd])
