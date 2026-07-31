@@ -24,9 +24,9 @@ const
   ProjectRTLPathKey = 'RTLPath';
 
   BinaryMetadataDocsURL =
-    'https://github.com/fpc-unleashed/freepascal/blob/main/unleashed/docs/binary-metadata.md';
+    'https://github.com/unleashedpascal/freepascal/blob/main/unleashed/docs/binary-metadata.md';
   StripRTTIDocsURL =
-    'https://github.com/fpc-unleashed/freepascal/blob/main/unleashed/docs/strip-rtti.md';
+    'https://github.com/unleashedpascal/freepascal/blob/main/unleashed/docs/strip-rtti.md';
 
 type
 
