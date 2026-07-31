@@ -14,7 +14,7 @@ jobs:
     steps:
     - name: Download Unleashed Pascal nightly
       run: |
-        curl -L -o fpc-bundle.zip https://github.com/unleashedpascal/freepascal/releases/download/nightly/windows-bundle.zip
+        curl -L -o fpc-bundle.zip https://github.com/unleashedpascal/compiler/releases/download/nightly/windows-bundle.zip
       shell: cmd
 
     - name: Extract Unleashed Pascal to C:\fpc

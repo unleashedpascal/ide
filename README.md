@@ -2,7 +2,7 @@
 
 <img align="left" src="images/splash_logo.png" width="300">
 
-**Unleashed Pascal IDE** is a community-driven fork of **Lazarus IDE** built specifically for the [Unleashed Pascal](https://github.com/unleashedpascal/freepascal) compiler. Stock Lazarus has no idea about Unleashed mode features - it underlines `match`, `defer`, contextual `step`, inline `var ... := ...`, and the rest as syntax errors, and code completion stops working the moment you cross into anything Unleashed adds. This fork makes the IDE understand the language as it actually compiles.
+**Unleashed Pascal IDE** is a community-driven fork of **Lazarus IDE** built specifically for the [Unleashed Pascal](https://github.com/unleashedpascal/compiler) compiler. Stock Lazarus has no idea about Unleashed mode features - it underlines `match`, `defer`, contextual `step`, inline `var ... := ...`, and the rest as syntax errors, and code completion stops working the moment you cross into anything Unleashed adds. This fork makes the IDE understand the language as it actually compiles.
 
 It also ships with an Unleashed-aware default project template (new units start in `{$mode unleashed}`) and visible branding so you do not accidentally launch a stock Lazarus and wonder why your code stops getting highlighted.
 
@@ -17,9 +17,9 @@ It also ships with an Unleashed-aware default project template (new units start 
 
 ## Installation
 
-Unleashed Pascal IDE only builds against the [Unleashed Pascal](https://github.com/unleashedpascal/freepascal) compiler - install both together. The full procedure is in the [**Unleashed Pascal README**](https://github.com/unleashedpascal/freepascal#installation).
+Unleashed Pascal IDE only builds against the [Unleashed Pascal](https://github.com/unleashedpascal/compiler) compiler - install both together. The full procedure is in the [**Unleashed Pascal README**](https://github.com/unleashedpascal/compiler#installation).
 
 ## Links
 
 - Project website: https://unleashedpascal.org/
-- Compiler repository: https://github.com/unleashedpascal/freepascal
+- Compiler repository: https://github.com/unleashedpascal/compiler
