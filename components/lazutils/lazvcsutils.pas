@@ -505,7 +505,8 @@ function TVCSScout.GitDescribeCommit(KeepRevStr: Boolean
 var
   s: string;
 begin
-  Result := RunCommand('git', ['describe', '--always', '--first-parent'], s);
+  // plain commit hash, not the tag-based describe string
+  Result := RunCommand('git', ['rev-parse', '--short=7', 'HEAD'], s);
   if not Result then
     exit;
 
