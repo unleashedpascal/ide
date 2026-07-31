@@ -12,12 +12,12 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - name: Download FPC Unleashed nightly
+    - name: Download Unleashed Pascal nightly
       run: |
-        curl -L -o fpc-bundle.zip https://github.com/fpc-unleashed/freepascal/releases/download/nightly/windows-bundle.zip
+        curl -L -o fpc-bundle.zip https://github.com/unleashedpascal/freepascal/releases/download/nightly/windows-bundle.zip
       shell: cmd
 
-    - name: Extract FPC Unleashed to C:\fpc
+    - name: Extract Unleashed Pascal to C:\fpc
       run: |
         "C:\Program Files\7-Zip\7z.exe" x -bd -y fpc-bundle.zip -oC:\ >nul
         dir C:\fpc\bin\x86_64-win64
@@ -29,7 +29,7 @@ jobs:
         $cfg = "C:\fpc\bin\$target\fpc.cfg"
         # the IDE is upstream objfpc code that uses C-style operators (+=); the
         # Makefile build passes -Sci but the lazbuild IDE build does not
-        $lines = @("# FPC Unleashed minimal config", "-Sci")
+        $lines = @("# Unleashed Pascal minimal config", "-Sci")
         foreach ($d in Get-ChildItem -Path "C:\fpc\units\$target" -Directory) {
           $lines += "-Fu$($d.FullName)"
         }

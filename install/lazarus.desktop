@@ -1,6 +1,6 @@
 [Desktop Entry]
-Name=Lazarus
-Comment=Lazarus IDE
+Name=Unleashed Pascal IDE
+Comment=Unleashed Pascal IDE
 Exec=startlazarus %f
 Terminal=false
 Type=Application

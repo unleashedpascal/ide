@@ -8,7 +8,7 @@ on:
         type: boolean
         default: false
   schedule:
-    # Run after FPC Unleashed nightly so a fresh FPC is available.
+    # Run after the compiler nightly so a fresh Unleashed Pascal is available.
     - cron: '0 1 * * *'
 
 jobs:
@@ -86,7 +86,7 @@ jobs:
         run: |
           ts=$(TZ=Europe/Berlin date +"%Y-%m-%d %H:%M:%S CEST")
           {
-            echo "Lazarus Unleashed IDE nightly build"
+            echo "Unleashed Pascal IDE nightly build"
             echo
             echo "Generated from commit: $GITHUB_SHA"
             echo "Build time: $ts"
@@ -100,7 +100,7 @@ jobs:
           gh release create nightly \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
-            --title "Lazarus Unleashed IDE nightly" \
+            --title "Unleashed Pascal IDE nightly" \
             --notes-file release-body.txt \
             --prerelease \
             windows-bundle.zip \

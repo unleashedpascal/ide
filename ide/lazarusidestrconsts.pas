@@ -996,15 +996,16 @@ resourcestring
   lisAboutLazarusMsg =
        'License: GPL/LGPL. See Lazarus and Free Pascal sources for license details.'
       +'%s'
-      +'Lazarus is an IDE to create graphical and console applications '
-      +'with Free Pascal. Free Pascal is a Pascal and Object Pascal '
-      +'compiler that runs on Windows, Linux, macOS, FreeBSD and more.'
+      +'Unleashed Pascal IDE is an IDE to create graphical and console '
+      +'applications with the Unleashed Pascal compiler: a Pascal and '
+      +'Object Pascal compiler with modern language features that runs '
+      +'on Windows, Linux, macOS, FreeBSD and more.'
       +'%s'
-      +'Lazarus is the missing part of the puzzle that will allow you to '
-      +'develop programs for all of the above platforms in a Delphi-like '
-      +'environment. The IDE is a RAD tool that includes a form designer.'
+      +'The IDE is based on Lazarus and lets you develop programs for '
+      +'all of the above platforms in a Delphi-like environment. It is '
+      +'a RAD tool that includes a form designer.'
       +'%s'
-      +'As Lazarus is growing, we need more developers.';
+      +'Project website: https://unleashedpascal.org/';
   lisAboutNoContributors = 'Cannot find contributors list.';
   lisUnitNameAlreadyExistsCap = 'Unitname already in project';
   lisTheUnitAlreadyExists = 'The unit "%s" already exists.';

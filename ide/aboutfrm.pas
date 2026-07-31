@@ -239,8 +239,8 @@ end;
 
 procedure TAboutForm.miVerToClipboardClick(Sender: TObject);
 begin
-  Clipboard.AsText := 'Lazarus ' + LazarusVersionStr + ' (rev ' + LazarusRevisionStr + ')' +
-    ' FPC ' + {$I %FPCVERSION%} + ' ' + PlatformLabel.Caption;
+  Clipboard.AsText := 'Unleashed Pascal IDE ' + LazarusVersionStr + ' (rev ' + LazarusRevisionStr + ')' +
+    ' compiler ' + {$I %FPCVERSION%} + ' ' + PlatformLabel.Caption;
 end;
 
 procedure TAboutForm.NotebookPageChanged(Sender: TObject);

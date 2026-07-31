@@ -22,9 +22,9 @@ jobs:
           libgtk-3-dev libcairo2-dev libpango1.0-dev \
           libgdk-pixbuf2.0-dev libatk1.0-dev libgl1-mesa-dev
 
-    - name: Download FPC Unleashed nightly
+    - name: Download Unleashed Pascal nightly
       run: |
-        curl -L -o fpc-bundle.zip https://github.com/fpc-unleashed/freepascal/releases/download/nightly/linux-bundle.zip
+        curl -L -o fpc-bundle.zip https://github.com/unleashedpascal/freepascal/releases/download/nightly/linux-bundle.zip
         unzip -q fpc-bundle.zip -d "$HOME"
         ls "$HOME/fpc/bin"
 
@@ -32,7 +32,7 @@ jobs:
       run: |
         target=x86_64-linux
         {
-          echo "# FPC Unleashed minimal config"
+          echo "# Unleashed Pascal minimal config"
           # the IDE is upstream objfpc code that uses C-style operators (+=); the
           # Makefile build passes -Sci but the lazbuild IDE build does not
           echo "-Sci"
