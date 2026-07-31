@@ -5,7 +5,7 @@ object AboutForm: TAboutForm
   Width = 470
   ActiveControl = Notebook
   BorderIcons = [biSystemMenu, biMaximize]
-  Caption = 'About Lazarus'
+  Caption = 'About Unleashed Pascal IDE'
   ClientHeight = 390
   ClientWidth = 470
   Constraints.MinHeight = 390

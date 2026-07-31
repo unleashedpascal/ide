@@ -787,7 +787,7 @@ resourcestring
     +'%sThe Free Pascal compiler does not search for all cases.'
     +' It is recommended to use lowercase filename.'
     +'%sRename file lowercase?';
-  lisLazarusEditorV = 'Lazarus v%s (Unleashed Edition)';
+  lisLazarusEditorV = 'Unleashed Pascal IDE v%s';
   liscompiling = '%s (compiling ...)';
   lisdebugging = '%s (debugging ...)';
   lisRunning = '%s (running ...)';
@@ -971,11 +971,11 @@ resourcestring
   lisProjectSessionChanged = 'Project session changed';
   lisSaveSessionChangesToProject = 'Save session changes to project %s?';
 
-  lisAboutLazarus = 'About Lazarus Unleashed';
+  lisAboutLazarus = 'About Unleashed Pascal IDE';
   lisVersion = 'Version';
   lisVerToClipboard = 'Copy version information to clipboard';
-  lisBuildDate = 'Build Date';
-  lisFPCVersion = 'FPC Version: ';
+  lisBuildDate = 'Build date';
+  lisFPCVersion = 'Compiler version: ';
   lisRevision = 'Revision: ';
   lisPrior = 'prior %s';
   lisWelcomeToLazarusThereIsAlreadyAConfigurationFromVe = 'Welcome to Lazarus %s'
@@ -5806,7 +5806,7 @@ resourcestring
     +'has the name "%s". It is needed for building the IDE. Please give the full file path.';
   lisFPCSources = 'FPC sources';
   lisConfigureLazarusIDE = 'Configure Lazarus IDE';
-  lisWelcomeToLazarusIDE = 'Welcome to Lazarus IDE (Unleashed Edition) %s';
+  lisWelcomeToLazarusIDE = 'Welcome to Unleashed Pascal IDE %s';
   lisStartIDE = 'Start IDE';
 
 
@@ -5856,7 +5856,7 @@ resourcestring
 
   lisUIClearIncludedByReference = 'Clear include cache';
   lisChangeParent = 'Change Parent';
-  lisLazarusIDE = 'Lazarus IDE (Unleashed Edition)';
+  lisLazarusIDE = 'Unleashed Pascal IDE';
   lisProject = 'Project %s';
   lisWhatNeedsBuilding = 'What needs building';
   lisTarget = 'Target:';
