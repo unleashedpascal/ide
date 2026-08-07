@@ -1941,6 +1941,13 @@ begin
     AddCompilerProcedure('WriteLn','Args:Arguments');
     AddCompilerProcedure('WriteStr','var S:String;Args:Arguments');
     AddCompilerProcedure('SwapValues','var A,B:T');
+    if cmsPrepostIncDec in Scanner.CompilerModeSwitches then begin
+      // value-returning inc/dec: Pre yields the value after the update, Post the one before
+      AddCompilerFunction('PreInc','var N:T;X:Integer=1','T');
+      AddCompilerFunction('PostInc','var N:T;X:Integer=1','T');
+      AddCompilerFunction('PreDec','var N:T;X:Integer=1','T');
+      AddCompilerFunction('PostDec','var N:T;X:Integer=1','T');
+    end;
     if (cmsParallelFor in Scanner.CompilerModeSwitches)
     and ContextInImplicitStatementScope(Context.Node,CleanPos,issParallelForBody) then begin
       // implicit worker-locals of `for parallel` bodies only
