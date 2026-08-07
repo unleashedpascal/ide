@@ -1121,15 +1121,23 @@ end;
 function TCompilerOptReader.ReadVersion(s: string): Boolean;
 const
   VersBegin = 'Free Pascal Compiler version ';
+  VersBeginAlt = 'Unleashed Pascal Compiler version ';
 var
   Start, V1, V2: Integer;
+  VersPfx: String;
   OutputI: TStringList;      // fpc -Fr$(FPCMsgFile) -i
 begin
-  Result := StartsStr(VersBegin, s);
+  VersPfx := VersBegin;
+  Result := StartsStr(VersPfx, s);
+  if not Result then
+  begin
+    VersPfx := VersBeginAlt;
+    Result := StartsStr(VersPfx, s);
+  end;
   if Result then
   begin
     fIsNewFpc := False;
-    Start := Length(VersBegin)+1;
+    Start := Length(VersPfx)+1;
     V1 := PosEx(' ', s, Start);
     if V1 > 0 then
     begin
