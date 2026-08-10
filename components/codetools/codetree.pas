@@ -165,7 +165,7 @@ const
   ctnHintModifier       =122; // deprecated, platform, unimplemented, library, experimental
   ctnAttribute          =123; // children are ctnAttribParam
   ctnAttribParam        =124; // 1st child: ctnIdentifier, optional 2nd: ctnParamsRound
-  ctnTypeOfExpr         =125; // unleashed `Type(expr)` intrinsic; node range covers
+  ctnTypeOfExpr         =125; // `Type(expr)` intrinsic; node range covers
                               // the entire `Type(...)` construct, the parenthesised
                               // expression is recovered from Src between `(` and `)`
   ctnFutureType         =126; // `future of T` thread-handle type;

@@ -1927,7 +1927,7 @@ begin
     AddCompilerProcedure('Str','const X[:Width[:Decimals]];var S:String');
     AddCompilerFunction('Succ','X:Ordinal', 'Ordinal');
     if Scanner.CompilerMode=cmUnleashed then
-      // unleashed: compile-time type-of-expression intrinsic
+      // compile-time type-of-expression intrinsic
       AddCompilerFunction('Type','Expr','typeof Expr');
     AddCompilerFunction('TypeInfo','Identifier', 'Pointer');
     AddCompilerFunction('GetTypeKind','Identifier', 'TTypeKind');
@@ -4236,7 +4236,7 @@ var
       AddCompilerProc('Str','const X[:Width[:Decimals]];var S:String');
       AddCompilerProc('Succ','X:Ordinal', 'Ordinal');
       if Scanner.CompilerMode=cmUnleashed then
-        // unleashed: compile-time type-of-expression intrinsic
+        // compile-time type-of-expression intrinsic
         AddCompilerProc('Type','Expr','typeof Expr');
       AddCompilerProc('TypeInfo','Identifier', 'Pointer');
       AddCompilerProc('GetTypeKind','Identifier', 'TTypeKind');

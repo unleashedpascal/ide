@@ -232,7 +232,7 @@ type
     cmsInlineVars,         { allow inline variable declarations inside statement blocks }
     cmsTuples,             { allow anonymous tuple types and related syntax }
     cmsImplicitGenerics,   { Delphi-style generic syntax: 'generic'/'specialize' keywords optional, <T> allowed }
-    cmsStripRtti,          { strip type-name strings from RTTI/VMT (unleashed) }
+    cmsStripRtti,          { strip type-name strings from RTTI/VMT }
     cmsComposableRecords,  { record composition: union, `embed`, inline anon record, per-field sizing }
     cmsStaticSection,      { allow `static` declaration section in function/procedure bodies }
     cmsInlineStatic,       { allow `static x := ...` inline declarations inside statement blocks }
@@ -245,11 +245,11 @@ type
     cmsIgnoreAttributes,   { pas2js: ignore attributes }
     cmsOmitRTTI,           { pas2js: treat class section 'published' as 'public' and typeinfo does not work on symbols declared with this switch }
     cmsMultiLineStrings,   { pas2js: Multiline strings }
-    cmsInterpolatedStrings,{ Unleashed: $'text {expr} text' interpolated string literals }
-    cmsAutoProperties,     { Unleashed: accessor-less property synthesizes a backing field }
-    cmsParallelFor,        { Unleashed: `for parallel` worker-pool loop, WorkerIndex/WorkerCount in the body }
-    cmsOutVar,             { Unleashed: `var x` declares an inline variable at an out-argument, `_` discards it }
-    cmsPrepostIncDec       { Unleashed: PreInc/PostInc/PreDec/PostDec value-returning inc/dec }
+    cmsInterpolatedStrings,{ $'text {expr} text' interpolated string literals }
+    cmsAutoProperties,     { accessor-less property synthesizes a backing field }
+    cmsParallelFor,        { `for parallel` worker-pool loop, WorkerIndex/WorkerCount in the body }
+    cmsOutVar,             { `var x` declares an inline variable at an out-argument, `_` discards it }
+    cmsPrepostIncDec       { PreInc/PostInc/PreDec/PostDec value-returning inc/dec }
     );
   TCompilerModeSwitches = set of TCompilerModeSwitch;
 const

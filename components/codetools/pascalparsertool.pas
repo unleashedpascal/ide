@@ -1979,7 +1979,7 @@ begin
         KeyWordFuncTypeDefault
       else if (Scanner.CompilerMode=cmUnleashed)
         and (UpAtomIs('ARRAY') or UpAtomIs('PACKED') or UpAtomIs('BITPACKED')) then
-        // unleashed: inline `array of X` (also `packed`/`bitpacked array of X`)
+        // inline `array of X` (also `packed`/`bitpacked array of X`)
         // as a function result type; classic modes still require a named type
         ParseType(CurPos.StartPos)
       else
@@ -2044,7 +2044,7 @@ begin
                              Src,CurPos.StartPos,CurPos.EndPos-CurPos.StartPos);
     end else
       IsSpecifier:=false;
-    // unleashed staticsection: in a method body `static` after the header
+    // staticsection: in a method body `static` after the header
     // opens a static declaration section, not a method directive (the
     // directive only applies to the declaration inside the class body) -
     // yield it to the section parser
@@ -3337,13 +3337,13 @@ begin
     end else if UpAtomIs('CONST')
     and (BlockType in [ebtBegin,ebtTry,ebtRepeat])
     and (cmsInlineVars in Scanner.CompilerModeSwitches) then begin
-      // unleashed inline-const (gated by the same modeswitch as inline-var
-      // in FPC): const NAME = EXPR; or const NAME: TYPE = EXPR;
+      // inline-const (gated by the same modeswitch as inline-var):
+      // const NAME = EXPR; or const NAME: TYPE = EXPR;
       ReadInlineConstDeclaration(CreateNodes);
     end else if UpAtomIs('TYPE')
     and (Scanner.CompilerMode=cmUnleashed)
     and (BlockType in [ebtBegin,ebtTry,ebtRepeat,ebtIf,ebtCase]) then begin
-      // unleashed: Type(expr) intrinsic can appear in expression position
+      // Type(expr) intrinsic can appear in expression position
       // inside a body (e.g. typecast `Type(x)(v)`, `SizeOf(Type(x))`,
       // assignment `y := Type(x)(v)`). skip the parenthesised body so the
       // bare `type` keyword is not flagged as an unexpected section header.
@@ -3355,14 +3355,14 @@ begin
     end else if UpAtomIs('STATIC')
     and (BlockType in [ebtBegin,ebtTry,ebtRepeat])
     and (cmsInlineStatic in Scanner.CompilerModeSwitches) then begin
-      // unleashed inline-static: shares the post-keyword syntax with inline-var
+      // inline-static: shares the post-keyword syntax with inline-var
       // (`static name [: T] [:= expr];`); reuse the inline-var reader so the
       // variable is registered in scope the same way
       ReadInlineVarDeclaration(CreateNodes);
     end else if (UpAtomIs('THREADSTATIC') or UpAtomIs('TSTATIC'))
     and (BlockType in [ebtBegin,ebtTry,ebtRepeat])
     and (cmsThreadStatic in Scanner.CompilerModeSwitches) then begin
-      // unleashed inline-threadstatic (`tstatic` is the short alias): same
+      // inline-threadstatic (`tstatic` is the short alias): same
       // post-keyword syntax as inline-var (`threadstatic name [: T] [:= expr];`);
       // reuse the inline-var reader so the variable is registered in scope
       ReadInlineVarDeclaration(CreateNodes);
@@ -3867,7 +3867,7 @@ function TPascalParserTool.ReadWithStatement(ExceptionOnError,
       repeat
         WithVarNode:=WithVarNode.PriorBrother;
         if WithVarNode=nil then break;
-        // unleashed inline-var entries leave a ctnVarSection sibling between
+        // inline-var entries leave a ctnVarSection sibling between
         // with-vars; step over it so EndPos still propagates to prior with-vars
         if WithVarNode.Desc=ctnVarSection then continue;
         if (WithVarNode.Desc<>ctnWithVariable) or (WithVarNode.EndPos>0) then
@@ -3883,7 +3883,7 @@ begin
   ReadNextAtom; // peek first with-entry atom
   repeat
     if UpAtomIs('VAR') then begin
-      // unleashed inline-var: var IDENT [: TYPE] [:= EXPR]
+      // inline-var: var IDENT [: TYPE] [:= EXPR]
       // ReadInlineVarDeclaration creates a ctnVarSection sibling so the
       // identifier is registered in scope; cursor is left on the atom
       // before the next terminator (',' or last decl atom before 'do')
@@ -4851,7 +4851,7 @@ begin
 end;
 
 function TPascalParserTool.KeyWordFuncStatic: boolean;
-{ unleashed staticsection: writeable typed-const-style declarations at the top
+{ staticsection: writeable typed-const-style declarations at the top
   of a function/procedure body. Modelled as ctnVarSection so identifier
   completion treats the entries like locals.
 
@@ -4935,7 +4935,7 @@ begin
 end;
 
 function TPascalParserTool.KeyWordFuncThreadStatic: boolean;
-{ unleashed threadstatic: per-thread declarations at the top of a
+{ threadstatic: per-thread declarations at the top of a
   function/procedure body. Same syntax as the `static` section, modelled as
   ctnVarSection so identifier completion treats the entries like locals.
 
@@ -5388,7 +5388,7 @@ procedure TPascalParserTool.ReadTypeNameAndDefinition;
     generic name<name>=type;  // this is the only case where >= are two operators
     name<name,name> = type;  // delphi style
     TTest19<T1: record; T2,T3: class; T4: constructor; T5: name> = type
-    expose name = type;     // unleashed: whitelist type from m_strip_rtti stripping
+    expose name = type;     // whitelist type from m_strip_rtti stripping
 }
 var
   TypeNode: TCodeTreeNode;
@@ -5397,7 +5397,7 @@ var
 begin
   CreateChildNode;
   TypeNode:=CurNode;
-  // unleashed: optional `expose` prefix whitelists the type from m_strip_rtti.
+  // optional `expose` prefix whitelists the type from m_strip_rtti.
   // contextual - skip only when the next atom is another identifier, so that
   // `type expose = integer;` (alias named `expose`) keeps parsing correctly
   if (Scanner.CompilerMode=cmUnleashed) and UpAtomIs('EXPOSE') then begin
@@ -6284,7 +6284,7 @@ begin
       NodeEnd := CurPos.EndPos;
       if (Scanner.CompilerMode=cmUnleashed)
         and (UpAtomIs('ARRAY') or UpAtomIs('PACKED') or UpAtomIs('BITPACKED')) then begin
-        // unleashed: inline `array of X` as procedural-type result
+        // inline `array of X` as procedural-type result
         if ParseType(CurPos.StartPos) then
           NodeEnd := CurNode.LastChild.EndPos;
       end
@@ -6449,7 +6449,7 @@ begin
 end;
 
 function TPascalParserTool.KeyWordFuncTypeType: boolean;
-// 'type identifier' (strong alias) or unleashed `Type(expr)` intrinsic
+// 'type identifier' (strong alias) or the `Type(expr)` intrinsic
 var
   StartPos: Integer;
 begin
@@ -6462,7 +6462,7 @@ begin
   if (CurPos.Flag=cafRoundBracketOpen)
   and (Scanner.CompilerMode=cmUnleashed) then
   begin
-    { unleashed Type(expr): the parenthesised expression is the operand whose
+    { Type(expr): the parenthesised expression is the operand whose
       static type the intrinsic yields. body is not parsed into the tree, it
       is preserved as a text range and resolved on demand by the find-
       declaration resolver. }

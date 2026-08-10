@@ -1528,7 +1528,7 @@ begin
     Result:=xtPChar
   else if (CompareIdentifiers(Identifier,'WORKERINDEX')=0)
   or (CompareIdentifiers(Identifier,'WORKERCOUNT')=0) then
-    // implicit worker-locals of unleashed `for parallel` bodies
+    // implicit worker-locals of `for parallel` bodies
     Result:=xtLongint
   else if CompareIdentifiers(Identifier,'FUTURE')=0 then
     // `future of T` thread handle
@@ -6474,7 +6474,7 @@ begin
         break;
       end else
       if (Result.Node.Desc=ctnTypeOfExpr) then begin
-        // unleashed: `Type(expr)` resolves to the static type of expr.
+        // `Type(expr)` resolves to the static type of expr.
         // expr lives in the source between the parens; resolve it via the
         // expression-type machinery and continue with the resulting node.
         if Result.Tool<>Self then begin

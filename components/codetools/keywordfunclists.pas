@@ -1883,7 +1883,7 @@ begin
     Add('WIDESTRING' ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('WORD'       ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('WORDBOOL'   ,{$ifdef FPC}@{$endif}AllwaysTrue);
-    // implicit worker-locals of unleashed `for parallel` bodies
+    // implicit worker-locals of `for parallel` bodies
     Add('WORKERINDEX',{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('WORKERCOUNT',{$ifdef FPC}@{$endif}AllwaysTrue);
     // `future of T` handles and the `async begin..end` cancel flag

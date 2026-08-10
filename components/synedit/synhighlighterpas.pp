@@ -3650,7 +3650,7 @@ begin
   then
     Result := tkKey
   else if KeyCompU('TSTATIC') then begin
-    // unleashed `tstatic` (short alias for `threadstatic`): top-of-body section
+    // `tstatic` (short alias for `threadstatic`): top-of-body section
     // (same mechanics as `var`) or `tstatic name := expr` inline declaration
     // inside a statement block; elsewhere it is an ordinary identifier
     tfb := TopPascalCodeFoldBlockType;
@@ -4089,7 +4089,7 @@ begin
     FTokenIsValueOrTypeName := True;
   end
   else if KeyCompU('THREADSTATIC') then begin
-    // unleashed threadstatic: top-of-body `threadstatic <decls>` section (same
+    // threadstatic: top-of-body `threadstatic <decls>` section (same
     // mechanics as `var`) or `threadstatic name := expr` inline declaration
     // inside a statement block; elsewhere it is an ordinary identifier
     tfb := TopPascalCodeFoldBlockType;
