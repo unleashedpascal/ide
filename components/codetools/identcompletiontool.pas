@@ -3006,6 +3006,7 @@ begin
         AddKeyWord('AppType');
         AddKeyWord('AsmMode');
         AddKeyWord('Assertions');
+        AddKeyWord('AutoPropPrefix');
         AddKeyWord('BitPacking');
         AddKeyWord('BoolEval');
         AddKeyWord('Calling');
@@ -3033,9 +3034,13 @@ begin
         AddKeyWord('Else');
         AddKeyWord('ElseC');
         AddKeyWord('ElseIf');
+        AddKeyWord('EmbedBytes');
+        AddKeyWord('EmbedStr');
         AddKeyWord('EndC');
         AddKeyWord('EndIf');
         AddKeyWord('EndRegion');
+        if SrcType in [ctnProgram,ctnLibrary] then
+          AddKeyWord('EntryPoint');
         AddKeyWord('Error');
         AddKeyWord('ErrorC');
         AddKeyWord('ExtendedSyntax');
@@ -3137,6 +3142,7 @@ begin
         AddKeyWord('Region');
         AddKeyWord('Resource');
         AddKeyWord('RTTI');
+        AddKeyWord('RTTIExpose');
         if (Compiler=pcDelphi) and (SrcType=ctnPackage) then
           AddKeyWord('RunOnly');
         if Compiler=pcDelphi then
