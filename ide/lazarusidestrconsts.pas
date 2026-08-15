@@ -978,7 +978,8 @@ resourcestring
   lisFPCVersion = 'Compiler version: ';
   lisRevision = 'Revision: ';
   lisPrior = 'prior %s';
-  lisWelcomeToLazarusThereIsAlreadyAConfigurationFromVe = 'Welcome to Lazarus %s'
+  lisWelcomeToLazarusThereIsAlreadyAConfigurationFromVe = 'Welcome to Unleashed '
+    +'Pascal IDE %s'
     +'%sThere is already a configuration from version %s in'
     +'%s%s';
   lisTheOldConfigurationWillBeUpgraded = 'The old configuration will be '
@@ -5806,7 +5807,7 @@ resourcestring
   lisTheMakeExecutableTypicallyHasTheName = 'The "make" executable typically '
     +'has the name "%s". It is needed for building the IDE. Please give the full file path.';
   lisFPCSources = 'FPC sources';
-  lisConfigureLazarusIDE = 'Configure Lazarus IDE';
+  lisConfigureLazarusIDE = 'Configure Unleashed Pascal IDE';
   lisWelcomeToLazarusIDE = 'Welcome to Unleashed Pascal IDE %s';
   lisStartIDE = 'Start IDE';
 
