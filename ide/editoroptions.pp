@@ -2098,7 +2098,7 @@ type
     property ShowOnlyLineNumbersMultiplesOf: integer read fShowOnlyLineNumbersMultiplesOf
       write fShowOnlyLineNumbersMultiplesOf;
     property GutterWidth: Integer read fGutterWidth write fGutterWidth default 30;
-    property RightMargin: Integer read fRightMargin write fRightMargin default 80;
+    property RightMargin: Integer read fRightMargin write fRightMargin default 160;
     property EditorFont: String read fEditorFont write fEditorFont;
     property EditorFontSize: Integer read fEditorFontSize write fEditorFontSize;
     property ExtraCharSpacing: Integer
@@ -6103,7 +6103,7 @@ begin
     fGutterWidth :=
       XMLConfig.GetValue('EditorOptions/Display/GutterWidth', 30);
     fRightMargin :=
-      XMLConfig.GetValue('EditorOptions/Display/RightMargin', 80);
+      XMLConfig.GetValue('EditorOptions/Display/RightMargin', 160);
     fEditorFont  :=
       XMLConfig.GetValue('EditorOptions/Display/EditorFont', SynDefaultFontName);
     if FileVersion < 8 then begin
@@ -6326,7 +6326,7 @@ begin
     XMLConfig.DeleteValue('EditorOptions/Display/GutterSeparatorIndex');
     XMLConfig.DeleteValue('EditorOptions/Misc/ShowOverviewGutter');
     XMLConfig.SetDeleteValue('EditorOptions/Display/RightMargin',
-      fRightMargin, 80);
+      fRightMargin, 160);
     XMLConfig.SetDeleteValue('EditorOptions/Display/EditorFont',
       fEditorFont, SynDefaultFontName);
     XMLConfig.DeleteValue('EditorOptions/Display/EditorFontHeight'); // unused old value
