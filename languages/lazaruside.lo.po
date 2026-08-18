@@ -5214,13 +5214,13 @@ msgid "About IDE"
 msgstr "ກ່ຽວກັບ IDE"
 
 #: lazarusidestrconsts.lisaboutlazarus
-msgid "About Lazarus"
-msgstr "ກ່ຽວກັບ Lazarus"
+msgid "About Unleashed Pascal IDE"
+msgstr "ກ່ຽວກັບ Unleashed Pascal IDE"
 
 #: lazarusidestrconsts.lisaboutlazarusmsg
 #, object-pascal-format
-msgid "License: GPL/LGPL. See Lazarus and Free Pascal sources for license details.%sLazarus is an IDE to create graphical and console applications with Free Pascal. Free Pascal is a Pascal and Object Pascal compiler that runs on Windows, Linux, macOS, FreeBSD and more.%sLazarus is the missing part of the puzzle that will allow you to develop programs for all of the above platforms in a Delphi-like environment. The IDE is a RAD tool that includes a form designer.%sAs Lazarus is growing, we need more developers."
-msgstr "ໃບອະນຸຍາດ: GPL/LGPL. ເບິ່ງ Lazarus ແລະ Free Pascal sources ສຳລັບລາຍລະອຽດໃບອະນຸຍາດ.%sLazarus ແມ່ນ IDE ເພື່ອສ້າງແອັບພລິເຄຊັນກຣາຟິກ ແລະ ຄອນໂຊນດ້ວຍ Free Pascal. Free Pascal ແມ່ນ Pascal ແລະ Object Pascal compiler ທີ່ຣັນໃນ Windows, Linux, macOS, FreeBSD ແລະ ອື່ນໆ.%sLazarus ແມ່ນຊິ້ນສ່ວນທີ່ຫາຍໄປຂອງຈິ໊ກຊໍທີ່ຈະຊ່ວຍໃຫ້ທ່ານພັດທະນາໂປຣແກຣມສຳລັບທຸກແພລັດຟອມຂ້າງເທິງໃນສະພາບແວດລ້ອມທີ່ຄ້າຍຄື Delphi. IDE ເປັນເຄື່ອງມື RAD ທີ່ລວມມີ form designer.%sຂະນະທີ່ Lazarus ກຳລັງເຕີບໃຫຍ່, ພວກເຮົາຕ້ອງການນັກພັດທະນາເພີ່ມເຕີມ."
+msgid "License: GPL/LGPL. See Lazarus and Free Pascal sources for license details.%sUnleashed Pascal IDE is an IDE to create graphical and console applications with the Unleashed Pascal compiler: a Pascal and Object Pascal compiler with modern language features that runs on Windows, Linux, macOS, FreeBSD and more.%sThe IDE is based on Lazarus and lets you develop programs for all of the above platforms in a Delphi-like environment. It is a RAD tool that includes a form designer.%sProject website: https://unleashedpascal.org/"
+msgstr "ໃບອະນຸຍາດ: GPL/LGPL. ເບິ່ງ Lazarus ແລະ Free Pascal sources ສຳລັບລາຍລະອຽດໃບອະນຸຍາດ.%sUnleashed Pascal IDE ແມ່ນ IDE ເພື່ອສ້າງແອັບພລິເຄຊັນກຣາຟິກ ແລະ ຄອນໂຊນດ້ວຍ compiler Unleashed Pascal: Pascal ແລະ Object Pascal compiler ທີ່ມີຄຸນສົມບັດພາສາທັນສະໄໝ ແລະ ຣັນໃນ Windows, Linux, macOS, FreeBSD ແລະ ອື່ນໆ.%sIDE ນີ້ອີງໃສ່ Lazarus ແລະ ຊ່ວຍໃຫ້ທ່ານພັດທະນາໂປຣແກຣມສຳລັບທຸກແພລັດຟອມຂ້າງເທິງໃນສະພາບແວດລ້ອມທີ່ຄ້າຍຄື Delphi. ມັນເປັນເຄື່ອງມື RAD ທີ່ລວມມີ form designer.%s"
 
 #: lazarusidestrconsts.lisaboutnocontributors
 msgid "Cannot find contributors list."
@@ -5901,7 +5901,7 @@ msgid "Build"
 msgstr "ສ້າງ (Build)"
 
 #: lazarusidestrconsts.lisbuilddate
-msgid "Build Date"
+msgid "Build date"
 msgstr "ວັນທີ Build"
 
 #: lazarusidestrconsts.lisbuildidewithpackages
@@ -7627,8 +7627,8 @@ msgid "Configure Toolbar"
 msgstr "ຕັ້ງຄ່າ Toolbar"
 
 #: lazarusidestrconsts.lisconfigurelazaruside
-msgid "Configure Lazarus IDE"
-msgstr "ຕັ້ງຄ່າ Lazarus IDE"
+msgid "Configure Unleashed Pascal IDE"
+msgstr "ຕັ້ງຄ່າ Unleashed Pascal IDE"
 
 #: lazarusidestrconsts.lisconfirm
 msgid "Confirm"
@@ -10138,8 +10138,8 @@ msgid "FPC too old"
 msgstr "FPC ເກົ່າເກີນໄປ"
 
 #: lazarusidestrconsts.lisfpcversion
-msgid "FPC Version: "
-msgstr "FPC Version: "
+msgid "Compiler version: "
+msgstr "ເວີຊັນ compiler: "
 
 #: lazarusidestrconsts.lisfpdoceditor
 msgctxt "lazarusidestrconsts.lisfpdoceditor"
@@ -11584,12 +11584,12 @@ msgstr "ໄດເຣັກທໍຣີທີ່ຈະໃຊ້ເປັນໄດ
 
 #: lazarusidestrconsts.lislazaruseditorv
 #, object-pascal-format
-msgid "Lazarus IDE v%s"
-msgstr "Lazarus IDE ເວີຊັນ %s"
+msgid "Unleashed Pascal IDE v%s"
+msgstr "Unleashed Pascal IDE ເວີຊັນ %s"
 
 #: lazarusidestrconsts.lislazaruside
-msgid "Lazarus IDE"
-msgstr "Lazarus IDE"
+msgid "Unleashed Pascal IDE"
+msgstr "Unleashed Pascal IDE"
 
 #: lazarusidestrconsts.lislazarusoptionsprojectfilename
 msgid "lazarus [options] <project-filename>"
@@ -18903,13 +18903,13 @@ msgstr "%sຄຳເຕືອນ: ນີ້ແມ່ນ unit ຫຼັກ. unit �
 
 #: lazarusidestrconsts.liswelcometolazaruside
 #, object-pascal-format
-msgid "Welcome to Lazarus IDE %s"
-msgstr "ຍິນດີຕ້ອນຮັບສູ່ Lazarus IDE %s"
+msgid "Welcome to Unleashed Pascal IDE %s"
+msgstr "ຍິນດີຕ້ອນຮັບສູ່ Unleashed Pascal IDE %s"
 
 #: lazarusidestrconsts.liswelcometolazarusthereisalreadyaconfigurationfromve
 #, object-pascal-format
-msgid "Welcome to Lazarus %s%sThere is already a configuration from version %s in%s%s"
-msgstr "ຍິນດີຕ້ອນຮັບສູ່ Lazarus %s%sມີການຕັ້ງຄ່າຈາກເວີຊັນ %s ຢູ່ແລ້ວໃນ %s%s"
+msgid "Welcome to Unleashed Pascal IDE %s%sThere is already a configuration from version %s in%s%s"
+msgstr "ຍິນດີຕ້ອນຮັບສູ່ Unleashed Pascal IDE %s%sມີການຕັ້ງຄ່າຈາກເວີຊັນ %s ຢູ່ແລ້ວໃນ %s%s"
 
 #: lazarusidestrconsts.liswhatneedsbuilding
 msgid "What needs building"

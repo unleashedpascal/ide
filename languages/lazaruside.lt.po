@@ -5375,14 +5375,14 @@ msgid "About IDE"
 msgstr "Apie IKA"
 
 #: lazarusidestrconsts.lisaboutlazarus
-msgid "About Lazarus"
-msgstr "Apie Lazarus"
+msgid "About Unleashed Pascal IDE"
+msgstr "Apie Unleashed Pascal IDE"
 
 #: lazarusidestrconsts.lisaboutlazarusmsg
 #, object-pascal-format, fuzzy
 #| msgid "License: GPL/LGPL. See Lazarus and Free Pascal sources for license details.%sLazarus is an IDE to create graphical and console applications with Free Pascal. Free Pascal is Pascal and Object Pascal compiler that runs on Windows, Linux, Mac OS X, FreeBSD and more.%sLazarus is the missing part of the puzzle that will allow you to develop programs for all of the above platforms in a Delphi like environment. The IDE is a RAD tool that includes a form designer.%sAs Lazarus is growing we need more developers."
-msgid "License: GPL/LGPL. See Lazarus and Free Pascal sources for license details.%sLazarus is an IDE to create graphical and console applications with Free Pascal. Free Pascal is a Pascal and Object Pascal compiler that runs on Windows, Linux, macOS, FreeBSD and more.%sLazarus is the missing part of the puzzle that will allow you to develop programs for all of the above platforms in a Delphi-like environment. The IDE is a RAD tool that includes a form designer.%sAs Lazarus is growing, we need more developers."
-msgstr "Licenzija: GPL/LGPL. Licencijos detalės pateiktos Lazarus ir Free Pascal pirminiame kode/%sLazarus yra IKA (Integruota Kūrimo Aplinka), kuriame galima kurti vizualines bei pulto Free Pascal programas. Free Pascal yra paskalio ir objektinio paskalio kompiliatorius, jis dirba Linux, FreeBSD, Windows, Mac OS X ir kitose operacinėse sistemose.%sLazarus yra trūkstamoji galvosūkio dalis, kuri jums leidžia į Delphi panašioje aplinkoje kurti programas visoms minėtoms operacinėms sistemoms. IKA yra GPK (Greitas Programų Kūrimas) įrankis, kuriame yra formų konstruktorius.%sLazarus auga, todėl mums reikia daugiau kūrėjų."
+msgid "License: GPL/LGPL. See Lazarus and Free Pascal sources for license details.%sUnleashed Pascal IDE is an IDE to create graphical and console applications with the Unleashed Pascal compiler: a Pascal and Object Pascal compiler with modern language features that runs on Windows, Linux, macOS, FreeBSD and more.%sThe IDE is based on Lazarus and lets you develop programs for all of the above platforms in a Delphi-like environment. It is a RAD tool that includes a form designer.%sProject website: https://unleashedpascal.org/"
+msgstr "Licenzija: GPL/LGPL. Licencijos detalės pateiktos Lazarus ir Free Pascal pirminiame kode.%sUnleashed Pascal IDE yra IKA (Integruota Kūrimo Aplinka), kurioje galima kurti vizualines bei pulto programas su Unleashed Pascal kompiliatoriumi: paskalio ir objektinio paskalio kompiliatoriumi su šiuolaikinėmis kalbos savybėmis, veikiančiu Linux, FreeBSD, Windows, macOS ir kitose operacinėse sistemose.%sIKA remiasi Lazarus ir leidžia į Delphi panašioje aplinkoje kurti programas visoms minėtoms operacinėms sistemoms. Tai GPK (Greitas Programų Kūrimas) įrankis, kuriame yra formų konstruktorius.%s"
 
 #: lazarusidestrconsts.lisaboutnocontributors
 msgid "Cannot find contributors list."
@@ -6085,7 +6085,7 @@ msgid "Build"
 msgstr "Daryti"
 
 #: lazarusidestrconsts.lisbuilddate
-msgid "Build Date"
+msgid "Build date"
 msgstr ""
 
 #: lazarusidestrconsts.lisbuildidewithpackages
@@ -7837,8 +7837,8 @@ msgid "Configure Toolbar"
 msgstr "Konfigūruoti įrankių juostą"
 
 #: lazarusidestrconsts.lisconfigurelazaruside
-msgid "Configure Lazarus IDE"
-msgstr "Derinti Lazarus IKA"
+msgid "Configure Unleashed Pascal IDE"
+msgstr "Derinti Unleashed Pascal IDE"
 
 #: lazarusidestrconsts.lisconfirm
 msgid "Confirm"
@@ -10383,8 +10383,8 @@ msgid "FPC too old"
 msgstr "FPC pernelyg senas"
 
 #: lazarusidestrconsts.lisfpcversion
-msgid "FPC Version: "
-msgstr "FPC versija: "
+msgid "Compiler version: "
+msgstr "Kompiliatoriaus versija: "
 
 #: lazarusidestrconsts.lisfpdoceditor
 msgctxt "lazarusidestrconsts.lisfpdoceditor"
@@ -11874,12 +11874,12 @@ msgstr "aplankas, naudotinas kaip pagrindinis"
 
 #: lazarusidestrconsts.lislazaruseditorv
 #, object-pascal-format
-msgid "Lazarus IDE v%s"
-msgstr "Lazarus IKA v%s"
+msgid "Unleashed Pascal IDE v%s"
+msgstr "Unleashed Pascal IDE v%s"
 
 #: lazarusidestrconsts.lislazaruside
-msgid "Lazarus IDE"
-msgstr "Lazarus IKA"
+msgid "Unleashed Pascal IDE"
+msgstr "Unleashed Pascal IDE"
 
 #: lazarusidestrconsts.lislazarusoptionsprojectfilename
 msgid "lazarus [options] <project-filename>"
@@ -19351,13 +19351,13 @@ msgstr "%sPerspėjimas: tai pagrindinis modulis, naujo pagrindinio modulio faila
 
 #: lazarusidestrconsts.liswelcometolazaruside
 #, object-pascal-format
-msgid "Welcome to Lazarus IDE %s"
-msgstr "Jus sveikina Lazarus IKA %s"
+msgid "Welcome to Unleashed Pascal IDE %s"
+msgstr "Jus sveikina Unleashed Pascal IDE %s"
 
 #: lazarusidestrconsts.liswelcometolazarusthereisalreadyaconfigurationfromve
 #, object-pascal-format
-msgid "Welcome to Lazarus %s%sThere is already a configuration from version %s in%s%s"
-msgstr "Jus sveikina „Lazarus“ IKA %s%sRasta ankstesnė „Lazarus“ konfigūracija (%s) patalpinta aplanke%s%s"
+msgid "Welcome to Unleashed Pascal IDE %s%sThere is already a configuration from version %s in%s%s"
+msgstr "Jus sveikina Unleashed Pascal IDE %s%sRasta ankstesnė konfigūracija (%s) patalpinta aplanke%s%s"
 
 #: lazarusidestrconsts.liswhatneedsbuilding
 msgid "What needs building"

@@ -5370,15 +5370,15 @@ msgid "About IDE"
 msgstr "O IDE"
 
 #: lazarusidestrconsts.lisaboutlazarus
-msgid "About Lazarus"
-msgstr "O programie Lazarus"
+msgid "About Unleashed Pascal IDE"
+msgstr "O programie Unleashed Pascal IDE"
 
 #: lazarusidestrconsts.lisaboutlazarusmsg
 #, object-pascal-format, fuzzy
 #| msgid "License: GPL/LGPL. See Lazarus and Free Pascal sources for license details.%sLazarus is an IDE to create graphical and console applications with Free Pascal. Free Pascal is Pascal and Object Pascal compiler that runs on Windows, Linux, Mac OS X, FreeBSD and more.%sLazarus is the missing part of the puzzle that will allow you to develop programs for all of the above platforms in a Delphi like environment. The IDE is a RAD tool that includes a form designer.%sAs Lazarus is growing we need more developers."
 msgctxt "lazarusidestrconsts.lisaboutlazarusmsg"
-msgid "License: GPL/LGPL. See Lazarus and Free Pascal sources for license details.%sLazarus is an IDE to create graphical and console applications with Free Pascal. Free Pascal is a Pascal and Object Pascal compiler that runs on Windows, Linux, macOS, FreeBSD and more.%sLazarus is the missing part of the puzzle that will allow you to develop programs for all of the above platforms in a Delphi-like environment. The IDE is a RAD tool that includes a form designer.%sAs Lazarus is growing, we need more developers."
-msgstr "Licencja: GPL/LGPL. Sprawdź licencje w plikach źródłowych .%sLazarus jest darmowym środowiskiem programistycznym, przeznaczonym do tworzenia aplikacji graficznych i konsolowych. Program napisany w środowisku %sLazarus można bez żadnych zmian skompilować dla dowolnego obsługiwanego procesora, systemu operacyjnego i interfejsu okienek. Jeśli jesteś zainteresowany rozwojem %sLazarusa , to dołącz do nas."
+msgid "License: GPL/LGPL. See Lazarus and Free Pascal sources for license details.%sUnleashed Pascal IDE is an IDE to create graphical and console applications with the Unleashed Pascal compiler: a Pascal and Object Pascal compiler with modern language features that runs on Windows, Linux, macOS, FreeBSD and more.%sThe IDE is based on Lazarus and lets you develop programs for all of the above platforms in a Delphi-like environment. It is a RAD tool that includes a form designer.%sProject website: https://unleashedpascal.org/"
+msgstr "Licencja: GPL/LGPL. Sprawdź licencje w plikach źródłowych.%sUnleashed Pascal IDE to środowisko programistyczne przeznaczone do tworzenia aplikacji graficznych i konsolowych za pomocą kompilatora Unleashed Pascal: kompilatora języka Pascal i Object Pascal z nowoczesnymi możliwościami języka, działającego w systemach Windows, Linux, macOS, FreeBSD i innych.%sŚrodowisko oparte jest na Lazarusie i pozwala tworzyć programy dla wszystkich powyższych platform w otoczeniu podobnym do Delphi. To narzędzie RAD zawierające projektanta formularzy.%s"
 
 #: lazarusidestrconsts.lisaboutnocontributors
 msgid "Cannot find contributors list."
@@ -6076,7 +6076,7 @@ msgid "Build"
 msgstr "Buduj"
 
 #: lazarusidestrconsts.lisbuilddate
-msgid "Build Date"
+msgid "Build date"
 msgstr ""
 
 #: lazarusidestrconsts.lisbuildidewithpackages
@@ -7836,8 +7836,8 @@ msgid "Configure Toolbar"
 msgstr "Konfiguracja paska narzędziowego"
 
 #: lazarusidestrconsts.lisconfigurelazaruside
-msgid "Configure Lazarus IDE"
-msgstr "Konfiguruj IDE Lazarusa"
+msgid "Configure Unleashed Pascal IDE"
+msgstr "Konfiguruj Unleashed Pascal IDE"
 
 #: lazarusidestrconsts.lisconfirm
 msgid "Confirm"
@@ -10383,8 +10383,8 @@ msgid "FPC too old"
 msgstr "Zbyt stary FPC"
 
 #: lazarusidestrconsts.lisfpcversion
-msgid "FPC Version: "
-msgstr "Wersja FPC: "
+msgid "Compiler version: "
+msgstr "Wersja kompilatora: "
 
 #: lazarusidestrconsts.lisfpdoceditor
 msgctxt "lazarusidestrconsts.lisfpdoceditor"
@@ -11842,12 +11842,12 @@ msgstr "Plik jest w użyciu"
 
 #: lazarusidestrconsts.lislazaruseditorv
 #, object-pascal-format
-msgid "Lazarus IDE v%s"
-msgstr "IDE Lazarusa v%s"
+msgid "Unleashed Pascal IDE v%s"
+msgstr "Unleashed Pascal IDE v%s"
 
 #: lazarusidestrconsts.lislazaruside
-msgid "Lazarus IDE"
-msgstr "IDE Lazarusa"
+msgid "Unleashed Pascal IDE"
+msgstr "Unleashed Pascal IDE"
 
 #: lazarusidestrconsts.lislazarusoptionsprojectfilename
 msgid "lazarus [options] <project-filename>"
@@ -19237,12 +19237,12 @@ msgstr ""
 
 #: lazarusidestrconsts.liswelcometolazaruside
 #, object-pascal-format
-msgid "Welcome to Lazarus IDE %s"
-msgstr "Witaj w IDE Lazarusa %s"
+msgid "Welcome to Unleashed Pascal IDE %s"
+msgstr "Witaj w Unleashed Pascal IDE %s"
 
 #: lazarusidestrconsts.liswelcometolazarusthereisalreadyaconfigurationfromve
 #, object-pascal-format
-msgid "Welcome to Lazarus %s%sThere is already a configuration from version %s in%s%s"
+msgid "Welcome to Unleashed Pascal IDE %s%sThere is already a configuration from version %s in%s%s"
 msgstr ""
 
 #: lazarusidestrconsts.liswhatneedsbuilding

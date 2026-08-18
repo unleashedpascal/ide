@@ -5221,13 +5221,13 @@ msgid "About IDE"
 msgstr "关于 IDE(&I)"
 
 #: lazarusidestrconsts.lisaboutlazarus
-msgid "About Lazarus"
-msgstr "关于 Lazarus"
+msgid "About Unleashed Pascal IDE"
+msgstr "关于 Unleashed Pascal IDE"
 
 #: lazarusidestrconsts.lisaboutlazarusmsg
 #, object-pascal-format
-msgid "License: GPL/LGPL. See Lazarus and Free Pascal sources for license details.%sLazarus is an IDE to create graphical and console applications with Free Pascal. Free Pascal is a Pascal and Object Pascal compiler that runs on Windows, Linux, macOS, FreeBSD and more.%sLazarus is the missing part of the puzzle that will allow you to develop programs for all of the above platforms in a Delphi-like environment. The IDE is a RAD tool that includes a form designer.%sAs Lazarus is growing, we need more developers."
-msgstr "许可证：GPL/LGPL。有关许可证详情，请参阅 Lazarus 和 Free Pascal 的源代码。%sLazarus 是一个使用 Free Pascal 创建图形和控制台应用程序的 IDE。Free Pascal 是一个 Pascal 和 Object Pascal 编译器，可以在 Windows、Linux、macOS、FreeBSD 等平台上运行。%sLazarus 是这个拼图中缺失的一块，它将允许你在类似 Delphi 的环境中为上述所有平台开发程序。IDE 是一个 RAD 工具，包含一个表单设计器。%s随着 Lazarus 的发展，我们需要更多的开发人员。"
+msgid "License: GPL/LGPL. See Lazarus and Free Pascal sources for license details.%sUnleashed Pascal IDE is an IDE to create graphical and console applications with the Unleashed Pascal compiler: a Pascal and Object Pascal compiler with modern language features that runs on Windows, Linux, macOS, FreeBSD and more.%sThe IDE is based on Lazarus and lets you develop programs for all of the above platforms in a Delphi-like environment. It is a RAD tool that includes a form designer.%sProject website: https://unleashedpascal.org/"
+msgstr "许可证：GPL/LGPL。有关许可证详情，请参阅 Lazarus 和 Free Pascal 的源代码。%sUnleashed Pascal IDE 是一个使用 Unleashed Pascal 编译器创建图形和控制台应用程序的 IDE。Unleashed Pascal 是一个具有现代语言特性的 Pascal 和 Object Pascal 编译器，可以在 Windows、Linux、macOS、FreeBSD 等平台上运行。%s该 IDE 基于 Lazarus，允许你在类似 Delphi 的环境中为上述所有平台开发程序。它是一个 RAD 工具，包含一个表单设计器。%s"
 
 #: lazarusidestrconsts.lisaboutnocontributors
 msgid "Cannot find contributors list."
@@ -5912,7 +5912,7 @@ msgid "Build"
 msgstr "构建"
 
 #: lazarusidestrconsts.lisbuilddate
-msgid "Build Date"
+msgid "Build date"
 msgstr "构建日期"
 
 #: lazarusidestrconsts.lisbuildidewithpackages
@@ -7642,8 +7642,8 @@ msgid "Configure Toolbar"
 msgstr "配置工具栏"
 
 #: lazarusidestrconsts.lisconfigurelazaruside
-msgid "Configure Lazarus IDE"
-msgstr "配置 Lazarus IDE"
+msgid "Configure Unleashed Pascal IDE"
+msgstr "配置 Unleashed Pascal IDE"
 
 #: lazarusidestrconsts.lisconfirm
 msgid "Confirm"
@@ -10155,8 +10155,8 @@ msgid "FPC too old"
 msgstr "FPC 太旧"
 
 #: lazarusidestrconsts.lisfpcversion
-msgid "FPC Version: "
-msgstr "FPC 版本： "
+msgid "Compiler version: "
+msgstr "编译器版本： "
 
 #: lazarusidestrconsts.lisfpdoceditor
 msgctxt "lazarusidestrconsts.lisfpdoceditor"
@@ -11609,12 +11609,12 @@ msgstr "用作基本目录的目录。"
 
 #: lazarusidestrconsts.lislazaruseditorv
 #, object-pascal-format
-msgid "Lazarus IDE v%s"
-msgstr "Lazarus IDE v%s"
+msgid "Unleashed Pascal IDE v%s"
+msgstr "Unleashed Pascal IDE v%s"
 
 #: lazarusidestrconsts.lislazaruside
-msgid "Lazarus IDE"
-msgstr "Lazarus IDE"
+msgid "Unleashed Pascal IDE"
+msgstr "Unleashed Pascal IDE"
 
 #: lazarusidestrconsts.lislazarusoptionsprojectfilename
 msgid "lazarus [options] <project-filename>"
@@ -18926,13 +18926,13 @@ msgstr "%s警告：这是主单元，新的主单元将是 %s.pas。"
 
 #: lazarusidestrconsts.liswelcometolazaruside
 #, object-pascal-format
-msgid "Welcome to Lazarus IDE %s"
-msgstr "欢迎使用 Lazarus IDE %s"
+msgid "Welcome to Unleashed Pascal IDE %s"
+msgstr "欢迎使用 Unleashed Pascal IDE %s"
 
 #: lazarusidestrconsts.liswelcometolazarusthereisalreadyaconfigurationfromve
 #, object-pascal-format
-msgid "Welcome to Lazarus %s%sThere is already a configuration from version %s in%s%s"
-msgstr "欢迎使用 Lazarus %s%s系统中已经有一个旧版本(%s)配置文件位于 %s%s"
+msgid "Welcome to Unleashed Pascal IDE %s%sThere is already a configuration from version %s in%s%s"
+msgstr "欢迎使用 Unleashed Pascal IDE %s%s系统中已经有一个旧版本(%s)配置文件位于 %s%s"
 
 #: lazarusidestrconsts.liswhatneedsbuilding
 msgid "What needs building"

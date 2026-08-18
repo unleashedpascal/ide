@@ -5387,12 +5387,12 @@ msgid "About IDE"
 msgstr ""
 
 #: lazarusidestrconsts.lisaboutlazarus
-msgid "About Lazarus"
-msgstr "Informatie over Lazarus"
+msgid "About Unleashed Pascal IDE"
+msgstr "Informatie over Unleashed Pascal IDE"
 
 #: lazarusidestrconsts.lisaboutlazarusmsg
 #, object-pascal-format
-msgid "License: GPL/LGPL. See Lazarus and Free Pascal sources for license details.%sLazarus is an IDE to create graphical and console applications with Free Pascal. Free Pascal is a Pascal and Object Pascal compiler that runs on Windows, Linux, macOS, FreeBSD and more.%sLazarus is the missing part of the puzzle that will allow you to develop programs for all of the above platforms in a Delphi-like environment. The IDE is a RAD tool that includes a form designer.%sAs Lazarus is growing, we need more developers."
+msgid "License: GPL/LGPL. See Lazarus and Free Pascal sources for license details.%sUnleashed Pascal IDE is an IDE to create graphical and console applications with the Unleashed Pascal compiler: a Pascal and Object Pascal compiler with modern language features that runs on Windows, Linux, macOS, FreeBSD and more.%sThe IDE is based on Lazarus and lets you develop programs for all of the above platforms in a Delphi-like environment. It is a RAD tool that includes a form designer.%sProject website: https://unleashedpascal.org/"
 msgstr ""
 
 #: lazarusidestrconsts.lisaboutnocontributors
@@ -6094,7 +6094,7 @@ msgid "Build"
 msgstr "Bouw"
 
 #: lazarusidestrconsts.lisbuilddate
-msgid "Build Date"
+msgid "Build date"
 msgstr ""
 
 #: lazarusidestrconsts.lisbuildidewithpackages
@@ -7861,7 +7861,7 @@ msgid "Configure Toolbar"
 msgstr ""
 
 #: lazarusidestrconsts.lisconfigurelazaruside
-msgid "Configure Lazarus IDE"
+msgid "Configure Unleashed Pascal IDE"
 msgstr ""
 
 #: lazarusidestrconsts.lisconfirm
@@ -10401,7 +10401,7 @@ msgid "FPC too old"
 msgstr ""
 
 #: lazarusidestrconsts.lisfpcversion
-msgid "FPC Version: "
+msgid "Compiler version: "
 msgstr ""
 
 #: lazarusidestrconsts.lisfpdoceditor
@@ -11832,11 +11832,11 @@ msgstr ""
 
 #: lazarusidestrconsts.lislazaruseditorv
 #, object-pascal-format
-msgid "Lazarus IDE v%s"
+msgid "Unleashed Pascal IDE v%s"
 msgstr ""
 
 #: lazarusidestrconsts.lislazaruside
-msgid "Lazarus IDE"
+msgid "Unleashed Pascal IDE"
 msgstr ""
 
 #: lazarusidestrconsts.lislazarusoptionsprojectfilename
@@ -19448,12 +19448,12 @@ msgstr ""
 
 #: lazarusidestrconsts.liswelcometolazaruside
 #, object-pascal-format
-msgid "Welcome to Lazarus IDE %s"
+msgid "Welcome to Unleashed Pascal IDE %s"
 msgstr ""
 
 #: lazarusidestrconsts.liswelcometolazarusthereisalreadyaconfigurationfromve
 #, object-pascal-format
-msgid "Welcome to Lazarus %s%sThere is already a configuration from version %s in%s%s"
+msgid "Welcome to Unleashed Pascal IDE %s%sThere is already a configuration from version %s in%s%s"
 msgstr ""
 
 #: lazarusidestrconsts.liswhatneedsbuilding

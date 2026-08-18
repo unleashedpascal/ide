@@ -5262,14 +5262,14 @@ msgid "About IDE"
 msgstr "Tietoja IDE:sta"
 
 #: lazarusidestrconsts.lisaboutlazarus
-msgid "About Lazarus"
-msgstr "Tietoja Lazaruksesta"
+msgid "About Unleashed Pascal IDE"
+msgstr "Tietoja Unleashed Pascal IDE:stä"
 
 #: lazarusidestrconsts.lisaboutlazarusmsg
 #, object-pascal-format, fuzzy
 #| msgid "License: GPL/LGPL. See Lazarus and Free Pascal sources for license details.%sLazarus is an IDE to create graphical and console applications with Free Pascal. Free Pascal is Pascal and Object Pascal compiler that runs on Windows, Linux, Mac OS X, FreeBSD and more.%sLazarus is the missing part of the puzzle that will allow you to develop programs for all of the above platforms in a Delphi like environment. The IDE is a RAD tool that includes a form designer.%sAs Lazarus is growing we need more developers."
-msgid "License: GPL/LGPL. See Lazarus and Free Pascal sources for license details.%sLazarus is an IDE to create graphical and console applications with Free Pascal. Free Pascal is a Pascal and Object Pascal compiler that runs on Windows, Linux, macOS, FreeBSD and more.%sLazarus is the missing part of the puzzle that will allow you to develop programs for all of the above platforms in a Delphi-like environment. The IDE is a RAD tool that includes a form designer.%sAs Lazarus is growing, we need more developers."
-msgstr "Lisenssi: GPL/LGPL. Katso Lazaruksen ja Free Pascalin lähdekoodeista tarkemmat lisenssit.%sLazarus on IDE, millä voi tehdä graafisia ja komentorivisovelluksia Free Pascal -kielellä. Free Pascal on (Object) Pascal kääntäjä, joka toimii mm. Windows, Linux, Mac OS X, FreeBSD ym. käyttöjärjestelmissä.%sLazarus on puuttuva lenkki, joka sallii ohjelmoinnin kaikille em. alustoille Delphin kaltaisessa ympäristössä. IDE on RAD-työkalu, missä mukana on lomakeiden suunnittelu.%sLazaruksen kasvaessa tarvitsemme lisää kehittäjiä."
+msgid "License: GPL/LGPL. See Lazarus and Free Pascal sources for license details.%sUnleashed Pascal IDE is an IDE to create graphical and console applications with the Unleashed Pascal compiler: a Pascal and Object Pascal compiler with modern language features that runs on Windows, Linux, macOS, FreeBSD and more.%sThe IDE is based on Lazarus and lets you develop programs for all of the above platforms in a Delphi-like environment. It is a RAD tool that includes a form designer.%sProject website: https://unleashedpascal.org/"
+msgstr "Lisenssi: GPL/LGPL. Katso Lazaruksen ja Free Pascalin lähdekoodeista tarkemmat lisenssit.%sUnleashed Pascal IDE on IDE, millä voi tehdä graafisia ja komentorivisovelluksia Unleashed Pascal -kääntäjällä: Pascal- ja Object Pascal -kääntäjällä, jossa on modernit kielen ominaisuudet ja joka toimii mm. Windows, Linux, macOS, FreeBSD ym. käyttöjärjestelmissä.%sIDE perustuu Lazarukseen ja sallii ohjelmoinnin kaikille em. alustoille Delphin kaltaisessa ympäristössä. Se on RAD-työkalu, missä mukana on lomakkeiden suunnittelu.%s"
 
 #: lazarusidestrconsts.lisaboutnocontributors
 msgid "Cannot find contributors list."
@@ -5967,7 +5967,7 @@ msgid "Build"
 msgstr "Kokoa"
 
 #: lazarusidestrconsts.lisbuilddate
-msgid "Build Date"
+msgid "Build date"
 msgstr ""
 
 #: lazarusidestrconsts.lisbuildidewithpackages
@@ -7710,8 +7710,8 @@ msgid "Configure Toolbar"
 msgstr "Konfiguroi työkalupalkki"
 
 #: lazarusidestrconsts.lisconfigurelazaruside
-msgid "Configure Lazarus IDE"
-msgstr "Konfiguroi Lazarus IDE"
+msgid "Configure Unleashed Pascal IDE"
+msgstr "Konfiguroi Unleashed Pascal IDE"
 
 #: lazarusidestrconsts.lisconfirm
 msgid "Confirm"
@@ -10238,8 +10238,8 @@ msgid "FPC too old"
 msgstr "FPC on liian vanha"
 
 #: lazarusidestrconsts.lisfpcversion
-msgid "FPC Version: "
-msgstr "FPC-versio: "
+msgid "Compiler version: "
+msgstr "Kääntäjän versio: "
 
 #: lazarusidestrconsts.lisfpdoceditor
 msgctxt "lazarusidestrconsts.lisfpdoceditor"
@@ -11676,11 +11676,11 @@ msgstr "hakemisto, käytetään kantahakemistona"
 
 #: lazarusidestrconsts.lislazaruseditorv
 #, object-pascal-format
-msgid "Lazarus IDE v%s"
+msgid "Unleashed Pascal IDE v%s"
 msgstr ""
 
 #: lazarusidestrconsts.lislazaruside
-msgid "Lazarus IDE"
+msgid "Unleashed Pascal IDE"
 msgstr ""
 
 #: lazarusidestrconsts.lislazarusoptionsprojectfilename
@@ -18983,13 +18983,13 @@ msgstr "%sVaroitus: Tämä on pääkäännösyksikkö. Uusi pää-käännösyksi
 
 #: lazarusidestrconsts.liswelcometolazaruside
 #, object-pascal-format
-msgid "Welcome to Lazarus IDE %s"
-msgstr "Tervetuloa Lazarus IDE:en %s"
+msgid "Welcome to Unleashed Pascal IDE %s"
+msgstr "Tervetuloa Unleashed Pascal IDE:en %s"
 
 #: lazarusidestrconsts.liswelcometolazarusthereisalreadyaconfigurationfromve
 #, object-pascal-format
-msgid "Welcome to Lazarus %s%sThere is already a configuration from version %s in%s%s"
-msgstr "Tervetuloa Lazarus versioon %s%sVersion %s asetukset löytyvät hakemistosta%s%s"
+msgid "Welcome to Unleashed Pascal IDE %s%sThere is already a configuration from version %s in%s%s"
+msgstr "Tervetuloa Unleashed Pascal IDE %s%sVersion %s asetukset löytyvät hakemistosta%s%s"
 
 #: lazarusidestrconsts.liswhatneedsbuilding
 msgid "What needs building"
