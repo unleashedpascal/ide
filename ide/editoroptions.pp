@@ -602,6 +602,11 @@ type
     Info: PEditorOptionsDividerInfoList;
   end;
 
+const
+
+  // Default color of the divider lines drawn around code blocks: RGB(70, 70, 70)
+  DefaultDividerColor = TColor($00464646);
+
 var
 
   (* When adding new entries, ensure that resourcestrings are re-assigned in InitLocale *)
@@ -6794,8 +6799,8 @@ begin
   TheInfo := EditorOptionsDividerDefaults[HighlighterList[h].TheType];
   for i := 0 to TheInfo.Count - 1 do begin
     Syn.DividerDrawConfig[i].MaxDrawDepth := TheInfo.Info[i].MaxLeveL;
-    Syn.DividerDrawConfig[i].TopColor := clDefault;
-    Syn.DividerDrawConfig[i].NestColor := clDefault;
+    Syn.DividerDrawConfig[i].TopColor := DefaultDividerColor;
+    Syn.DividerDrawConfig[i].NestColor := DefaultDividerColor;
   end;
 end;
 
