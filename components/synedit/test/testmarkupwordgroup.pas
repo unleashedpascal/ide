@@ -26,6 +26,7 @@ type
     function TestText2: TStringArray;
     function TestText3: TStringArray;
     function TestText4: TStringArray;
+    function TestText5: TStringArray;
   published
     procedure TestWordGroup;
   end;
@@ -127,6 +128,22 @@ begin
   Result[8]  := 'begin';
   Result[9]  := 'end.';
   Result[10] := '';
+end;
+
+function TTestMarkupWordGroup.TestText5: TStringArray;
+begin
+  // match expression with "else": closes without "end", like a case expression
+  SetLength(Result, 10);
+  Result[0] := 'program Foo;';
+  Result[1] := 'function T(s: string): string;';
+  Result[2] := 'begin';
+  Result[3] := '  Result := match s of';
+  Result[4] := '    ''a'': ''1'';';
+  Result[5] := '    else ''2'';';
+  Result[6] := 'end;';
+  Result[7] := 'begin';
+  Result[8] := 'end.';
+  Result[9] := '';
 end;
 
 procedure TTestMarkupWordGroup.TestWordGroup;
@@ -267,6 +284,20 @@ begin
   // the "end;" pairs with function/begin, not with the try expression
   CheckWord('TryExp begin',     1, 3,   1,9,2,  1,6,3,  1,4,8);
   CheckWord('TryExp fn-end',    1, 8,   1,9,2,  1,6,3,  1,4,8);
+
+  PopPushBaseName('Text 5');
+  SetLines(TestText5);
+  EnableFolds([cfbtBeginEnd.. cfbtNone], [cfbtSlashComment]);
+
+  // match expression with "else": the group is match/of/else, no "end"
+  CheckWord('MatchExp match 1', 13, 4,   13,18,4,  21,23,4,  5,9,6);
+  CheckWord('MatchExp match 2', 17, 4,   13,18,4,  21,23,4,  5,9,6);
+  CheckWord('MatchExp of',      21, 4,   13,18,4,  21,23,4,  5,9,6);
+  CheckWord('MatchExp else',     5, 6,   13,18,4,  21,23,4,  5,9,6);
+
+  // the "end;" pairs with function/begin, not with the match expression
+  CheckWord('MatchExp begin',    1, 3,   1,9,2,  1,6,3,  1,4,7);
+  CheckWord('MatchExp fn-end',   1, 7,   1,9,2,  1,6,3,  1,4,7);
 
   PopBaseName;
 

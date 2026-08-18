@@ -2737,7 +2737,9 @@ end;
 
 function TSynPasSyn.Func45: TtkTokenKind;
 var
+  tfb: TPascalCodeFoldBlockType;
   CaseDepth: Integer;
+  IsMatchExpression: Boolean;
 begin
   if KeyCompU('SHR') then begin
     Result := tkKey;
@@ -2750,13 +2752,23 @@ begin
     // match-as-expression can sit inside parentheses (a call argument like
     // writeln(match c: v; _: d; end)), so do not require BracketNestLevel=0
     Result := tkKey;
+    tfb := TopPascalCodeFoldBlockType;
+    (* A match in expression position is a match expression. With an "else"/
+       "otherwise" catch-all it closes without "end", like the else-form of
+       a case expression; with a "_:" catch-all it keeps its "end" *)
+    CaseDepth := OpenCaseFoldCount;
+    IsMatchExpression :=
+      (FRangeCompilerMode in [pcmUnleashed, pcmUnknown]) and
+      (tfb in PascalStatementBlocks) and
+      ( not (FTokenState in tsAnyAtBeginOfStatement) or
+        ( (tfb in [cfbtCase, cfbtCaseElse]) and
+          PasCodeFoldRange.GetCaseExprBit(CaseDepth - 1) ) or
+        ( (tfb = cfbtExcept) and
+          PasCodeFoldRange.GetTryExprBit(OpenTryFoldCount - 1) ) );
     FNextTokenState := tsAfterMatch;
     DoCodeBlockStatement;
-    // match always closes with its own "end": clear the case-expression bit
-    // that a previously closed case block may have left at this depth
-    CaseDepth := OpenCaseFoldCount;
     if StartPascalCodeFoldBlock(cfbtCase, True) then
-      PasCodeFoldRange.SetCaseExprBit(CaseDepth, False);
+      PasCodeFoldRange.SetCaseExprBit(CaseDepth, IsMatchExpression);
   end
   else
   if KeyCompU('LEAVE') and
