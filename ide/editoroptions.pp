@@ -2470,6 +2470,7 @@ begin
   end
   else
   if FGClass = TSynGutterLineOverview then begin
+    FVisible := False;
     FShowLineColor := glcOff;
   end;
 end;
