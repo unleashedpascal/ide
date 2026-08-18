@@ -84,6 +84,7 @@ type
     procedure TestContextForObjective;
     procedure TestCaseLabel;
     procedure TestCaseExpressionElidedEnd;
+    procedure TestTryExpression;
     procedure TestBreakKeyword;
     procedure TestModifierAttributesForProcedure;
     procedure TestModifierAttributesForProperty;
@@ -3924,6 +3925,81 @@ begin
   CheckTokensForLine('end of exhaustive case', 7, [_, tkKey, TK_Semi]);
   AssertEquals('exhaustive case fold end', 7, PasHighLighter.FoldEndLine(4, 0));
   AssertEquals('begin fold end',           8, PasHighLighter.FoldEndLine(2, 0));
+  PopBaseName;
+  {%endregion}
+end;
+
+procedure TTestHighlighterPas.TestTryExpression;
+begin
+  {%region try statement: unchanged, "end" closes the construct}
+  ReCreateEdit;
+  EnableFolds([cfbtBeginEnd..cfbtNone]);
+  PushBaseName('try statement');
+  SetLines
+    ([ '{$mode unleashed}',                     // 0
+       'program a;',                            // 1
+       'begin',                                 // 2
+       '  try',                                 // 3
+       '    x := risky;',                       // 4
+       '  except',                              // 5
+       '    on e: Exception do y := ''c'';',    // 6
+       '    else y := ''e'';',                  // 7
+       '  end;',                                // 8
+       'end.',                                  // 9
+       ''
+    ]);
+
+  CheckTokensForLine('else in except', 7,
+    [_, tkKey, _, tkIdentifier, _, tkSymbol, _, tkString, TK_Semi]);
+  CheckTokensForLine('end of try',     8, [_, tkKey, TK_Semi]);
+  AssertEquals('try fold end',    8, PasHighLighter.FoldEndLine(3, 0));
+  AssertEquals('except fold end', 8, PasHighLighter.FoldEndLine(5, 0));
+  AssertEquals('begin fold end',  9, PasHighLighter.FoldEndLine(2, 0));
+  {%endregion}
+
+  {%region try expression: the fallback is the tail, no "end"}
+  SetLines
+    ([ '{$mode unleashed}',                                              // 0
+       'function T(const s: string): string;',                           // 1
+       'begin',                                                          // 2
+       '  var r := try risky except on e: Exception do ''c'' else ''e'';', // 3
+       '  Result := try risky except ''f'';',                            // 4
+       'end;',                                                           // 5
+       ''
+    ]);
+
+  PopPushBaseName('try expression, single line');
+  CheckTokensForLine('filter form', 3,
+    [_, tkKey, _, tkIdentifier, _, tkSymbol, _, tkKey, _, tkIdentifier, _,
+     tkKey, _, tkKey, _, tkIdentifier, TK_Colon, _, tkIdentifier, _, tkKey,
+     _, tkString, _, tkKey, _, tkString, TK_Semi]);
+  CheckTokensForLine('else-less form', 4,
+    [_, tkIdentifier, _, tkSymbol, _, tkKey, _, tkIdentifier, _, tkKey, _,
+     tkString, TK_Semi]);
+  // neither try expression owns the "end;": it belongs to begin/function
+  AssertEquals('begin fold end',    5, PasHighLighter.FoldEndLine(2, 0));
+  AssertEquals('function fold end', 5, PasHighLighter.FoldEndLine(1, 0));
+  {%endregion}
+
+  {%region multi-line try expression: try..except..else fold spans}
+  SetLines
+    ([ '{$mode unleashed}',                     // 0
+       'function T(const s: string): string;',  // 1
+       'begin',                                 // 2
+       '  Result := try risky',                 // 3
+       '    except',                            // 4
+       '      on e: Exception do ''c''',        // 5
+       '      else ''e'';',                     // 6
+       'end;',                                  // 7
+       ''
+    ]);
+
+  PopPushBaseName('try expression, multi line');
+  CheckTokensForLine('catch-all else', 6, [_, tkKey, _, tkString, TK_Semi]);
+  AssertEquals('try-part fold end',   4, PasHighLighter.FoldEndLine(3, 0));
+  AssertEquals('except fold end',     6, PasHighLighter.FoldEndLine(4, 0));
+  AssertEquals('begin fold end',      7, PasHighLighter.FoldEndLine(2, 0));
+  AssertEquals('function fold end',   7, PasHighLighter.FoldEndLine(1, 0));
   PopBaseName;
   {%endregion}
 end;

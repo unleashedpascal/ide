@@ -641,6 +641,12 @@ type
                                 Bits above the current case nesting may be stale;
                                 they are rewritten whenever a new case block opens
                                 at that depth *)
+    FTryExprBits: Cardinal;  (* Same as FCaseExprBits for try-except constructs,
+                                one bit per open cfbtTry/cfbtExcept fold: set if it
+                                is a try expression. Its fallback expression is the
+                                final token - "except" closes the try-part and the
+                                "else" catch-all (or ";" etc for the else-less
+                                form) closes the except block; no "end" follows *)
     procedure SetBracketNestLevel(AValue: integer); inline;
   public
     procedure Clear; override;
@@ -659,6 +665,8 @@ type
     procedure DecLastLinePasFoldFix;
     procedure SetCaseExprBit(ADepth: integer; AValue: Boolean);
     function GetCaseExprBit(ADepth: integer): Boolean;
+    procedure SetTryExprBit(ADepth: integer; AValue: Boolean);
+    function GetTryExprBit(ADepth: integer): Boolean;
     property Mode: TPascalCompilerMode read FMode write FMode;
     property ModeSwitches: TPascalCompilerModeSwitches read FModeSwitches write FModeSwitches;
     (* BracketNestLevel counts only within the current "fold" (or expression).
@@ -1107,6 +1115,8 @@ type
     function TopPascalCodeFoldBlockType
              (DownIndex: Integer = 0): TPascalCodeFoldBlockType;
     function OpenCaseFoldCount: Integer; // open cfbtCase blocks on the nest stack
+    function OpenTryFoldCount: Integer;  // open cfbtTry/cfbtExcept blocks on the nest stack
+    function CloseCompletedTryExpressions: TPascalCodeFoldBlockType;
     function HasRangeCompilerModeswitch(AModeSwitch: TPascalCompilerModeSwitch): Boolean; inline;
     function HasRangeCompilerModeswitch(AModeSwitches: TPascalCompilerModeSwitches): Boolean; inline;
 
@@ -2173,7 +2183,12 @@ begin
       sl := fStringLen;
       // there may be more than on block ending here
       fStringLen:=0;
-      EndStatement(tfb, [cfbtForDo,cfbtWhileDo,cfbtWithDo,cfbtIfThen,cfbtIfElse]);
+      // an else-less try expression has no own "end": close its except
+      // block, this "end" belongs to an enclosing block
+      repeat
+        tfb := CloseCompletedTryExpressions;
+        EndStatement(tfb, [cfbtForDo,cfbtWhileDo,cfbtWithDo,cfbtIfThen,cfbtIfElse]);
+      until TopPascalCodeFoldBlockType = tfb;
 
       tfb := CloseFolds(TopPascalCodeFoldBlockType, [cfbtRecordCaseSection { missing ")"? },
                     cfbtClassConstBlock, cfbtClassTypeBlock]);
@@ -2336,7 +2351,9 @@ begin
         (tfb in PascalStatementBlocks) and
         ( not (FTokenState in tsAnyAtBeginOfStatement) or
           ( (tfb in [cfbtCase, cfbtCaseElse]) and
-            PasCodeFoldRange.GetCaseExprBit(CaseDepth - 1) ) );
+            PasCodeFoldRange.GetCaseExprBit(CaseDepth - 1) ) or
+          ( (tfb = cfbtExcept) and
+            PasCodeFoldRange.GetTryExprBit(OpenTryFoldCount - 1) ) );
       DoCodeBlockStatement;
       if StartPascalCodeFoldBlock(cfbtCase, True) then
         PasCodeFoldRange.SetCaseExprBit(CaseDepth, IsCaseExpression);
@@ -2570,6 +2587,14 @@ begin
     // close all parent "else" and "do" // there can only be one else
     EndStatementLastLine(TopPascalCodeFoldBlockType, [cfbtForDo,cfbtWhileDo,cfbtWithDo,cfbtIfElse]);
     tfb := TopPascalCodeFoldBlockType;
+    if (tfb = cfbtExcept) and
+       PasCodeFoldRange.GetTryExprBit(OpenTryFoldCount - 1)
+    then begin
+      // try expression: the "else" catch-all is the tail of the construct
+      // and closes the except block; its value is an expression
+      EndPascalCodeFoldBlock;
+      FNextTokenState := tsNone;
+    end else
     if (tfb in [cfbtIfThen]) then begin
       EndPascalCodeFoldBlock;
       StartPascalCodeFoldBlock(cfbtIfElse);
@@ -3012,6 +3037,8 @@ end;
 function TSynPasSyn.Func63: TtkTokenKind;
 var
   tfb: TPascalCodeFoldBlockType;
+  TryDepth: Integer;
+  IsTryExpression: Boolean;
 begin
   if KeyCompU('PUBLIC') then begin
     tfb := TopPascalCodeFoldBlockType;
@@ -3058,9 +3085,30 @@ begin
   end
   else if KeyCompU('TRY') then
   begin
-    if TopPascalCodeFoldBlockType in PascalStatementBlocks + [cfbtUnitSection] then begin
+    tfb := TopPascalCodeFoldBlockType;
+    if tfb in PascalStatementBlocks + [cfbtUnitSection] then begin
+      (* A try in expression position is a try expression: "except" closes
+         its try-part and the fallback expression is the tail of the
+         construct, no "end" follows. Expression position: mid statement
+         (after ":=", "(", ",", an operator, ...) or at the start of a
+         branch of an enclosing case or try expression *)
+      TryDepth := OpenTryFoldCount;
+      IsTryExpression :=
+        (FRangeCompilerMode in [pcmUnleashed, pcmUnknown]) and
+        (tfb in PascalStatementBlocks) and
+        ( not (FTokenState in tsAnyAtBeginOfStatement) or
+          ( (tfb in [cfbtCase, cfbtCaseElse]) and
+            PasCodeFoldRange.GetCaseExprBit(OpenCaseFoldCount - 1) ) or
+          ( (tfb = cfbtExcept) and
+            PasCodeFoldRange.GetTryExprBit(TryDepth - 1) ) );
       DoCodeBlockStatement;
-      StartPascalCodeFoldBlock(cfbtTry);
+      if StartPascalCodeFoldBlock(cfbtTry) then
+        PasCodeFoldRange.SetTryExprBit(TryDepth, IsTryExpression);
+      if IsTryExpression then begin
+        Result := tkKey;
+        FNextTokenState := tsNone; // the tried part is an expression
+        exit;
+      end;
     end;
     Result := tkKey;
     FNextTokenState := tsAtBeginOfStatement;
@@ -3312,15 +3360,34 @@ function TSynPasSyn.Func73: TtkTokenKind;
     if i < fLineLen then
       Result := LinePtr[i] in [':', ','];
   end;
+var
+  tfb: TPascalCodeFoldBlockType;
 begin
   if KeyCompU('EXCEPT') then begin
     Result := tkKey;
     // no semicolon before except
     DoCodeBlockStatement;
-    EndStatement(TopPascalCodeFoldBlockType, [cfbtForDo,cfbtWhileDo,cfbtWithDo,cfbtIfThen,cfbtIfElse]);
+    // also close nested else-less try expressions in the tried part
+    repeat
+      tfb := CloseCompletedTryExpressions;
+      EndStatement(tfb, [cfbtForDo,cfbtWhileDo,cfbtWithDo,cfbtIfThen,cfbtIfElse]);
+    until TopPascalCodeFoldBlockType = tfb;
     SmartCloseBeginEndBlocks(cfbtTry);
-    if TopPascalCodeFoldBlockType = cfbtTry then
-      StartPascalCodeFoldBlock(cfbtExcept);
+    if TopPascalCodeFoldBlockType = cfbtTry then begin
+      if PasCodeFoldRange.GetTryExprBit(OpenTryFoldCount - 1) then begin
+        // try expression: "except" ends the try-part, like "of" restarts a
+        // case; closing and reopening keeps the construct's bit index
+        EndPascalCodeFoldBlock;
+        StartPascalCodeFoldBlock(cfbtExcept, True);
+        FNextTokenState := tsNone; // the fallback is an expression
+      end
+      else begin
+        StartPascalCodeFoldBlock(cfbtExcept);
+        // the stacked except block is a frame of its own: mark it as
+        // statement so a stale expression bit can not leak onto it
+        PasCodeFoldRange.SetTryExprBit(OpenTryFoldCount - 1, False);
+      end;
+    end;
    end
    else if KeyCompU('COUNT') and (FTokenState = tsAfterFamType) then
      Result := tkKey
@@ -3371,12 +3438,17 @@ begin
 end;
 
 function TSynPasSyn.Func76: TtkTokenKind;
+var
+  tfb: TPascalCodeFoldBlockType;
 begin
   if KeyCompU('UNTIL') then begin
     Result := tkKey;
     // no semicolon before until;
     DoCodeBlockStatement;
-    EndStatement(TopPascalCodeFoldBlockType, [cfbtForDo,cfbtWhileDo,cfbtWithDo,cfbtIfThen,cfbtIfElse]);
+    repeat
+      tfb := CloseCompletedTryExpressions;
+      EndStatement(tfb, [cfbtForDo,cfbtWhileDo,cfbtWithDo,cfbtIfThen,cfbtIfElse]);
+    until TopPascalCodeFoldBlockType = tfb;
     SmartCloseBeginEndBlocks(cfbtRepeat);
     if TopPascalCodeFoldBlockType = cfbtRepeat then EndPascalCodeFoldBlock;
   end
@@ -3410,15 +3482,23 @@ function TSynPasSyn.Func79: TtkTokenKind;
 
     Result := (l=2) and (s[i] in ['t', 'T']) and (s[i+1] in ['o', 'O']);
   end;
+var
+  tfb: TPascalCodeFoldBlockType;
 begin
   if KeyCompU('FINALLY') then begin
     Result := tkKey;
     DoCodeBlockStatement;
      // no semicolon before finally
-    EndStatement(TopPascalCodeFoldBlockType, [cfbtForDo,cfbtWhileDo,cfbtWithDo,cfbtIfThen,cfbtIfElse]);
+    repeat
+      tfb := CloseCompletedTryExpressions;
+      EndStatement(tfb, [cfbtForDo,cfbtWhileDo,cfbtWithDo,cfbtIfThen,cfbtIfElse]);
+    until TopPascalCodeFoldBlockType = tfb;
     SmartCloseBeginEndBlocks(cfbtTry);
-    if TopPascalCodeFoldBlockType = cfbtTry then
+    if TopPascalCodeFoldBlockType = cfbtTry then begin
+      // "finally" only exists in the statement form
       StartPascalCodeFoldBlock(cfbtExcept);
+      PasCodeFoldRange.SetTryExprBit(OpenTryFoldCount - 1, False);
+    end;
   end
   else
   if HasRangeCompilerModeswitch(pcsFunctionReferences) and
@@ -6130,6 +6210,10 @@ begin
   fTokenID := tkSymbol;
   fRange := fRange + [rsAfterIdentifierOrValue];
   FOldRange := FOldRange - [rsAfterIdentifierOrValue];
+  // ")" of the surrounding argument list / parenthesized expression closes
+  // the except block of an else-less try expression
+  if PasCodeFoldRange.BracketNestLevel = 0 then
+    CloseCompletedTryExpressions;
   if (PasCodeFoldRange.BracketNestLevel = 0) and
      (TopPascalCodeFoldBlockType in [cfbtRecordCase, cfbtRecordCaseSection])
   then begin
@@ -6183,6 +6267,10 @@ begin
   fTokenID := tkSymbol;
   fRange := fRange + [rsAfterIdentifierOrValue];
   FOldRange := FOldRange - [rsAfterIdentifierOrValue];
+  // "]" of the surrounding index expression closes the except block of an
+  // else-less try expression
+  if PasCodeFoldRange.BracketNestLevel = 0 then
+    CloseCompletedTryExpressions;
   PasCodeFoldRange.DecBracketNestLevel;
   if FTokenState = tsInArrayBracket then
     FNextTokenState := tsAfterEmptyArrayBracket;
@@ -6234,6 +6322,10 @@ procedure TSynPasSyn.CommaProc;
 begin
   inc(Run);
   FTokenID := tkSymbol;
+  // a "," (e.g. in an argument list) closes the except block of an
+  // else-less try expression
+  if PasCodeFoldRange.BracketNestLevel = 0 then
+    CloseCompletedTryExpressions;
   if (rsInGenericParams in fRange) or
      (PasCodeFoldRange.SpecializeBracketNestLevel > 0)
   then begin
@@ -6275,8 +6367,11 @@ begin
     fRange := fRange - [rsInClassHeader, rsInTypeHelper, rsInObjcProtocol];
   end;
 
-  EndStatement(tfb, [cfbtForDo,cfbtWhileDo,cfbtWithDo,cfbtIfThen,cfbtIfElse]);
-  tfb := TopPascalCodeFoldBlockType;
+  // a ";" also closes the except block of an else-less try expression
+  repeat
+    tfb := CloseCompletedTryExpressions;
+    EndStatement(tfb, [cfbtForDo,cfbtWhileDo,cfbtWithDo,cfbtIfThen,cfbtIfElse]);
+  until TopPascalCodeFoldBlockType = tfb;
 
   Inc(Run);
 
@@ -7999,6 +8094,35 @@ begin
       inc(Result);
 end;
 
+function TSynPasSyn.OpenTryFoldCount: Integer;
+(* Each try construct holds one bit in the try-expression mask. A statement
+   try occupies two frames after "except"/"finally" (cfbtTry plus the stacked
+   cfbtExcept); a try expression only one (its cfbtTry is closed when the
+   cfbtExcept opens), keeping the bit index of the construct unchanged *)
+var
+  i: Integer;
+begin
+  Result := 0;
+  for i := 0 to CurrentCodeNestBlockLevel - 1 do
+    if TopPascalCodeFoldBlockType(i) in [cfbtTry, cfbtExcept] then
+      inc(Result);
+end;
+
+function TSynPasSyn.CloseCompletedTryExpressions: TPascalCodeFoldBlockType;
+(* The else-less form of a try expression ("try a except 'fallback'") has no
+   token that closes the construct: the fallback expression is its tail. The
+   except block is closed by the first token that can not belong to the
+   fallback expression: ";", "end", ")", "]", ",", "until" or the "except"
+   of an enclosing try expression *)
+begin
+  Result := TopPascalCodeFoldBlockType;
+  while (Result = cfbtExcept) and
+        PasCodeFoldRange.GetTryExprBit(OpenTryFoldCount - 1) do begin
+    EndPascalCodeFoldBlockLastLine;
+    Result := TopPascalCodeFoldBlockType;
+  end;
+end;
+
 function TSynPasSyn.HasRangeCompilerModeswitch(AModeSwitch: TPascalCompilerModeSwitch): Boolean;
 begin
   Result := (AModeSwitch in FRangeModeSwitches);
@@ -9289,6 +9413,7 @@ begin
   FInInlineVarStmt := False;
   FInterpExprDepth := 0;
   FCaseExprBits := 0;
+  FTryExprBits := 0;
 end;
 
 function TSynPasSynRange.Compare(Range: TLazHighlighterRange): integer;
@@ -9311,6 +9436,7 @@ begin
     FInInlineVarStmt := TSynPasSynRange(Src).FInInlineVarStmt;
     FInterpExprDepth := TSynPasSynRange(Src).FInterpExprDepth;
     FCaseExprBits := TSynPasSynRange(Src).FCaseExprBits;
+    FTryExprBits := TSynPasSynRange(Src).FTryExprBits;
   end;
 end;
 
@@ -9392,6 +9518,23 @@ function TSynPasSynRange.GetCaseExprBit(ADepth: integer): Boolean;
 begin
   Result := (ADepth >= 0) and (ADepth <= 31) and
             ((FCaseExprBits and (Cardinal(1) shl ADepth)) <> 0);
+end;
+
+procedure TSynPasSynRange.SetTryExprBit(ADepth: integer; AValue: Boolean);
+begin
+  // deeper nesting than the mask can hold degrades to "not an expression"
+  if (ADepth < 0) or (ADepth > 31) then
+    exit;
+  if AValue then
+    FTryExprBits := FTryExprBits or (Cardinal(1) shl ADepth)
+  else
+    FTryExprBits := FTryExprBits and not (Cardinal(1) shl ADepth);
+end;
+
+function TSynPasSynRange.GetTryExprBit(ADepth: integer): Boolean;
+begin
+  Result := (ADepth >= 0) and (ADepth <= 31) and
+            ((FTryExprBits and (Cardinal(1) shl ADepth)) <> 0);
 end;
 
 { TSynPasSynCustomToken }

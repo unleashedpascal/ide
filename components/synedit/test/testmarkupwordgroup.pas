@@ -25,6 +25,7 @@ type
     function TestText1: TStringArray;
     function TestText2: TStringArray;
     function TestText3: TStringArray;
+    function TestText4: TStringArray;
   published
     procedure TestWordGroup;
   end;
@@ -109,6 +110,23 @@ begin
   Result[18] := 'begin';
   Result[19] := 'end.';
   Result[20] := '';
+end;
+
+function TTestMarkupWordGroup.TestText4: TStringArray;
+begin
+  // try expression: the else catch-all is the tail, there is no "end"
+  SetLength(Result, 11);
+  Result[0]  := 'program Foo;';
+  Result[1]  := 'function T(s: string): string;';
+  Result[2]  := 'begin';
+  Result[3]  := '  Result := try risky';
+  Result[4]  := '    except';
+  Result[5]  := '      on e: Exception do ''c''';
+  Result[6]  := '      else ''e'';';
+  Result[7]  := 'end;';
+  Result[8]  := 'begin';
+  Result[9]  := 'end.';
+  Result[10] := '';
 end;
 
 procedure TTestMarkupWordGroup.TestWordGroup;
@@ -234,6 +252,22 @@ begin
   CheckWord('CaseStmt end',    3,17,  10,12,14,  5,9,16,  3,6,17);
   CheckWord('CaseStmt else',   5,16,  10,12,14,  5,9,16,  3,6,17);
 
+  PopPushBaseName('Text 4');
+  SetLines(TestText4);
+  EnableFolds([cfbtBeginEnd.. cfbtNone], [cfbtSlashComment]);
+
+  // try expression: the group is try/except/else, there is no "end"
+  CheckWord('TryExp try 1',    13, 4,   13,16,4,  5,11,5,  7,11,7);
+  CheckWord('TryExp try 2',    15, 4,   13,16,4,  5,11,5,  7,11,7);
+  CheckWord('TryExp except 1',  5, 5,   13,16,4,  5,11,5,  7,11,7);
+  CheckWord('TryExp except 2', 10, 5,   13,16,4,  5,11,5,  7,11,7);
+  CheckWord('TryExp else 1',    7, 7,   13,16,4,  5,11,5,  7,11,7);
+  CheckWord('TryExp else 2',   10, 7,   13,16,4,  5,11,5,  7,11,7);
+
+  // the "end;" pairs with function/begin, not with the try expression
+  CheckWord('TryExp begin',     1, 3,   1,9,2,  1,6,3,  1,4,8);
+  CheckWord('TryExp fn-end',    1, 8,   1,9,2,  1,6,3,  1,4,8);
+
   PopBaseName;
 
   PopPushBaseName('No folds');
@@ -298,6 +332,16 @@ begin
   CheckWord('CaseExp fn-end',  1,11,   1,9,2,  1,6,3,  1,4,11);
   CheckWord('CaseStmt case',   3,14,   3,7,14,  10,12,14,  3,6,17);
   CheckWord('CaseStmt else',   5,16,  10,12,14,  5,9,16,  3,6,17);
+
+  PopPushBaseName('Text 4');
+  SetLines(TestText4);
+  EnableFolds([cfbtBeginEnd.. cfbtNone], [], [cfbtBeginEnd.. cfbtNone]);
+
+  CheckWord('TryExp try',      13, 4,   13,16,4,  5,11,5,  7,11,7);
+  CheckWord('TryExp except',    5, 5,   13,16,4,  5,11,5,  7,11,7);
+  CheckWord('TryExp else',      7, 7,   13,16,4,  5,11,5,  7,11,7);
+  CheckWord('TryExp begin',     1, 3,   1,9,2,  1,6,3,  1,4,8);
+  CheckWord('TryExp fn-end',    1, 8,   1,9,2,  1,6,3,  1,4,8);
 
   PopBaseName;
 end;
