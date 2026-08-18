@@ -6080,7 +6080,7 @@ begin
       if not OldShowLineNumbers then
         FGutterPartLine.Visible := False;
       fShowOnlyLineNumbersMultiplesOf :=
-        XMLConfig.GetValue('EditorOptions/Display/ShowOnlyLineNumbersMultiplesOf', 5);
+        XMLConfig.GetValue('EditorOptions/Display/ShowOnlyLineNumbersMultiplesOf', 1);
     end;
 
     OldGutterSeparatorIndex :=
@@ -6319,7 +6319,7 @@ begin
       fVisibleGutter, True);
     XMLConfig.DeleteValue('EditorOptions/Display/ShowLineNumbers');
     XMLConfig.SetDeleteValue('EditorOptions/Display/ShowOnlyLineNumbersMultiplesOf',
-      fShowOnlyLineNumbersMultiplesOf, 5);
+      fShowOnlyLineNumbersMultiplesOf, 1);
     XMLConfig.SetDeleteValue('EditorOptions/Display/GutterWidth',
       fGutterWidth, 30);
     XMLConfig.DeleteValue('EditorOptions/Display/GutterSeparatorIndex');
