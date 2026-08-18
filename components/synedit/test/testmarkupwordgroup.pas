@@ -263,11 +263,12 @@ begin
   CheckWord('CaseExp begin',   1, 3,   1,9,2,  1,6,3,  1,4,11);
   CheckWord('CaseExp fn-end',  1,11,   1,9,2,  1,6,3,  1,4,11);
 
-  // case statement: unchanged, its "end" belongs to the case
+  // case statement: unchanged, its "end" belongs to the case; the "else"
+  // has no group of its own
   CheckWord('CaseStmt case',   3,14,   3,7,14,  10,12,14,  3,6,17);
   CheckWord('CaseStmt of',    10,14,   3,7,14,  10,12,14,  3,6,17);
-  CheckWord('CaseStmt end',    3,17,  10,12,14,  5,9,16,  3,6,17);
-  CheckWord('CaseStmt else',   5,16,  10,12,14,  5,9,16,  3,6,17);
+  CheckWord('CaseStmt end',    3,17,   3,7,14,  10,12,14,  3,6,17);
+  CheckWord('CaseStmt else',   5,16,  -1,-1,-1,  -1,-1,-1,  -1,-1,-1);
 
   PopPushBaseName('Text 4');
   SetLines(TestText4);
@@ -362,7 +363,7 @@ begin
   CheckWord('CaseExp begin',   1, 3,   1,9,2,  1,6,3,  1,4,11);
   CheckWord('CaseExp fn-end',  1,11,   1,9,2,  1,6,3,  1,4,11);
   CheckWord('CaseStmt case',   3,14,   3,7,14,  10,12,14,  3,6,17);
-  CheckWord('CaseStmt else',   5,16,  10,12,14,  5,9,16,  3,6,17);
+  CheckWord('CaseStmt else',   5,16,  -1,-1,-1,  -1,-1,-1,  -1,-1,-1);
 
   PopPushBaseName('Text 4');
   SetLines(TestText4);

@@ -340,7 +340,7 @@ const
   PascalWordTripletRanges = TPascalCodeFoldBlockTypes(
     [cfbtBeginEnd, cfbtTopBeginEnd, cfbtProcedure, cfbtAnonymousProcedure, cfbtClass, cfbtProgram,
      cfbtRecord, cfbtRecordCase, // TODO recordcase needs fmMarkup
-     cfbtTry, cfbtExcept, cfbtRepeat, cfbtAsm, cfbtCase, cfbtCaseElse,
+     cfbtTry, cfbtExcept, cfbtRepeat, cfbtAsm, cfbtCase,
      cfbtIfDef, cfbtRegion,
      cfbtIfThen, cfbtForDo,cfbtWhileDo,cfbtWithDo
     ]);
