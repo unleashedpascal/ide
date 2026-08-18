@@ -40,7 +40,7 @@
           <ahaLineHighlight Background="clSilver" BackAlpha="32"/>
           <ahaModifiedLine Background="2894118" Foreground="54528" FrameColor="clYellow"/>
           <ahaMouseLink Foreground="clBlue" FrameColor="clBlue" FrameEdges="sfeBottom"/>
-          <ahaRightMargin Foreground="clSilver"/>
+          <ahaRightMargin Foreground="4605510"/>
           <ahaSpecialVisibleChars Foreground="7303023"/>
           <ahaSyncroEditArea Background="clMoneyGreen"/>
           <ahaSyncroEditCur FrameColor="clFuchsia"/>
@@ -87,7 +87,6 @@
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
           <ahaLineNumber Foreground="11446692" UseSchemeGlobals="False"/>
           <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
-          <ahaRightMargin Foreground="2236962" UseSchemeGlobals="False"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaSyncroEditArea Background="1321001" UseSchemeGlobals="False"/>
           <ahaSyncroEditCur FrameColor="clAqua" UseSchemeGlobals="False"/>
