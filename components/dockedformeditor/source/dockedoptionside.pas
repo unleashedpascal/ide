@@ -57,6 +57,7 @@ type
     DefaultAnchorRightColor   = $0000FF;
     DefaultAnchorBottomColor  = $FFAA00;
     DefaultResizerColor       = $AAFFAA;
+    DefaultTabPosition        = tpBottom;
   private
     FAllowSizing: Boolean;
     FAnchorBorderColor: TColor;
@@ -294,7 +295,7 @@ begin
   FForceRefreshing    := True;
   FMouseBorderFactor  := 1;
   FResizerColor       := DefaultResizerColor;
-  FTabPosition        := tpTop;
+  FTabPosition        := DefaultTabPosition;
   FTreatAlign         := True;
   FTreatBorder        := True;
   FEnableDockedDesigner            := True;
@@ -342,7 +343,7 @@ begin
     Cfg.SetDeleteValue('ForceRefreshing/Value',    ForceRefreshing,    True);
     Cfg.SetDeleteValue('MouseBorderFactor/Value',  MouseBorderFactor,  1);
     Cfg.SetDeleteValue('ResizerColor/Value',       ResizerColor,       DefaultResizerColor);
-    Cfg.SetDeleteValue('TabPosition/Value',        Integer(TabPosition), Integer(tpTop));
+    Cfg.SetDeleteValue('TabPosition/Value',        Integer(TabPosition), Integer(DefaultTabPosition));
     Cfg.SetDeleteValue('TreatAlign/Value',         TreatAlign,         True);
     Cfg.SetDeleteValue('TreatBorder/Value',        TreatBorder,        True);
     Cfg.SetDeleteValue('EnableDockedDesigner/Value',             EnableDockedDesigner,            True);
@@ -371,7 +372,7 @@ begin
     ForceRefreshing    := Cfg.GetValue('ForceRefreshing/Value',    True);
     MouseBorderFactor  := Cfg.GetValue('MouseBorderFactor/Value',  1);
     ResizerColor       := Cfg.GetValue('ResizerColor/Value',       DefaultResizerColor);
-    TabPosition        := TTabPosition(Cfg.GetValue('TabPosition/Value', Integer(tpTop)));
+    TabPosition        := TTabPosition(Cfg.GetValue('TabPosition/Value', Integer(DefaultTabPosition)));
     TreatAlign         := Cfg.GetValue('TreatAlign/Value',         True);
     TreatBorder        := Cfg.GetValue('TreatBorder/Value',        True);
     EnableDockedDesigner            := Cfg.GetValue('EnableDockedDesigner/Value',             True);
