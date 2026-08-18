@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <Name Value="UnleashedMinimap"/>
+    <Type Value="DesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/$(LCLWidgetType)"/>
+      </SearchPaths>
+      <Other>
+        <CustomOptions Value="$(IDEBuildOptions)"/>
+      </Other>
+    </CompilerOptions>
+    <Description Value="Unleashed Minimap: a tiny code overview inside each source editor with a draggable viewport band.
+"/>
+    <License Value="Copyright (c) 2026 Unleashed Pascal Team &lt;https://unleashedpascal.org&gt;
+
+Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text ships as LICENSE next to this package; it is also available at https://mozilla.org/MPL/2.0/.
+"/>
+    <Version Major="1"/>
+    <Files>
+      <Item>
+        <Filename Value="regunleashedminimap.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="RegUnleashedMiniMap"/>
+      </Item>
+      <Item>
+        <Filename Value="minimapconfig.pas"/>
+        <UnitName Value="MiniMapConfig"/>
+      </Item>
+      <Item>
+        <Filename Value="minimapmanager.pas"/>
+        <UnitName Value="MiniMapManager"/>
+      </Item>
+      <Item>
+        <Filename Value="minimapsetupdlg.pas"/>
+        <UnitName Value="MiniMapSetupDlg"/>
+      </Item>
+      <Item>
+        <Filename Value="minimapstrings.pas"/>
+        <UnitName Value="MiniMapStrings"/>
+      </Item>
+      <Item>
+        <Filename Value="minimapview.pas"/>
+        <UnitName Value="MiniMapView"/>
+      </Item>
+    </Files>
+    <i18n>
+      <EnableI18N Value="True"/>
+      <OutDir Value="languages"/>
+    </i18n>
+    <RequiredPkgs>
+      <Item>
+        <PackageName Value="LCL"/>
+      </Item>
+      <Item>
+        <PackageName Value="LazEdit"/>
+      </Item>
+      <Item>
+        <PackageName Value="SynEdit"/>
+      </Item>
+      <Item>
+        <PackageName Value="IDEIntf"/>
+      </Item>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

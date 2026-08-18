@@ -1,0 +1,43 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+#: minimapstrings.menu_map_setup
+msgid "Code Minimap Options ..."
+msgstr ""
+
+#: minimapstrings.menu_show_map
+msgid "Code Minimap"
+msgstr ""
+
+#: minimapstrings.setup_band_color
+msgid "Viewport tint"
+msgstr ""
+
+#: minimapstrings.setup_band_tint
+msgid "Viewport tint strength in percent"
+msgstr ""
+
+#: minimapstrings.setup_cancel
+msgid "Cancel"
+msgstr ""
+
+#: minimapstrings.setup_caption
+msgid "Code Minimap Options"
+msgstr ""
+
+#: minimapstrings.setup_color_hint
+msgid "Default blends white into the editor background."
+msgstr ""
+
+#: minimapstrings.setup_font_size
+msgid "Map font size"
+msgstr ""
+
+#: minimapstrings.setup_ok
+msgid "OK"
+msgstr ""
+
+#: minimapstrings.setup_width
+msgid "Map width in pixels"
+msgstr ""
+
