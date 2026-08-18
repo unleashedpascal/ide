@@ -291,8 +291,10 @@ begin
   fMapEdit.ShareTextBufferFrom(fEdit);
   fMapEdit.Highlighter := fEdit.Highlighter;
   fMapEdit.RightEdge := fEdit.RightEdge;
-  fMapEdit.RightEdgeColor := fEdit.RightEdgeColor;
   fMapEdit.Color := fEdit.Color;
+  // the right-edge color doubles as the divider color (clDefault dividers
+  // resolve to it at paint time); the background color hides both on the map
+  fMapEdit.RightEdgeColor := fMapEdit.Color;
   fEdit.RegisterStatusChangedHandler(@statusChanged, [scTopLine, scLinesInWindow, scHandleCreated, scFontOrStyleChanged]);
 end;
 
@@ -313,6 +315,7 @@ procedure TMiniMapView.reconfigure;
 begin
   if fEdit = nil then exit;
   fMapEdit.Color := fEdit.Color;
+  fMapEdit.RightEdgeColor := fMapEdit.Color; // keeps dividers hidden
   fMapEdit.Font := fEdit.Font;
   fMapEdit.Font.Size := fFontSize;
   // drop and reassign so SynEdit rebuilds its markup for the new scheme
