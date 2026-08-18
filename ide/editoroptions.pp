@@ -930,7 +930,8 @@ const
 
 const
   SynEditDefaultOptions = SYNEDIT_DEFAULT_OPTIONS - [eoShowScrollHint, eoSmartTabs]
-                                                  + [eoHalfPageScroll, eoTabIndent];
+                                                  + [eoHalfPageScroll, eoTabIndent,
+                                                     eoScrollPastEof];
   SynEditDefaultOptions2 = SYNEDIT_DEFAULT_OPTIONS2;
 
   EditorOptionsMinimumFontSize = 5;
