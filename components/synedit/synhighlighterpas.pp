@@ -633,6 +633,14 @@ type
     FTokenState: TTokenState;
     FInInlineVarStmt: Boolean;
     FInterpExprDepth: Byte; // open `{expr}` depth inside `$'...'` interpolated strings
+    FCaseExprBits: Cardinal; (* One bit per open "case" fold, bit 0 = outermost:
+                                set if that case is a case expression. With an
+                                "else"/"otherwise" branch that construct has no
+                                closing "end" - the "else" closes the case block;
+                                only the exhaustive form (no else) ends with "end".
+                                Bits above the current case nesting may be stale;
+                                they are rewritten whenever a new case block opens
+                                at that depth *)
     procedure SetBracketNestLevel(AValue: integer); inline;
   public
     procedure Clear; override;
@@ -649,6 +657,8 @@ type
     procedure DecSpecializeBracketNestLevel;
     procedure DecLastLineCodeFoldLevelFix;
     procedure DecLastLinePasFoldFix;
+    procedure SetCaseExprBit(ADepth: integer; AValue: Boolean);
+    function GetCaseExprBit(ADepth: integer): Boolean;
     property Mode: TPascalCompilerMode read FMode write FMode;
     property ModeSwitches: TPascalCompilerModeSwitches read FModeSwitches write FModeSwitches;
     (* BracketNestLevel counts only within the current "fold" (or expression).
@@ -1096,6 +1106,7 @@ type
     property PasCodeFoldRange: TSynPasSynRange read GetPasCodeFoldRange;
     function TopPascalCodeFoldBlockType
              (DownIndex: Integer = 0): TPascalCodeFoldBlockType;
+    function OpenCaseFoldCount: Integer; // open cfbtCase blocks on the nest stack
     function HasRangeCompilerModeswitch(AModeSwitch: TPascalCompilerModeSwitch): Boolean; inline;
     function HasRangeCompilerModeswitch(AModeSwitches: TPascalCompilerModeSwitches): Boolean; inline;
 
@@ -2295,6 +2306,8 @@ end;
 function TSynPasSyn.Func28: TtkTokenKind;
 var
   tfb: TPascalCodeFoldBlockType;
+  CaseDepth: Integer;
+  IsCaseExpression: Boolean;
 begin
   if KeyCompU('IS') then begin
     if (fRange * [rsInProcHeader, rsInTypeSpecification] = [rsInProcHeader, rsInTypeSpecification]) and
@@ -2310,9 +2323,23 @@ begin
     Result := DoPropertyDefinitionKey;
   end
   else if KeyCompU('CASE') then begin
-    if TopPascalCodeFoldBlockType in PascalStatementBlocks + [cfbtUnitSection] then begin
+    tfb := TopPascalCodeFoldBlockType;
+    if tfb in PascalStatementBlocks + [cfbtUnitSection] then begin
+      (* A case in expression position is a case expression: with an
+         "else"/"otherwise" branch it has no closing "end", the "else" closes
+         the case block. Expression position: mid statement (after ":=", "(",
+         ",", an operator, ...) or at the start of a branch of an enclosing
+         case expression (after the label ":" or after its "else") *)
+      CaseDepth := OpenCaseFoldCount;
+      IsCaseExpression :=
+        (FRangeCompilerMode in [pcmUnleashed, pcmUnknown]) and
+        (tfb in PascalStatementBlocks) and
+        ( not (FTokenState in tsAnyAtBeginOfStatement) or
+          ( (tfb in [cfbtCase, cfbtCaseElse]) and
+            PasCodeFoldRange.GetCaseExprBit(CaseDepth - 1) ) );
       DoCodeBlockStatement;
-      StartPascalCodeFoldBlock(cfbtCase, True);
+      if StartPascalCodeFoldBlock(cfbtCase, True) then
+        PasCodeFoldRange.SetCaseExprBit(CaseDepth, IsCaseExpression);
     end
     else begin
       tfb := CloseFolds(TopPascalCodeFoldBlockType(), [cfbtClassConstBlock, cfbtClassTypeBlock]);
@@ -2549,7 +2576,15 @@ begin
     end else
     if tfb = cfbtCase then begin
       FTokenIsCaseLabel := True;
-      StartPascalCodeFoldBlock(cfbtCaseElse, True);
+      if PasCodeFoldRange.GetCaseExprBit(OpenCaseFoldCount - 1) then begin
+        // case expression: "else <expr>" is the tail of the construct and
+        // there is no closing "end". The "else" closes the case block, like
+        // "else" closes the "then"-block of an if-statement
+        EndPascalCodeFoldBlock;
+        FNextTokenState := tsNone; // the branch is an expression, not a statement
+      end
+      else
+        StartPascalCodeFoldBlock(cfbtCaseElse, True);
     end
   end
   else if KeyCompU('VAR') then begin
@@ -2676,6 +2711,8 @@ begin
 end;
 
 function TSynPasSyn.Func45: TtkTokenKind;
+var
+  CaseDepth: Integer;
 begin
   if KeyCompU('SHR') then begin
     Result := tkKey;
@@ -2690,7 +2727,11 @@ begin
     Result := tkKey;
     FNextTokenState := tsAfterMatch;
     DoCodeBlockStatement;
-    StartPascalCodeFoldBlock(cfbtCase, True);
+    // match always closes with its own "end": clear the case-expression bit
+    // that a previously closed case block may have left at this depth
+    CaseDepth := OpenCaseFoldCount;
+    if StartPascalCodeFoldBlock(cfbtCase, True) then
+      PasCodeFoldRange.SetCaseExprBit(CaseDepth, False);
   end
   else
   if KeyCompU('LEAVE') and
@@ -4026,14 +4067,23 @@ begin
 end;
 
 function TSynPasSyn.Func122: TtkTokenKind;
+var
+  tfb: TPascalCodeFoldBlockType;
 begin
   if KeyCompU('OTHERWISE') then begin
     Result := tkKey;
     //DebugLn('  ### Otherwise');
     EndStatementLastLine(TopPascalCodeFoldBlockType, [cfbtForDo,cfbtWhileDo,cfbtWithDo,cfbtIfThen,cfbtIfElse]);
-    if TopPascalCodeFoldBlockType = cfbtCase then begin
-      StartPascalCodeFoldBlock(cfbtCaseElse, True);
+    tfb := TopPascalCodeFoldBlockType;
+    if tfb = cfbtCase then begin
       FTokenIsCaseLabel := True;
+      if PasCodeFoldRange.GetCaseExprBit(OpenCaseFoldCount - 1) then begin
+        // case expression: "otherwise <expr>" closes the case block, see "else"
+        EndPascalCodeFoldBlock;
+        FNextTokenState := tsNone; // the branch is an expression, not a statement
+      end
+      else
+        StartPascalCodeFoldBlock(cfbtCaseElse, True);
     end;
   end
   else
@@ -7939,6 +7989,16 @@ begin
   Result := TPascalCodeFoldBlockType(PtrUInt(p));
 end;
 
+function TSynPasSyn.OpenCaseFoldCount: Integer;
+var
+  i: Integer;
+begin
+  Result := 0;
+  for i := 0 to CurrentCodeNestBlockLevel - 1 do
+    if TopPascalCodeFoldBlockType(i) = cfbtCase then
+      inc(Result);
+end;
+
 function TSynPasSyn.HasRangeCompilerModeswitch(AModeSwitch: TPascalCompilerModeSwitch): Boolean;
 begin
   Result := (AModeSwitch in FRangeModeSwitches);
@@ -9228,6 +9288,7 @@ begin
   FTokenState := tsNone;
   FInInlineVarStmt := False;
   FInterpExprDepth := 0;
+  FCaseExprBits := 0;
 end;
 
 function TSynPasSynRange.Compare(Range: TLazHighlighterRange): integer;
@@ -9249,6 +9310,7 @@ begin
     FPasFoldFixLevel := TSynPasSynRange(Src).FPasFoldFixLevel;
     FInInlineVarStmt := TSynPasSynRange(Src).FInInlineVarStmt;
     FInterpExprDepth := TSynPasSynRange(Src).FInterpExprDepth;
+    FCaseExprBits := TSynPasSynRange(Src).FCaseExprBits;
   end;
 end;
 
@@ -9313,6 +9375,23 @@ end;
 procedure TSynPasSynRange.DecLastLinePasFoldFix;
 begin
   dec(FPasFoldFixLevel);
+end;
+
+procedure TSynPasSynRange.SetCaseExprBit(ADepth: integer; AValue: Boolean);
+begin
+  // deeper nesting than the mask can hold degrades to "not an expression"
+  if (ADepth < 0) or (ADepth > 31) then
+    exit;
+  if AValue then
+    FCaseExprBits := FCaseExprBits or (Cardinal(1) shl ADepth)
+  else
+    FCaseExprBits := FCaseExprBits and not (Cardinal(1) shl ADepth);
+end;
+
+function TSynPasSynRange.GetCaseExprBit(ADepth: integer): Boolean;
+begin
+  Result := (ADepth >= 0) and (ADepth <= 31) and
+            ((FCaseExprBits and (Cardinal(1) shl ADepth)) <> 0);
 end;
 
 { TSynPasSynCustomToken }

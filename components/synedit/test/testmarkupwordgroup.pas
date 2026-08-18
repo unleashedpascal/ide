@@ -24,9 +24,10 @@ type
     procedure ReCreateEdit; reintroduce;
     function TestText1: TStringArray;
     function TestText2: TStringArray;
+    function TestText3: TStringArray;
   published
     procedure TestWordGroup;
-  end; 
+  end;
 
 implementation
 
@@ -81,6 +82,33 @@ begin
   Result[8] := 'end;';
   Result[9] := '';
 
+end;
+
+function TTestMarkupWordGroup.TestText3: TStringArray;
+begin
+  // case expressions (else-form has no "end") and a case statement
+  SetLength(Result, 21);
+  Result[0]  := 'program Foo;';
+  Result[1]  := 'function Test(i: integer): string;';
+  Result[2]  := 'begin';
+  Result[3]  := '  Result := case (i and 3) of';
+  Result[4]  := '    0: ''0'';';
+  Result[5]  := '    2:';
+  Result[6]  := '      case (i shr 7) of';
+  Result[7]  := '        0: ''x'';';
+  Result[8]  := '        else '''';';
+  Result[9]  := '    else '''';';
+  Result[10] := 'end;';
+  Result[11] := 'procedure b;';
+  Result[12] := 'begin';
+  Result[13] := '  case x of';
+  Result[14] := '    1: ;';
+  Result[15] := '    else ;';
+  Result[16] := '  end;';
+  Result[17] := 'end;';
+  Result[18] := 'begin';
+  Result[19] := 'end.';
+  Result[20] := '';
 end;
 
 procedure TTestMarkupWordGroup.TestWordGroup;
@@ -177,6 +205,35 @@ begin
   CheckWord('T-End Nest 2',   29, 5,   5,8,5,  21,27,5,  28,31,5);
   CheckWord('T-End Nest 3',   31, 5,   5,8,5,  21,27,5,  28,31,5);
 
+  PopPushBaseName('Text 3');
+  SetLines(TestText3);
+  EnableFolds([cfbtBeginEnd.. cfbtNone], [cfbtSlashComment]);
+
+  // else-form case expression: the group is case/of/else, there is no "end"
+  CheckWord('CaseExp out 1',  13, 4,   13,17,4,  28,30,4,  5,9,10);
+  CheckWord('CaseExp out 2',  16, 4,   13,17,4,  28,30,4,  5,9,10);
+  CheckWord('CaseExp out 3',  28, 4,   13,17,4,  28,30,4,  5,9,10);
+  CheckWord('CaseExp out 4',  29, 4,   13,17,4,  28,30,4,  5,9,10);
+  CheckWord('CaseExp out 5',   5,10,   13,17,4,  28,30,4,  5,9,10);
+  CheckWord('CaseExp out 6',   8,10,   13,17,4,  28,30,4,  5,9,10);
+
+  CheckWord('CaseExp in 1',    7, 7,   7,11,7,  22,24,7,  9,13,9);
+  CheckWord('CaseExp in 2',   10, 7,   7,11,7,  22,24,7,  9,13,9);
+  CheckWord('CaseExp in 3',   22, 7,   7,11,7,  22,24,7,  9,13,9);
+  CheckWord('CaseExp in 4',   23, 7,   7,11,7,  22,24,7,  9,13,9);
+  CheckWord('CaseExp in 5',    9, 9,   7,11,7,  22,24,7,  9,13,9);
+  CheckWord('CaseExp in 6',   12, 9,   7,11,7,  22,24,7,  9,13,9);
+
+  // the "end;" pairs with function/begin, not with the case expression
+  CheckWord('CaseExp begin',   1, 3,   1,9,2,  1,6,3,  1,4,11);
+  CheckWord('CaseExp fn-end',  1,11,   1,9,2,  1,6,3,  1,4,11);
+
+  // case statement: unchanged, its "end" belongs to the case
+  CheckWord('CaseStmt case',   3,14,   3,7,14,  10,12,14,  3,6,17);
+  CheckWord('CaseStmt of',    10,14,   3,7,14,  10,12,14,  3,6,17);
+  CheckWord('CaseStmt end',    3,17,  10,12,14,  5,9,16,  3,6,17);
+  CheckWord('CaseStmt else',   5,16,  10,12,14,  5,9,16,  3,6,17);
+
   PopBaseName;
 
   PopPushBaseName('No folds');
@@ -228,6 +285,19 @@ begin
   CheckWord('T-End Nest 1',   28, 5,   5,8,5,  21,27,5,  28,31,5);
   CheckWord('T-End Nest 2',   29, 5,   5,8,5,  21,27,5,  28,31,5);
   CheckWord('T-End Nest 3',   31, 5,   5,8,5,  21,27,5,  28,31,5);
+
+  PopPushBaseName('Text 3');
+  SetLines(TestText3);
+  EnableFolds([cfbtBeginEnd.. cfbtNone], [], [cfbtBeginEnd.. cfbtNone]);
+
+  CheckWord('CaseExp out 1',  13, 4,   13,17,4,  28,30,4,  5,9,10);
+  CheckWord('CaseExp out 5',   5,10,   13,17,4,  28,30,4,  5,9,10);
+  CheckWord('CaseExp in 1',    7, 7,   7,11,7,  22,24,7,  9,13,9);
+  CheckWord('CaseExp in 5',    9, 9,   7,11,7,  22,24,7,  9,13,9);
+  CheckWord('CaseExp begin',   1, 3,   1,9,2,  1,6,3,  1,4,11);
+  CheckWord('CaseExp fn-end',  1,11,   1,9,2,  1,6,3,  1,4,11);
+  CheckWord('CaseStmt case',   3,14,   3,7,14,  10,12,14,  3,6,17);
+  CheckWord('CaseStmt else',   5,16,  10,12,14,  5,9,16,  3,6,17);
 
   PopBaseName;
 end;

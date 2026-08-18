@@ -83,6 +83,7 @@ type
     procedure TestContextForStatic;
     procedure TestContextForObjective;
     procedure TestCaseLabel;
+    procedure TestCaseExpressionElidedEnd;
     procedure TestBreakKeyword;
     procedure TestModifierAttributesForProcedure;
     procedure TestModifierAttributesForProperty;
@@ -3817,6 +3818,114 @@ begin
   CheckTokensForLine('else foo;',  9, [tkKey, tkSpace, tkIdentifier, TK_Semi]);
   CheckTokensForLine('end;',  10, [tkKey, TK_Semi]);
 
+end;
+
+procedure TTestHighlighterPas.TestCaseExpressionElidedEnd;
+begin
+  {%region case expression: the else-branch is the final token, no "end"}
+  ReCreateEdit;
+  PasHighLighter.CaseLabelAttriMatchesElseOtherwise := True;
+  EnableFolds([cfbtBeginEnd..cfbtNone]);
+  PushBaseName('case expression, else-form without end');
+  SetLines
+    ([ '{$mode unleashed}',                              // 0
+       'function Test(const i: integer): AnsiString;',   // 1
+       'begin',                                          // 2
+       '  Result := case (i and %11) of',                // 3
+       '    %00: ''0'';',                                // 4
+       '    %01: ''1'';',                                // 5
+       '    %10:',                                       // 6
+       '      case (i shr 7) of',                        // 7
+       '        0: ''x'';',                              // 8
+       '        else '''';',                             // 9
+       '    else '''';',                                 // 10
+       'end;',                                           // 11
+       ''
+    ]);
+
+  CheckTokensForLine('%00: label',       4, [_, tkNumber+FCaseLabelAttri, TK_Colon, _, tkString, TK_Semi]);
+  CheckTokensForLine('inner 0: label',   8, [_, tkNumber+FCaseLabelAttri, TK_Colon, _, tkString, TK_Semi]);
+  CheckTokensForLine('inner else',       9, [_, tkKey+FCaseLabelAttri, _, tkString, TK_Semi]);
+  CheckTokensForLine('outer else',      10, [_, tkKey+FCaseLabelAttri, _, tkString, TK_Semi]);
+  CheckTokensForLine('end of function', 11, [tkKey, TK_Semi]);
+
+  // both case expressions have an else-branch, so neither has an "end":
+  // each case block is closed by its own "else" (like "then" by "else" in
+  // an if-statement). The single "end;" belongs to "begin"
+  AssertEquals('inner case fold end',  9, PasHighLighter.FoldEndLine(7, 0));
+  AssertEquals('outer case fold end', 10, PasHighLighter.FoldEndLine(3, 0));
+  AssertEquals('begin fold end',      11, PasHighLighter.FoldEndLine(2, 0));
+  AssertEquals('function fold end',   11, PasHighLighter.FoldEndLine(1, 0));
+  {%endregion}
+
+  {%region control: a case STATEMENT with a missing "end" stays unclosed}
+  SetLines
+    ([ 'program a;',          // 0
+       'begin',               // 1
+       '  case a of',         // 2
+       '    1:',              // 3
+       '      case b of',     // 4
+       '        0: x;',       // 5
+       '        else y;',     // 6
+       '    else z;',         // 7  inner case not closed: no label highlight
+       '  end;',              // 8
+       'end.',                // 9
+       ''
+    ]);
+
+  PopPushBaseName('case statement, missing end');
+  CheckTokensForLine('inner else',  6, [_, tkKey+FCaseLabelAttri, _, tkIdentifier, TK_Semi]);
+  CheckTokensForLine('stray else',  7, [_, tkKey, _, tkIdentifier, TK_Semi]);
+  {%endregion}
+
+  {%region regression: nested case statements with explicit "end"s}
+  SetLines
+    ([ '{$mode unleashed}',       // 0
+       'program a;',              // 1
+       'begin',                   // 2
+       '  case a of',             // 3
+       '    1:',                  // 4
+       '      case b of',         // 5
+       '        0: x;',           // 6
+       '        otherwise y;',    // 7
+       '      end;',              // 8
+       '    else z;',             // 9
+       '  end;',                  // 10
+       'end.',                    // 11
+       ''
+    ]);
+
+  PopPushBaseName('nested case statements, explicit ends');
+  CheckTokensForLine('inner otherwise', 7, [_, tkKey+FCaseLabelAttri, _, tkIdentifier, TK_Semi]);
+  CheckTokensForLine('outer else',      9, [_, tkKey+FCaseLabelAttri, _, tkIdentifier, TK_Semi]);
+  AssertEquals('inner case fold end',  8, PasHighLighter.FoldEndLine(5, 0));
+  AssertEquals('outer case fold end', 10, PasHighLighter.FoldEndLine(3, 0));
+  {%endregion}
+
+  {%region exhaustive case expression keeps its "end"; ")" closes the else-form}
+  SetLines
+    ([ '{$mode unleashed}',                        // 0
+       'program a;',                               // 1
+       'begin',                                    // 2
+       '  foo(case i of 1: ''a''; else ''b'');',   // 3
+       '  s := case flag of',                      // 4
+       '    true:  ''yes'';',                      // 5
+       '    false: ''no'';',                       // 6
+       '  end;',                                   // 7
+       'end.',                                     // 8
+       ''
+    ]);
+
+  PopPushBaseName('case expression, exhaustive form and argument position');
+  CheckTokensForLine('case as argument', 3,
+    [_, tkIdentifier, TK_Bracket, tkKey, _, tkIdentifier, _, tkKey, _,
+     tkNumber+FCaseLabelAttri, TK_Colon, _, tkString, TK_Semi, _,
+     tkKey+FCaseLabelAttri, _, tkString, TK_Bracket, TK_Semi]);
+  CheckTokensForLine('end of exhaustive case', 7, [_, tkKey, TK_Semi]);
+  AssertEquals('exhaustive case fold end', 7, PasHighLighter.FoldEndLine(4, 0));
+  AssertEquals('begin fold end',           8, PasHighLighter.FoldEndLine(2, 0));
+  PopBaseName;
+  {%endregion}
 end;
 
 procedure TTestHighlighterPas.TestBreakKeyword;
