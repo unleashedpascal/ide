@@ -4046,6 +4046,7 @@ var
   // right - so an 'end' read inside a nested case/match/begin block pops
   // the right counter
   ExprStack: string;
+  OuterVarNode: TCodeTreeNode;
 begin
   if CreateNodes then begin
     CreateChildNode;
@@ -4136,6 +4137,24 @@ begin
       and (LastAtoms.GetPriorAtom.Flag in
            [cafAssignment,cafComma,cafRoundBracketOpen,cafEdgedBracketOpen]) then begin
         ReadAnonymousFunction(true);
+        continue;
+      end;
+      // an out-variable at a call argument inside the initializer
+      // (var r := TryParse(s, var n)) declares n in the enclosing block.
+      // Give it a definition node beside this one - under the same var
+      // section - else the name stays unknown to completion and
+      // find-declaration. The cursor stays on the name, so the ',' or ')'
+      // after it goes through the bracket tracking below as usual.
+      if (CurPos.Flag=cafWord) and UpAtomIs('VAR')
+      and (cmsOutVar in Scanner.CompilerModeSwitches)
+      and (BracketDepth>0)
+      and (LastAtoms.GetPriorAtom.Flag in [cafRoundBracketOpen,cafComma]) then begin
+        OuterVarNode:=CurNode;
+        if CreateNodes then
+          CurNode:=CurNode.Parent;
+        ReadOutVarDeclaration(CreateNodes);
+        if CreateNodes then
+          CurNode:=OuterVarNode;
         continue;
       end;
       case CurPos.Flag of
