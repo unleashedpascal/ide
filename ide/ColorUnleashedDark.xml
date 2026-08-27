@@ -3,22 +3,22 @@
   <Lazarus>
     <ColorSchemes Version="13">
       <Names Count="1">
-        <Item1 Value="UnleahedDark"/>
+        <Item1 Value="UnleashedDark"/>
       </Names>
       <Globals Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clWhite" Style="fsBold" BackAlpha="90"/>
           <ahaCaretColor Foreground="clRed"/>
           <ahaCodeFoldingTree Foreground="clSilver"/>
-          <ahaDefault Background="2894118" Foreground="clWhite"/>
-          <ahaDisabledBreakpoint Background="2424612" Foreground="clBlack" BackAlpha="200"/>
-          <ahaEnabledBreakpoint Background="2105599" Foreground="clWhite" BackAlpha="200"/>
-          <ahaErrorLine Background="3224050" Foreground="clBlack" BackAlpha="225"/>
-          <ahaExecutionPoint Background="13658628" Foreground="clWhite" BackAlpha="200"/>
+          <ahaDefault Foreground="clWhite" Background="2894118"/>
+          <ahaDisabledBreakpoint Foreground="clBlack" Background="2424612" BackAlpha="200"/>
+          <ahaEnabledBreakpoint Foreground="clWhite" Background="2105599" BackAlpha="200"/>
+          <ahaErrorLine Foreground="clBlack" Background="3224050" BackAlpha="225"/>
+          <ahaExecutionPoint Foreground="clWhite" Background="13658628" BackAlpha="200"/>
           <ahaFoldedCode Foreground="clSilver" FrameColor="clSilver"/>
-          <ahaFoldedCodeLine Background="clWhite" Foreground="clLime" BackAlpha="35"/>
+          <ahaFoldedCodeLine Foreground="clLime" Background="clWhite" BackAlpha="35"/>
           <ahaGutter Background="clBtnFace"/>
-          <ahaGutterSeparator Background="clWhite" Foreground="clGray"/>
+          <ahaGutterSeparator Foreground="clGray" Background="clWhite"/>
           <ahaHighlightAll Background="clYellow"/>
           <ahaHighlightWord Background="clWhite" BackAlpha="50" FrameAlpha="55"/>
           <ahaIdentComplWindowBorder Foreground="5460819"/>
@@ -35,12 +35,12 @@
           <ahaIfDefBlockInactive Foreground="6584640" BackAlpha="100"/>
           <ahaIfDefNodeActive ForeAlpha="100"/>
           <ahaIfDefNodeInactive Foreground="6584640" FrameEdges="sfeNone" BackAlpha="100"/>
-          <ahaIncrementalSearch Background="3199088" Foreground="clWhite"/>
-          <ahaInvalidBreakpoint Background="clOlive" Foreground="clSilver" BackAlpha="200"/>
+          <ahaIncrementalSearch Foreground="clWhite" Background="3199088"/>
+          <ahaInvalidBreakpoint Foreground="clSilver" Background="clOlive" BackAlpha="200"/>
           <ahaLineHighlight Background="clSilver" BackAlpha="32"/>
-          <ahaModifiedLine Background="2894118" Foreground="54528" FrameColor="clYellow"/>
+          <ahaModifiedLine Foreground="54528" Background="2894118" FrameColor="clYellow"/>
           <ahaMouseLink Foreground="clBlue" FrameColor="clBlue" FrameEdges="sfeBottom"/>
-          <ahaRightMargin Foreground="4605510"/>
+          <ahaRightMargin Foreground="clSilver"/>
           <ahaSpecialVisibleChars Foreground="7303023"/>
           <ahaSyncroEditArea Background="clMoneyGreen"/>
           <ahaSyncroEditCur FrameColor="clFuchsia"/>
@@ -49,25 +49,25 @@
           <ahaTemplateEditCur FrameColor="clAqua"/>
           <ahaTemplateEditOther FrameColor="clMaroon"/>
           <ahaTemplateEditSync FrameColor="clFuchsia"/>
-          <ahaTextBlock Background="clWhite" Foreground="clBlack"/>
-          <ahaUnknownBreakpoint Background="2105599" Foreground="clBlack" FrameEdges="sfeBottom" BackAlpha="200"/>
+          <ahaTextBlock Foreground="clBlack" Background="clWhite"/>
+          <ahaUnknownBreakpoint Foreground="clBlack" Background="2105599" FrameEdges="sfeBottom" BackAlpha="200"/>
           <ahaWordGroup Background="clWhite" BackAlpha="40" ForeAlpha="160" FrameAlpha="155"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </Globals>
       <LangObjectPascal Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaCodeFoldingTree Foreground="10853782" FrameColor="647454" UseSchemeGlobals="False"/>
           <ahaDefault Background="1184274"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCode Background="647454" Foreground="cl3DDkShadow" FrameColor="clNone" FrameStyle="slsDotted" Style="fsBold,fsUnderline" UseSchemeGlobals="False"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCode Foreground="cl3DDkShadow" Background="647454" FrameColor="clNone" FrameStyle="slsDotted" Style="fsBold,fsUnderline" UseSchemeGlobals="False"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaGutter Background="2894118" UseSchemeGlobals="False"/>
-          <ahaGutterSeparator Background="clNone" Foreground="1447446" UseSchemeGlobals="False"/>
+          <ahaGutterSeparator Foreground="1447446" Background="clNone" UseSchemeGlobals="False"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -86,38 +86,39 @@
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
           <ahaLineNumber Foreground="11446692" UseSchemeGlobals="False"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
+          <ahaRightMargin Foreground="2236962" UseSchemeGlobals="False"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaSyncroEditArea Background="1321001" UseSchemeGlobals="False"/>
           <ahaSyncroEditCur FrameColor="clAqua" UseSchemeGlobals="False"/>
           <ahaSyncroEditOther FrameColor="1535383" UseSchemeGlobals="False"/>
           <ahaSyncroEditSync FrameColor="clFuchsia" UseSchemeGlobals="False"/>
-          <ahaTextBlock Background="clSilver" Foreground="clNone" BackAlpha="32" UseSchemeGlobals="False"/>
+          <ahaTextBlock Foreground="clNone" Background="clSilver" BackAlpha="32" UseSchemeGlobals="False"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
           <Assembler Foreground="clFuchsia" UseSchemeGlobals="False"/>
           <Comment Foreground="8816262" UseSchemeGlobals="False"/>
           <Directive Foreground="clMoneyGreen" UseSchemeGlobals="False"/>
           <Identifier UseSchemeGlobals="False"/>
-          <Modifier Foreground="2315256" Style="fsBold"/>
+          <Modifier Foreground="6891235" Style="fsBold"/>
           <Number Foreground="15234507" UseSchemeGlobals="False"/>
           <Procedure_header_name Foreground="5630620" FrameEdges="sfeBottom" UseSchemeGlobals="False"/>
           <Reserved_word Foreground="6891235" Style="fsBold" UseSchemeGlobals="False"/>
           <Space UseSchemeGlobals="False"/>
-          <String Background="2897720" Foreground="3471598" FrameStyle="slsDotted" FrameEdges="sfeBottom" UseSchemeGlobals="False"/>
+          <String Foreground="3471598" Background="2897720" FrameStyle="slsDotted" FrameEdges="sfeBottom" UseSchemeGlobals="False"/>
           <Symbol UseSchemeGlobals="False"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangObjectPascal>
       <LangHTML_document Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -132,11 +133,11 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
-          <Asp Background="clYellow" Foreground="clBlack"/>
+          <Asp Foreground="clBlack" Background="clYellow"/>
           <Comment Foreground="clGray"/>
           <Escape_ampersand Foreground="clLime" Style="fsBold"/>
           <Identifier Style="fsBold"/>
@@ -144,18 +145,18 @@
           <Symbol Foreground="clAqua"/>
           <Unknown_word Foreground="clRed" Style="fsBold"/>
           <Value Foreground="16744448"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangHTML_document>
       <LangC__ Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -170,7 +171,7 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
@@ -182,18 +183,18 @@
           <Space Foreground="clWindow"/>
           <String Foreground="clYellow"/>
           <Symbol Foreground="clAqua"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangC__>
       <LangXML_document Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -208,7 +209,7 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
@@ -222,20 +223,21 @@
           <Namespace_Attribute_Name Foreground="clRed"/>
           <Namespace_Attribute_Value Foreground="clRed" Style="fsBold"/>
           <Processing_Instruction Foreground="clBlue"/>
+          <Processing_Instruction_Symbol StrikeOutPriority="150"/>
           <Symbol Foreground="clAqua"/>
           <Text Foreground="clBlack" Style="fsBold"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangXML_document>
       <LangLazarus_Form_definition Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -250,22 +252,22 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangLazarus_Form_definition>
       <LangPerl Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -280,7 +282,7 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
@@ -292,18 +294,18 @@
           <String Foreground="clYellow"/>
           <Symbol Foreground="clAqua"/>
           <Variable Style="fsBold"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangPerl>
       <LangJava Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -318,7 +320,7 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
@@ -329,18 +331,18 @@
           <Space Foreground="clWindow"/>
           <String Foreground="clYellow"/>
           <Symbol Foreground="clAqua"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangJava>
       <LangUNIX_Shell_Script Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -355,7 +357,7 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
@@ -365,18 +367,18 @@
           <String Foreground="clYellow"/>
           <Symbol Foreground="clAqua"/>
           <Variable Foreground="clPurple"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangUNIX_Shell_Script>
       <LangPython Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -391,7 +393,7 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
@@ -407,18 +409,18 @@
           <Symbol Foreground="clAqua"/>
           <SyntaxError Foreground="clRed"/>
           <System_functions_and_variables Style="fsBold"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangPython>
       <LangPHP Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -433,7 +435,7 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
@@ -442,18 +444,18 @@
           <Reserved_word Foreground="clAqua" Style="fsBold"/>
           <String Foreground="clYellow"/>
           <Symbol Foreground="clAqua"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangPHP>
       <LangSQL Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -468,7 +470,7 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
@@ -483,18 +485,18 @@
           <SQL_Plus_command Style="fsBold"/>
           <String Foreground="clYellow"/>
           <Symbol Foreground="clAqua"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangSQL>
       <LangCascading_style_sheets Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -509,22 +511,22 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangCascading_style_sheets>
       <LangJavascript Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -539,7 +541,7 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
@@ -548,18 +550,18 @@
           <Reserved_word Foreground="clAqua" Style="fsBold"/>
           <String Foreground="clYellow"/>
           <Symbol Foreground="clAqua"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangJavascript>
       <LangDiff_File Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -574,7 +576,7 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
@@ -588,18 +590,18 @@
           <Diff_Original_File Background="clRed" Style="fsBold"/>
           <Diff_Removed_Line Foreground="clRed"/>
           <Unknown_word Style="fsItalic"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangDiff_File>
       <LangMS_DOS_batch_language Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -614,22 +616,22 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangMS_DOS_batch_language>
       <LangINI_file Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -644,22 +646,22 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangINI_file>
       <Langpo_language_files Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -674,22 +676,22 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </Langpo_language_files>
       <LangPike Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -704,22 +706,22 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangPike>
       <LangPlain_Text Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaBracketMatch Background="clNone" BackAlpha="0"/>
           <ahaCaretColor Foreground="clNone"/>
           <ahaDefault Background="clBlack"/>
-          <ahaDisabledBreakpoint Background="clLime" Foreground="clRed" BackAlpha="0"/>
+          <ahaDisabledBreakpoint Foreground="clRed" Background="clLime" BackAlpha="0"/>
           <ahaEnabledBreakpoint Background="clRed" BackAlpha="0"/>
           <ahaErrorLine Background="5284095" BackAlpha="0"/>
           <ahaExecutionPoint Background="clBlue" BackAlpha="0"/>
-          <ahaFoldedCodeLine Background="clNone" Foreground="clNone" BackAlpha="0"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
           <ahaHighlightWord Background="3158064" FrameColor="clSilver" BackAlpha="0" FrameAlpha="0"/>
           <ahaIdentComplWindowBorder Foreground="clNone"/>
           <ahaIdentComplWindowEntryConst Foreground="clNone"/>
@@ -734,21 +736,86 @@
           <ahaIdentComplWindowSelection Background="clNone"/>
           <ahaInvalidBreakpoint Foreground="clGreen" BackAlpha="0"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
-          <ahaModifiedLine Background="clNone" Foreground="clGreen" FrameColor="59900"/>
+          <ahaModifiedLine Foreground="clGreen" Background="clNone" FrameColor="59900"/>
           <ahaSpecialVisibleChars Foreground="clNone"/>
           <ahaUnknownBreakpoint Background="clRed" FrameEdges="sfeAround" BackAlpha="0"/>
           <ahaWordGroup Background="clNone" FrameColor="clRed" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
-        </SchemeUnleahedDark>
+        </SchemeUnleashedDark>
       </LangPlain_Text>
+      <LangMarkdown Version="13">
+        <SchemeUnleashedDark>
+          <ahaBracketMatch Background="clNone" Style="" BackAlpha="0"/>
+          <ahaCaretColor Foreground="clNone"/>
+          <ahaCodeFoldingTree Foreground="clNone"/>
+          <ahaDefault Foreground="clNone" Background="clNone"/>
+          <ahaDisabledBreakpoint Foreground="clNone" Background="clNone" BackAlpha="0"/>
+          <ahaEnabledBreakpoint Foreground="clNone" Background="clNone" BackAlpha="0"/>
+          <ahaErrorLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
+          <ahaExecutionPoint Foreground="clNone" Background="clNone" BackAlpha="0"/>
+          <ahaFoldedCode Foreground="clNone" FrameColor="clNone"/>
+          <ahaFoldedCodeLine Foreground="clNone" Background="clNone" BackAlpha="0"/>
+          <ahaGutter Background="clNone"/>
+          <ahaGutterSeparator Foreground="clNone" Background="clNone"/>
+          <ahaHighlightAll Background="clNone"/>
+          <ahaHighlightWord Background="clNone" BackAlpha="0" FrameAlpha="0"/>
+          <ahaIdentComplWindowBorder Foreground="clNone"/>
+          <ahaIdentComplWindowEntryConst Foreground="clNone"/>
+          <ahaIdentComplWindowEntryEnum Foreground="clNone"/>
+          <ahaIdentComplWindowEntryFunc Foreground="clNone"/>
+          <ahaIdentComplWindowEntryMethAbstract Foreground="clNone"/>
+          <ahaIdentComplWindowEntryProc Foreground="clNone"/>
+          <ahaIdentComplWindowEntryText Foreground="clNone"/>
+          <ahaIdentComplWindowEntryType Foreground="clNone"/>
+          <ahaIdentComplWindowEntryVar Foreground="clNone"/>
+          <ahaIdentComplWindowHighlight Foreground="clNone"/>
+          <ahaIdentComplWindowSelection Background="clNone"/>
+          <ahaIncrementalSearch Foreground="clNone" Background="clNone"/>
+          <ahaInvalidBreakpoint Foreground="clNone" Background="clNone" BackAlpha="0"/>
+          <ahaLineHighlight Background="clNone" BackAlpha="0"/>
+          <ahaModifiedLine Foreground="clNone" Background="clNone" FrameColor="clNone"/>
+          <ahaMouseLink Foreground="clNone" FrameColor="clNone" FrameEdges="sfeAround"/>
+          <ahaRightMargin Foreground="clNone"/>
+          <ahaSpecialVisibleChars Foreground="clNone"/>
+          <ahaSyncroEditArea Background="clNone"/>
+          <ahaSyncroEditCur FrameColor="clNone"/>
+          <ahaSyncroEditOther FrameColor="clNone"/>
+          <ahaSyncroEditSync FrameColor="clNone"/>
+          <ahaTemplateEditCur FrameColor="clNone"/>
+          <ahaTemplateEditOther FrameColor="clNone"/>
+          <ahaTemplateEditSync FrameColor="clNone"/>
+          <ahaTextBlock Foreground="clNone" Background="clNone"/>
+          <ahaUnknownBreakpoint Foreground="clNone" Background="clNone" FrameEdges="sfeAround" BackAlpha="0"/>
+          <ahaWordGroup Background="clNone" BackAlpha="0" ForeAlpha="0" FrameAlpha="0"/>
+          <BlockQuote Foreground="clGreen"/>
+          <Bold Style="fsBold"/>
+          <CodeBlock Foreground="clBlue"/>
+          <CodeInline Foreground="clRed" Background="clSilver"/>
+          <Header Foreground="clMaroon" Style="fsBold"/>
+          <Italic Style="fsItalic"/>
+          <Link Foreground="clBlue" Style="fsUnderline"/>
+          <List Foreground="clNavy" Style="fsBold"/>
+        </SchemeUnleashedDark>
+      </LangMarkdown>
+      <LangWatches_Locals Version="13">
+        <SchemeUnleashedDark>
+          <WatchValueDisabled Foreground="clGray"/>
+          <WatchValueEllipsis Foreground="clGray"/>
+          <WatchValueError Foreground="clRed"/>
+          <WatchValueEval Foreground="clGray"/>
+          <WatchValueFoundStackFrame Foreground="clFuchsia"/>
+          <WatchValueShadowLast Foreground="clWhite" ForeAlpha="128"/>
+          <WatchValueUnknown Foreground="clGray"/>
+        </SchemeUnleashedDark>
+      </LangWatches_Locals>
       <LangDisassembler_Window Version="13">
-        <SchemeUnleahedDark>
+        <SchemeUnleashedDark>
           <ahaAsmSourceFunc Foreground="3561956" Style="fsBold" UseSchemeGlobals="False"/>
           <ahaAsmSourceLine Foreground="3561956" Style="fsBold" UseSchemeGlobals="False"/>
-          <ahaDefault Background="clNone" Foreground="clNone"/>
+          <ahaDefault Foreground="clNone" Background="clNone"/>
           <ahaLineHighlight Background="clNone" BackAlpha="0"/>
           <ahaMouseLink Foreground="clNone" FrameColor="clNone" FrameEdges="sfeAround"/>
-          <ahaTextBlock Background="clNone" Foreground="clNone"/>
-        </SchemeUnleahedDark>
+          <ahaTextBlock Foreground="clNone" Background="clNone" Features=""/>
+        </SchemeUnleashedDark>
       </LangDisassembler_Window>
     </ColorSchemes>
   </Lazarus>

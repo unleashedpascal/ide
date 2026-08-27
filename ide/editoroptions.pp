@@ -3030,7 +3030,7 @@ begin
     TheColorSchemeFactorSingleton.RegisterScheme(TColorSchemeFromResource.CreateFrom('ColorSchemePascalClassic', 'Pascal Classic', TColorSchemeFactory.XML_COL_PATH));
     TheColorSchemeFactorSingleton.RegisterScheme(TColorSchemeFromResource.CreateFrom('ColorSchemeOcean',         'Ocean',    TColorSchemeFactory.XML_COL_PATH));
     TheColorSchemeFactorSingleton.RegisterScheme(TColorSchemeFromResource.CreateFrom('ColorSchemeDelphi',        'Delphi',   TColorSchemeFactory.XML_COL_PATH));
-    TheColorSchemeFactorSingleton.RegisterScheme(TColorSchemeFromResource.CreateFrom('ColorSchemeUnleahedDark',  'UnleahedDark', TColorSchemeFactory.XML_COL_PATH));
+    TheColorSchemeFactorSingleton.RegisterScheme(TColorSchemeFromResource.CreateFrom('ColorSchemeUnleashedDark',  'UnleashedDark', TColorSchemeFactory.XML_COL_PATH));
     DefaultColorSchemeName := 'Default';
 
     if DirectoryExistsUTF8(UserSchemeDirectory(False)) then begin

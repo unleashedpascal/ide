@@ -1763,7 +1763,7 @@ begin
   if (not EnvironmentOptions.InitialColorSchemeForDarkPkgDone)
   and (PackageGraph<>nil) and (EditorOpts<>nil) then begin
     if PackageGraph.FindInstalledPackageMatching('MetaDarkStyle*')<>nil then begin
-      DefaultColorSchemeName := 'UnleahedDark';
+      DefaultColorSchemeName := 'UnleashedDark';
       // index 0 of HighlighterList is the "None" pseudo-entry; the real
       // highlighters start at IdeHighlighterStartId. Pass the RAW language
       // name (HighlighterList[i].SynInstance.LanguageName) - WriteColorScheme
@@ -1772,7 +1772,7 @@ begin
       // ReadColorScheme cannot find on the next start.
       for ColorSchemeIdx := IdeHighlighterStartId to HighlighterList.Count - 1 do
         if HighlighterList[ColorSchemeIdx].SynInstance <> nil then
-          EditorOpts.WriteColorScheme(HighlighterList[ColorSchemeIdx].SynInstance.LanguageName, 'UnleahedDark');
+          EditorOpts.WriteColorScheme(HighlighterList[ColorSchemeIdx].SynInstance.LanguageName, 'UnleashedDark');
       // WriteColorScheme only updates the stored config. The shared SynInstance
       // highlighters keep the attributes applied at creation, and the
       // ReloadEditorOptions path below never re-reads them (RefreshEditorSettings
