@@ -16489,11 +16489,11 @@ end;
 
 function TFindDeclarationTool.FindOutVarParamDef(VarDefNode: TCodeTreeNode;
   Params: TFindDeclarationParams; out ParamContext: TFindContext): boolean;
-// Resolve the out parameter behind an inline out-variable declaration:
+// Resolve the parameter behind an inline out-variable declaration:
 //   if TryParse(s, var n) then ...   (n has the type of TryParse's 2nd param)
 // VarDefNode is the typeless ctnVarDefinition created by ReadOutVarDeclaration.
 // Returns the ctnVarDefinition of the parameter at the same position, which
-// must be an `out` one; `var`/`const`/value parameters take no out-var.
+// must be a `var` or `out` one; `const`/value parameters take no out-var.
 // Overloads are not resolved: the first match wins, which is what the compiler
 // accepts anyway (candidates differing in the out type are ambiguous there).
 var
@@ -16569,8 +16569,9 @@ begin
   ParamNode:=ProcTool.FindNthParameterNode(ProcNode,ParameterIndex);
   if ParamNode=nil then exit;
   if not ProcTool.MoveCursorToParameterSpecifier(ParamNode) then exit;
-  if not (ProcTool.UpAtomIs('OUT')
-          and (cmsOut in ProcTool.Scanner.CompilerModeSwitches)) then exit;
+  if not (ProcTool.UpAtomIs('VAR')
+          or (ProcTool.UpAtomIs('OUT')
+              and (cmsOut in ProcTool.Scanner.CompilerModeSwitches))) then exit;
   ParamContext.Tool:=ProcTool;
   ParamContext.Node:=ParamNode;
   Result:=true;
