@@ -4094,6 +4094,75 @@ begin
     [_, tkKey+FCaseLabelAttri, _, tkString, TK_Semi]);
   AssertEquals('match fold end',    5, PasHighLighter.FoldEndLine(3, 0));
   AssertEquals('begin fold end',    7, PasHighLighter.FoldEndLine(2, 0));
+  {%endregion}
+
+  {%region match condition form: branches are expressions, "_" included}
+  SetLines
+    ([ '{$mode unleashed}',                     // 0
+       'program a;',                            // 1
+       'begin',                                 // 2
+       '  match',                               // 3
+       '    Foo(s, ''x''): y := ''a'';',        // 4
+       '    x > 10: y := ''b'';',               // 5
+       '    _: y := ''c'';',                    // 6
+       '  end;',                                // 7
+       'end.',                                  // 8
+       ''
+    ]);
+
+  PopPushBaseName('match condition form');
+  CheckTokensForLine('call branch', 4,
+    [_, tkIdentifier, TK_Bracket, tkIdentifier, TK_Comma, _, tkString,
+     TK_Bracket, TK_Colon, _, tkIdentifier, _, TK_Assign, _, tkString, TK_Semi]);
+  CheckTokensForLine('compare branch', 5,
+    [_, tkIdentifier, _, TK_Angle, _, tkNumber, TK_Colon,
+     _, tkIdentifier, _, TK_Assign, _, tkString, TK_Semi]);
+  CheckTokensForLine('underscore catch-all', 6,
+    [_, tkIdentifier, TK_Colon,
+     _, tkIdentifier, _, TK_Assign, _, tkString, TK_Semi]);
+  CheckTokensForLine('end of match', 7, [_, tkKey, TK_Semi]);
+  AssertEquals('match fold end', 7, PasHighLighter.FoldEndLine(3, 0));
+  {%endregion}
+
+  {%region match condition form: "else" is a plain keyword despite the option}
+  SetLines
+    ([ '{$mode unleashed}',                     // 0
+       'program a;',                            // 1
+       'begin',                                 // 2
+       '  match',                               // 3
+       '    x > 10: y := ''b'';',               // 4
+       '    else y := ''d'';',                  // 5
+       '  end;',                                // 6
+       'end.',                                  // 7
+       ''
+    ]);
+
+  PopPushBaseName('match condition form, else');
+  CheckTokensForLine('else branch', 5,
+    [_, tkKey, _, tkIdentifier, _, TK_Assign, _, tkString, TK_Semi]);
+  CheckTokensForLine('end of match', 6, [_, tkKey, TK_Semi]);
+  AssertEquals('match fold end', 6, PasHighLighter.FoldEndLine(3, 0));
+  {%endregion}
+
+  {%region match expression, condition form: guards plain, closes without "end"}
+  SetLines
+    ([ '{$mode unleashed}',                     // 0
+       'function T(const x: integer): string;', // 1
+       'begin',                                 // 2
+       '  var r := match',                      // 3
+       '    x > 10: ''b'';',                    // 4
+       '    else ''d'';',                       // 5
+       '  result := r;',                        // 6
+       'end;',                                  // 7
+       ''
+    ]);
+
+  PopPushBaseName('match expression, condition form');
+  CheckTokensForLine('guard branch', 4,
+    [_, tkIdentifier, _, TK_Angle, _, tkNumber, TK_Colon, _, tkString, TK_Semi]);
+  CheckTokensForLine('else catch-all', 5, [_, tkKey, _, tkString, TK_Semi]);
+  AssertEquals('match fold end',    5, PasHighLighter.FoldEndLine(3, 0));
+  AssertEquals('begin fold end',    7, PasHighLighter.FoldEndLine(2, 0));
   PopBaseName;
   {%endregion}
 end;

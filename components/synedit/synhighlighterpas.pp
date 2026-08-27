@@ -646,6 +646,12 @@ type
                                 final token - "except" closes the try-part and the
                                 "else" catch-all (or ";" etc for the else-less
                                 form) closes the except block; no "end" follows *)
+    FMatchCondBits: Cardinal; (* Same per-depth scheme as FCaseExprBits: set if
+                                the cfbtCase fold at that depth is a condition
+                                form "match" (no "of"). Its branches are boolean
+                                expressions, not labels: they do not get the
+                                case-label attribute ("_" included) and
+                                "else"/"otherwise" stay plain keywords *)
     procedure SetBracketNestLevel(AValue: integer); inline;
   public
     procedure Clear; override;
@@ -666,6 +672,8 @@ type
     function GetCaseExprBit(ADepth: integer): Boolean;
     procedure SetTryExprBit(ADepth: integer; AValue: Boolean);
     function GetTryExprBit(ADepth: integer): Boolean;
+    procedure SetMatchCondBit(ADepth: integer; AValue: Boolean);
+    function GetMatchCondBit(ADepth: integer): Boolean;
     property Mode: TPascalCompilerMode read FMode write FMode;
     property ModeSwitches: TPascalCompilerModeSwitches read FModeSwitches write FModeSwitches;
     (* BracketNestLevel counts only within the current "fold" (or expression).
@@ -2141,6 +2149,9 @@ begin
       EndPascalCodeFoldBlock();
       StartPascalCodeFoldBlock(tfb, True);
       fRange := fRange + [rsAtCaseLabel];
+      if tfb = cfbtCase then
+        // "match x of": subject form, the branch patterns are labels
+        PasCodeFoldRange.SetMatchCondBit(OpenCaseFoldCount - 1, False);
     end;
     if FTokenState = tsAfterEmptyArrayBracket then
       FNextTokenState := tsAfterFamOf;
@@ -2360,8 +2371,10 @@ begin
           ( (tfb = cfbtExcept) and
             PasCodeFoldRange.GetTryExprBit(OpenTryFoldCount - 1) ) );
       DoCodeBlockStatement;
-      if StartPascalCodeFoldBlock(cfbtCase, True) then
+      if StartPascalCodeFoldBlock(cfbtCase, True) then begin
         PasCodeFoldRange.SetCaseExprBit(CaseDepth, IsCaseExpression);
+        PasCodeFoldRange.SetMatchCondBit(CaseDepth, False);
+      end;
     end
     else begin
       tfb := CloseFolds(TopPascalCodeFoldBlockType(), [cfbtClassConstBlock, cfbtClassTypeBlock]);
@@ -2605,7 +2618,9 @@ begin
       StartPascalCodeFoldBlock(cfbtIfElse);
     end else
     if tfb = cfbtCase then begin
-      FTokenIsCaseLabel := True;
+      // in a condition-form match the "else" catch-all stays a plain keyword
+      if not PasCodeFoldRange.GetMatchCondBit(OpenCaseFoldCount - 1) then
+        FTokenIsCaseLabel := True;
       if PasCodeFoldRange.GetCaseExprBit(OpenCaseFoldCount - 1) then begin
         // case expression: "else <expr>" is the tail of the construct and
         // there is no closing "end". The "else" closes the case block, like
@@ -2772,8 +2787,13 @@ begin
           PasCodeFoldRange.GetTryExprBit(OpenTryFoldCount - 1) ) );
     FNextTokenState := tsAfterMatch;
     DoCodeBlockStatement;
-    if StartPascalCodeFoldBlock(cfbtCase, True) then
+    if StartPascalCodeFoldBlock(cfbtCase, True) then begin
       PasCodeFoldRange.SetCaseExprBit(CaseDepth, IsMatchExpression);
+      // assume the condition form until an "of" proves the subject form; the
+      // label state covers the first branch, which starts right after "match"
+      PasCodeFoldRange.SetMatchCondBit(CaseDepth, True);
+      fRange := fRange + [rsAtCaseLabel];
+    end;
   end
   else
   if KeyCompU('LEAVE') and
@@ -4173,7 +4193,9 @@ begin
     EndStatementLastLine(TopPascalCodeFoldBlockType, [cfbtForDo,cfbtWhileDo,cfbtWithDo,cfbtIfThen,cfbtIfElse]);
     tfb := TopPascalCodeFoldBlockType;
     if tfb = cfbtCase then begin
-      FTokenIsCaseLabel := True;
+      // in a condition-form match "otherwise" stays a plain keyword, see "else"
+      if not PasCodeFoldRange.GetMatchCondBit(OpenCaseFoldCount - 1) then
+        FTokenIsCaseLabel := True;
       if PasCodeFoldRange.GetCaseExprBit(OpenCaseFoldCount - 1) then begin
         // case expression: "otherwise <expr>" closes the case block, see "else"
         EndPascalCodeFoldBlock;
@@ -7070,7 +7092,7 @@ end;
 
 procedure TSynPasSyn.Next;
 var
-  IsAtCaseLabel: Boolean;
+  IsAtCaseLabel, IsAtMatchCondBranch: Boolean;
   OldNestLevel: Integer;
 begin
   fAsmStart := False;
@@ -7145,6 +7167,9 @@ begin
         //else
 
         IsAtCaseLabel := rsAtCaseLabel in fRange;
+        IsAtMatchCondBranch := IsAtCaseLabel and
+          (TopPascalCodeFoldBlockType = cfbtCase) and
+          PasCodeFoldRange.GetMatchCondBit(OpenCaseFoldCount - 1);
 
         FTokenHashKey := 0;
         fProcTable[LinePtr[Run]];
@@ -7231,9 +7256,18 @@ begin
         end;
 
         if (IsAtCaseLabel) and (rsAtCaseLabel in fRange) then begin
-          FTokenIsCaseLabel := True;
-          if (FTokenID = tkKey) then
-            fRange := fRange - [rsAtCaseLabel];
+          if IsAtMatchCondBranch then begin
+            // condition-form match: the branch is a boolean expression, not a
+            // label ("_" included). Drop the label state at the first real
+            // token so the branch keeps its normal colors
+            if not (FTokenID in [tkSpace, tkComment, tkIDEDirective, tkDirective, tkNull]) then
+              fRange := fRange - [rsAtCaseLabel];
+          end
+          else begin
+            FTokenIsCaseLabel := True;
+            if (FTokenID = tkKey) then
+              fRange := fRange - [rsAtCaseLabel];
+          end;
         end;
 
         if not (FTokenID in [tkSpace, tkComment, tkIDEDirective, tkDirective]) then begin
@@ -9430,6 +9464,7 @@ begin
   FInInlineVarStmt := False;
   FCaseExprBits := 0;
   FTryExprBits := 0;
+  FMatchCondBits := 0;
 end;
 
 function TSynPasSynRange.Compare(Range: TLazHighlighterRange): integer;
@@ -9452,6 +9487,7 @@ begin
     FInInlineVarStmt := TSynPasSynRange(Src).FInInlineVarStmt;
     FCaseExprBits := TSynPasSynRange(Src).FCaseExprBits;
     FTryExprBits := TSynPasSynRange(Src).FTryExprBits;
+    FMatchCondBits := TSynPasSynRange(Src).FMatchCondBits;
   end;
 end;
 
@@ -9550,6 +9586,23 @@ function TSynPasSynRange.GetTryExprBit(ADepth: integer): Boolean;
 begin
   Result := (ADepth >= 0) and (ADepth <= 31) and
             ((FTryExprBits and (Cardinal(1) shl ADepth)) <> 0);
+end;
+
+procedure TSynPasSynRange.SetMatchCondBit(ADepth: integer; AValue: Boolean);
+begin
+  // deeper nesting than the mask can hold degrades to "not a condition match"
+  if (ADepth < 0) or (ADepth > 31) then
+    exit;
+  if AValue then
+    FMatchCondBits := FMatchCondBits or (Cardinal(1) shl ADepth)
+  else
+    FMatchCondBits := FMatchCondBits and not (Cardinal(1) shl ADepth);
+end;
+
+function TSynPasSynRange.GetMatchCondBit(ADepth: integer): Boolean;
+begin
+  Result := (ADepth >= 0) and (ADepth <= 31) and
+            ((FMatchCondBits and (Cardinal(1) shl ADepth)) <> 0);
 end;
 
 { TSynPasSynCustomToken }
