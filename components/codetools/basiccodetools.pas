@@ -154,6 +154,8 @@ function GetBracketLvl(const Src: string; StartPos, EndPos: integer;
 
 // string interpolation ($'text {expr} text')
 procedure SkipPascalInterpolatedString(var p: PChar; NestedComments: Boolean);
+function FindInterpolatedStringExprStart(const Src: string;
+    LiteralStartPos, CursorPos: integer; NestedComments: boolean): integer;
 
 // replacements
 function ReplacementNeedsLineEnd(const Source: string;
@@ -615,6 +617,207 @@ begin
       inc(p);
     end;
   end;
+end;
+
+function FindInterpolatedStringExprStart(const Src: string;
+  LiteralStartPos, CursorPos: integer; NestedComments: boolean): integer;
+// Src[LiteralStartPos] must be the '$' of a `$'...'` literal. If CursorPos
+// lies inside one of its interpolation expressions, return the position just
+// past that expression's opening '{' (the innermost one when `$'...'`
+// literals nest), otherwise 0. Follows the same walk as
+// SkipPascalInterpolatedString, so unterminated literals are tolerated: an
+// expression cut off by the end of the source still counts as containing the
+// cursor.
+var
+  p, Len: integer;
+
+  procedure SkipCurlyComment;
+  var Lvl: Integer;
+  begin
+    Lvl:=1;
+    inc(p);
+    while p<=Len do begin
+      case Src[p] of
+        '{': if NestedComments then inc(Lvl);
+        '}':
+          begin
+            dec(Lvl);
+            if Lvl=0 then begin
+              inc(p);
+              exit;
+            end;
+          end;
+      end;
+      inc(p);
+    end;
+  end;
+
+  procedure SkipRoundComment;
+  var Lvl: Integer;
+  begin
+    Lvl:=1;
+    inc(p,2);
+    while p<=Len do begin
+      if (Src[p]='(') and (p<Len) and (Src[p+1]='*') and NestedComments then begin
+        inc(Lvl); inc(p,2);
+      end else if (Src[p]='*') and (p<Len) and (Src[p+1]=')') then begin
+        dec(Lvl); inc(p,2);
+        if Lvl=0 then exit;
+      end else
+        inc(p);
+    end;
+  end;
+
+  procedure SkipRegularApostropheString;
+  begin
+    inc(p);
+    while p<=Len do begin
+      case Src[p] of
+        '''':
+          if (p<Len) and (Src[p+1]='''') then
+            inc(p,2)
+          else begin
+            inc(p);
+            exit;
+          end;
+        #10,#13:
+          exit;
+      else
+        inc(p);
+      end;
+    end;
+  end;
+
+  procedure SkipBacktickString;
+  begin
+    inc(p);
+    while (p<=Len) and (Src[p]<>'`') do inc(p);
+    if p<=Len then inc(p);
+  end;
+
+  procedure SkipCharConstant;
+  begin
+    inc(p);
+    if (p<=Len) and (Src[p]='$') then begin
+      inc(p);
+      while (p<=Len) and IsHexNumberChar[Src[p]] do inc(p);
+    end else
+      while (p<=Len) and IsNumberChar[Src[p]] do inc(p);
+  end;
+
+  procedure WalkLiteral; forward;
+
+  procedure WalkInterpExpr;
+  // p is just past the expression-opening '{'; advance past the matching '}',
+  // recording the expression when it contains the cursor
+  var
+    PLvl, ExprStart: Integer;
+  begin
+    ExprStart:=p;
+    PLvl:=0;
+    while p<=Len do begin
+      case Src[p] of
+        '}':
+          begin
+            inc(p);
+            break;
+          end;
+        ':':
+          if PLvl=0 then begin
+            // `{expr:mask}` - mask runs raw to the closing `}`
+            while (p<=Len) and (Src[p]<>'}') do inc(p);
+          end else
+            inc(p);
+        '{':
+          SkipCurlyComment;
+        '(':
+          if (p<Len) and (Src[p+1]='*') then
+            SkipRoundComment
+          else begin
+            inc(PLvl); inc(p);
+          end;
+        ')':
+          begin
+            if PLvl>0 then dec(PLvl);
+            inc(p);
+          end;
+        '[':
+          begin
+            inc(PLvl); inc(p);
+          end;
+        ']':
+          begin
+            if PLvl>0 then dec(PLvl);
+            inc(p);
+          end;
+        '/':
+          if (p<Len) and (Src[p+1]='/') then begin
+            while (p<=Len) and not (Src[p] in [#10,#13]) do inc(p);
+          end else
+            inc(p);
+        '''':
+          SkipRegularApostropheString;
+        '`':
+          SkipBacktickString;
+        '#':
+          SkipCharConstant;
+        '$':
+          if (p<Len) and (Src[p+1]='''') then
+            WalkLiteral // nested $'...': its expressions are checked first
+          else begin
+            inc(p);
+            while (p<=Len) and IsHexNumberChar[Src[p]] do inc(p);
+          end;
+      else
+        inc(p);
+      end;
+    end;
+    // a nested literal's expression already claimed the cursor -> keep it
+    if (Result=0) and (CursorPos>=ExprStart) and (CursorPos<p) then
+      Result:=ExprStart;
+  end;
+
+  procedure WalkLiteral;
+  begin
+    // skip $'
+    inc(p,2);
+    while p<=Len do begin
+      case Src[p] of
+        '''':
+          if (p<Len) and (Src[p+1]='''') then
+            inc(p,2) // doubled apostrophe = literal
+          else begin
+            inc(p);
+            exit;
+          end;
+        '{':
+          if (p<Len) and (Src[p+1]='{') then
+            inc(p,2) // escaped brace
+          else begin
+            inc(p);
+            WalkInterpExpr;
+          end;
+        '}':
+          if (p<Len) and (Src[p+1]='}') then
+            inc(p,2) // escaped brace
+          else
+            inc(p);
+        #10,#13:
+          exit; // newline in string part ends the literal
+      else
+        inc(p);
+      end;
+    end;
+  end;
+
+begin
+  Result:=0;
+  Len:=length(Src);
+  if (LiteralStartPos<1) or (LiteralStartPos>=Len) then exit;
+  if (Src[LiteralStartPos]<>'$') or (Src[LiteralStartPos+1]<>'''') then exit;
+  if CursorPos<=LiteralStartPos then exit;
+  p:=LiteralStartPos;
+  WalkLiteral;
 end;
 
 { most simple code tools - just methods }

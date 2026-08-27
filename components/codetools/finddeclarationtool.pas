@@ -14782,6 +14782,24 @@ function TFindDeclarationTool.CheckParameterSyntax(StartPos,
 
   function CheckIdentifierAndParameterList: boolean; forward;
 
+  function StepIntoInterpolationExpr: boolean;
+  // CurPos is an atom reaching beyond CleanCursorPos. When it is a `$'...'`
+  // literal and the cursor sits in one of its interpolation expressions, move
+  // the cursor to the expression start (to scan the expression like regular
+  // code) and return true.
+  var
+    ExprStart: integer;
+  begin
+    Result:=false;
+    if (CurPos.StartPos>CleanCursorPos) or (CurPos.StartPos>SrcLen) then exit;
+    if Src[CurPos.StartPos]<>'$' then exit;
+    ExprStart:=FindInterpolatedStringExprStart(Src,CurPos.StartPos,
+      CleanCursorPos,Scanner.NestedComments);
+    if ExprStart<1 then exit;
+    MoveCursorToCleanPos(ExprStart);
+    Result:=true;
+  end;
+
   function CheckBrackets: boolean;
   { check simple brackets (no identifier in front of brackets)
   }
@@ -14792,6 +14810,8 @@ function TFindDeclarationTool.CheckParameterSyntax(StartPos,
     {$IFDEF VerboseCPS}DebugLn('CheckBrackets "',GetAtom,'" BracketAtom=',dbgs(BracketAtom));{$ENDIF}
     repeat
       ReadNextAtom;
+      if (CurPos.EndPos>CleanCursorPos) and StepIntoInterpolationExpr then
+        continue;
       if CurPos.Flag in [cafRoundBracketOpen,cafEdgedBracketOpen] then begin
         if (LastAtoms.GetPriorAtom.Flag=cafWord) then begin
           {$IFDEF VerboseCPS}DebugLn('CheckBrackets check word+bracket open');{$ENDIF}
@@ -14840,6 +14860,11 @@ function TFindDeclarationTool.CheckParameterSyntax(StartPos,
     repeat
       ReadNextAtom;
       {$IFDEF VerboseCPS}DebugLn('CheckIdentifierAndParameterList Atom="',GetAtom,'"');{$ENDIF}
+      if (CurPos.EndPos>CleanCursorPos) and StepIntoInterpolationExpr then
+        // cursor in an interpolation expression of this `$'...'` argument:
+        // scan the expression itself; if it holds no call of its own, the
+        // enclosing list (this one) still supplies the context
+        continue;
       if (CurPos.EndPos>CleanCursorPos)
       or ((CurPos.EndPos=CleanCursorPos)
         and ((CurPos.Flag=cafWord) or AtomIsChar('@')))
@@ -14946,6 +14971,9 @@ begin
     DebugLn('TFindDeclarationTool.CheckParameterSyntax ',GetAtom,' at ',CleanPosToStr(CurPos.StartPos),' ',dbgs(CurPos.EndPos),'<',dbgs(CleanCursorPos));
     {$ENDIF}
     if CurPos.EndPos>CleanCursorPos then begin
+      // cursor inside an interpolation expression of a `$'...'` literal?
+      // => parse within the expression, like within a comment below
+      if StepIntoInterpolationExpr then continue;
       if not LastAtoms.HasPrior then exit;
       CleanPosInFront:=LastAtoms.GetPriorAtom.EndPos;
       //debugln(['TFindDeclarationTool.CheckParameterSyntax Cur="',GetAtom,'" Last="',GetAtom(LastAtoms.GetValueAt(0)),'"']);
