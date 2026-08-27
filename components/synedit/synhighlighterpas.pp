@@ -632,7 +632,6 @@ type
     FSpecializeBracketNestLevel: integer;
     FTokenState: TTokenState;
     FInInlineVarStmt: Boolean;
-    FInterpExprDepth: Byte; // open `{expr}` depth inside `$'...'` interpolated strings
     FCaseExprBits: Cardinal; (* One bit per open "case" fold, bit 0 = outermost:
                                 set if that case is a case expression. With an
                                 "else"/"otherwise" branch that construct has no
@@ -690,7 +689,6 @@ type
     // set by `var` inside a statement block; cleared by `;` or `:=`
     // so `:` is treated as a type intro and `^T` as a pointer type
     property InInlineVarStmt: Boolean read FInInlineVarStmt write FInInlineVarStmt;
-    property InterpExprDepth: Byte read FInterpExprDepth write FInterpExprDepth;
   end;
 
   TProcTableProc = procedure of object;
@@ -835,7 +833,14 @@ type
     FSynPasRangeInfo: TSynPasRangeInfo;
     FAtLineStart, FAtSlashStart, FHadSlashLastLine, FInString: Boolean; // Line had only spaces or comments sofar
     FInInterpString: Boolean; // currently scanning a `$'...'` string part (single-line)
-    FInterpExprDepth: Byte;   // number of currently open `{expr}` scopes in interpolated strings (persists across lines)
+    FInterpExprDepth: Byte;   (* number of currently open `{expr}` scopes in
+      interpolated strings. Deliberately NOT part of the stored range: the
+      compiler allows an expression to span lines, but carrying the depth
+      across lines means one unbalanced `{` - a normal transient state while
+      typing a literal - restyles the whole rest of the unit (every `:` starts
+      a format mask, every `}` closes a phantom expression). Interpolation
+      highlighting is therefore line-local; continuation lines of a multi-line
+      expression are painted as plain code *)
     fLineLen: integer;
     fProcTable: array[#0..#255] of TProcTableProc;
     Run: LongInt;// current parser postion in LinePtr
@@ -5035,6 +5040,7 @@ begin
   FHadSlashLastLine := rsSlash in fRange;
   FInString := False;
   FInInterpString := False;
+  FInterpExprDepth := 0;
   FCustomCommentTokenMarkup := nil;
   if not IsCollectingNodeInfo then
     Next;
@@ -7615,7 +7621,6 @@ begin
   PasCodeFoldRange.TokenState := FTokenState;
   PasCodeFoldRange.Mode := FRangeCompilerMode;
   PasCodeFoldRange.ModeSwitches := FRangeModeSwitches;
-  PasCodeFoldRange.InterpExprDepth := FInterpExprDepth;
   // return a fixed copy of the current CodeFoldRange instance
   Result := inherited GetRange;
 end;
@@ -7627,7 +7632,7 @@ begin
   FRangeCompilerMode := PasCodeFoldRange.Mode;
   FRangeModeSwitches := PasCodeFoldRange.ModeSwitches;
   FTokenState := PasCodeFoldRange.TokenState;
-  FInterpExprDepth := PasCodeFoldRange.InterpExprDepth;
+  FInterpExprDepth := 0; // interpolation state is line-local, see the field
   FInInterpString := False;
   fRange := TRangeStates(Integer(PtrUInt(CodeFoldRange.RangeType)));
   FSynPasRangeInfo := TSynHighlighterPasRangeList(CurrentRanges).PasRangeInfo[LineIndex-1];
@@ -9423,7 +9428,6 @@ begin
   FPasFoldFixLevel := 0;
   FTokenState := tsNone;
   FInInlineVarStmt := False;
-  FInterpExprDepth := 0;
   FCaseExprBits := 0;
   FTryExprBits := 0;
 end;
@@ -9446,7 +9450,6 @@ begin
     FLastLineCodeFoldLevelFix := TSynPasSynRange(Src).FLastLineCodeFoldLevelFix;
     FPasFoldFixLevel := TSynPasSynRange(Src).FPasFoldFixLevel;
     FInInlineVarStmt := TSynPasSynRange(Src).FInInlineVarStmt;
-    FInterpExprDepth := TSynPasSynRange(Src).FInterpExprDepth;
     FCaseExprBits := TSynPasSynRange(Src).FCaseExprBits;
     FTryExprBits := TSynPasSynRange(Src).FTryExprBits;
   end;
