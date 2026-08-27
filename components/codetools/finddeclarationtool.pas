@@ -3889,6 +3889,15 @@ begin
           end;
         end else begin
           case Node.Desc of
+          ctnVarDefinition:
+            begin
+              // no type annotation: an inline var (`var x := expr`), a tuple
+              // destructure entry or an out-var at a call argument; show the
+              // inferred type
+              NodeStr:=ExtractInlineVarInitType(Node);
+              if NodeStr<>'' then
+                Result+=': '+NodeStr;
+            end;
           ctnConstDefinition:
             begin
               DebugLn('TFindDeclarationTool.GetSmartHint const without subnode "',ExtractNode(Node,[]),'"');
