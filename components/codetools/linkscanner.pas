@@ -675,6 +675,15 @@ type
     procedure SkipTillEndifElse(SkippingUntil: TLSSkippingDirective);
     procedure SortDirectives;
     function InternalIfDirective: boolean;
+    function EvalSizeOfIdentifier(Sender: TObject; const Identifier: string;
+      out Size: int64): boolean;
+    function FindTypeSizeInSrc(const Identifier: string;
+      MaxPos, Depth: integer; out Size: int64): boolean;
+    function ParseTypeSizeInSrc(var Pos: integer;
+      MaxPos, Depth: integer; out Size: int64): boolean;
+    procedure SkipSrcSpaceAndComments(var Pos: integer; MaxPos: integer);
+    function ReadSrcIntConst(var Pos: integer; MaxPos: integer;
+      out Value: int64): boolean;
     procedure EndSkipping;
     procedure AddSkipComment(IsStart: boolean);
     procedure SetDirectiveValueWithSequence(ADirective: TSequenceDirective;
@@ -1505,6 +1514,7 @@ begin
   inherited Create;
   FInitValues:=TExpressionEvaluator.Create;
   Values:=TExpressionEvaluator.Create;
+  Values.OnSizeOfIdentifier:=@EvalSizeOfIdentifier;
   FDirectiveSequence:=TDirectiveSequence.Create;
   IncreaseChangeStep;
   FSourceChangeSteps:=TFPList.Create;
@@ -4937,6 +4947,303 @@ end;
 function TLinkScanner.GetIgnoreMissingIncludeFiles: boolean;
 begin
   Result:=lssIgnoreMissingIncludeFiles in FStates;
+end;
+
+procedure TLinkScanner.SkipSrcSpaceAndComments(var Pos: integer; MaxPos: integer);
+// skips whitespace and comments (including directives) in Src
+begin
+  repeat
+    while (Pos<=MaxPos) and (Src[Pos] in [' ',#9,#10,#13]) do inc(Pos);
+    if Pos>MaxPos then exit;
+    case Src[Pos] of
+    '{':
+      begin
+        while (Pos<=MaxPos) and (Src[Pos]<>'}') do inc(Pos);
+        if Pos<=MaxPos then inc(Pos);
+      end;
+    '(':
+      if (Pos<MaxPos) and (Src[Pos+1]='*') then begin
+        inc(Pos,2);
+        while (Pos<MaxPos) and not ((Src[Pos]='*') and (Src[Pos+1]=')')) do
+          inc(Pos);
+        if Pos<MaxPos then
+          inc(Pos,2)
+        else
+          Pos:=MaxPos+1;
+      end else
+        exit;
+    '/':
+      if (Pos<MaxPos) and (Src[Pos+1]='/') then begin
+        while (Pos<=MaxPos) and not (Src[Pos] in [#10,#13]) do inc(Pos);
+      end else
+        exit;
+    else
+      exit;
+    end;
+  until false;
+end;
+
+function TLinkScanner.ReadSrcIntConst(var Pos: integer; MaxPos: integer;
+  out Value: int64): boolean;
+// reads an integer literal (decimal or $hex, optionally negated,
+// '_' digit group separators allowed) at Src[Pos]
+const
+  MaxSafe = High(int64) div 16 - 15;
+var
+  Negated, HasDigit: boolean;
+begin
+  Result:=false;
+  Value:=0;
+  HasDigit:=false;
+  Negated:=false;
+  if (Pos<=MaxPos) and (Src[Pos]='-') then begin
+    Negated:=true;
+    inc(Pos);
+    SkipSrcSpaceAndComments(Pos,MaxPos);
+  end;
+  if Pos>MaxPos then exit;
+  if Src[Pos]='$' then begin
+    inc(Pos);
+    while Pos<=MaxPos do begin
+      if Value>MaxSafe then exit;
+      case Src[Pos] of
+      '0'..'9': begin Value:=Value*16+ord(Src[Pos])-ord('0'); HasDigit:=true; end;
+      'a'..'f': begin Value:=Value*16+ord(Src[Pos])-ord('a')+10; HasDigit:=true; end;
+      'A'..'F': begin Value:=Value*16+ord(Src[Pos])-ord('A')+10; HasDigit:=true; end;
+      '_': ;
+      else break;
+      end;
+      inc(Pos);
+    end;
+  end else begin
+    while Pos<=MaxPos do begin
+      if Value>MaxSafe then exit;
+      case Src[Pos] of
+      '0'..'9': begin Value:=Value*10+ord(Src[Pos])-ord('0'); HasDigit:=true; end;
+      '_': ;
+      else break;
+      end;
+      inc(Pos);
+    end;
+  end;
+  if Negated then Value:=-Value;
+  Result:=HasDigit;
+end;
+
+function TLinkScanner.ParseTypeSizeInSrc(var Pos: integer;
+  MaxPos, Depth: integer; out Size: int64): boolean;
+// parses a type at Src[Pos] and computes its size for simple cases:
+// built-in types, aliases of other declared types, string[N] and
+// (multi-)dimensional arrays with constant bounds;
+// returns false when the type is more complex (record, class, ...)
+var
+  Ident: string;
+  ElemSize, Count, DimCount, Lo, Hi: int64;
+
+  function ReadIdent: string;
+  var
+    StartP: integer;
+  begin
+    StartP:=Pos;
+    while (Pos<=MaxPos) and (Src[Pos] in ['a'..'z','A'..'Z','0'..'9','_']) do
+      inc(Pos);
+    Result:=copy(Src,StartP,Pos-StartP);
+  end;
+
+  function IndexTypeCount(const IndexIdent: string; out Cnt: int64): boolean;
+  // number of elements when an ordinal built-in type is used as array index
+  var
+    s: int64;
+  begin
+    Cnt:=0;
+    Result:=true;
+    case lowercase(IndexIdent) of
+    'boolean','bytebool','wordbool','longbool','qwordbool': Cnt:=2;
+    else
+      begin
+        s:=Values.BuiltinTypeSize(IndexIdent);
+        case s of
+        1: Cnt:=256;
+        2: Cnt:=65536;
+        else Result:=false;
+        end;
+      end;
+    end;
+  end;
+
+begin
+  Result:=false;
+  Size:=0;
+  if Depth>8 then exit;
+  SkipSrcSpaceAndComments(Pos,MaxPos);
+  if (Pos>MaxPos) or not (Src[Pos] in ['a'..'z','A'..'Z','_']) then exit;
+  Ident:=ReadIdent;
+  if SameText(Ident,'packed') then begin
+    SkipSrcSpaceAndComments(Pos,MaxPos);
+    if (Pos>MaxPos) or not (Src[Pos] in ['a'..'z','A'..'Z','_']) then exit;
+    Ident:=ReadIdent;
+  end;
+  if SameText(Ident,'array') then begin
+    SkipSrcSpaceAndComments(Pos,MaxPos);
+    if (Pos>MaxPos) or (Src[Pos]<>'[') then exit;
+    inc(Pos);
+    Count:=1;
+    repeat
+      SkipSrcSpaceAndComments(Pos,MaxPos);
+      if Pos>MaxPos then exit;
+      if Src[Pos] in ['a'..'z','A'..'Z','_'] then begin
+        if not IndexTypeCount(ReadIdent,DimCount) then exit;
+      end else begin
+        if not ReadSrcIntConst(Pos,MaxPos,Lo) then exit;
+        SkipSrcSpaceAndComments(Pos,MaxPos);
+        if (Pos<MaxPos) and (Src[Pos]='.') and (Src[Pos+1]='.') then begin
+          // range form: array[Lo..Hi]
+          inc(Pos,2);
+          SkipSrcSpaceAndComments(Pos,MaxPos);
+          if not ReadSrcIntConst(Pos,MaxPos,Hi) then exit;
+          DimCount:=Hi-Lo+1;
+        end else
+          // element count form: array[N]
+          DimCount:=Lo;
+      end;
+      if DimCount<0 then exit;
+      if (DimCount>0) and (Count>High(int64) div DimCount) then exit;
+      Count:=Count*DimCount;
+      SkipSrcSpaceAndComments(Pos,MaxPos);
+      if (Pos<=MaxPos) and (Src[Pos]=',') then
+        inc(Pos)
+      else
+        break;
+    until false;
+    if (Pos>MaxPos) or (Src[Pos]<>']') then exit;
+    inc(Pos);
+    SkipSrcSpaceAndComments(Pos,MaxPos);
+    if (Pos>MaxPos) or not (Src[Pos] in ['a'..'z','A'..'Z','_']) then exit;
+    if not SameText(ReadIdent,'of') then exit;
+    if not ParseTypeSizeInSrc(Pos,MaxPos,Depth+1,ElemSize) then exit;
+    if (ElemSize<=0) or (Count>High(int64) div ElemSize) then exit;
+    Size:=Count*ElemSize;
+    Result:=true;
+  end else if SameText(Ident,'string') then begin
+    SkipSrcSpaceAndComments(Pos,MaxPos);
+    if (Pos<=MaxPos) and (Src[Pos]='[') then begin
+      // shortstring with explicit length: length byte + characters
+      inc(Pos);
+      SkipSrcSpaceAndComments(Pos,MaxPos);
+      if not ReadSrcIntConst(Pos,MaxPos,Lo) then exit;
+      SkipSrcSpaceAndComments(Pos,MaxPos);
+      if (Pos>MaxPos) or (Src[Pos]<>']') then exit;
+      inc(Pos);
+      if (Lo<1) or (Lo>255) then exit;
+      Size:=Lo+1;
+      Result:=true;
+    end else begin
+      Size:=Values.BuiltinTypeSize('string');
+      Result:=Size>0;
+    end;
+  end else begin
+    Size:=Values.BuiltinTypeSize(Ident);
+    if Size>0 then
+      Result:=true
+    else
+      // not a built-in type - try to find its declaration
+      Result:=FindTypeSizeInSrc(Ident,MaxPos,Depth+1,Size);
+  end;
+end;
+
+function TLinkScanner.FindTypeSizeInSrc(const Identifier: string;
+  MaxPos, Depth: integer; out Size: int64): boolean;
+// searches the current source up to MaxPos for a type or variable
+// declaration of Identifier ("x = <type>" or "x[, y]: <type>") and computes
+// the size of the declared type; the last parsable declaration wins
+var
+  p, q, IdentStart: integer;
+  DeclStart: boolean; // the previous token allows a declaration here
+  Ident: string;
+  CurSize: int64;
+begin
+  Result:=false;
+  Size:=0;
+  if (Depth>8) or (Identifier='') then exit;
+  if MaxPos>SrcLen then MaxPos:=SrcLen;
+  p:=1;
+  DeclStart:=true;
+  while p<=MaxPos do begin
+    SkipSrcSpaceAndComments(p,MaxPos);
+    if p>MaxPos then break;
+    case Src[p] of
+    'a'..'z','A'..'Z','_':
+      begin
+        IdentStart:=p;
+        while (p<=MaxPos) and (Src[p] in ['a'..'z','A'..'Z','0'..'9','_']) do
+          inc(p);
+        Ident:=copy(Src,IdentStart,p-IdentStart);
+        if DeclStart and SameText(Ident,Identifier) then begin
+          q:=p;
+          SkipSrcSpaceAndComments(q,MaxPos);
+          // skip the other names of a combined declaration: a, b, c: type
+          while (q<=MaxPos) and (Src[q]=',') do begin
+            inc(q);
+            SkipSrcSpaceAndComments(q,MaxPos);
+            if (q>MaxPos) or not (Src[q] in ['a'..'z','A'..'Z','_']) then break;
+            while (q<=MaxPos) and (Src[q] in ['a'..'z','A'..'Z','0'..'9','_']) do
+              inc(q);
+            SkipSrcSpaceAndComments(q,MaxPos);
+          end;
+          if (q<=MaxPos) and (Src[q] in [':','=']) then begin
+            inc(q);
+            if ParseTypeSizeInSrc(q,MaxPos,Depth,CurSize) then begin
+              Size:=CurSize;
+              Result:=true;
+            end;
+          end;
+        end;
+        // these keywords start declarations; any other identifier does not
+        DeclStart:=SameText(Ident,'type') or SameText(Ident,'var')
+          or SameText(Ident,'threadvar') or SameText(Ident,'const')
+          or SameText(Ident,'record') or SameText(Ident,'public')
+          or SameText(Ident,'private') or SameText(Ident,'protected')
+          or SameText(Ident,'published');
+      end;
+    '''':
+      begin
+        // string literal
+        inc(p);
+        repeat
+          while (p<=MaxPos) and (Src[p]<>'''') and not (Src[p] in [#10,#13]) do
+            inc(p);
+          if (p<MaxPos) and (Src[p]='''') and (Src[p+1]='''') then
+            inc(p,2)
+          else
+            break;
+        until false;
+        if (p<=MaxPos) and (Src[p]='''') then inc(p);
+        DeclStart:=false;
+      end;
+    ';',',':
+      begin
+        DeclStart:=true;
+        inc(p);
+      end;
+    else
+      begin
+        DeclStart:=false;
+        inc(p);
+      end;
+    end;
+  end;
+end;
+
+function TLinkScanner.EvalSizeOfIdentifier(Sender: TObject;
+  const Identifier: string; out Size: int64): boolean;
+// called by the expression evaluator for SizeOf(X)/BitSizeOf(X) when X is
+// not a built-in type: find the declaration of X in the already scanned
+// part of the current source and compute its size, so that the IDE
+// evaluates {$IF SizeOf(x)=...} like the compiler for simple declarations
+begin
+  Size:=0;
+  Result:=(Src<>'') and (SrcPos>1) and (System.Pos('.',Identifier)=0)
+    and FindTypeSizeInSrc(Identifier,SrcPos-1,0,Size);
 end;
 
 function TLinkScanner.InternalIfDirective: boolean;

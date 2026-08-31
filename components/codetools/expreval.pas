@@ -76,6 +76,10 @@ const
 type
   TOnValuesChanged = procedure of object;
   TOnGetSameString = procedure(var s: string) of object;
+  // resolve SizeOf(Identifier) for identifiers that are not built-in types,
+  // e.g. by looking up the declaration in the scanned source
+  TExprSizeOfIdentEvent = function(Sender: TObject; const Identifier: string;
+                                   out Size: int64): boolean of object;
   ArrayOfAnsiString = ^AnsiString;
   
   TEvalOperand = record
@@ -99,6 +103,7 @@ type
     OldExpr: string;
     OldCurPos, OldMax, OldAtomStart, OldAtomEnd, OldPriorAtomStart: integer;
     FOnChange: TOnValuesChanged;
+    FOnSizeOfIdentifier: TExprSizeOfIdentEvent;
     function OldReadTilEndBracket:boolean;
     function CompAtom(const UpperCaseTag:string): boolean;
     function OldReadNextAtom:boolean;
@@ -124,9 +129,13 @@ type
                        out Operand: TEvalOperand; AllowExternalMacro: boolean = false): boolean;// true if expression valid
     function EvalBoolean(Expression: PChar; ExprLen: PtrInt; AllowExternalMacro: boolean = false): boolean;
     function EvalOld(const Expression: string):string;
+    function BuiltinTypeSize(const Identifier: string): int64; // in bytes, -1 if not a built-in type
+    function PointerTypeSize: int64;
     property ErrorPosition: integer read FErrorPos write FErrorPos;
     property ErrorMsg: string read FErrorMsg write FErrorMsg;
     property OnChange: TOnValuesChanged read FOnChange write FOnChange;
+    property OnSizeOfIdentifier: TExprSizeOfIdentEvent read FOnSizeOfIdentifier
+                                                       write FOnSizeOfIdentifier;
     function Items(Index: integer): string;
     function Names(Index: integer): string;
     function Values(Index: integer): string;
@@ -218,6 +227,7 @@ begin
         '0'..'9': Result:=Result*16+ord(p^)-ord('0');
         'a'..'f': Result:=Result*16+ord(p^)-ord('a')+10;
         'A'..'Z': Result:=Result*16+ord(p^)-ord('A')+10;
+        '_': ; // digit group separator
         else
           break;
         end;
@@ -248,7 +258,7 @@ begin
         c:=p^;
         if c in ['0'..'9'] then
           Result:=Result*10+ord(c)-ord('0')
-        else
+        else if c<>'_' then // '_' digit group separator is skipped
           break;
         inc(p);
         dec(l);
@@ -1182,6 +1192,64 @@ begin
     SL.Add(FNames[i]+'='+FValues[i]);
 end;
 
+function TExpressionEvaluator.PointerTypeSize: int64;
+begin
+  if IsDefined('CPU16') then
+    Result:=2
+  else if IsDefined('CPU32') then
+    Result:=4
+  else
+    Result:=8;
+end;
+
+function TExpressionEvaluator.BuiltinTypeSize(const Identifier: string): int64;
+// returns size in bytes for known built-in types, -1 for anything else
+begin
+  case lowercase(Identifier) of
+  'boolean',
+  'bytebool',
+  'byte',
+  'shortint': Result:=1;
+  'wordbool',
+  'word',
+  'smallint': Result:=2;
+  'cardinal',
+  'longword',
+  'longint',
+  'integer', // 2 bytes in mode tp, 4 in all common modes
+  'longbool': Result:=4;
+  'int64',
+  'qword',
+  'qwordbool',
+  'comp': Result:=8;
+  'pointer',
+  'ptrint',
+  'ptruint',
+  'string',
+  'ansistring',
+  'unicodestring',
+  'rawbytestring',
+  'widestring':
+     Result:=PointerTypeSize;
+  'ansichar': Result:=1;
+  'widechar','unicodechar': Result:=2;
+  'char':
+    if IsDefined('FPC_UNICODESTRINGS') then
+      Result:=2
+    else
+      Result:=1;
+  'single': Result:=4;
+  'double': Result:=8;
+  'extended':
+    if IsDefined('CPU32') then
+      Result:=10
+    else
+      Result:=8;
+  else
+    Result:=-1;
+  end;
+end;
+
 function TExpressionEvaluator.Eval(const Expression: string;
   AllowExternalMacro: boolean): string;
 {  0 = false
@@ -1271,7 +1339,7 @@ var
         Exponent:=false;
         repeat
           case p^ of
-          '0'..'9': inc(p);
+          '0'..'9','_': inc(p); // '_' is a digit group separator: 100_000
           '.':
             if Float then
               break
@@ -1294,7 +1362,7 @@ var
     '$':
       begin
         inc(p);
-        while IsHexNumberChar[p^] do inc(p);
+        while IsHexNumberChar[p^] or (p^='_') do inc(p);
       end;
     '>':
       begin
@@ -1542,63 +1610,18 @@ var
     Result:=true;
   end;
 
-  function PointerSize: int64;
-  begin
-    if IsDefined('CPU16') then
-      Result:=2
-    else if IsDefined('CPU32') then
-      Result:=4
-    else
-      Result:=8;
-  end;
-
-  function SizeOfBuiltin(const Identifier: string): int64;
-  // returns size in bytes for known built-in types; for unknown types
-  // (records, classes, user types) returns the default pointer size so
+  function SizeOfIdentifier(const Identifier: string): int64;
+  // size in bytes for built-in types; other identifiers are resolved via
+  // OnSizeOfIdentifier (e.g. lookup of the declaration in the source); if
+  // that fails too, the default pointer size is returned so that
   // {$IF SizeOf(...)} expressions still produce a usable integer
   begin
-    case lowercase(Identifier) of
-    'boolean',
-    'bytebool',
-    'byte',
-    'shortint': Result:=1;
-    'wordbool',
-    'word',
-    'smallint': Result:=2;
-    'cardinal',
-    'longword',
-    'longbool': Result:=4;
-    'int64',
-    'qword',
-    'qwordbool',
-    'comp': Result:=8;
-    'pointer',
-    'ptrint',
-    'ptruint',
-    'string',
-    'ansistring',
-    'unicodestring',
-    'rawbytestring',
-    'widestring':
-       Result:=PointerSize;
-    'ansichar': Result:=1;
-    'widechar','unicodechar': Result:=2;
-    'char':
-      if IsDefined('FPC_UNICODESTRINGS') then
-        Result:=2
-      else
-        Result:=1;
-    'single': Result:=4;
-    'double': Result:=8;
-    'extended':
-      if IsDefined('CPU32') then
-        Result:=10
-      else
-        Result:=8;
-    else
-      // unknown type (user record, class, ...) - fall back to pointer size
-      Result:=PointerSize;
-    end;
+    Result:=BuiltinTypeSize(Identifier);
+    if Result>=0 then exit;
+    if Assigned(FOnSizeOfIdentifier)
+    and FOnSizeOfIdentifier(Self,Identifier,Result) then exit;
+    // unknown type (user record, class, ...) - fall back to pointer size
+    Result:=PointerTypeSize;
   end;
 
   function AlignOfBuiltin(const Identifier: string): int64;
@@ -1632,7 +1655,7 @@ var
       if IsDefined('CPU386') or IsDefined('CPUX86_64') then
         Result:=2
       else
-        Result:=PointerSize;
+        Result:=PointerTypeSize;
     'pointer',
     'ptrint',
     'ptruint',
@@ -1641,14 +1664,14 @@ var
     'unicodestring',
     'rawbytestring',
     'widestring':
-       Result:=PointerSize;
+       Result:=PointerTypeSize;
     'char':
       if IsDefined('FPC_UNICODESTRINGS') then
         Result:=2
       else
         Result:=1;
     else
-      Result:=PointerSize;
+      Result:=PointerTypeSize;
     end;
   end;
 
@@ -1658,7 +1681,7 @@ var
   begin
     Result:=false;
     if not ReadDottedIdentInBracket(Identifier) then exit;
-    SetOperandValueInt64(Operand,SizeOfBuiltin(Identifier));
+    SetOperandValueInt64(Operand,SizeOfIdentifier(Identifier));
     Result:=true;
   end;
 
@@ -1678,7 +1701,7 @@ var
   begin
     Result:=false;
     if not ReadDottedIdentInBracket(Identifier) then exit;
-    SetOperandValueInt64(Operand,SizeOfBuiltin(Identifier)*8);
+    SetOperandValueInt64(Operand,SizeOfIdentifier(Identifier)*8);
     Result:=true;
   end;
 
@@ -1727,6 +1750,8 @@ var
   var
     i: LongInt;
     BracketStart: PChar;
+    NewValue: PChar;
+    NewLen: PtrInt;
   begin
     Result:=false;
     if AtomStart>=ExprEnd then exit;
@@ -1852,10 +1877,23 @@ var
       end;
     '0'..'9','$':
       begin
-        // number
+        // number; drop '_' digit group separators, so that e.g.
+        // 100_000 and 100000 compare equal
         if Operand.Free then FreeEvalOperand(Operand);
         Operand.Value:=AtomStart;
         Operand.Len:=p-AtomStart;
+        if IndexByte(AtomStart^,Operand.Len,ord('_'))>=0 then begin
+          NewValue:=GetMem(Operand.Len);
+          NewLen:=0;
+          for i:=0 to Operand.Len-1 do
+            if AtomStart[i]<>'_' then begin
+              NewValue[NewLen]:=AtomStart[i];
+              inc(NewLen);
+            end;
+          Operand.Value:=NewValue;
+          Operand.Len:=NewLen;
+          Operand.Free:=true;
+        end;
         exit(true);
       end;
     '''':
