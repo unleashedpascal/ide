@@ -354,7 +354,7 @@ const
 var
   j: Integer;
   k: Integer;
-  i2: Int64;
+  s: shortstring;
 begin
   if (i>=-999) and (i<=9999) then begin
     // small number => save in data
@@ -385,39 +385,17 @@ begin
       dec(k);
     until false;
   end else begin
-    // big number => save as hex number
-    // calculate needed mem
-    i2:=i;
-    j:=1; // $
-    if i2<0 then begin
-      i2:=-i2;
-      inc(j);
-    end;
-    while i2>0 do begin
-      i2:=i2 shr 4;
-      inc(j);
-    end;
-    V.Len:=j;
-    // allocate mem
+    // big number => save as decimal string, the same representation as
+    // number literals, so that the byte-wise '='/'<>' comparison works
+    str(i,s);
+    V.Len:=length(s);
     if V.Free then begin
-      ReAllocMem(V.Value,j);
+      ReAllocMem(V.Value,V.Len);
     end else begin
       V.Free:=true;
-      Getmem(V.Value,j);
+      Getmem(V.Value,V.Len);
     end;
-    // write number
-    if i<0 then i:=-i;
-    while i>0 do begin
-      i:=i shr 4;
-      dec(j);
-      V.Value[j]:=HexChrs[i and $f];
-    end;
-    // write $
-    dec(j);
-    V.Value[j]:='$';
-    // write minus sign
-    if j=0 then
-      V.Value[j]:='-';
+    System.Move(s[1],V.Value^,V.Len);
   end;
 end;
 
@@ -471,18 +449,72 @@ begin
   end;
 end;
 
+function TryEvalOperandAsInt64(const Op: TEvalOperand; out Value: int64): boolean;
+// true if the whole operand is an integer literal (decimal or $hex,
+// optionally negated, '_' digit group separators allowed)
+const
+  MaxSafe = High(int64) div 16 - 15;
+var
+  p, EndP: PChar;
+  HasDigit: boolean;
+  Negated: boolean;
+  c: char;
+begin
+  Result:=false;
+  Value:=0;
+  HasDigit:=false;
+  Negated:=false;
+  if Op.Len=0 then exit;
+  p:=Op.Value;
+  EndP:=Op.Value+Op.Len;
+  if p^='-' then begin
+    Negated:=true;
+    inc(p);
+  end;
+  if p>=EndP then exit;
+  if p^='$' then begin
+    inc(p);
+    while p<EndP do begin
+      if Value>MaxSafe then exit;
+      c:=p^;
+      case c of
+      '0'..'9': begin Value:=Value*16+ord(c)-ord('0'); HasDigit:=true; end;
+      'a'..'f': begin Value:=Value*16+ord(c)-ord('a')+10; HasDigit:=true; end;
+      'A'..'F': begin Value:=Value*16+ord(c)-ord('A')+10; HasDigit:=true; end;
+      '_': ;
+      else exit;
+      end;
+      inc(p);
+    end;
+  end else begin
+    while p<EndP do begin
+      if Value>MaxSafe then exit;
+      c:=p^;
+      case c of
+      '0'..'9': begin Value:=Value*10+ord(c)-ord('0'); HasDigit:=true; end;
+      '_': ;
+      else exit;
+      end;
+      inc(p);
+    end;
+  end;
+  if Negated then Value:=-Value;
+  Result:=HasDigit;
+end;
+
 function OperandsAreEqual(const Op1, Op2: TEvalOperand): boolean;
 var
   i: Integer;
+  Val1, Val2: int64;
 begin
-  Result:=false;
-  if Op1.Len<>Op2.Len then exit;
-  i:=Op1.Len-1;
-  while i>=0 do begin
-    if Op1.Value[i]<>Op2.Value[i] then exit;
-    dec(i);
+  if Op1.Len=Op2.Len then begin
+    i:=Op1.Len-1;
+    while (i>=0) and (Op1.Value[i]=Op2.Value[i]) do dec(i);
+    if i<0 then exit(true);
   end;
-  Result:=true;
+  // texts differ; integers can still have the same value, e.g. $64 = 100
+  Result:=TryEvalOperandAsInt64(Op1,Val1) and TryEvalOperandAsInt64(Op2,Val2)
+    and (Val1=Val2);
 end;
 
 function GetIdentifierLen(Identifier: PChar): integer;
