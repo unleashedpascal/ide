@@ -227,7 +227,7 @@ const
       'wasm32',
       'z80'
     );
-  FPCSyntaxModes: array[1..8] of shortstring = (
+  FPCSyntaxModes: array[1..9] of shortstring = (
     'FPC',
     'ObjFPC',
     'Delphi',
@@ -235,7 +235,8 @@ const
     'TP',
     'MacPas',
     'ISO',
-    'ExtendedPascal'
+    'ExtendedPascal',
+    'Unleashed'
     );
 
   Pas2jsPlatformNames: array[1..4] of shortstring = (
