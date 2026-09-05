@@ -558,6 +558,8 @@ type
     procedure AddFromList(const Tool: TFindDeclarationTool; const ExtList: TFDHelpersList);
     function IterateFromClassNode(ClassNode: TCodeTreeNode;
       Tool: TFindDeclarationTool; out HelperContext: TFindContext; out Iterator: TAVLTreeNode): boolean; // returns newest (rightmost)
+    function IterateFromExprType(const ExprType: TExpressionType;
+      out HelperContext: TFindContext; out Iterator: TAVLTreeNode): boolean; // returns newest (rightmost)
     function GetNext(out HelperContext: TFindContext; var Iterator: TAVLTreeNode): boolean;
     function FindFromExprType(const ExprType: TExpressionType): TFindContext; // returns newest (rightmost)
     procedure DeleteHelperNode(HelperNode: TCodeTreeNode; Tool: TFindDeclarationTool);
@@ -2090,6 +2092,15 @@ begin
   ExprType.Desc:=xtContext;
   ExprType.Context.Node:=ClassNode;
   ExprType.Context.Tool:=Tool;
+  Iterator := FTree.FindRightMostKey(@ExprType, @CompareHelpersListExprType);
+  if Iterator=nil then exit(false);
+  HelperContext:=TFDHelpersListItem(Iterator.Data).HelperContext;
+  Result:=true;
+end;
+
+function TFDHelpersList.IterateFromExprType(const ExprType: TExpressionType;
+  out HelperContext: TFindContext; out Iterator: TAVLTreeNode): boolean;
+begin
   Iterator := FTree.FindRightMostKey(@ExprType, @CompareHelpersListExprType);
   if Iterator=nil then exit(false);
   HelperContext:=TFDHelpersListItem(Iterator.Data).HelperContext;
@@ -6581,6 +6592,7 @@ var
   FullExprType: TExpressionType;
   CHContext: TFindContext;
   Helpers: TFDHelpersList;
+  HelperIterator: TAVLTreeNode;
 begin
   Helpers:=Params.GetHelpers(fdhlkDelphiHelper);
   if Helpers=nil then exit(false);
@@ -6595,10 +6607,11 @@ begin
   //debugln(['TFindDeclarationTool.FindIdentifierInBasicTypeHelpers ',ExprTypeToString(FullExprType)]);
 
   // find class helper functions
-  CHContext := Helpers.FindFromExprType(FullExprType);
-
-  if Assigned(CHContext.Node) and Assigned(CHContext.Tool) then
-  begin
+  if not Helpers.IterateFromExprType(FullExprType,CHContext,HelperIterator) then
+    exit(false);
+  // newest helper first; with multiple helpers in scope the older ones stay
+  // visible too, so keep looking (or collecting) in them
+  repeat
     OldFlags := Params.Flags;
     try
       Exclude(Params.Flags, fdfExceptionOnNotFound);
@@ -6610,8 +6623,9 @@ begin
     finally
       Params.Flags := OldFlags;
     end;
-  end else
-    Result := False;
+  until Result
+    or not (cmsMultiHelpers in Scanner.CompilerModeSwitches)
+    or not Helpers.GetNext(CHContext,HelperIterator);
 end;
 
 function TFindDeclarationTool.FindDeclarationAndOverload(
@@ -13404,6 +13418,7 @@ begin
     Result:=xtUnicodeString
   else if (Scanner.PascalCompiler=pcDelphi)
   or ((Scanner.CompilerMode=cmDELPHI)
+  or (cmsDefault_ansistring in Scanner.CompilerModeSwitches)
   or (Scanner.Values['LONGSTRINGS']='1')) then
     Result:=xtAnsiString
   else

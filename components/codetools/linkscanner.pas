@@ -293,7 +293,7 @@ const
     // cmUnleashed - superset of OBJFPC with all modern features
     [cmsClass,cmsObjpas,cmsResult,cmsString_pchar,cmsNested_comment,
      cmsRepeat_forward,cmsCvar_support,cmsInitfinal,cmsOut,cmsDefault_para,
-     cmsHintdirective,cmsProperty,cmsDefault_inline,cmsExcept,
+     cmsHintdirective,cmsProperty,cmsDefault_inline,cmsExcept,cmsDefault_ansistring,
      cmsAdvancedRecords,cmsPrefixedAttributes,cmsMultiHelpers,
      cmsFunctionReferences,cmsAnonymousFunctions,cmsImplicitGenerics,
      cmsStatementExpressions,cmsArrayEquality,cmsInlineVars,cmsTuples,
