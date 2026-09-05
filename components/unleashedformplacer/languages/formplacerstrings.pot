@@ -1,0 +1,67 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+#: formplacerstrings.splacercolors
+msgid "Map colors"
+msgstr ""
+
+#: formplacerstrings.splacerformedgecolor
+msgid "Form edge:"
+msgstr ""
+
+#: formplacerstrings.splacerformfillcolor
+msgid "Form rectangle:"
+msgstr ""
+
+#: formplacerstrings.splacerliveupdate
+msgid "Move form while dragging"
+msgstr ""
+
+#: formplacerstrings.splacermapbackcolor
+msgid "Desktop background:"
+msgstr ""
+
+#: formplacerstrings.splacermaphint
+msgid "Drag the form to place its window on the desktop. Arrow keys nudge, double click centers."
+msgstr ""
+
+#: formplacerstrings.splacermapwidth
+msgid "Map width (pixels):"
+msgstr ""
+
+#: formplacerstrings.splacermenucenter
+msgid "Center on screen"
+msgstr ""
+
+#: formplacerstrings.splacermenuhide
+msgid "Hide desktop map"
+msgstr ""
+
+#: formplacerstrings.splacermenuoptions
+msgid "Options ..."
+msgstr ""
+
+#: formplacerstrings.splacermenuposition
+msgid "Position"
+msgstr ""
+
+#: formplacerstrings.splacermonitoredgecolor
+msgid "Monitor edges:"
+msgstr ""
+
+#: formplacerstrings.splacernudgestep
+msgid "Arrow key step (pixels):"
+msgstr ""
+
+#: formplacerstrings.splaceroptionstitle
+msgid "Form Placer"
+msgstr ""
+
+#: formplacerstrings.splacershowmap
+msgid "Show desktop map in form designer"
+msgstr ""
+
+#: formplacerstrings.splacertitlebarcolor
+msgid "Title strip of the form rectangle:"
+msgstr ""
+

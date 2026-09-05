@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <Name Value="UnleashedFormplacer"/>
+    <Type Value="DesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/$(LCLWidgetType)"/>
+      </SearchPaths>
+      <Other>
+        <CustomOptions Value="$(IDEBuildOptions)"/>
+      </Other>
+    </CompilerOptions>
+    <Description Value="Unleashed Form Placer: a miniature desktop map in the corner of the docked form designer. Drag the form rectangle to place the designed window anywhere on the desktop.
+"/>
+    <License Value="Copyright (c) 2026 Unleashed Pascal Team &lt;https://unleashedpascal.org&gt;
+
+Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text ships as LICENSE next to this package; it is also available at https://mozilla.org/MPL/2.0/.
+"/>
+    <Version Major="1"/>
+    <Files>
+      <Item>
+        <Filename Value="regunleashedformplacer.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="RegUnleashedFormplacer"/>
+      </Item>
+      <Item>
+        <Filename Value="formplacerconfig.pas"/>
+        <UnitName Value="FormPlacerConfig"/>
+      </Item>
+      <Item>
+        <Filename Value="formplacermap.pas"/>
+        <UnitName Value="FormPlacerMap"/>
+      </Item>
+      <Item>
+        <Filename Value="formplaceroptionsframe.pas"/>
+        <UnitName Value="FormPlacerOptionsFrame"/>
+      </Item>
+      <Item>
+        <Filename Value="formplacerstrings.pas"/>
+        <UnitName Value="FormPlacerStrings"/>
+      </Item>
+    </Files>
+    <i18n>
+      <EnableI18N Value="True"/>
+      <OutDir Value="languages"/>
+    </i18n>
+    <RequiredPkgs>
+      <Item>
+        <PackageName Value="DockedFormEditor"/>
+      </Item>
+      <Item>
+        <PackageName Value="IDEIntf"/>
+      </Item>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
