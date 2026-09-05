@@ -37,7 +37,7 @@
     <RunParams>
       <FormatVersion Value="2"/>
     </RunParams>
-    <RequiredPackages Count="15">
+    <RequiredPackages Count="16">
       <Item1>
         <PackageName Value="IdePackager"/>
       </Item1>
@@ -85,6 +85,9 @@
       <Item15>
         <PackageName Value="SynEdit"/>
       </Item15>
+      <Item16>
+        <PackageName Value="UnleashedFormplacer"/>
+      </Item16>
     </RequiredPackages>
     <Units Count="210">
       <Unit0>
