@@ -136,6 +136,9 @@ type
   
   TPascalParserTool = class(TMultiKeyWordListCodeTool)
   private
+    // >0 while an anonymous type is read as a specialization argument;
+    // a bare `>` then ends the type, e.g. `set of 0..7` in TArray<set of 0..7>
+    FSpecializeArgLevel: integer;
   protected
     // often used errors
     procedure SaveRaiseCharExpectedButAtomFound(id: int64; c: char; ParserFlags: TPascalParserFlags = []);
@@ -6555,6 +6558,7 @@ var
     while (CurPos.StartPos<=SrcLen) do begin
       if (CurPos.Flag in [cafSemicolon,cafColon,cafRoundBracketClose,
         cafEqual,cafEdgedBracketClose,cafAssignment])
+      or ((FSpecializeArgLevel>0) and AtomIsChar('>'))
       or (AtomIsKeyWord
           and (not IsKeyWordInConstAllowed.DoIdentifier(@Src[CurPos.StartPos])))
       then
@@ -7992,6 +7996,8 @@ function TPascalParserTool.ReadSpecializeParams(ParserFlags: TPascalParserFlags;
       ExtractNextAtom(Copying,Attr);
   end;
 
+var
+  Level: integer;
 begin
   Result := False;
   // read params
@@ -8004,7 +8010,44 @@ begin
   repeat
     // read identifier (a parameter of the generic type)
     Next;
-    ReadTypeReference(ParserFlags, Extract,Copying,Attr);
+    if ((cmsTuples in Scanner.CompilerModeSwitches) and (CurPos.Flag=cafRoundBracketOpen))
+    or ((Scanner.CompilerMode=cmUnleashed)
+        and (AtomIsChar('^') or UpAtomIs('ARRAY') or UpAtomIs('SET')
+             or UpAtomIs('RECORD') or UpAtomIs('PACKED') or UpAtomIs('BITPACKED')))
+    then begin
+      // an anonymous type written directly as the argument, e.g.
+      // TArray<(key, value: string)> or TArray<array of string>
+      if (ppDontCreateNodes in ParserFlags) or Extract then begin
+        // no nodes wanted: skip to the `,` or `>` closing this argument
+        Level:=0;
+        repeat
+          if CurPos.StartPos>SrcLen then begin
+            SaveRaiseCharExpectedButAtomFound(20260905100000,'>', ParserFlags);
+            exit;
+          end;
+          if CurPos.Flag in [cafRoundBracketOpen,cafEdgedBracketOpen] then inc(Level)
+          else if CurPos.Flag in [cafRoundBracketClose,cafEdgedBracketClose] then dec(Level)
+          else if AtomIsChar('<') then inc(Level)
+          else if AtomIsChar('>') then begin
+            if Level=0 then break;
+            dec(Level);
+          end else if (CurPos.Flag=cafComma) and (Level=0) then
+            break;
+          Next;
+        until false;
+      end else begin
+        inc(FSpecializeArgLevel);
+        try
+          if CurPos.Flag=cafRoundBracketOpen then
+            KeyWordFuncTypeDefault
+          else
+            ParseType(CurPos.StartPos);
+        finally
+          dec(FSpecializeArgLevel);
+        end;
+      end;
+    end else
+      ReadTypeReference(ParserFlags, Extract,Copying,Attr);
     if AtomIsChar('>') then
       break
     else if CurPos.Flag=cafComma then begin

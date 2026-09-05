@@ -6164,7 +6164,8 @@ var
         TestContext.Node:=SubParams.NewNode;
         if (not (TestContext.Node.Desc in [ctnTypeDefinition,ctnGenericType,ctnGenericParameter,ctnSpecializeParam]))
         // TODO: the parser marks ctnSpecializeParam as ctnIdentifier (at least for types like "string"
-        and not ((TestContext.Node.Desc=ctnIdentifier) and (TestContext.Node.Parent<>nil) and (TestContext.Node.Parent.Desc=ctnSpecializeParams))
+        // an anonymous type written as the argument (TArray<(a, b: integer)>) is its own type node
+        and not ((TestContext.Node.Desc in AllPascalTypes) and (TestContext.Node.Parent<>nil) and (TestContext.Node.Parent.Desc=ctnSpecializeParams))
         then
         begin
           // not a type
@@ -17845,6 +17846,16 @@ begin
 
     GenParamType := CtxNode.FirstChild;
     for i := 2 to n do if GenParamType <> nil then GenParamType := GenParamType.NextBrother;
+    if (GenParamType <> nil)
+    and (GenParamType.Desc in AllPascalTypes-[ctnIdentifier,ctnSpecialize]) then begin
+      // an anonymous type written directly as the argument, e.g.
+      // TArray<(key, value: string)>: the node itself is the type
+      NewNode:=GenParamType;
+      NewCodeTool:=CtxTool;
+      Include(Flags, fdfDoNotCache);
+      Include(NewFlags, fodDoNotCache);
+      Result := True;
+    end else
     if GenParamType <> nil then begin
       Result:=DoFindIdentifierInContext(CtxTool, CtxNode, CtxTool, GenParamType);
 
