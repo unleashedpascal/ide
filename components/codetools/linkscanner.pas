@@ -3623,6 +3623,10 @@ begin
     if not ModeValid then
       RaiseExceptionFmt(20170422130122,ctsInvalidMode,[copy(Src,ValStart,SrcPos-ValStart)]);
   end;
+  // All mode macros were undefined above, so define the current one again.
+  // SetCompilerMode exits early when the mode does not change, so it cannot
+  // be relied on to restore the macro.
+  Values.Variables[CompilerModeVars[CompilerMode]]:='1';
   Result:=true;
 end;
 
