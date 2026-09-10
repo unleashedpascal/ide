@@ -2979,6 +2979,27 @@ begin
         SaveRaiseEndOfSourceExpected(20170421195551);
     end else if UpAtomIs('WITH') then begin
       ReadWithStatement(true,true);
+    end else if UpAtomIs('VAR')
+    and (cmsOutVar in Scanner.CompilerModeSwitches)
+    and (LastAtoms.GetPriorAtom.Flag in [cafRoundBracketOpen,cafComma]) then begin
+      // out-argument of a call in the section body: `Foo(a, var x)`. Only a
+      // name follows, so the inline-var reader must not run here.
+      ReadOutVarDeclaration(true);
+    end else if UpAtomIs('VAR') then begin
+      // inline-var written directly in the section body (not inside a
+      // begin..end): the statements here are not read by ReadTilBlockEnd,
+      // so the declaration has to be picked up in this loop, otherwise the
+      // name stays unknown to find-declaration and completion
+      ReadInlineVarDeclaration(true);
+    end else if UpAtomIs('CONST')
+    and (cmsInlineVars in Scanner.CompilerModeSwitches) then begin
+      ReadInlineConstDeclaration(true);
+    end else if UpAtomIs('STATIC')
+    and (cmsInlineStatic in Scanner.CompilerModeSwitches) then begin
+      ReadInlineVarDeclaration(true);
+    end else if (UpAtomIs('THREADSTATIC') or UpAtomIs('TSTATIC'))
+    and (cmsThreadStatic in Scanner.CompilerModeSwitches) then begin
+      ReadInlineVarDeclaration(true);
     end;
   until false;
   //debugln(['TPascalParserTool.KeyWordFuncSectionInitFinalization END ',GetAtom]);

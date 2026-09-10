@@ -4912,6 +4912,30 @@ var
     end;
   end;
   
+  procedure MoveContextNodeToSectionDeclarations;
+  // An initialization/finalization body can hold inline var/const
+  // declarations. Move to the last (first, when searching forward) of them,
+  // so only declarations are searched: unlike a begin block the section is
+  // not made transparent as a whole, otherwise a with-variable or a nested
+  // begin block written in the same body would be searched as well and
+  // leak its scope into the statements around it.
+  var
+    Node: TCodeTreeNode;
+  begin
+    if not (fdfSearchForward in Flags) then begin
+      Node:=ContextNode.LastChild;
+      while (Node<>nil) and not (Node.Desc in [ctnVarSection,ctnConstSection]) do
+        Node:=Node.PriorBrother;
+    end else begin
+      Node:=ContextNode.FirstChild;
+      while (Node<>nil) and not (Node.Desc in [ctnVarSection,ctnConstSection]) do
+        Node:=Node.NextBrother;
+    end;
+    if Node=nil then exit;
+    RaiseLastErrorIfInFrontOfCleanedPos(Node.EndPos);
+    ContextNode:=Node;
+  end;
+
   procedure MoveContextNodeToChildren;
   begin
     if (ContextNode.LastChild<>nil) then begin
@@ -5582,13 +5606,17 @@ var
         ctnRecordVariant,
         ctnProcedureHead, ctnParameterList,
         ctnClassInheritance,ctnHelperFor,
-        ctnBeginBlock:
+        ctnBeginBlock, ctnInitialization, ctnFinalization:
           // these codetreenodes build a parent-child-relationship, but
           // for pascal it is only a range, hence after searching in the
           // children of the last node, search must continue in the children
           // of the prior node.
-          // Note: ctnBeginBlock is transparent so inline-var declarations
-          // inside the body are visible to identifier completion.
+          // Note: ctnBeginBlock and the initialization/finalization bodies
+          // are transparent so inline-var declarations inside them are
+          // visible to identifier completion. They must be listed here as
+          // well: leaving them through the default 'break' would hand the
+          // node back to the main loop, which descends into the children
+          // again - an endless loop.
           ;
 
         ctnClass, ctnClassInterface, ctnDispinterface, ctnObject,
@@ -5779,6 +5807,13 @@ begin
             if (ContextNode=StartContextNode)
             or StartContextNode.HasAsParent(ContextNode) then
               MoveContextNodeToChildren;
+
+          ctnInitialization,ctnFinalization:
+            // such a body can hold inline var/const declarations without a
+            // begin..end of its own; search those, and only those
+            if (ContextNode=StartContextNode)
+            or StartContextNode.HasAsParent(ContextNode) then
+              MoveContextNodeToSectionDeclarations;
 
           ctnTypeDefinition, ctnVarDefinition, ctnConstDefinition,
           ctnGlobalProperty:
@@ -12125,9 +12160,11 @@ var
         if Context.Node=StartNode then begin
           // there is no special context -> search in parent contexts too
           Params.Flags:=Params.Flags+[fdfSearchInParentNodes];
-          // ctnBeginBlock is transparent and may contain inline-var declarations,
-          // so do NOT skip it; MoveContextNodeToChildren will search its children.
-          if Context.Node.Desc<>ctnBeginBlock then
+          // ctnBeginBlock and the initialization/finalization bodies are
+          // transparent and may contain inline-var declarations, so do NOT
+          // skip them; MoveContextNodeToChildren searches their children.
+          if not (Context.Node.Desc in
+                  [ctnBeginBlock,ctnInitialization,ctnFinalization]) then
             Include(Params.Flags,fdfIgnoreCurContextNode);
           // check if searching forward too
           if CanBeForwardDefined then begin
@@ -16571,7 +16608,8 @@ begin
   if not UpAtomIs('VAR') then exit;
   ReadPriorAtom;
   if not (CurPos.Flag in [cafRoundBracketOpen,cafComma]) then exit;
-  BlockNode:=VarDefNode.GetNodeOfType(ctnBeginBlock);
+  BlockNode:=VarDefNode.GetNodeOfTypes([ctnBeginBlock,ctnInitialization,
+                                        ctnFinalization]);
   if BlockNode=nil then exit;
   // which call is this, and which of its arguments
   if not CheckParameterSyntax(BlockNode.StartPos,VarDefNode.StartPos,
