@@ -13144,6 +13144,72 @@ var EndPos, SubStartPos: integer;
     RaiseExceptionFmt(20170421200609,ctsStrExpectedButAtomFound,[ctsIdentifier,GetAtom]);
   end;
 
+  // `if c then a else b`, `case x of l: a; ... else b` and `try a except b`
+  // used as expressions have the type of their first value branch; the
+  // branches must be compatible, so the first one is enough
+  function ReadStatementExpressionType: TExpressionType;
+  var
+    BranchStart, BranchEnd, BracketDepth, Nesting: integer;
+    IsIf, IsCase, AfterOf: boolean;
+  begin
+    Result:=CleanExpressionType;
+    IsIf:=UpAtomIs('IF');
+    IsCase:=UpAtomIs('CASE');
+    BracketDepth:=0;
+    AfterOf:=false;
+    // skip the condition (`then`) or the selector and first label (`of l:`);
+    // `try` has its value right after the keyword
+    while IsIf or IsCase do begin
+      ReadNextAtom;
+      if (CurPos.StartPos>MaxEndPos) or (CurPos.StartPos>SrcLen) then exit;
+      case CurPos.Flag of
+        cafRoundBracketOpen,cafEdgedBracketOpen: inc(BracketDepth);
+        cafRoundBracketClose,cafEdgedBracketClose: dec(BracketDepth);
+        cafColon:
+          if IsCase and AfterOf and (BracketDepth=0) then break;
+        cafWord:
+          if BracketDepth=0 then begin
+            if IsIf and UpAtomIs('THEN') then break;
+            if IsCase and UpAtomIs('OF') then AfterOf:=true;
+          end;
+      end;
+    end;
+    ReadNextAtom;
+    BranchStart:=CurPos.StartPos;
+    // find the end of the first branch: `else` / `;` / `except` at the outer
+    // level; a nested statement expression owns its own `else`
+    BranchEnd:=BranchStart;
+    BracketDepth:=0;
+    Nesting:=0;
+    while (CurPos.StartPos<=MaxEndPos) and (CurPos.StartPos<=SrcLen) do begin
+      case CurPos.Flag of
+        cafRoundBracketOpen,cafEdgedBracketOpen: inc(BracketDepth);
+        cafRoundBracketClose,cafEdgedBracketClose:
+          begin
+            if BracketDepth=0 then break;
+            dec(BracketDepth);
+          end;
+        cafSemicolon:
+          if (BracketDepth=0) and (Nesting=0) then break;
+        cafWord:
+          if BracketDepth=0 then begin
+            if UpAtomIs('IF') or UpAtomIs('CASE') or UpAtomIs('TRY') then
+              inc(Nesting)
+            else if UpAtomIs('ELSE') or UpAtomIs('EXCEPT') then begin
+              if Nesting=0 then break;
+              dec(Nesting);
+            end;
+          end;
+      end;
+      BranchEnd:=CurPos.EndPos;
+      ReadNextAtom;
+    end;
+    if BranchEnd>BranchStart then
+      Result:=FindExpressionResultType(Params,BranchStart,BranchEnd,AliasType);
+    MoveCursorToCleanPos(MaxEndPos);
+    ReadNextAtom;
+  end;
+
 var
   OldFlags: TFindDeclarationFlags;
   MaybeFuncAtCursor: Boolean;
@@ -13155,6 +13221,12 @@ begin
   if CurPos.StartPos=CurPos.EndPos then
     ReadNextAtom;
   if MaxEndPos<0 then MaxEndPos:=SrcLen;
+
+  if (cmsStatementExpressions in Scanner.CompilerModeSwitches)
+  and (UpAtomIs('IF') or UpAtomIs('CASE') or UpAtomIs('TRY')) then begin
+    Result:=ReadStatementExpressionType;
+    exit;
+  end;
 
   // read unary operators which have no effect on the type: +, -, not, autofree
   while AtomIsChar('+') or AtomIsChar('-') or UpAtomIs('NOT') or UpAtomIs('AUTOFREE') do
