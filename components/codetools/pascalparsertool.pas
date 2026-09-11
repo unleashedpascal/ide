@@ -4064,6 +4064,7 @@ var
   TryExprDepth: integer;
   CaseExprDepth: integer;
   MatchExprDepth: integer;
+  IfExprDepth: integer;
   BeginDepth: integer;
   InCaseElse: boolean;
   // stack of entries: 'C' (case), 'M' (match), 'B' (begin) - newest at the
@@ -4144,6 +4145,7 @@ begin
     TryExprDepth := 0;
     CaseExprDepth := 0;
     MatchExprDepth := 0;
+    IfExprDepth := 0;
     BeginDepth := 0;
     InCaseElse := false;
     ExprStack := '';
@@ -4269,6 +4271,22 @@ begin
             inc(MatchExprDepth);
             ExprStack := ExprStack + 'M';
           end;
+        end
+        // if-expression `if c then a else b`: its 'then' and 'else' belong
+        // to the initializer; the 'else' value closes the construct
+        else if UpAtomIs('IF')
+        and ((LastAtoms.GetPriorAtom.Flag in
+               [cafAssignment,cafRoundBracketOpen,cafEdgedBracketOpen,
+                cafComma,cafEqual,cafColon])
+          or (CaseExprDepth > 0) or (MatchExprDepth > 0)
+          or (IfExprDepth > 0)) then begin
+          inc(IfExprDepth);
+        end
+        else if (IfExprDepth > 0) and UpAtomIs('THEN') then begin
+          // condition done, the value branch follows
+        end
+        else if (IfExprDepth > 0) and UpAtomIs('ELSE') then begin
+          dec(IfExprDepth);
         end
         // 'else'/'otherwise' inside case- or match-expression switches to
         // the catch-all branch. case-with-else and match-with-else have no
