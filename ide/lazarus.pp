@@ -67,6 +67,7 @@ uses
   LazDebuggerFpLldb, LazDebuggerFp, laz.virtualtreeview_package,
   LazControlDsgn,
   unleashedformplacer, // preinstalled
+  unleashedthemes, // preinstalled
   // use the custom IDE static packages AFTER 'main'
   {$IFDEF AddStaticPkgs}
   // In case you get duplicate identifier errors in the uses clause,

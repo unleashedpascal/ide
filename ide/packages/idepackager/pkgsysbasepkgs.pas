@@ -34,7 +34,8 @@ type
     libpIdePackager,
     libpIdeProject,
     libpIdeDebugger,
-    libpUnleashedFormplacer
+    libpUnleashedFormplacer,
+    libpUnleashedThemes
     );
 const
   LazarusIDEBasePkgNames: array[TLazarusIDEBasePkg] of string = (
@@ -65,7 +66,8 @@ const
     'IdePackager',
     'IdeProject',
     'IdeDebugger',
-    'UnleashedFormplacer'
+    'UnleashedFormplacer',
+    'UnleashedThemes'
     );
 
   // extra packages for the release, alias "bigide"
