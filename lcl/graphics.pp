@@ -649,6 +649,7 @@ type
     {$ENDIF}
     FPattern: TPenPattern;
     FPenHandleCached: boolean;
+    FInternalUpdateIndex: Integer;
     FReference: TWSPenReference;
     procedure FreeReference;
     function GetHandle: HPEN;
@@ -2080,12 +2081,14 @@ begin
     if GraphicsUpdateCount=High(GraphicsUpdateCount) then
       GraphicsUpdateCount:=Low(GraphicsUpdateCount);
     inc(GraphicsUpdateCount);
-    // BrushResourceCache caches sys-color brushes by their TColor key
-    // (the unresolved sys color constant), so a stale cached handle will be
-    // reused even after GraphicsUpdateCount bump. Pass AClearBrushCache=True
-    // from WM_SYSCOLORCHANGE so brushes get re-resolved via GetSysColorBrush.
+    // the brush and pen caches key on the resolved color, so the handles made
+    // under the old system colors would only linger there. WM_SYSCOLORCHANGE
+    // passes AClearBrushCache=True to drop them right away.
     if AClearBrushCache then
+    begin
       BrushResourceCache.Clear;
+      PenResourceCache.Clear;
+    end;
   finally
     UpdateLock.Leave;
   end;

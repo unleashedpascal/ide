@@ -223,9 +223,11 @@ procedure TBrush.ReferenceNeeded;
 var
   LogBrush: TLogBrush;
   CachedBrush: TBlockResourceCacheDescriptor;
+  AColor: TColor;
 begin
   if FReference.Allocated then Exit;
 
+  AColor := GetColor;
   FillChar(LogBrush, SizeOf(LogBrush), 0);
   with LogBrush do
   begin
@@ -244,7 +246,9 @@ begin
         lbHatch := Ord(Style) - Ord(bsHorizontal);
       end;
     end;
-    lbColor := ColorRef(GetColor);
+    // the cache keys on the resolved color, so a system color that resolves
+    // to another value gets another handle
+    lbColor := ColorRef(ColorToRGB(AColor));
   end;
 
   BrushResourceCache.Lock;
@@ -257,8 +261,8 @@ begin
     end else
     begin
       if LogBrush.lbStyle <> BS_PATTERN then
-        if (LogBrush.lbStyle = BS_SOLID) and IsSysColor(LogBrush.lbColor) then
-          FReference._lclHandle := TLCLHandle(GetSysColorBrush(SysColorToSysColorIndex(TColor(LogBrush.lbColor))))
+        if (LogBrush.lbStyle = BS_SOLID) and IsSysColor(TColorRef(AColor)) then
+          FReference._lclHandle := TLCLHandle(GetSysColorBrush(SysColorToSysColorIndex(AColor)))
         else
           FReference._lclHandle := TLCLHandle(CreateBrushIndirect(LogBrush))
       else

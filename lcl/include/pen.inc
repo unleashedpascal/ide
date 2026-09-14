@@ -305,6 +305,7 @@ begin
 
   FreeReference;
   FReference._lclHandle := TLCLHandle(Value);
+  FInternalUpdateIndex := GraphicsUpdateCount;
   Changed;
 end;
 
@@ -336,6 +337,9 @@ end;
 
 function TPen.GetReference: TWSPenReference;
 begin
+  // a system color resolved into the handle goes stale after a color change
+  if FInternalUpdateIndex <> GraphicsUpdateCount then
+    FreeReference;
   ReferenceNeeded;
   Result := FReference;
 end;
@@ -402,7 +406,8 @@ begin
         elpWidth := 1;
     end;
     elpBrushStyle := BS_SOLID;
-    elpColor := TColorRef(FColor);
+    // the cache keys on the resolved color, like the brush cache
+    elpColor := TColorRef(ColorToRGB(FColor));
   end;
 
   PenResourceCache.Lock;
@@ -451,6 +456,7 @@ begin
   finally
     PenResourceCache.Unlock;
   end;
+  FInternalUpdateIndex := GraphicsUpdateCount;
 end;
 
 procedure TPen.SetCosmetic(const AValue: Boolean);
@@ -486,6 +492,8 @@ end;
  ------------------------------------------------------------------------------}
 
 procedure TPen.FreeReference;
+var
+  CacheItem: TResourceCacheItem;
 begin
   if not FReference.Allocated then Exit;
 
@@ -494,7 +502,10 @@ begin
   begin
     PenResourceCache.Lock;
     try
-      PenResourceCache.FindPen(FReference.Handle).DecreaseRefCount;
+      // the cache may have been cleared on a system color change
+      CacheItem := PenResourceCache.FindPen(FReference.Handle);
+      if (CacheItem <> nil) and (CacheItem.ReferenceCount > 0) then
+        CacheItem.DecreaseRefCount;
       FPenHandleCached := False;
     finally
       PenResourceCache.Unlock;
