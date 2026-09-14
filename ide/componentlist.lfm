@@ -43,7 +43,7 @@ object ComponentListForm: TComponentListForm
           Width = 288
           Align = alClient
           HideSelection = False
-          Indent = 25
+          Indent = 0
           PopupMenu = CompListPopupMenu
           ReadOnly = True
           RowSelect = True
