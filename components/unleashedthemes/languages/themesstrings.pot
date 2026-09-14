@@ -1,0 +1,47 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+#: themesstrings.menu_dark
+msgid "Dark"
+msgstr ""
+
+#: themesstrings.menu_default
+msgid "None"
+msgstr ""
+
+#: themesstrings.menu_dusk
+msgid "Dusk"
+msgstr ""
+
+#: themesstrings.menu_ember
+msgid "Ember"
+msgstr ""
+
+#: themesstrings.menu_frost
+msgid "Frost"
+msgstr ""
+
+#: themesstrings.menu_light
+msgid "Light"
+msgstr ""
+
+#: themesstrings.menu_midnight
+msgid "Midnight"
+msgstr ""
+
+#: themesstrings.menu_ocean
+msgid "Ocean"
+msgstr ""
+
+#: themesstrings.menu_paper
+msgid "Paper"
+msgstr ""
+
+#: themesstrings.menu_system
+msgid "Follow system"
+msgstr ""
+
+#: themesstrings.menu_theme
+msgid "Theme"
+msgstr ""
+

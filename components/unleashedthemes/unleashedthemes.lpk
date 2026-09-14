@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <Name Value="UnleashedThemes"/>
+    <Type Value="DesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/$(LCLWidgetType)"/>
+      </SearchPaths>
+      <Other>
+        <CustomOptions Value="$(IDEBuildOptions)"/>
+      </Other>
+    </CompilerOptions>
+    <Description Value="Unleashed Themes: switches the IDE between the stock, system, light, dark and ocean look from the View menu without a restart.
+"/>
+    <License Value="Copyright (c) 2026 Unleashed Pascal Team &lt;https://unleashedpascal.org>
+
+Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text ships as LICENSE next to this package; it is also available at https://mozilla.org/MPL/2.0/.
+"/>
+    <Version Major="1"/>
+    <Files>
+      <Item>
+        <Filename Value="regunleashedthemes.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="RegUnleashedThemes"/>
+      </Item>
+      <Item>
+        <Filename Value="themesconfig.pas"/>
+        <UnitName Value="ThemesConfig"/>
+      </Item>
+      <Item>
+        <Filename Value="themesmanager.pas"/>
+        <UnitName Value="ThemesManager"/>
+      </Item>
+      <Item>
+        <Filename Value="themespalette.pas"/>
+        <UnitName Value="ThemesPalette"/>
+      </Item>
+      <Item>
+        <Filename Value="themesstrings.pas"/>
+        <UnitName Value="ThemesStrings"/>
+      </Item>
+      <Item>
+        <Filename Value="themeswin32.pas"/>
+        <UnitName Value="ThemesWin32"/>
+      </Item>
+    </Files>
+    <i18n>
+      <EnableI18N Value="True"/>
+      <OutDir Value="languages"/>
+    </i18n>
+    <RequiredPkgs>
+      <Item>
+        <PackageName Value="LCL"/>
+      </Item>
+      <Item>
+        <PackageName Value="IDEIntf"/>
+      </Item>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
