@@ -234,7 +234,7 @@ constructor TGrip.Create(TheOwner: TComponent);
 begin
   inherited Create(TheOwner);
   BevelOuter := bvNone;
-  Color := clBlack;
+  Color := clWindowFrame; // stays visible on dark palettes, unlike a fixed black
   SetInitialBounds(0, 0, 8, 8);
   FActivated := False;
 

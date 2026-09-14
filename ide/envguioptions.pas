@@ -13,17 +13,32 @@ uses
   // BuildIntf
   ProjectIntf, IDEOptionsIntf, IDEExternToolIntf, ComponentReg,
   // IDEIntf
-  ObjectInspector, IDEWindowIntf, IDEOptEditorIntf, SrcEditorIntf,
+  ObjectInspector, IDEWindowIntf, IDEOptEditorIntf, SrcEditorIntf, IDEIntfUtils,
   // IdeConfig
   IDEOptionDefs, EnvironmentOpts, ModeMatrixOpts, CoolBarOptions, EditorToolBarOptions;
 
 const
   DefaultRubberbandSelectsGrandChilds = false;
   DefaultBorderSpacingColor = clRed;
-  DefaultGridColor = clBlack;
   DefaultGridSize = 8;
-  DefaultGuideLineColorLeftTop = clBlue;
-  DefaultGuideLineColorRightBottom = clGreen;
+  // designer colors come in a light and a dark preset; a stored preset
+  // follows the current IDE look, an explicit user color stays
+  DefaultGridColorLight = clBlack;
+  DefaultGridColorDark = TColor($A8A09A);
+  DefaultGuideLineColorLeftTopLight = clBlue;
+  DefaultGuideLineColorLeftTopDark = TColor($FFA34D);
+  DefaultGuideLineColorRightBottomLight = clGreen;
+  DefaultGuideLineColorRightBottomDark = TColor($66CC66);
+  DefaultGrabberColorLight = clBlack;
+  DefaultGrabberColorDark = TColor($DEDAD8);
+  DefaultMarkerColorLight = clDkGray;
+  DefaultMarkerColorDark = TColor($A8A09A);
+
+function DefaultGridColor: TColor;
+function DefaultGuideLineColorLeftTop: TColor;
+function DefaultGuideLineColorRightBottom: TColor;
+function DefaultGrabberColor: TColor;
+function DefaultMarkerColor: TColor;
 
 type
   { Messages window }
@@ -314,6 +329,11 @@ type
     FDebugDesktopName: string;
     function GetMsgColors(u: TMessageLineUrgency): TColor;
     function GetMsgViewColors(c: TMsgWndColor): TColor;
+    function GetGridColor: TColor;
+    function GetGuideLineColorLeftTop: TColor;
+    function GetGuideLineColorRightBottom: TColor;
+    function GetGrabberColor: TColor;
+    function GetMarkerColor: TColor;
     procedure SetMsgColors(u: TMessageLineUrgency; AValue: TColor);
     procedure SetMsgViewColors(c: TMsgWndColor; AValue: TColor);
 
@@ -346,14 +366,14 @@ type
     property BorderSpacingColor: TColor read FBorderSpacingColor write FBorderSpacingColor;
     property ShowGrid: boolean read FShowGrid write FShowGrid;
     property SnapToGrid: boolean read FSnapToGrid write FSnapToGrid;
-    property GridColor: TColor read FGridColor write FGridColor;
+    property GridColor: TColor read GetGridColor write FGridColor;
     property GridSizeX: integer read FGridSizeX write FGridSizeX;
     property GridSizeY: integer read FGridSizeY write FGridSizeY;
     property ShowGuideLines: boolean read FShowGuideLines write FShowGuideLines;
     property SnapToGuideLines: boolean read FSnapToGuideLines write FSnapToGuideLines;
-    property GuideLineColorLeftTop: TColor read FGuideLineColorLeftTop
+    property GuideLineColorLeftTop: TColor read GetGuideLineColorLeftTop
                                            write FGuideLineColorLeftTop;
-    property GuideLineColorRightBottom: TColor read FGuideLineColorRightBottom
+    property GuideLineColorRightBottom: TColor read GetGuideLineColorRightBottom
                                                write FGuideLineColorRightBottom;
     property ShowNonVisualComponents: boolean read FShowNonVisualComponents
                                              write FShowNonVisualComponents;
@@ -367,8 +387,8 @@ type
                                                 write FCheckPackagesOnFormCreate;
     property RightClickSelects: boolean read FRightClickSelects
                                         write FRightClickSelects;
-    property GrabberColor: TColor read FGrabberColor write FGrabberColor;
-    property MarkerColor: TColor read FMarkerColor write FMarkerColor;
+    property GrabberColor: TColor read GetGrabberColor write FGrabberColor;
+    property MarkerColor: TColor read GetMarkerColor write FMarkerColor;
     property NonFormBackgroundColor: TColor read FNonFormBackgroundColor
                                             write FNonFormBackgroundColor;
     property RubberbandSelectionColor: TColor read FRubberbandSelectionColor
@@ -428,6 +448,41 @@ implementation
 
 const
   DefaultMsgViewFocus = {$IFDEF Windows}true{$ELSE}false{$ENDIF};
+
+function DefaultGridColor: TColor;
+begin
+  if IDEColorsAreDark then
+    exit(DefaultGridColorDark);
+  Result := DefaultGridColorLight;
+end;
+
+function DefaultGuideLineColorLeftTop: TColor;
+begin
+  if IDEColorsAreDark then
+    exit(DefaultGuideLineColorLeftTopDark);
+  Result := DefaultGuideLineColorLeftTopLight;
+end;
+
+function DefaultGuideLineColorRightBottom: TColor;
+begin
+  if IDEColorsAreDark then
+    exit(DefaultGuideLineColorRightBottomDark);
+  Result := DefaultGuideLineColorRightBottomLight;
+end;
+
+function DefaultGrabberColor: TColor;
+begin
+  if IDEColorsAreDark then
+    exit(DefaultGrabberColorDark);
+  Result := DefaultGrabberColorLight;
+end;
+
+function DefaultMarkerColor: TColor;
+begin
+  if IDEColorsAreDark then
+    exit(DefaultMarkerColorDark);
+  Result := DefaultMarkerColorLight;
+end;
 
 function StrToMsgWndFilenameStyle(const s: string): TMsgWndFileNameStyle;
 begin
@@ -966,6 +1021,42 @@ end;
 
 { TEnvGuiOptions }
 
+// a preset of either look resolves to the preset of the current look
+function ResolveDesignerPreset(AValue, ALight, ADark: TColor): TColor;
+begin
+  Result:=AValue;
+  if (AValue<>ALight) and (AValue<>ADark) then exit;
+  if IDEColorsAreDark then
+    Result:=ADark
+  else
+    Result:=ALight;
+end;
+
+function TEnvGuiOptions.GetGridColor: TColor;
+begin
+  Result:=ResolveDesignerPreset(FGridColor,DefaultGridColorLight,DefaultGridColorDark);
+end;
+
+function TEnvGuiOptions.GetGuideLineColorLeftTop: TColor;
+begin
+  Result:=ResolveDesignerPreset(FGuideLineColorLeftTop,DefaultGuideLineColorLeftTopLight,DefaultGuideLineColorLeftTopDark);
+end;
+
+function TEnvGuiOptions.GetGuideLineColorRightBottom: TColor;
+begin
+  Result:=ResolveDesignerPreset(FGuideLineColorRightBottom,DefaultGuideLineColorRightBottomLight,DefaultGuideLineColorRightBottomDark);
+end;
+
+function TEnvGuiOptions.GetGrabberColor: TColor;
+begin
+  Result:=ResolveDesignerPreset(FGrabberColor,DefaultGrabberColorLight,DefaultGrabberColorDark);
+end;
+
+function TEnvGuiOptions.GetMarkerColor: TColor;
+begin
+  Result:=ResolveDesignerPreset(FMarkerColor,DefaultMarkerColorLight,DefaultMarkerColorDark);
+end;
+
 constructor TEnvGuiOptions.Create;
 var
   c: TMsgWndColor;
@@ -994,8 +1085,8 @@ begin
   FAutoCreateFormsOnOpen:=true;
   FCheckPackagesOnFormCreate:=true;
   FRightClickSelects:=true;
-  FGrabberColor:=clBlack;
-  FMarkerColor:=clDkGray;
+  FGrabberColor:=DefaultGrabberColor;
+  FMarkerColor:=DefaultMarkerColor;
   FNonFormBackgroundColor:=clWindow;
   FRubberbandSelectionColor:=clNavy;
   FRubberbandCreationColor:=clMaroon;
@@ -1207,8 +1298,8 @@ begin
   XMLCfg.SetDeleteValue(Path+'FormEditor/AutoCreateFormsOnOpen',FAutoCreateFormsOnOpen,true);
   XMLCfg.SetDeleteValue(Path+'FormEditor/CheckPackagesOnFormCreate',FCheckPackagesOnFormCreate,true);
   XMLCfg.SetDeleteValue(Path+'FormEditor/RightClickSelects',FRightClickSelects,true);
-  XMLCfg.SetDeleteValue(Path+'FormEditor/GrabberColor/Value',FGrabberColor,clBlack);
-  XMLCfg.SetDeleteValue(Path+'FormEditor/MarkerColor/Value',FMarkerColor,clDkGray);
+  XMLCfg.SetDeleteValue(Path+'FormEditor/GrabberColor/Value',FGrabberColor,DefaultGrabberColor);
+  XMLCfg.SetDeleteValue(Path+'FormEditor/MarkerColor/Value',FMarkerColor,DefaultMarkerColor);
   XMLCfg.SetDeleteValue(Path+'FormEditor/NonFormBackgroundColor/Value',FNonFormBackgroundColor,clWindow);
   XMLCfg.SetDeleteValue(Path+'FormEditor/Rubberband/SelectionColor/Value',
      FRubberbandSelectionColor,clNavy);

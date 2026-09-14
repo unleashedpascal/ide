@@ -66,7 +66,7 @@ uses
   // LazEdit
   LazEditTextAttributes, LazEditHighlighter,
   // IdeIntf
-  SrcEditorIntf, MenuIntf, LazIDEIntf, PackageIntf, IDEHelpIntf, IDEImagesIntf,
+  SrcEditorIntf, MenuIntf, LazIDEIntf, PackageIntf, IDEHelpIntf, IDEImagesIntf, IDEIntfUtils,
   IDEWindowIntf, ProjectIntf, MacroDefIntf, ToolBarIntf, IDEDialogs, IDECommands,
   EditorSyntaxHighlighterDef, IdeIntfStrConsts, EditorOptionsIntf,
   // DebuggerIntf
@@ -2532,7 +2532,10 @@ Begin
   FColors.Clear;
   FColors.Color[ahaIdentComplWindow].Foreground := Editor.Font.Color;
   FColors.Color[ahaIdentComplWindow].Background := Editor.Color;
-  FColors.Color[ahaIdentComplWindowBorder].Foreground := RGBToColor(200, 200, 200);
+  if IDEColorsAreDark then
+    FColors.Color[ahaIdentComplWindowBorder].Foreground := RGBToColor(82, 88, 96)
+  else
+    FColors.Color[ahaIdentComplWindowBorder].Foreground := RGBToColor(200, 200, 200);
   FColors.Color[ahaIdentComplWindowSelection].Foreground := TSynEdit(Editor).SelectedColor.Foreground;
   FColors.Color[ahaIdentComplWindowSelection].Background := TSynEdit(Editor).SelectedColor.Background;
 

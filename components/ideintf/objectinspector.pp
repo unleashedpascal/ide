@@ -44,7 +44,7 @@ uses
   // LazUtils
   GraphType, LazConfigStorage, LazLoggerBase, LazStringUtils, LazVersion, LazUTF8,
   // IdeIntf
-  IDEImagesIntf, IDEHelpIntf, ObjInspStrConsts,
+  IDEImagesIntf, IDEHelpIntf, ObjInspStrConsts, IDEIntfUtils,
   PropEdits, PropEditUtils, ComponentTreeView, OIFavoriteProperties,
   ComponentEditors, ChangeParentDlg;
 
@@ -922,6 +922,42 @@ implementation
 {$R *.lfm}
 {$R images\ideintf_images.res}
 
+const
+  // counterparts of the Def*Color presets for dark palettes
+  DefReferencesColorDark = TColor($56A0E0);
+  DefSubPropertiesColorDark = TColor($7EC77E);
+  DefValueColorDark = TColor($D69C56);
+  DefValueDifferBackgrndColorDark = TColor($604050);
+
+// a stored preset follows the IDE look; explicit user colors pass through
+function ResolvePreset(AValue, ALight, ADark: TColor): TColor;
+begin
+  Result:=AValue;
+  if (AValue<>ALight) and (AValue<>ADark) then exit;
+  if IDEColorsAreDark then
+    Result:=ADark
+  else
+    Result:=ALight;
+end;
+
+// shift a color by ADelta per channel towards more contrast:
+// darker on light colors, lighter on dark ones
+function ShiftColor(AColor: TColor; ADelta: Integer): TColor;
+var
+  rgb, r, g, b: Integer;
+begin
+  rgb:=ColorToRGB(AColor);
+  r:=rgb and $ff;
+  g:=(rgb shr 8) and $ff;
+  b:=(rgb shr 16) and $ff;
+  if r+g+b>=384 then
+    ADelta:=-ADelta;
+  r:=EnsureRange(r+ADelta,0,255);
+  g:=EnsureRange(g+ADelta,0,255);
+  b:=EnsureRange(b+ADelta,0,255);
+  Result:=TColor(r or (g shl 8) or (b shl 16));
+end;
+
 function SortGridRows(Item1, Item2 : pointer) : integer;
 begin
   Result:=CompareText(TOIPropertyGridRow(Item1).Name,
@@ -1044,18 +1080,18 @@ begin
   FIndent := ThemeServices.GetDetailSizeForPPI(Details, Font.PixelsPerInch).cx;
 
   FBackgroundColor:=DefBackgroundColor;
-  FReferencesColor:=DefReferencesColor;
-  FSubPropertiesColor:=DefSubPropertiesColor;
+  FReferencesColor:=ResolvePreset(DefReferencesColor,DefReferencesColor,DefReferencesColorDark);
+  FSubPropertiesColor:=ResolvePreset(DefSubPropertiesColor,DefSubPropertiesColor,DefSubPropertiesColorDark);
   FReadOnlyColor:=DefReadOnlyColor;
   FHighlightColor:=DefHighlightColor;
   FGutterColor:=DefGutterColor;
   FGutterEdgeColor:=DefGutterEdgeColor;
-  FValueDifferBackgrndColor:=DefValueDifferBackgrndColor;
+  FValueDifferBackgrndColor:=ResolvePreset(DefValueDifferBackgrndColor,DefValueDifferBackgrndColor,DefValueDifferBackgrndColorDark);
 
   FNameFont:=TFont.Create;
   FNameFont.Color:=DefNameColor;
   FValueFont:=TFont.Create;
-  FValueFont.Color:=DefValueColor;
+  FValueFont.Color:=ResolvePreset(DefValueColor,DefValueColor,DefValueColorDark);
   FDefaultValueFont:=TFont.Create;
   FDefaultValueFont.Color:=DefDefaultValueColor;
   FHighlightFont:=TFont.Create;
@@ -2970,8 +3006,9 @@ var
     end;
     if DrawValuesDiffer then
     begin
-      // Make the background color darker than what the active edit control has.
-      Canvas.Brush.Color := FValueDifferBackgrndColor - $282828;
+      // shade against the active edit control: darker on light palettes,
+      // lighter on dark ones
+      Canvas.Brush.Color := ShiftColor(FValueDifferBackgrndColor, $28);
       Canvas.FillRect(ValueRect);
     end;
     if ShowGutter and (Layout = oilHorizontal) and
@@ -3098,6 +3135,20 @@ var
     end;
   end;
 
+  // separator color that stays subtle but visible on light and dark
+  // backgrounds alike; the fixed 3D system colors degenerate to white or
+  // near-black under themed palettes
+  function RowLineColor: TColor;
+  var
+    R, G, B: Byte;
+  begin
+    RedGreenBlue(ColorToRGB(BackgroundColor), R, G, B);
+    if (Integer(R) + G + B) < 384 then
+      Result := RGBToColor(Min(R + 52, 255), Min(G + 52, 255), Min(B + 52, 255))
+    else
+      Result := RGBToColor(Max(R - 52, 0), Max(G - 52, 0), Max(B - 52, 0));
+  end;
+
 var
   IconX: integer;
   DrawState: TPropEditDrawState;
@@ -3154,7 +3205,7 @@ begin
         Pen.Style := psDot;
         Pen.EndCap := pecFlat;
         Pen.Cosmetic := False;
-        Pen.Color := cl3DShadow;
+        Pen.Color := RowLineColor;
         if FRowSpacing <> 0 then
         begin
           MoveTo(NameTextRect.Left, NameRect.Top - 1);
@@ -3164,15 +3215,12 @@ begin
         LineTo(ValueRect.Right, NameRect.Bottom - 1);
       end;
 
-      // Split lines between: icon and name, name and value
+      // Split line between name and value
       Pen.Style := psSolid;
       Pen.Cosmetic := True;
-      Pen.Color := cl3DHiLight;
+      Pen.Color := RowLineColor;
       MoveTo(NameRect.Right - 1, NameRect.Bottom - 1);
       LineTo(NameRect.Right - 1, NameRect.Top - 1 - FRowSpacing);
-      Pen.Color := cl3DShadow;
-      MoveTo(NameRect.Right - 2, NameRect.Bottom - 1);
-      LineTo(NameRect.Right - 2, NameRect.Top - 1 - FRowSpacing);
 
       // draw gutter line
       if ShowGutter then
@@ -3186,18 +3234,16 @@ begin
     end
     else begin                              // Layout <> oilHorizontal
       Pen.Style := psSolid;
-      Pen.Color := cl3DLight;
+      Pen.Color := RowLineColor;
       MoveTo(ValueRect.Left, ValueRect.Bottom - 1);
       LineTo(ValueRect.Left, NameTextRect.Top);
       LineTo(ValueRect.Right - 1, NameTextRect.Top);
-      Pen.Color:=cl3DHiLight;
       LineTo(ValueRect.Right - 1, ValueRect.Bottom - 1);
       LineTo(ValueRect.Left, ValueRect.Bottom - 1);
 
       MoveTo(NameTextRect.Left + 1, NametextRect.Bottom);
       LineTo(NameTextRect.Left + 1, NameTextRect.Top + 1);
       LineTo(NameTextRect.Right - 2, NameTextRect.Top + 1);
-      Pen.Color:=cl3DLight;
       LineTo(NameTextRect.Right - 2, NameTextRect.Bottom - 1);
       LineTo(NameTextRect.Left + 2, NameTextRect.Bottom - 1);
     end;
@@ -4229,11 +4275,11 @@ end;
 procedure TOIOptions.AssignTo(AGrid: TOICustomPropertyGrid);
 begin
   AGrid.BackgroundColor := FGridBackgroundColor;
-  AGrid.SubPropertiesColor := FSubPropertiesColor;
-  AGrid.ReferencesColor := FReferencesColor;
+  AGrid.SubPropertiesColor := ResolvePreset(FSubPropertiesColor,DefSubPropertiesColor,DefSubPropertiesColorDark);
+  AGrid.ReferencesColor := ResolvePreset(FReferencesColor,DefReferencesColor,DefReferencesColorDark);
   AGrid.ReadOnlyColor := FReadOnlyColor;
-  AGrid.ValueDifferBackgrndColor := FValueDifferBackgrndColor;
-  AGrid.ValueFont.Color := FValueColor;
+  AGrid.ValueDifferBackgrndColor := ResolvePreset(FValueDifferBackgrndColor,DefValueDifferBackgrndColor,DefValueDifferBackgrndColorDark);
+  AGrid.ValueFont.Color := ResolvePreset(FValueColor,DefValueColor,DefValueColorDark);
   if FBoldNonDefaultValues then
     AGrid.ValueFont.Style := [fsBold]
   else

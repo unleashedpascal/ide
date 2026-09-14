@@ -6950,6 +6950,26 @@ begin
   end;
 end;
 
+// a shade of the editor background for the current line: darker on a light
+// background, lighter on a dark one
+function LineShadeOf(ABackground: TColor; ADelta: Integer): TColor;
+
+  function Clamp(V: Integer): Byte;
+  begin
+    if V < 0 then V := 0;
+    if V > 255 then V := 255;
+    Result := V;
+  end;
+
+var
+  R, G, B: Byte;
+begin
+  RedGreenBlue(ColorToRGB(ABackground), R, G, B);
+  if (Integer(R) + G + B) >= 384 then
+    ADelta := -ADelta;
+  Result := RGBToColor(Clamp(R + ADelta), Clamp(G + ADelta), Clamp(B + ADelta));
+end;
+
 procedure TEditorOptions.SetMarkupColors(aSynEd: TSynEdit);
 var
   Scheme: TColorSchemeLanguage;
@@ -8120,6 +8140,12 @@ begin
     SetMarkupColor(ahaFoldedCodeLine,    aSynEdit.FoldedCodeLineColor);
     SetMarkupColor(ahaHiddenCodeLine,    aSynEdit.HiddenCodeLineColor);
     SetMarkupColor(ahaLineHighlight,     aSynEdit.LineHighlightColor);
+    // a scheme that leaves the current line unset gets a shade of the
+    // editor background instead of no highlight at all
+    if aSynEdit.LineHighlightColor.Background = clNone then begin
+      aSynEdit.LineHighlightColor.Background := LineShadeOf(aSynEdit.Color, 12);
+      aSynEdit.LineHighlightColor.BackAlpha := 0;
+    end;
     if ASynEdit is TIDESynEditor then begin
       SetMarkupColor(ahaTopInfoHint,  TIDESynEditor(aSynEdit).TopInfoMarkup);
       Attri := GetUsedAttr(ahaCaretColor);

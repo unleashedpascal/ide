@@ -59,7 +59,7 @@ type
       cDefaultWidth = 230;
       cDefaultGrabStyle = 1;
       cDefaultGrabWidth = 5;
-      cDefaultBorderstyle = 1;
+      cDefaultBorderstyle = 0; // flat bands, no bevel around each toolbar
   public
     constructor Create;
     destructor Destroy; override;

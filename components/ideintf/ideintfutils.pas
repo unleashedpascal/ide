@@ -20,6 +20,10 @@ uses
   // LazUtils
   LazStringUtils, LazFileUtils;
 
+// true when the IDE paints on dark backgrounds, whatever put them there
+// (a theme package, the widgetset palette); reads the live system colors
+function IDEColorsAreDark: boolean;
+
 type
   // Moved and deprecated in Lazarus 4.99 in April 2026.
   TCmpStrType = LazStringUtils.TCmpStrType deprecated 'Use from unit LazStringUtils instead.';
@@ -44,6 +48,15 @@ function GetValidDirectoryAndFilename(const aFileDirStr: string;
 
 
 implementation
+
+function IDEColorsAreDark: boolean;
+var
+  R, G, B: Byte;
+begin
+  RedGreenBlue(ColorToRGB(clWindow), R, G, B);
+  // perceived luminance, Rec. 601 weights
+  Result := (R*299+G*587+B*114) div 1000 < 128;
+end;
 
 function IndexInStringList(List: TStrings; Cmp: TCmpStrType; s: string): integer;
 begin

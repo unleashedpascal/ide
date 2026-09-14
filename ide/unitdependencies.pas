@@ -46,7 +46,7 @@ uses
   // LazUtils
   LazLoggerBase, LazFileUtils, LazFileCache, LazStringUtils, LazUTF8, LvlGraphCtrl,
   // IDE interface
-  LazIDEIntf, ProjectIntf, IDEWindowIntf, PackageIntf, SrcEditorIntf, IDEImagesIntf,
+  LazIDEIntf, ProjectIntf, IDEWindowIntf, PackageIntf, SrcEditorIntf, IDEImagesIntf, IDEIntfUtils,
   IDEMsgIntf, IDEExternToolIntf, IDECommands, IDEDialogs, laz.VirtualTrees,
   // IDE
   IDEOptionDefs, LazarusIDEStrConsts, UnusedUnitsDlg, DependencyGraphOptions,
@@ -1983,7 +1983,10 @@ begin
     EdgeStyle.BackColor := $5870FF;
     EdgeStyle.BackHighlightColor := clRed;
     EdgeStyle.BackNodeSelectedColor := clFuchsia;
-    EdgeStyle.NodeSelectedColor := clBlue;
+    if IDEColorsAreDark then
+      EdgeStyle.NodeSelectedColor := RGBToColor(77, 163, 255)
+    else
+      EdgeStyle.NodeSelectedColor := clBlue;
   end;
 
   GroupsSplitter.Top:=GroupsLvlGraph.Height;
@@ -2004,7 +2007,10 @@ begin
     EdgeStyle.BackColor := $5870FF;
     EdgeStyle.BackHighlightColor := clRed;
     EdgeStyle.BackNodeSelectedColor := clFuchsia;
-    EdgeStyle.NodeSelectedColor := clBlue;
+    if IDEColorsAreDark then
+      EdgeStyle.NodeSelectedColor := RGBToColor(77, 163, 255)
+    else
+      EdgeStyle.NodeSelectedColor := clBlue;
   end;
 end;
 

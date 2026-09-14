@@ -43,7 +43,7 @@ uses
   // BuildIntf
   ProjectIntf,
   // IdeIntf
-  IdeIntfStrConsts, LazIDEIntf, IDEImagesIntf, IDEWindowIntf,
+  IdeIntfStrConsts, LazIDEIntf, IDEImagesIntf, IDEWindowIntf, IDEIntfUtils,
   // IDE
   LazarusIDEStrConsts, SourceEditor, Project, EnvironmentOpts, MainIntf;
 
@@ -292,7 +292,10 @@ begin
     Canvas.FillRect(ARect);
     ena := not Assigned(Items.Objects[Index]) or (Items.Objects[Index] is TCodeTreeNode);
     if not (ena or (odSelected in State)) then
-      Canvas.Font.Color := clGreen;
+      if IDEColorsAreDark then
+        Canvas.Font.Color := RGBToColor(126, 199, 126)
+      else
+        Canvas.Font.Color := clGreen;
     IDEImages.Images_16.Draw(Canvas, 1, (ARect.Top+ARect.Bottom-IDEImages.Images_16.Height) div 2, UnitImgInd, ena);
     if Items.Objects[Index] is TCodeTreeNode then
     begin

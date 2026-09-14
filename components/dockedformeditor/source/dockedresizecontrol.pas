@@ -143,6 +143,10 @@ end;
 
 procedure TResizeControl.CreateBarBitmaps;
 begin
+  // the pixels hold resolved colors, so the bitmaps are rebuilt on every
+  // paint to follow a theme change
+  FreeAndNil(FBitmapBarActive);
+  FreeAndNil(FBitmapBarInactive);
   FBitmapBarActive := TBitmap.Create;
   FBitmapBarActive.SetSize(2, 2);
   FBitmapBarActive.Canvas.Pixels[0, 0] := DockedOptions.ResizerColor;
@@ -152,10 +156,11 @@ begin
 
   FBitmapBarInactive := TBitmap.Create;
   FBitmapBarInactive.SetSize(2, 2);
-  FBitmapBarInactive.Canvas.Pixels[0, 0] := clGray;
+  // a muted system color instead of a fixed gray, so it fits a dark palette
+  FBitmapBarInactive.Canvas.Pixels[0, 0] := clGrayText;
   FBitmapBarInactive.Canvas.Pixels[0, 1] := clBtnFace;
   FBitmapBarInactive.Canvas.Pixels[1, 0] := clBtnFace;
-  FBitmapBarInactive.Canvas.Pixels[1, 1] := clGray;
+  FBitmapBarInactive.Canvas.Pixels[1, 1] := clGrayText;
 end;
 
 function TResizeControl.CurrentSizingOffset(Sender: TObject): TPoint;
@@ -273,6 +278,7 @@ var
 begin
   if not (Sender is TPanel) then Exit;
   LPanel := TPanel(Sender);
+  CreateBarBitmaps;
   LPanel.Canvas.Brush.Style := bsImage;
   if IsFocused then
     LPanel.Canvas.Brush.Bitmap := FBitmapBarActive

@@ -2537,13 +2537,13 @@ var
     begin
       DC.BeginPainting;
       RestoreBrush := True;
-      with DC.Canvas do
-      begin
-        OldBrushColor := Brush.Color;
-        Brush.Color := GrabberColor;
-      end;
+      OldBrushColor := DC.Canvas.Brush.Color;
     end;
+    // a frame keeps the grabber visible whatever fill color the user picked
+    DC.Canvas.Brush.Color := clWindowFrame;
     DC.Canvas.FillRect(Rect(RLeft, RTop, RRight, RBottom));
+    DC.Canvas.Brush.Color := GrabberColor;
+    DC.Canvas.FillRect(Rect(RLeft+1, RTop+1, RRight-1, RBottom-1));
     //DC.Canvas.TextOut(RLeft,RTop,dbgs(ord(g)));
   end;
 
