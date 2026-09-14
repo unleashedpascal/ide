@@ -265,6 +265,7 @@ var
     DrawResult: TCustomDrawResult;
     ResultFlag: TCustomDrawResultFlag;
     OldDC: HDC;
+    TextColor: TColor;
   begin
     MsgResult := CDRF_DODEFAULT;
     WinProcess := False;
@@ -306,7 +307,10 @@ var
     if not (cdrSkipDefault in DrawResult) and
        (DrawInfo^.nmcd.dwDrawStage and CDDS_ITEMPREPAINT = CDDS_ITEMPREPAINT) then
     begin
-      DrawInfo^.clrText := ColorToRGB(ALV.Canvas.Font.Color);
+      TextColor := ALV.Canvas.Font.Color;
+      if TextColor = clDefault then
+        TextColor := ALV.GetDefaultColor(dctFont);
+      DrawInfo^.clrText := ColorToRGB(TextColor);
       DrawInfo^.clrTextBk := ColorToRGB(ALV.Canvas.Brush.Color);
     end;
     ALV.Canvas.Handle := OldDC;
