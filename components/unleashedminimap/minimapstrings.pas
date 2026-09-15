@@ -15,16 +15,17 @@ unit MiniMapStrings;
 interface
 
 resourcestring
-  MENU_SHOW_MAP    = 'Code Minimap';
-  MENU_MAP_SETUP   = 'Code Minimap Options ...';
-  SETUP_CAPTION    = 'Code Minimap Options';
-  SETUP_WIDTH      = 'Map width in pixels';
-  SETUP_FONT_SIZE  = 'Map font size';
-  SETUP_BAND_COLOR = 'Viewport tint';
-  SETUP_BAND_TINT  = 'Viewport tint strength in percent';
-  SETUP_COLOR_HINT = 'Default blends white into the editor background.';
-  SETUP_OK         = 'OK';
-  SETUP_CANCEL     = 'Cancel';
+  MENU_SHOW_MAP        = 'Code Minimap';
+  OPTIONS_TITLE        = 'Code Minimap';
+  OPTIONS_SHOW_MAP     = 'Show the code minimap';
+  OPTIONS_WIDTH        = 'Map width (pixels):';
+  OPTIONS_FONT_SIZE    = 'Map font size:';
+  OPTIONS_RESET        = 'Reset to defaults';
+  OPTIONS_FOLLOW_THEME = 'Adjust the colors to match the theme';
+  OPTIONS_VIEWPORT     = 'Viewport band';
+  OPTIONS_BAND_COLOR   = 'Tint color:';
+  OPTIONS_BAND_TINT    = 'Tint strength (percent):';
+  OPTIONS_COLOR_HINT   = 'Default blends white into the editor background.';
 
 implementation
 

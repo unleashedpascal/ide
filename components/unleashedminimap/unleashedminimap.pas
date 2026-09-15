@@ -8,7 +8,7 @@ unit unleashedminimap;
 interface
 
 uses
-  RegUnleashedMiniMap, MiniMapConfig, MiniMapManager, MiniMapSetupDlg, MiniMapStrings, MiniMapView, LazarusPackageIntf;
+  RegUnleashedMiniMap, MiniMapConfig, MiniMapManager, MiniMapOptionsFrame, MiniMapStrings, MiniMapView, LazarusPackageIntf;
 
 implementation
 

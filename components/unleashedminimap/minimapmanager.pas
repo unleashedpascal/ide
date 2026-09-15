@@ -27,6 +27,7 @@ type
     fViews: TFPList;
     fSettings: TMapSettings;
     fHooked: boolean;
+    fOnApplied: TNotifyEvent;
     function viewCount: integer;
     function viewAt(index: integer): TMiniMapView;
     function viewFor(aEditor: TSourceEditorInterface): TMiniMapView;
@@ -47,6 +48,8 @@ type
     procedure applySettings(const src: TMapSettings);
     procedure toggleShown;
     property settings: TMapSettings read fSettings;
+    // after every applySettings, from the menu or the options page alike
+    property onApplied: TNotifyEvent read fOnApplied write fOnApplied;
   end;
 
 var
@@ -181,15 +184,15 @@ procedure TMiniMapManager.applySettings(const src: TMapSettings);
 begin
   fSettings := clampMapSettings(src);
   hookEvents(fSettings.shown);
-  if not fSettings.shown then begin
+  if fSettings.shown then begin
+    attachOpenEditors;
+    for var i := 0 to viewCount-1 do begin
+      configView(viewAt(i));
+      viewAt(i).reconfigure;
+    end;
+  end else
     detachAll;
-    exit;
-  end;
-  attachOpenEditors;
-  for var i := 0 to viewCount-1 do begin
-    configView(viewAt(i));
-    viewAt(i).reconfigure;
-  end;
+  if Assigned(fOnApplied) then fOnApplied(self);
 end;
 
 procedure TMiniMapManager.toggleShown;

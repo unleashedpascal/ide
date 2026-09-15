@@ -34,8 +34,8 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <UnitName Value="MiniMapManager"/>
       </Item>
       <Item>
-        <Filename Value="minimapsetupdlg.pas"/>
-        <UnitName Value="MiniMapSetupDlg"/>
+        <Filename Value="minimapoptionsframe.pas"/>
+        <UnitName Value="MiniMapOptionsFrame"/>
       </Item>
       <Item>
         <Filename Value="minimapstrings.pas"/>

@@ -19,7 +19,11 @@ procedure Register;
 implementation
 
 uses
-  Classes, Forms, MenuIntf, MiniMapStrings, MiniMapConfig, MiniMapManager, MiniMapSetupDlg;
+  Classes, Forms, MenuIntf, IDEOptionsIntf, IDEOptEditorIntf, MiniMapStrings, MiniMapManager, MiniMapOptionsFrame;
+
+const
+  // right behind the Form Placer page of the editor group
+  OPTIONS_FRAME_ID = 1011;
 
 type
 
@@ -27,7 +31,7 @@ type
 
   TMenuGlue = class(TComponent)
     procedure toggleClicked(Sender: TObject);
-    procedure setupClicked(Sender: TObject);
+    procedure settingsApplied(Sender: TObject);
   end;
 
 var
@@ -53,16 +57,11 @@ procedure TMenuGlue.toggleClicked(Sender: TObject);
 begin
   if mapManager = nil then exit;
   mapManager.toggleShown;
-  syncToggle;
 end;
 
-procedure TMenuGlue.setupClicked(Sender: TObject);
+// the options page changes the setting as well
+procedure TMenuGlue.settingsApplied(Sender: TObject);
 begin
-  if mapManager = nil then exit;
-  var edited := mapManager.settings;
-  if not editMapSettings(edited) then exit;
-  mapManager.applySettings(edited);
-  mapManager.saveConfig;
   syncToggle;
 end;
 
@@ -71,10 +70,11 @@ begin
   mapManager := TMiniMapManager.Create(Application);
   mapManager.loadConfig;
   glue := TMenuGlue.Create(Application);
+  mapManager.onApplied := @glue.settingsApplied;
   var host := menuHost;
   toggleItem := RegisterIDEMenuCommand(host, 'itmViewCodeMapToggle', MENU_SHOW_MAP, @glue.toggleClicked);
   syncToggle;
-  RegisterIDEMenuCommand(host, 'itmViewCodeMapSetup', MENU_MAP_SETUP, @glue.setupClicked);
+  RegisterIDEOptionsEditor(GroupEditor, TMiniMapOptionsFrame, OPTIONS_FRAME_ID);
 end;
 
 end.
