@@ -25,6 +25,7 @@ resourcestring
   SPlacerColors            = 'Map colors';
   SPlacerFollowTheme       = 'Adjust the colors to match the theme';
   SPlacerResetColors       = 'Reset colors';
+  SPlacerResetDefaults     = 'Reset to defaults';
   SPlacerMapBackColor      = 'Desktop background:';
   SPlacerMonitorEdgeColor  = 'Monitor edges:';
   SPlacerFormFillColor     = 'Form rectangle:';

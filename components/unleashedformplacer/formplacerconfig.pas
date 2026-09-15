@@ -35,13 +35,12 @@ type
   { TFormPlacerOptions }
 
   TFormPlacerOptions = class
-  private const
+  public const
     DefShowMap          = True;
     DefLiveUpdate       = True;
     DefMapWidth         = 160;
     DefNudgeStep        = 8;
     DefFollowTheme      = True;
-  public const
     DefMapBackColor     = TColor($00404040);
     DefMonitorEdgeColor = TColor($00909090);
     DefFormFillColor    = clWhite;

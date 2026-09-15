@@ -36,6 +36,7 @@ type
     SpinEditMapWidth: TSpinEdit;
     LabelNudgeStep: TLabel;
     SpinEditNudgeStep: TSpinEdit;
+    ButtonResetDefaults: TButton;
     CheckBoxFollowTheme: TCheckBox;
     LabelColors: TLabel;
     LabelMapBack: TLabel;
@@ -51,6 +52,7 @@ type
     ButtonResetColors: TButton;
     procedure CheckBoxFollowThemeChange(Sender: TObject);
     procedure ButtonResetColorsClick(Sender: TObject);
+    procedure ButtonResetDefaultsClick(Sender: TObject);
   public
     function GetTitle: String; override;
     procedure Setup({%H-}ADialog: TAbstractOptionsEditorDialog); override;
@@ -76,6 +78,7 @@ begin
   CheckBoxLiveUpdate.Caption := SPlacerLiveUpdate;
   CheckBoxFollowTheme.Caption := SPlacerFollowTheme;
   ButtonResetColors.Caption  := SPlacerResetColors;
+  ButtonResetDefaults.Caption := SPlacerResetDefaults;
   LabelMapWidth.Caption      := SPlacerMapWidth;
   LabelNudgeStep.Caption     := SPlacerNudgeStep;
   LabelColors.Caption        := SPlacerColors;
@@ -126,6 +129,16 @@ begin
   ColorBoxFormEdge.Enabled    := not CheckBoxFollowTheme.Checked;
   ColorBoxTitleBar.Enabled    := not CheckBoxFollowTheme.Checked;
   ButtonResetColors.Enabled   := not CheckBoxFollowTheme.Checked;
+end;
+
+// the settings apart from the own colors, which have their own button
+procedure TFormPlacerOptionsFrame.ButtonResetDefaultsClick(Sender: TObject);
+begin
+  CheckBoxShowMap.Checked     := TFormPlacerOptions.DefShowMap;
+  CheckBoxLiveUpdate.Checked  := TFormPlacerOptions.DefLiveUpdate;
+  SpinEditMapWidth.Value      := TFormPlacerOptions.DefMapWidth;
+  SpinEditNudgeStep.Value     := TFormPlacerOptions.DefNudgeStep;
+  CheckBoxFollowTheme.Checked := TFormPlacerOptions.DefFollowTheme;
 end;
 
 procedure TFormPlacerOptionsFrame.ButtonResetColorsClick(Sender: TObject);

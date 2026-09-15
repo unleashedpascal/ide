@@ -65,6 +65,10 @@ msgstr ""
 msgid "Reset colors"
 msgstr ""
 
+#: formplacerstrings.splacerresetdefaults
+msgid "Reset to defaults"
+msgstr ""
+
 #: formplacerstrings.splacershowmap
 msgid "Show desktop map in form designer"
 msgstr ""
