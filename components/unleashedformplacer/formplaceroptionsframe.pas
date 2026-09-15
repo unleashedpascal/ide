@@ -36,6 +36,7 @@ type
     SpinEditMapWidth: TSpinEdit;
     LabelNudgeStep: TLabel;
     SpinEditNudgeStep: TSpinEdit;
+    CheckBoxFollowTheme: TCheckBox;
     LabelColors: TLabel;
     LabelMapBack: TLabel;
     ColorBoxMapBack: TColorBox;
@@ -47,6 +48,9 @@ type
     ColorBoxFormEdge: TColorBox;
     LabelTitleBar: TLabel;
     ColorBoxTitleBar: TColorBox;
+    ButtonResetColors: TButton;
+    procedure CheckBoxFollowThemeChange(Sender: TObject);
+    procedure ButtonResetColorsClick(Sender: TObject);
   public
     function GetTitle: String; override;
     procedure Setup({%H-}ADialog: TAbstractOptionsEditorDialog); override;
@@ -70,6 +74,8 @@ procedure TFormPlacerOptionsFrame.Setup(ADialog: TAbstractOptionsEditorDialog);
 begin
   CheckBoxShowMap.Caption    := SPlacerShowMap;
   CheckBoxLiveUpdate.Caption := SPlacerLiveUpdate;
+  CheckBoxFollowTheme.Caption := SPlacerFollowTheme;
+  ButtonResetColors.Caption  := SPlacerResetColors;
   LabelMapWidth.Caption      := SPlacerMapWidth;
   LabelNudgeStep.Caption     := SPlacerNudgeStep;
   LabelColors.Caption        := SPlacerColors;
@@ -86,11 +92,13 @@ begin
   CheckBoxLiveUpdate.Checked   := FormPlacerOptions.LiveUpdate;
   SpinEditMapWidth.Value       := FormPlacerOptions.MapWidth;
   SpinEditNudgeStep.Value      := FormPlacerOptions.NudgeStep;
+  CheckBoxFollowTheme.Checked  := FormPlacerOptions.FollowTheme;
   ColorBoxMapBack.Selected     := FormPlacerOptions.MapBackColor;
   ColorBoxMonitorEdge.Selected := FormPlacerOptions.MonitorEdgeColor;
   ColorBoxFormFill.Selected    := FormPlacerOptions.FormFillColor;
   ColorBoxFormEdge.Selected    := FormPlacerOptions.FormEdgeColor;
   ColorBoxTitleBar.Selected    := FormPlacerOptions.TitleBarColor;
+  CheckBoxFollowThemeChange(nil);
 end;
 
 procedure TFormPlacerOptionsFrame.WriteSettings(AOptions: TAbstractIDEOptions);
@@ -99,6 +107,7 @@ begin
   FormPlacerOptions.LiveUpdate       := CheckBoxLiveUpdate.Checked;
   FormPlacerOptions.MapWidth         := SpinEditMapWidth.Value;
   FormPlacerOptions.NudgeStep        := SpinEditNudgeStep.Value;
+  FormPlacerOptions.FollowTheme      := CheckBoxFollowTheme.Checked;
   FormPlacerOptions.MapBackColor     := ColorBoxMapBack.Selected;
   FormPlacerOptions.MonitorEdgeColor := ColorBoxMonitorEdge.Selected;
   FormPlacerOptions.FormFillColor    := ColorBoxFormFill.Selected;
@@ -106,6 +115,26 @@ begin
   FormPlacerOptions.TitleBarColor    := ColorBoxTitleBar.Selected;
   FormPlacerOptions.SaveSafe;
   ApplyOptionsToAllMaps;
+end;
+
+// the own colors only matter while the map does not follow the theme
+procedure TFormPlacerOptionsFrame.CheckBoxFollowThemeChange(Sender: TObject);
+begin
+  ColorBoxMapBack.Enabled     := not CheckBoxFollowTheme.Checked;
+  ColorBoxMonitorEdge.Enabled := not CheckBoxFollowTheme.Checked;
+  ColorBoxFormFill.Enabled    := not CheckBoxFollowTheme.Checked;
+  ColorBoxFormEdge.Enabled    := not CheckBoxFollowTheme.Checked;
+  ColorBoxTitleBar.Enabled    := not CheckBoxFollowTheme.Checked;
+  ButtonResetColors.Enabled   := not CheckBoxFollowTheme.Checked;
+end;
+
+procedure TFormPlacerOptionsFrame.ButtonResetColorsClick(Sender: TObject);
+begin
+  ColorBoxMapBack.Selected     := TFormPlacerOptions.DefMapBackColor;
+  ColorBoxMonitorEdge.Selected := TFormPlacerOptions.DefMonitorEdgeColor;
+  ColorBoxFormFill.Selected    := TFormPlacerOptions.DefFormFillColor;
+  ColorBoxFormEdge.Selected    := TFormPlacerOptions.DefFormEdgeColor;
+  ColorBoxTitleBar.Selected    := TFormPlacerOptions.DefTitleBarColor;
 end;
 
 class function TFormPlacerOptionsFrame.SupportedOptionsClass: TAbstractIDEOptionsClass;

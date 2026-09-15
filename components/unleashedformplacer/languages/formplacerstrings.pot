@@ -5,6 +5,10 @@ msgstr "Content-Type: text/plain; charset=UTF-8"
 msgid "Map colors"
 msgstr ""
 
+#: formplacerstrings.splacerfollowtheme
+msgid "Adjust the colors to match the theme"
+msgstr ""
+
 #: formplacerstrings.splacerformedgecolor
 msgid "Form edge:"
 msgstr ""
@@ -55,6 +59,10 @@ msgstr ""
 
 #: formplacerstrings.splaceroptionstitle
 msgid "Form Placer"
+msgstr ""
+
+#: formplacerstrings.splacerresetcolors
+msgid "Reset colors"
 msgstr ""
 
 #: formplacerstrings.splacershowmap

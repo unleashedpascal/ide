@@ -40,6 +40,8 @@ type
     DefLiveUpdate       = True;
     DefMapWidth         = 160;
     DefNudgeStep        = 8;
+    DefFollowTheme      = True;
+  public const
     DefMapBackColor     = TColor($00404040);
     DefMonitorEdgeColor = TColor($00909090);
     DefFormFillColor    = clWhite;
@@ -50,6 +52,7 @@ type
     FLiveUpdate: Boolean;
     FMapWidth: Integer;
     FNudgeStep: Integer;
+    FFollowTheme: Boolean;
     FMapBackColor: TColor;
     FMonitorEdgeColor: TColor;
     FFormFillColor: TColor;
@@ -61,6 +64,7 @@ type
     procedure SetLiveUpdate(AValue: Boolean);
     procedure SetMapWidth(AValue: Integer);
     procedure SetNudgeStep(AValue: Integer);
+    procedure SetFollowTheme(AValue: Boolean);
     procedure SetMapBackColor(AValue: TColor);
     procedure SetMonitorEdgeColor(AValue: TColor);
     procedure SetFormFillColor(AValue: TColor);
@@ -76,6 +80,8 @@ type
     property LiveUpdate: Boolean read FLiveUpdate write SetLiveUpdate;
     property MapWidth: Integer read FMapWidth write SetMapWidth;
     property NudgeStep: Integer read FNudgeStep write SetNudgeStep;
+    // the map takes its colors from the IDE look instead of the ones below
+    property FollowTheme: Boolean read FFollowTheme write SetFollowTheme;
     property MapBackColor: TColor read FMapBackColor write SetMapBackColor;
     property MonitorEdgeColor: TColor read FMonitorEdgeColor write SetMonitorEdgeColor;
     property FormFillColor: TColor read FFormFillColor write SetFormFillColor;
@@ -103,6 +109,7 @@ begin
   FLiveUpdate       := DefLiveUpdate;
   FMapWidth         := DefMapWidth;
   FNudgeStep        := DefNudgeStep;
+  FFollowTheme      := DefFollowTheme;
   FMapBackColor     := DefMapBackColor;
   FMonitorEdgeColor := DefMonitorEdgeColor;
   FFormFillColor    := DefFormFillColor;
@@ -145,6 +152,13 @@ begin
   if AValue > 64 then AValue := 64;
   if FNudgeStep = AValue then Exit;
   FNudgeStep := AValue;
+  DoChanged;
+end;
+
+procedure TFormPlacerOptions.SetFollowTheme(AValue: Boolean);
+begin
+  if FFollowTheme = AValue then Exit;
+  FFollowTheme := AValue;
   DoChanged;
 end;
 
@@ -194,6 +208,7 @@ begin
       FLiveUpdate       := Cfg.GetValue('LiveUpdate/Value',       DefLiveUpdate);
       FMapWidth         := Cfg.GetValue('MapWidth/Value',         DefMapWidth);
       FNudgeStep        := Cfg.GetValue('NudgeStep/Value',        DefNudgeStep);
+      FFollowTheme      := Cfg.GetValue('FollowTheme/Value',      DefFollowTheme);
       FMapBackColor     := Cfg.GetValue('MapBackColor/Value',     DefMapBackColor);
       FMonitorEdgeColor := Cfg.GetValue('MonitorEdgeColor/Value', DefMonitorEdgeColor);
       FFormFillColor    := Cfg.GetValue('FormFillColor/Value',    DefFormFillColor);
@@ -219,6 +234,7 @@ begin
       Cfg.SetDeleteValue('LiveUpdate/Value',       FLiveUpdate,       DefLiveUpdate);
       Cfg.SetDeleteValue('MapWidth/Value',         FMapWidth,         DefMapWidth);
       Cfg.SetDeleteValue('NudgeStep/Value',        FNudgeStep,        DefNudgeStep);
+      Cfg.SetDeleteValue('FollowTheme/Value',      FFollowTheme,      DefFollowTheme);
       Cfg.SetDeleteValue('MapBackColor/Value',     FMapBackColor,     DefMapBackColor);
       Cfg.SetDeleteValue('MonitorEdgeColor/Value', FMonitorEdgeColor, DefMonitorEdgeColor);
       Cfg.SetDeleteValue('FormFillColor/Value',    FFormFillColor,    DefFormFillColor);

@@ -56,24 +56,35 @@ object FormPlacerOptionsFrame: TFormPlacerOptionsFrame
     Value = 8
     TabOrder = 3
   end
+  object CheckBoxFollowTheme: TCheckBox
+    Left = 6
+    Height = 19
+    Top = 132
+    Width = 260
+    Caption = 'CheckBoxFollowTheme'
+    Checked = True
+    State = cbChecked
+    TabOrder = 9
+    OnChange = CheckBoxFollowThemeChange
+  end
   object LabelColors: TLabel
     Left = 6
     Height = 15
-    Top = 134
+    Top = 160
     Width = 60
     Caption = 'LabelColors'
   end
   object LabelMapBack: TLabel
     Left = 16
     Height = 15
-    Top = 162
+    Top = 188
     Width = 140
     Caption = 'LabelMapBack'
   end
   object ColorBoxMapBack: TColorBox
     Left = 190
     Height = 22
-    Top = 158
+    Top = 184
     Width = 180
     Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames]
     TabOrder = 4
@@ -81,14 +92,14 @@ object FormPlacerOptionsFrame: TFormPlacerOptionsFrame
   object LabelMonitorEdge: TLabel
     Left = 16
     Height = 15
-    Top = 192
+    Top = 218
     Width = 140
     Caption = 'LabelMonitorEdge'
   end
   object ColorBoxMonitorEdge: TColorBox
     Left = 190
     Height = 22
-    Top = 188
+    Top = 214
     Width = 180
     Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames]
     TabOrder = 5
@@ -96,14 +107,14 @@ object FormPlacerOptionsFrame: TFormPlacerOptionsFrame
   object LabelFormFill: TLabel
     Left = 16
     Height = 15
-    Top = 222
+    Top = 248
     Width = 140
     Caption = 'LabelFormFill'
   end
   object ColorBoxFormFill: TColorBox
     Left = 190
     Height = 22
-    Top = 218
+    Top = 244
     Width = 180
     Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames]
     TabOrder = 6
@@ -111,14 +122,14 @@ object FormPlacerOptionsFrame: TFormPlacerOptionsFrame
   object LabelFormEdge: TLabel
     Left = 16
     Height = 15
-    Top = 252
+    Top = 278
     Width = 140
     Caption = 'LabelFormEdge'
   end
   object ColorBoxFormEdge: TColorBox
     Left = 190
     Height = 22
-    Top = 248
+    Top = 274
     Width = 180
     Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames]
     TabOrder = 7
@@ -126,16 +137,25 @@ object FormPlacerOptionsFrame: TFormPlacerOptionsFrame
   object LabelTitleBar: TLabel
     Left = 16
     Height = 15
-    Top = 282
+    Top = 308
     Width = 140
     Caption = 'LabelTitleBar'
   end
   object ColorBoxTitleBar: TColorBox
     Left = 190
     Height = 22
-    Top = 278
+    Top = 304
     Width = 180
     Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbPrettyNames]
     TabOrder = 8
+  end
+  object ButtonResetColors: TButton
+    Left = 190
+    Height = 25
+    Top = 340
+    Width = 120
+    Caption = 'ButtonResetColors'
+    TabOrder = 10
+    OnClick = ButtonResetColorsClick
   end
 end

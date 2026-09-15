@@ -23,6 +23,8 @@ resourcestring
   SPlacerMapWidth          = 'Map width (pixels):';
   SPlacerNudgeStep         = 'Arrow key step (pixels):';
   SPlacerColors            = 'Map colors';
+  SPlacerFollowTheme       = 'Adjust the colors to match the theme';
+  SPlacerResetColors       = 'Reset colors';
   SPlacerMapBackColor      = 'Desktop background:';
   SPlacerMonitorEdgeColor  = 'Monitor edges:';
   SPlacerFormFillColor     = 'Form rectangle:';

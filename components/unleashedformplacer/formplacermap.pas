@@ -405,6 +405,7 @@ var
   LRect, LTitle: TRect;
   LPos: TPoint;
   LText: String;
+  LMapBack, LMonitorEdge, LFormFill, LFormEdge, LTitleBar: TColor;
   i: Integer;
 
   function MonitorRectOnMap(const R: TRect): TRect;
@@ -417,11 +418,26 @@ begin
   LOpts := FormPlacerOptions;
   if LOpts = nil then Exit;
 
-  Canvas.Brush.Color := LOpts.MapBackColor;
+  // the system colors resolve to the current IDE look at every paint
+  LMapBack := LOpts.MapBackColor;
+  LMonitorEdge := LOpts.MonitorEdgeColor;
+  LFormFill := LOpts.FormFillColor;
+  LFormEdge := LOpts.FormEdgeColor;
+  LTitleBar := LOpts.TitleBarColor;
+  if LOpts.FollowTheme then
+  begin
+    LMapBack := clWindow;
+    LMonitorEdge := clWindowFrame;
+    LFormFill := clBtnHighlight;
+    LFormEdge := clGrayText;
+    LTitleBar := clHotLight;
+  end;
+
+  Canvas.Brush.Color := LMapBack;
   Canvas.FillRect(ClientRect);
 
   Canvas.Brush.Style := bsClear;
-  Canvas.Pen.Color := LOpts.MonitorEdgeColor;
+  Canvas.Pen.Color := LMonitorEdge;
   for i := 0 to Screen.MonitorCount - 1 do
     Canvas.Rectangle(MonitorRectOnMap(Screen.Monitors[i].BoundsRect));
   Canvas.Brush.Style := bsSolid;
@@ -430,8 +446,8 @@ begin
   FShownPosition := FTrackedForm.Position;
 
   LRect := FormRectOnMap;
-  Canvas.Brush.Color := LOpts.FormFillColor;
-  Canvas.Pen.Color := LOpts.FormEdgeColor;
+  Canvas.Brush.Color := LFormFill;
+  Canvas.Pen.Color := LFormEdge;
   Canvas.Rectangle(LRect);
 
   LTitle := LRect;
@@ -439,7 +455,7 @@ begin
   Inc(LTitle.Top);
   Dec(LTitle.Right);
   LTitle.Bottom := LTitle.Top + Max(2, (LRect.Bottom - LRect.Top) div 6);
-  Canvas.Brush.Color := LOpts.TitleBarColor;
+  Canvas.Brush.Color := LTitleBar;
   Canvas.FillRect(LTitle);
 
   if FDragging then
@@ -447,7 +463,7 @@ begin
     LPos := FormDesktopPos;
     LText := Format('%d, %d', [LPos.X, LPos.Y]);
     Canvas.Brush.Style := bsClear;
-    Canvas.Font.Color := LOpts.MonitorEdgeColor;
+    Canvas.Font.Color := LMonitorEdge;
     Canvas.TextOut(3, 2, LText);
     Canvas.Brush.Style := bsSolid;
   end;
