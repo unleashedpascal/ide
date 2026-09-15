@@ -37,6 +37,7 @@ object CodeExplorerView: TCodeExplorerView
         PopupMenu = TreePopupmenu
         ReadOnly = True
         RightClickSelect = True
+        ScrollBars = ssAutoBoth
         TabOrder = 1
         OnDblClick = TreeviewDblClick
         OnDeletion = TreeviewDeletion
@@ -201,6 +202,7 @@ object CodeExplorerView: TCodeExplorerView
         BorderSpacing.Top = 1
         PopupMenu = TreePopupmenu
         ReadOnly = True
+        ScrollBars = ssAutoBoth
         TabOrder = 1
         OnDblClick = TreeviewDblClick
         OnDeletion = TreeviewDeletion

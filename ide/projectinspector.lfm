@@ -32,6 +32,7 @@ object ProjectInspectorForm: TProjectInspectorForm
     PopupMenu = ItemsPopupMenu
     ReadOnly = True
     RightClickSelect = True
+    ScrollBars = ssAutoBoth
     TabOrder = 0
     Options = [tvoAllowMultiselect, tvoAutoItemHeight, tvoKeepCollapsedNodes, tvoReadOnly, tvoRightClickSelect, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
     OnAdvancedCustomDrawItem = ItemsTreeViewAdvancedCustomDrawItem
