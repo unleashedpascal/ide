@@ -90,6 +90,7 @@ begin
   view.Width := fSettings.mapWidth;
   view.bandColor := fSettings.bandColor;
   view.bandTint := fSettings.bandTint;
+  view.followTheme := fSettings.followTheme;
   view.fontSize := fSettings.fontSize;
   view.updateLayout;
 end;

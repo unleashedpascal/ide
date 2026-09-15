@@ -35,6 +35,7 @@ type
     fontSize: integer;  // point size of the map font
     bandColor: TColor;  // clDefault blends white into the editor background
     bandTint: integer;  // percent of bandColor mixed into the background
+    followTheme: boolean; // the band tint and strength come from the editor look instead
   end;
 
 function defaultMapSettings: TMapSettings;
@@ -50,6 +51,7 @@ const
   KEY_FONT_SIZE  = 'FontSize';
   KEY_BAND_COLOR = 'BandColor';
   KEY_BAND_TINT  = 'BandTint';
+  KEY_FOLLOW     = 'FollowTheme';
 
 function clampInt(value, low, high: integer): integer;
 begin
@@ -65,6 +67,7 @@ begin
   result.fontSize := 3;
   result.bandColor := clSilver;
   result.bandTint := 20;
+  result.followTheme := True;
 end;
 
 function clampMapSettings(const src: TMapSettings): TMapSettings;
@@ -85,6 +88,7 @@ begin
   result.fontSize := cfg.GetValue(KEY_FONT_SIZE, result.fontSize);
   result.bandColor := TColor(cfg.GetValue(KEY_BAND_COLOR, integer(result.bandColor)));
   result.bandTint := cfg.GetValue(KEY_BAND_TINT, result.bandTint);
+  result.followTheme := cfg.GetValue(KEY_FOLLOW, result.followTheme);
   result := clampMapSettings(result);
 end;
 
@@ -98,6 +102,7 @@ begin
   cfg.SetDeleteValue(KEY_FONT_SIZE, src.fontSize, def.fontSize);
   cfg.SetDeleteValue(KEY_BAND_COLOR, integer(src.bandColor), integer(def.bandColor));
   cfg.SetDeleteValue(KEY_BAND_TINT, src.bandTint, def.bandTint);
+  cfg.SetDeleteValue(KEY_FOLLOW, src.followTheme, def.followTheme);
   cfg.WriteToDisk;
 end;
 

@@ -49,6 +49,7 @@ type
     fEdit: TCustomSynEdit;
     fBandColor: TColor;
     fBandTint: integer;
+    fFollowTheme: boolean;
     fFontSize: integer;
     fGutterPart: TSynGutterPartBase;
     fInitTimer: TTimer;
@@ -83,6 +84,7 @@ type
     procedure setEditor(aValue: TSourceEditorInterface);
     procedure setBandColor(aValue: TColor);
     procedure setBandTint(aValue: integer);
+    procedure setFollowTheme(aValue: boolean);
     procedure setFontSize(aValue: integer);
   protected
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
@@ -98,6 +100,9 @@ type
     property editor: TSourceEditorInterface read fEditor write setEditor;
     property bandColor: TColor read fBandColor write setBandColor;
     property bandTint: integer read fBandTint write setBandTint;
+    // the band takes the accent color of the current look, at a strength
+    // picked for the brightness of the editor
+    property followTheme: boolean read fFollowTheme write setFollowTheme;
     property fontSize: integer read fFontSize write setFontSize;
   end;
 
@@ -381,9 +386,11 @@ end;
 
 function TMiniMapView.effectiveBandColor: TColor;
 
+  var strength: integer;
+
   function mix(base, tint: integer): integer;
   begin
-    result := base+((tint-base)*fBandTint) div 100;
+    result := base+((tint-base)*strength) div 100;
   end;
 
 begin
@@ -395,6 +402,14 @@ begin
   if (baseColor = clNone) or (baseColor = clDefault) then baseColor := clWindow;
   var base := ColorToRGB(baseColor);
   var tint := if fBandColor = clDefault then $FFFFFF else ColorToRGB(fBandColor);
+  strength := fBandTint;
+  // the accent of the current look, stronger on a dark editor where a
+  // light tint would just gray the band
+  if fFollowTheme then begin
+    var dark := (Red(base)*299+Green(base)*587+Blue(base)*114) div 1000 < 128;
+    tint := ColorToRGB(clHotLight);
+    strength := if dark then 28 else 18;
+  end;
   result := TColor(mix(base and $FF, tint and $FF) or (mix((base shr 8) and $FF, (tint shr 8) and $FF) shl 8) or (mix((base shr 16) and $FF, (tint shr 16) and $FF) shl 16));
 end;
 
@@ -589,6 +604,13 @@ begin
   if aValue > BAND_TINT_MAX then aValue := BAND_TINT_MAX;
   if fBandTint = aValue then exit;
   fBandTint := aValue;
+  fMapEdit.Invalidate;
+end;
+
+procedure TMiniMapView.setFollowTheme(aValue: boolean);
+begin
+  if fFollowTheme = aValue then exit;
+  fFollowTheme := aValue;
   fMapEdit.Invalidate;
 end;
 
