@@ -83,7 +83,7 @@ type
     procedure TestContextForStatic;
     procedure TestContextForObjective;
     procedure TestCaseLabel;
-    procedure TestCaseExpressionElidedEnd;
+    procedure TestCaseExpression;
     procedure TestTryExpression;
     procedure TestMatchExpression;
     procedure TestBreakKeyword;
@@ -3822,13 +3822,13 @@ begin
 
 end;
 
-procedure TTestHighlighterPas.TestCaseExpressionElidedEnd;
+procedure TTestHighlighterPas.TestCaseExpression;
 begin
-  {%region case expression: the else-branch is the final token, no "end"}
+  {%region case expression: the else-branch is an expression, "end" closes the construct}
   ReCreateEdit;
   PasHighLighter.CaseLabelAttriMatchesElseOtherwise := True;
   EnableFolds([cfbtBeginEnd..cfbtNone]);
-  PushBaseName('case expression, else-form without end');
+  PushBaseName('case expression, else form');
   SetLines
     ([ '{$mode unleashed}',                              // 0
        'function Test(const i: integer): AnsiString;',   // 1
@@ -3840,24 +3840,25 @@ begin
        '      case (i shr 7) of',                        // 7
        '        0: ''x'';',                              // 8
        '        else '''';',                             // 9
-       '    else '''';',                                 // 10
-       'end;',                                           // 11
+       '      end;',                                     // 10
+       '    else '''';',                                 // 11
+       '  end;',                                         // 12
+       'end;',                                           // 13
        ''
     ]);
 
-  CheckTokensForLine('%00: label',       4, [_, tkNumber+FCaseLabelAttri, TK_Colon, _, tkString, TK_Semi]);
-  CheckTokensForLine('inner 0: label',   8, [_, tkNumber+FCaseLabelAttri, TK_Colon, _, tkString, TK_Semi]);
-  CheckTokensForLine('inner else',       9, [_, tkKey+FCaseLabelAttri, _, tkString, TK_Semi]);
-  CheckTokensForLine('outer else',      10, [_, tkKey+FCaseLabelAttri, _, tkString, TK_Semi]);
-  CheckTokensForLine('end of function', 11, [tkKey, TK_Semi]);
+  CheckTokensForLine('%00: label',        4, [_, tkNumber+FCaseLabelAttri, TK_Colon, _, tkString, TK_Semi]);
+  CheckTokensForLine('inner 0: label',    8, [_, tkNumber+FCaseLabelAttri, TK_Colon, _, tkString, TK_Semi]);
+  CheckTokensForLine('inner else',        9, [_, tkKey+FCaseLabelAttri, _, tkString, TK_Semi]);
+  CheckTokensForLine('end of inner case', 10, [_, tkKey, TK_Semi]);
+  CheckTokensForLine('outer else',       11, [_, tkKey+FCaseLabelAttri, _, tkString, TK_Semi]);
+  CheckTokensForLine('end of outer case', 12, [_, tkKey, TK_Semi]);
+  CheckTokensForLine('end of function',  13, [tkKey, TK_Semi]);
 
-  // both case expressions have an else-branch, so neither has an "end":
-  // each case block is closed by its own "else" (like "then" by "else" in
-  // an if-statement). The single "end;" belongs to "begin"
-  AssertEquals('inner case fold end',  9, PasHighLighter.FoldEndLine(7, 0));
-  AssertEquals('outer case fold end', 10, PasHighLighter.FoldEndLine(3, 0));
-  AssertEquals('begin fold end',      11, PasHighLighter.FoldEndLine(2, 0));
-  AssertEquals('function fold end',   11, PasHighLighter.FoldEndLine(1, 0));
+  AssertEquals('inner case fold end', 10, PasHighLighter.FoldEndLine(7, 0));
+  AssertEquals('outer case fold end', 12, PasHighLighter.FoldEndLine(3, 0));
+  AssertEquals('begin fold end',      13, PasHighLighter.FoldEndLine(2, 0));
+  AssertEquals('function fold end',   13, PasHighLighter.FoldEndLine(1, 0));
   {%endregion}
 
   {%region control: a case STATEMENT with a missing "end" stays unclosed}
@@ -3904,17 +3905,17 @@ begin
   AssertEquals('outer case fold end', 10, PasHighLighter.FoldEndLine(3, 0));
   {%endregion}
 
-  {%region exhaustive case expression keeps its "end"; ")" closes the else-form}
+  {%region exhaustive case expression and else-form in argument position}
   SetLines
-    ([ '{$mode unleashed}',                        // 0
-       'program a;',                               // 1
-       'begin',                                    // 2
-       '  foo(case i of 1: ''a''; else ''b'');',   // 3
-       '  s := case flag of',                      // 4
-       '    true:  ''yes'';',                      // 5
-       '    false: ''no'';',                       // 6
-       '  end;',                                   // 7
-       'end.',                                     // 8
+    ([ '{$mode unleashed}',                            // 0
+       'program a;',                                   // 1
+       'begin',                                        // 2
+       '  foo(case i of 1: ''a''; else ''b'' end);',   // 3
+       '  s := case flag of',                          // 4
+       '    true:  ''yes'';',                          // 5
+       '    false: ''no'';',                           // 6
+       '  end;',                                       // 7
+       'end.',                                         // 8
        ''
     ]);
 
@@ -3922,7 +3923,7 @@ begin
   CheckTokensForLine('case as argument', 3,
     [_, tkIdentifier, TK_Bracket, tkKey, _, tkIdentifier, _, tkKey, _,
      tkNumber+FCaseLabelAttri, TK_Colon, _, tkString, TK_Semi, _,
-     tkKey+FCaseLabelAttri, _, tkString, TK_Bracket, TK_Semi]);
+     tkKey+FCaseLabelAttri, _, tkString, _, tkKey, TK_Bracket, TK_Semi]);
   CheckTokensForLine('end of exhaustive case', 7, [_, tkKey, TK_Semi]);
   AssertEquals('exhaustive case fold end', 7, PasHighLighter.FoldEndLine(4, 0));
   AssertEquals('begin fold end',           8, PasHighLighter.FoldEndLine(2, 0));
@@ -4031,7 +4032,7 @@ begin
   AssertEquals('begin fold end', 7, PasHighLighter.FoldEndLine(2, 0));
   {%endregion}
 
-  {%region match expression with "else": closes WITHOUT "end"}
+  {%region match expression with "else": "end" closes the construct}
   SetLines
     ([ '{$mode unleashed}',                     // 0
        'function T(const s: string): string;',  // 1
@@ -4039,8 +4040,9 @@ begin
        '  var r := match s of',                 // 3
        '    ''start'', ''run'': ''go'';',       // 4
        '    else ''other'';',                   // 5
-       '  result := r;',                        // 6
-       'end;',                                  // 7
+       '  end;',                                // 6
+       '  result := r;',                        // 7
+       'end;',                                  // 8
        ''
     ]);
 
@@ -4049,9 +4051,10 @@ begin
     [_, tkString+FCaseLabelAttri, TK_Comma, _, tkString+FCaseLabelAttri,
      TK_Colon, _, tkString, TK_Semi]);
   CheckTokensForLine('else catch-all', 5, [_, tkKey+FCaseLabelAttri, _, tkString, TK_Semi]);
-  AssertEquals('match fold end',    5, PasHighLighter.FoldEndLine(3, 0));
-  AssertEquals('begin fold end',    7, PasHighLighter.FoldEndLine(2, 0));
-  AssertEquals('function fold end', 7, PasHighLighter.FoldEndLine(1, 0));
+  CheckTokensForLine('end of match',   6, [_, tkKey, TK_Semi]);
+  AssertEquals('match fold end',    6, PasHighLighter.FoldEndLine(3, 0));
+  AssertEquals('begin fold end',    8, PasHighLighter.FoldEndLine(2, 0));
+  AssertEquals('function fold end', 8, PasHighLighter.FoldEndLine(1, 0));
   {%endregion}
 
   {%region match expression with "_:": keeps its "end"}
@@ -4076,7 +4079,7 @@ begin
   AssertEquals('begin fold end',    8, PasHighLighter.FoldEndLine(2, 0));
   {%endregion}
 
-  {%region match expression with "otherwise": closes WITHOUT "end"}
+  {%region match expression with "otherwise": "end" closes the construct}
   SetLines
     ([ '{$mode unleashed}',                     // 0
        'function T(const s: string): string;',  // 1
@@ -4084,16 +4087,18 @@ begin
        '  var r := match s of',                 // 3
        '    ''start'': ''go'';',                // 4
        '    otherwise ''other'';',              // 5
-       '  result := r;',                        // 6
-       'end;',                                  // 7
+       '  end;',                                // 6
+       '  result := r;',                        // 7
+       'end;',                                  // 8
        ''
     ]);
 
   PopPushBaseName('match expression, otherwise form');
   CheckTokensForLine('otherwise catch-all', 5,
     [_, tkKey+FCaseLabelAttri, _, tkString, TK_Semi]);
-  AssertEquals('match fold end',    5, PasHighLighter.FoldEndLine(3, 0));
-  AssertEquals('begin fold end',    7, PasHighLighter.FoldEndLine(2, 0));
+  CheckTokensForLine('end of match', 6, [_, tkKey, TK_Semi]);
+  AssertEquals('match fold end',    6, PasHighLighter.FoldEndLine(3, 0));
+  AssertEquals('begin fold end',    8, PasHighLighter.FoldEndLine(2, 0));
   {%endregion}
 
   {%region match condition form: branches are expressions, "_" included}
@@ -4144,7 +4149,7 @@ begin
   AssertEquals('match fold end', 6, PasHighLighter.FoldEndLine(3, 0));
   {%endregion}
 
-  {%region match expression, condition form: guards plain, closes without "end"}
+  {%region match expression, condition form: guards plain, "end" closes the construct}
   SetLines
     ([ '{$mode unleashed}',                     // 0
        'function T(const x: integer): string;', // 1
@@ -4152,8 +4157,9 @@ begin
        '  var r := match',                      // 3
        '    x > 10: ''b'';',                    // 4
        '    else ''d'';',                       // 5
-       '  result := r;',                        // 6
-       'end;',                                  // 7
+       '  end;',                                // 6
+       '  result := r;',                        // 7
+       'end;',                                  // 8
        ''
     ]);
 
@@ -4161,8 +4167,9 @@ begin
   CheckTokensForLine('guard branch', 4,
     [_, tkIdentifier, _, TK_Angle, _, tkNumber, TK_Colon, _, tkString, TK_Semi]);
   CheckTokensForLine('else catch-all', 5, [_, tkKey, _, tkString, TK_Semi]);
-  AssertEquals('match fold end',    5, PasHighLighter.FoldEndLine(3, 0));
-  AssertEquals('begin fold end',    7, PasHighLighter.FoldEndLine(2, 0));
+  CheckTokensForLine('end of match',   6, [_, tkKey, TK_Semi]);
+  AssertEquals('match fold end',    6, PasHighLighter.FoldEndLine(3, 0));
+  AssertEquals('begin fold end',    8, PasHighLighter.FoldEndLine(2, 0));
   PopBaseName;
   {%endregion}
 end;

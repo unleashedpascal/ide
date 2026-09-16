@@ -633,10 +633,10 @@ type
     FTokenState: TTokenState;
     FInInlineVarStmt: Boolean;
     FCaseExprBits: Cardinal; (* One bit per open "case" fold, bit 0 = outermost:
-                                set if that case is a case expression. With an
-                                "else"/"otherwise" branch that construct has no
-                                closing "end" - the "else" closes the case block;
-                                only the exhaustive form (no else) ends with "end".
+                                set if that case is a case expression. Its
+                                "else"/"otherwise" branch is an expression, not
+                                a statement; the construct closes with "end" like
+                                the statement form.
                                 Bits above the current case nesting may be stale;
                                 they are rewritten whenever a new case block opens
                                 at that depth *)
@@ -2356,9 +2356,9 @@ begin
   else if KeyCompU('CASE') then begin
     tfb := TopPascalCodeFoldBlockType;
     if tfb in PascalStatementBlocks + [cfbtUnitSection] then begin
-      (* A case in expression position is a case expression: with an
-         "else"/"otherwise" branch it has no closing "end", the "else" closes
-         the case block. Expression position: mid statement (after ":=", "(",
+      (* A case in expression position is a case expression: its branches,
+         the "else"/"otherwise" one included, are expressions, not
+         statements. Expression position: mid statement (after ":=", "(",
          ",", an operator, ...) or at the start of a branch of an enclosing
          case expression (after the label ":" or after its "else") *)
       CaseDepth := OpenCaseFoldCount;
@@ -2621,15 +2621,9 @@ begin
       // in a condition-form match the "else" catch-all stays a plain keyword
       if not PasCodeFoldRange.GetMatchCondBit(OpenCaseFoldCount - 1) then
         FTokenIsCaseLabel := True;
-      if PasCodeFoldRange.GetCaseExprBit(OpenCaseFoldCount - 1) then begin
-        // case expression: "else <expr>" is the tail of the construct and
-        // there is no closing "end". The "else" closes the case block, like
-        // "else" closes the "then"-block of an if-statement
-        EndPascalCodeFoldBlock;
-        FNextTokenState := tsNone; // the branch is an expression, not a statement
-      end
-      else
-        StartPascalCodeFoldBlock(cfbtCaseElse, True);
+      StartPascalCodeFoldBlock(cfbtCaseElse, True);
+      if PasCodeFoldRange.GetCaseExprBit(OpenCaseFoldCount - 1) then
+        FNextTokenState := tsNone; // case expression: the branch is an expression, not a statement
     end
   end
   else if KeyCompU('VAR') then begin
@@ -2773,9 +2767,9 @@ begin
     // writeln(match c: v; _: d; end)), so do not require BracketNestLevel=0
     Result := tkKey;
     tfb := TopPascalCodeFoldBlockType;
-    (* A match in expression position is a match expression. With an "else"/
-       "otherwise" catch-all it closes without "end", like the else-form of
-       a case expression; with a "_:" catch-all it keeps its "end" *)
+    (* A match in expression position is a match expression: its branches
+       are expressions, the "else"/"otherwise" catch-all included. It closes
+       with "end" like the statement form *)
     CaseDepth := OpenCaseFoldCount;
     IsMatchExpression :=
       (FRangeCompilerMode in [pcmUnleashed, pcmUnknown]) and
@@ -4196,13 +4190,9 @@ begin
       // in a condition-form match "otherwise" stays a plain keyword, see "else"
       if not PasCodeFoldRange.GetMatchCondBit(OpenCaseFoldCount - 1) then
         FTokenIsCaseLabel := True;
-      if PasCodeFoldRange.GetCaseExprBit(OpenCaseFoldCount - 1) then begin
-        // case expression: "otherwise <expr>" closes the case block, see "else"
-        EndPascalCodeFoldBlock;
-        FNextTokenState := tsNone; // the branch is an expression, not a statement
-      end
-      else
-        StartPascalCodeFoldBlock(cfbtCaseElse, True);
+      StartPascalCodeFoldBlock(cfbtCaseElse, True);
+      if PasCodeFoldRange.GetCaseExprBit(OpenCaseFoldCount - 1) then
+        FNextTokenState := tsNone; // case expression: the branch is an expression, not a statement
     end;
   end
   else

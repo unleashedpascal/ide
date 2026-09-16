@@ -88,8 +88,8 @@ end;
 
 function TTestMarkupWordGroup.TestText3: TStringArray;
 begin
-  // case expressions (else-form has no "end") and a case statement
-  SetLength(Result, 21);
+  // case expressions and a case statement
+  SetLength(Result, 23);
   Result[0]  := 'program Foo;';
   Result[1]  := 'function Test(i: integer): string;';
   Result[2]  := 'begin';
@@ -99,18 +99,20 @@ begin
   Result[6]  := '      case (i shr 7) of';
   Result[7]  := '        0: ''x'';';
   Result[8]  := '        else '''';';
-  Result[9]  := '    else '''';';
-  Result[10] := 'end;';
-  Result[11] := 'procedure b;';
-  Result[12] := 'begin';
-  Result[13] := '  case x of';
-  Result[14] := '    1: ;';
-  Result[15] := '    else ;';
-  Result[16] := '  end;';
-  Result[17] := 'end;';
-  Result[18] := 'begin';
-  Result[19] := 'end.';
-  Result[20] := '';
+  Result[9]  := '      end;';
+  Result[10] := '    else '''';';
+  Result[11] := '  end;';
+  Result[12] := 'end;';
+  Result[13] := 'procedure b;';
+  Result[14] := 'begin';
+  Result[15] := '  case x of';
+  Result[16] := '    1: ;';
+  Result[17] := '    else ;';
+  Result[18] := '  end;';
+  Result[19] := 'end;';
+  Result[20] := 'begin';
+  Result[21] := 'end.';
+  Result[22] := '';
 end;
 
 function TTestMarkupWordGroup.TestText4: TStringArray;
@@ -132,18 +134,19 @@ end;
 
 function TTestMarkupWordGroup.TestText5: TStringArray;
 begin
-  // match expression with "else": closes without "end", like a case expression
-  SetLength(Result, 10);
-  Result[0] := 'program Foo;';
-  Result[1] := 'function T(s: string): string;';
-  Result[2] := 'begin';
-  Result[3] := '  Result := match s of';
-  Result[4] := '    ''a'': ''1'';';
-  Result[5] := '    else ''2'';';
-  Result[6] := 'end;';
-  Result[7] := 'begin';
-  Result[8] := 'end.';
-  Result[9] := '';
+  // match expression with "else": closes with "end", like a case expression
+  SetLength(Result, 11);
+  Result[0]  := 'program Foo;';
+  Result[1]  := 'function T(s: string): string;';
+  Result[2]  := 'begin';
+  Result[3]  := '  Result := match s of';
+  Result[4]  := '    ''a'': ''1'';';
+  Result[5]  := '    else ''2'';';
+  Result[6]  := '  end;';
+  Result[7]  := 'end;';
+  Result[8]  := 'begin';
+  Result[9]  := 'end.';
+  Result[10] := '';
 end;
 
 procedure TTestMarkupWordGroup.TestWordGroup;
@@ -244,31 +247,34 @@ begin
   SetLines(TestText3);
   EnableFolds([cfbtBeginEnd.. cfbtNone], [cfbtSlashComment]);
 
-  // else-form case expression: the group is case/of/else, there is no "end"
-  CheckWord('CaseExp out 1',  13, 4,   13,17,4,  28,30,4,  5,9,10);
-  CheckWord('CaseExp out 2',  16, 4,   13,17,4,  28,30,4,  5,9,10);
-  CheckWord('CaseExp out 3',  28, 4,   13,17,4,  28,30,4,  5,9,10);
-  CheckWord('CaseExp out 4',  29, 4,   13,17,4,  28,30,4,  5,9,10);
-  CheckWord('CaseExp out 5',   5,10,   13,17,4,  28,30,4,  5,9,10);
-  CheckWord('CaseExp out 6',   8,10,   13,17,4,  28,30,4,  5,9,10);
+  // else-form case expression: the group is case/of/end like the statement
+  // form; the "else" has no group of its own
+  CheckWord('CaseExp out 1',  13, 4,   13,17,4,  28,30,4,  3,6,12);
+  CheckWord('CaseExp out 2',  16, 4,   13,17,4,  28,30,4,  3,6,12);
+  CheckWord('CaseExp out 3',  28, 4,   13,17,4,  28,30,4,  3,6,12);
+  CheckWord('CaseExp out 4',  29, 4,   13,17,4,  28,30,4,  3,6,12);
+  CheckWord('CaseExp out 5',   3,12,   13,17,4,  28,30,4,  3,6,12);
+  CheckWord('CaseExp out 6',   5,12,   13,17,4,  28,30,4,  3,6,12);
+  CheckWord('CaseExp out else', 5,11,  -1,-1,-1,  -1,-1,-1,  -1,-1,-1);
 
-  CheckWord('CaseExp in 1',    7, 7,   7,11,7,  22,24,7,  9,13,9);
-  CheckWord('CaseExp in 2',   10, 7,   7,11,7,  22,24,7,  9,13,9);
-  CheckWord('CaseExp in 3',   22, 7,   7,11,7,  22,24,7,  9,13,9);
-  CheckWord('CaseExp in 4',   23, 7,   7,11,7,  22,24,7,  9,13,9);
-  CheckWord('CaseExp in 5',    9, 9,   7,11,7,  22,24,7,  9,13,9);
-  CheckWord('CaseExp in 6',   12, 9,   7,11,7,  22,24,7,  9,13,9);
+  CheckWord('CaseExp in 1',    7, 7,   7,11,7,  22,24,7,  7,10,10);
+  CheckWord('CaseExp in 2',   10, 7,   7,11,7,  22,24,7,  7,10,10);
+  CheckWord('CaseExp in 3',   22, 7,   7,11,7,  22,24,7,  7,10,10);
+  CheckWord('CaseExp in 4',   23, 7,   7,11,7,  22,24,7,  7,10,10);
+  CheckWord('CaseExp in 5',    7,10,   7,11,7,  22,24,7,  7,10,10);
+  CheckWord('CaseExp in 6',    9,10,   7,11,7,  22,24,7,  7,10,10);
+  CheckWord('CaseExp in else', 9, 9,  -1,-1,-1,  -1,-1,-1,  -1,-1,-1);
 
-  // the "end;" pairs with function/begin, not with the case expression
-  CheckWord('CaseExp begin',   1, 3,   1,9,2,  1,6,3,  1,4,11);
-  CheckWord('CaseExp fn-end',  1,11,   1,9,2,  1,6,3,  1,4,11);
+  // the last "end;" pairs with function/begin
+  CheckWord('CaseExp begin',   1, 3,   1,9,2,  1,6,3,  1,4,13);
+  CheckWord('CaseExp fn-end',  1,13,   1,9,2,  1,6,3,  1,4,13);
 
-  // case statement: unchanged, its "end" belongs to the case; the "else"
-  // has no group of its own
-  CheckWord('CaseStmt case',   3,14,   3,7,14,  10,12,14,  3,6,17);
-  CheckWord('CaseStmt of',    10,14,   3,7,14,  10,12,14,  3,6,17);
-  CheckWord('CaseStmt end',    3,17,   3,7,14,  10,12,14,  3,6,17);
-  CheckWord('CaseStmt else',   5,16,  -1,-1,-1,  -1,-1,-1,  -1,-1,-1);
+  // case statement: its "end" belongs to the case; the "else" has no group
+  // of its own
+  CheckWord('CaseStmt case',   3,16,   3,7,16,  10,12,16,  3,6,19);
+  CheckWord('CaseStmt of',    10,16,   3,7,16,  10,12,16,  3,6,19);
+  CheckWord('CaseStmt end',    3,19,   3,7,16,  10,12,16,  3,6,19);
+  CheckWord('CaseStmt else',   5,18,  -1,-1,-1,  -1,-1,-1,  -1,-1,-1);
 
   PopPushBaseName('Text 4');
   SetLines(TestText4);
@@ -290,15 +296,17 @@ begin
   SetLines(TestText5);
   EnableFolds([cfbtBeginEnd.. cfbtNone], [cfbtSlashComment]);
 
-  // match expression with "else": the group is match/of/else, no "end"
-  CheckWord('MatchExp match 1', 13, 4,   13,18,4,  21,23,4,  5,9,6);
-  CheckWord('MatchExp match 2', 17, 4,   13,18,4,  21,23,4,  5,9,6);
-  CheckWord('MatchExp of',      21, 4,   13,18,4,  21,23,4,  5,9,6);
-  CheckWord('MatchExp else',     5, 6,   13,18,4,  21,23,4,  5,9,6);
+  // match expression with "else": the group is match/of/end; the "else"
+  // has no group of its own
+  CheckWord('MatchExp match 1', 13, 4,   13,18,4,  21,23,4,  3,6,7);
+  CheckWord('MatchExp match 2', 17, 4,   13,18,4,  21,23,4,  3,6,7);
+  CheckWord('MatchExp of',      21, 4,   13,18,4,  21,23,4,  3,6,7);
+  CheckWord('MatchExp end',      3, 7,   13,18,4,  21,23,4,  3,6,7);
+  CheckWord('MatchExp else',     5, 6,  -1,-1,-1,  -1,-1,-1,  -1,-1,-1);
 
-  // the "end;" pairs with function/begin, not with the match expression
-  CheckWord('MatchExp begin',    1, 3,   1,9,2,  1,6,3,  1,4,7);
-  CheckWord('MatchExp fn-end',   1, 7,   1,9,2,  1,6,3,  1,4,7);
+  // the last "end;" pairs with function/begin
+  CheckWord('MatchExp begin',    1, 3,   1,9,2,  1,6,3,  1,4,8);
+  CheckWord('MatchExp fn-end',   1, 8,   1,9,2,  1,6,3,  1,4,8);
 
   PopBaseName;
 
