@@ -1,0 +1,45 @@
+object PanesOptionsFrame: TPanesOptionsFrame
+  Left = 0
+  Height = 300
+  Top = 0
+  Width = 560
+  ClientHeight = 300
+  ClientWidth = 560
+  TabOrder = 0
+  object CheckBoxHeaders: TCheckBox
+    Left = 6
+    Height = 19
+    Top = 10
+    Width = 300
+    Caption = 'CheckBoxHeaders'
+    Checked = True
+    State = cbChecked
+    TabOrder = 0
+  end
+  object LabelPadding: TLabel
+    Left = 6
+    Height = 15
+    Top = 44
+    Width = 120
+    Caption = 'LabelPadding'
+  end
+  object SpinEditPadding: TSpinEdit
+    Left = 190
+    Height = 23
+    Top = 40
+    Width = 74
+    MinValue = 0
+    MaxValue = 16
+    Value = 4
+    TabOrder = 1
+  end
+  object ButtonResetDefaults: TButton
+    Left = 190
+    Height = 25
+    Top = 76
+    Width = 140
+    Caption = 'ButtonResetDefaults'
+    TabOrder = 2
+    OnClick = ButtonResetDefaultsClick
+  end
+end

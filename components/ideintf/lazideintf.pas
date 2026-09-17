@@ -610,9 +610,15 @@ type
     property TabDisplayStateEditor[Index: TSourceEditorInterface]: TTabDisplayState read GetTabDisplayStateEditor;
   end;
 
+  // picks the editor that shows the designer of a unit: the given one, or the
+  // editor of a window that holds the form of the unit already
+  TPickDesignerEditor = function(editor: TSourceEditorInterface): TSourceEditorInterface of object;
+
 var
   LazarusIDE: TLazIDEInterface = nil; // will be set by the IDE
   IDETabMaster: TIDETabMaster = nil;
+  // set by a docking package whose windows hold forms
+  OnPickDesignerEditor: TPickDesignerEditor = nil;
 
 type
   TLazarusIDEBootHandlerType = (

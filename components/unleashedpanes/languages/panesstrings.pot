@@ -1,0 +1,223 @@
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8"
+
+#: panesstrings.hint_close
+msgctxt "panesstrings.hint_close"
+msgid "Close"
+msgstr ""
+
+#: panesstrings.hint_move
+msgid "Move"
+msgstr ""
+
+#: panesstrings.menu_close
+msgctxt "panesstrings.menu_close"
+msgid "Close"
+msgstr ""
+
+#: panesstrings.menu_code_map
+msgid "Code map"
+msgstr ""
+
+#: panesstrings.menu_debug
+msgctxt "panesstrings.menu_debug"
+msgid "Debug"
+msgstr ""
+
+#: panesstrings.menu_forms
+msgid "Forms"
+msgstr ""
+
+#: panesstrings.menu_frames
+msgid "Frames"
+msgstr ""
+
+#: panesstrings.menu_identify
+msgid "Identify panes"
+msgstr ""
+
+#: panesstrings.menu_move_left
+msgid "Move left"
+msgstr ""
+
+#: panesstrings.menu_move_right
+msgid "Move right"
+msgstr ""
+
+#: panesstrings.menu_new_designer_window
+msgid "New designer window"
+msgstr ""
+
+#: panesstrings.menu_new_editor_window
+msgid "New editor window"
+msgstr ""
+
+#: panesstrings.menu_new_pane_window
+msgid "New empty window"
+msgstr ""
+
+#: panesstrings.menu_panes
+msgctxt "panesstrings.menu_panes"
+msgid "Panes"
+msgstr ""
+
+#: panesstrings.menu_show_headers
+msgctxt "panesstrings.menu_show_headers"
+msgid "Show pane title bars"
+msgstr ""
+
+#: panesstrings.menu_view
+msgid "View"
+msgstr ""
+
+#: panesstrings.options_headers
+msgctxt "panesstrings.options_headers"
+msgid "Show pane title bars"
+msgstr ""
+
+#: panesstrings.options_padding
+msgid "Body padding (pixels)"
+msgstr ""
+
+#: panesstrings.options_reset
+msgid "Reset to defaults"
+msgstr ""
+
+#: panesstrings.options_title
+msgctxt "panesstrings.options_title"
+msgid "Panes"
+msgstr ""
+
+#: panesstrings.pane_anchor_editor
+msgid "Anchor Editor"
+msgstr ""
+
+#: panesstrings.pane_assembler
+msgid "Assembler"
+msgstr ""
+
+#: panesstrings.pane_breakpoints
+msgid "BreakPoints/Exceptions"
+msgstr ""
+
+#: panesstrings.pane_call_stack
+msgid "Call Stack"
+msgstr ""
+
+#: panesstrings.pane_code_browser
+msgid "Code Browser"
+msgstr ""
+
+#: panesstrings.pane_code_explorer
+msgid "Code Explorer"
+msgstr ""
+
+#: panesstrings.pane_components
+msgid "Components"
+msgstr ""
+
+#: panesstrings.pane_debug
+msgctxt "panesstrings.pane_debug"
+msgid "Debug"
+msgstr ""
+
+#: panesstrings.pane_debug_events
+msgid "Event Log"
+msgstr ""
+
+#: panesstrings.pane_debug_output
+msgid "Debug Output"
+msgstr ""
+
+#: panesstrings.pane_editor_file_manager
+msgid "Editor File Manager"
+msgstr ""
+
+#: panesstrings.pane_evaluate
+msgid "Evaluate/Modify"
+msgstr ""
+
+#: panesstrings.pane_fpdoc_editor
+msgid "FPDoc Editor"
+msgstr ""
+
+#: panesstrings.pane_history
+msgid "History"
+msgstr ""
+
+#: panesstrings.pane_inspect
+msgid "Inspect"
+msgstr ""
+
+#: panesstrings.pane_jump_history
+msgid "Jump History"
+msgstr ""
+
+#: panesstrings.pane_locals
+msgid "Local Variables"
+msgstr ""
+
+#: panesstrings.pane_macro_list
+msgid "Editor Macros"
+msgstr ""
+
+#: panesstrings.pane_mem_viewer
+msgid "Memory Viewer"
+msgstr ""
+
+#: panesstrings.pane_messages
+msgid "Messages"
+msgstr ""
+
+#: panesstrings.pane_object_inspector
+msgid "Object Inspector"
+msgstr ""
+
+#: panesstrings.pane_project_inspector
+msgid "Project Inspector"
+msgstr ""
+
+#: panesstrings.pane_registers
+msgid "Registers"
+msgstr ""
+
+#: panesstrings.pane_restriction_browser
+msgid "Restriction Browser"
+msgstr ""
+
+#: panesstrings.pane_search_results
+msgid "Search Results"
+msgstr ""
+
+#: panesstrings.pane_tab_order
+msgid "Tab Order"
+msgstr ""
+
+#: panesstrings.pane_terminal
+msgid "Console In/Output"
+msgstr ""
+
+#: panesstrings.pane_threads
+msgid "Threads"
+msgstr ""
+
+#: panesstrings.pane_unit_dependencies
+msgid "Unit Dependencies"
+msgstr ""
+
+#: panesstrings.pane_watches
+msgid "Watches"
+msgstr ""
+
+#: panesstrings.window_designer
+msgid "Designer"
+msgstr ""
+
+#: panesstrings.window_dock
+msgid "Empty window"
+msgstr ""
+
+#: panesstrings.window_editor
+msgid "Editor"
+msgstr ""
+

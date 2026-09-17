@@ -27,6 +27,8 @@ type
     fViews: TFPList;
     fSettings: TMapSettings;
     fHooked: boolean;
+    // editor windows that show no map
+    fHiddenWindows: TFPList;
     fOnApplied: TNotifyEvent;
     function viewCount: integer;
     function viewAt(index: integer): TMiniMapView;
@@ -47,6 +49,9 @@ type
     procedure saveConfig;
     procedure applySettings(const src: TMapSettings);
     procedure toggleShown;
+    // the maps of one editor window, on top of the global setting
+    function windowShown(window: TSourceEditorWindowInterface): boolean;
+    procedure setWindowShown(window: TSourceEditorWindowInterface; shown: boolean);
     property settings: TMapSettings read fSettings;
     // after every applySettings, from the menu or the options page alike
     property onApplied: TNotifyEvent read fOnApplied write fOnApplied;
@@ -61,6 +66,7 @@ constructor TMiniMapManager.Create(aOwner: TComponent);
 begin
   inherited Create(aOwner);
   fViews := TFPList.Create;
+  fHiddenWindows := TFPList.Create;
   fSettings := defaultMapSettings;
 end;
 
@@ -68,7 +74,24 @@ destructor TMiniMapManager.Destroy;
 begin
   hookEvents(False);
   fViews.Free;
+  fHiddenWindows.Free;
   inherited Destroy;
+end;
+
+function TMiniMapManager.windowShown(window: TSourceEditorWindowInterface): boolean;
+begin
+  result := fHiddenWindows.IndexOf(window) < 0;
+end;
+
+procedure TMiniMapManager.setWindowShown(window: TSourceEditorWindowInterface; shown: boolean);
+begin
+  if (window = nil) or (shown = windowShown(window)) then exit;
+  if shown then fHiddenWindows.Remove(window) else begin
+    fHiddenWindows.Add(window);
+    window.FreeNotification(self);
+  end;
+  for var i := 0 to window.Count-1 do
+    if shown then editorCreated(window.Items[i]) else editorDestroyed(window.Items[i]);
 end;
 
 function TMiniMapManager.viewCount: integer;
@@ -140,7 +163,7 @@ begin
   var ed := TSourceEditorInterface(Sender);
   if viewFor(ed) <> nil then exit;
   var win := SourceEditorManagerIntf.SourceWindowWithEditor(ed);
-  if win = nil then exit;
+  if (win = nil) or not windowShown(win) then exit;
   var view := TMiniMapView.Create(win);
   fViews.Add(view);
   view.FreeNotification(self);
@@ -167,7 +190,9 @@ end;
 procedure TMiniMapManager.Notification(AComponent: TComponent; Operation: TOperation);
 begin
   inherited Notification(AComponent, Operation);
-  if (Operation = opRemove) and (AComponent is TMiniMapView) then fViews.Remove(AComponent);
+  if Operation <> opRemove then exit;
+  if AComponent is TMiniMapView then fViews.Remove(AComponent);
+  fHiddenWindows.Remove(AComponent);
 end;
 
 procedure TMiniMapManager.loadConfig;

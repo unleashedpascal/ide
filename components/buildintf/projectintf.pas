@@ -62,6 +62,9 @@ type
     procedure SetSourceText(const SourceText: string; Beautify: boolean = false); virtual; abstract;
     function GetSourceText: string; virtual; abstract;
     procedure ClearModifieds; virtual; abstract;
+    // the kind of component the file designs, pfcbcNone without a designer
+    function GetResourceBaseClass: TPFComponentBaseClass; virtual;
+    function GetComponentName: string; virtual;
   public
     property IsPartOfProject: boolean read FIsPartOfProject write SetIsPartOfProject;
     property CustomData: TStringToStringTree read FCustomData; // name,value pairs
@@ -1670,6 +1673,16 @@ begin
 end;
 }
 { TLazProjectFile }
+
+function TLazProjectFile.GetResourceBaseClass: TPFComponentBaseClass;
+begin
+  Result:=pfcbcNone;
+end;
+
+function TLazProjectFile.GetComponentName: string;
+begin
+  Result:='';
+end;
 
 procedure TLazProjectFile.SetIsPartOfProject(const AValue: boolean);
 begin
