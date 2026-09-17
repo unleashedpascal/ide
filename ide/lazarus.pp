@@ -68,6 +68,8 @@ uses
   LazControlDsgn,
   unleashedformplacer, // preinstalled
   unleashedthemes, // preinstalled
+  unleashedminimap, // preinstalled
+  unleashedpanes, // preinstalled
   // use the custom IDE static packages AFTER 'main'
   {$IFDEF AddStaticPkgs}
   // In case you get duplicate identifier errors in the uses clause,
@@ -85,7 +87,7 @@ uses
     EditorMacroScript, ExampleProjects,
     OnlinePackageManager,
     SimpleWebServerGUI, LazProjectGroups, Pas2jsDsgn, charactermap_ide_pkg,
-    AnchorDockingDsgn, DockedFormEditor,
+    DockedFormEditor,
   {$ENDIF}
   MainBase;
 

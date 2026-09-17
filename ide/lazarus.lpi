@@ -37,7 +37,7 @@
     <RunParams>
       <FormatVersion Value="2"/>
     </RunParams>
-    <RequiredPackages Count="17">
+    <RequiredPackages Count="19">
       <Item1>
         <PackageName Value="IdePackager"/>
       </Item1>
@@ -91,6 +91,12 @@
       <Item17>
         <PackageName Value="UnleashedThemes"/>
       </Item17>
+      <Item18>
+        <PackageName Value="UnleashedMinimap"/>
+      </Item18>
+      <Item19>
+        <PackageName Value="UnleashedPanes"/>
+      </Item19>
     </RequiredPackages>
     <Units Count="210">
       <Unit0>
