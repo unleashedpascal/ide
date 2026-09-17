@@ -305,6 +305,8 @@ type
 
     procedure SetSourceText(const SourceText: string; Beautify: boolean = false); override;
     function GetSourceText: string; override;
+    function GetResourceBaseClass: TPFComponentBaseClass; override;
+    function GetComponentName: string; override;
 
     // component dependencies
     function AddRequiresComponentDependency(RequiredUnit: TUnitInfo;
@@ -1655,6 +1657,16 @@ end;
 function TUnitInfo.GetSourceText: string;
 begin
   Result:=Source.Source;
+end;
+
+function TUnitInfo.GetResourceBaseClass: TPFComponentBaseClass;
+begin
+  Result:=FResourceBaseClass;
+end;
+
+function TUnitInfo.GetComponentName: string;
+begin
+  Result:=fComponentName;
 end;
 
 function TUnitInfo.AddRequiresComponentDependency(RequiredUnit: TUnitInfo;

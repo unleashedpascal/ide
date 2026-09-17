@@ -252,6 +252,7 @@ var
 begin
   {$IFDEF DEBUGDOCKEDFORMEDITOR} DebugLn('TDockedTabMaster.ShowDesigner'); {$ENDIF}
   if ASourceEditor = nil then Exit;
+  if Assigned(OnPickDesignerEditor) then ASourceEditor := OnPickDesignerEditor(ASourceEditor);
   SourceEditorManagerIntf.ActiveEditor := ASourceEditor;
   LPageCtrl := SourceWindows.FindPageControl(ASourceEditor);
   LPageCtrl.ShowDesigner(AIndex);

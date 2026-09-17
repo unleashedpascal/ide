@@ -721,6 +721,9 @@ end;
 procedure TCodeExplorerView.TreeviewKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
+  // the commands are picked up on activation, which a docked window never gets
+  if FCodeCmd1=nil then FormActivate(nil);
+  if (FCodeCmd1=nil) or (FCodeCmd2=nil) or (FCodeCmd3=nil) then exit;
   if (Key=VK_RETURN) and (Shift=[])
   or ((Key=FCodeCmd1.ShortcutA.Key1) and (Shift=FCodeCmd1.ShortcutA.Shift1))
   or ((Key=FCodeCmd1.ShortcutB.Key1) and (Shift=FCodeCmd1.ShortcutB.Shift1))

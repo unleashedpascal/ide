@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <Name Value="UnleashedPanes"/>
+    <Type Value="DesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/$(LCLWidgetType)"/>
+      </SearchPaths>
+      <Other>
+        <CustomOptions Value="$(IDEBuildOptions)"/>
+      </Other>
+    </CompilerOptions>
+    <Description Value="Unleashed Panes: single-window IDE layout with the tool windows docked as panes in columns and rows around the source editor.
+"/>
+    <License Value="Copyright (c) 2026 Unleashed Pascal Contributors &lt;https://unleashedpascal.org&gt;
+
+Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text is available at https://mozilla.org/MPL/2.0/.
+"/>
+    <Version Major="1"/>
+    <Files>
+      <Item>
+        <Filename Value="regunleashedpanes.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="RegUnleashedPanes"/>
+      </Item>
+      <Item>
+        <Filename Value="paneslayout.pas"/>
+        <UnitName Value="PanesLayout"/>
+      </Item>
+      <Item>
+        <Filename Value="panesmaster.pas"/>
+        <UnitName Value="PanesMaster"/>
+      </Item>
+      <Item>
+        <Filename Value="panesstrings.pas"/>
+        <UnitName Value="PanesStrings"/>
+      </Item>
+      <Item>
+        <Filename Value="panesdrag.pas"/>
+        <UnitName Value="PanesDrag"/>
+      </Item>
+      <Item>
+        <Filename Value="panesconfig.pas"/>
+        <UnitName Value="PanesConfig"/>
+      </Item>
+      <Item>
+        <Filename Value="panesoptionsframe.pas"/>
+        <UnitName Value="PanesOptionsFrame"/>
+      </Item>
+    </Files>
+    <i18n>
+      <EnableI18N Value="True"/>
+      <OutDir Value="languages"/>
+    </i18n>
+    <RequiredPkgs>
+      <Item>
+        <PackageName Value="LCL"/>
+      </Item>
+      <Item>
+        <PackageName Value="IDEIntf"/>
+      </Item>
+      <Item>
+        <PackageName Value="UnleashedMinimap"/>
+      </Item>
+      <Item>
+        <PackageName Value="UnleashedThemes"/>
+      </Item>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
