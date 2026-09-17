@@ -35,7 +35,9 @@ type
     libpIdeProject,
     libpIdeDebugger,
     libpUnleashedFormplacer,
-    libpUnleashedThemes
+    libpUnleashedThemes,
+    libpUnleashedMinimap,
+    libpUnleashedPanes
     );
 const
   LazarusIDEBasePkgNames: array[TLazarusIDEBasePkg] of string = (
@@ -67,11 +69,13 @@ const
     'IdeProject',
     'IdeDebugger',
     'UnleashedFormplacer',
-    'UnleashedThemes'
+    'UnleashedThemes',
+    'UnleashedMinimap',
+    'UnleashedPanes'
     );
 
   // extra packages for the release, alias "bigide"
-  LazarusIDEReleasePkgNames: array[0..32] of string = (
+  LazarusIDEReleasePkgNames: array[0..31] of string = (
 	  'SyneditDsgn',
     'DockedFormEditor',
     'OnlinePackageManager',
@@ -103,8 +107,7 @@ const
     'SimpleWebServerGUI',
     'LazProjectGroups',
     'Pas2jsDsgn',
-    'Charactermap_ide_pkg',
-    'AnchorDockingDsgn'
+    'Charactermap_ide_pkg'
     );
 
 implementation
