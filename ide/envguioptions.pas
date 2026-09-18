@@ -982,7 +982,14 @@ begin
   dskDockMaster := FXMLCfg.GetValue(Path+'DockMaster', '');
 
   if IndexOf(dskname) >=0 then
-    exit;
+  begin
+    // a desktop of the current dock master replaces the one of another
+    // dock master with the same name, otherwise the first one wins
+    if (Items[IndexOf(dskname)] is TDesktopOpt)
+    or not TEnvGuiOptions.DesktopCanBeLoaded(dskDockMaster) then
+      exit;
+    Delete(IndexOf(dskname));
+  end;
 
   if TEnvGuiOptions.DesktopCanBeLoaded(dskDockMaster) then
      dskClass := TDesktopOpt
@@ -1535,7 +1542,11 @@ begin
     if lDskTpOpt.Compatible then
       Exit(TDesktopOpt(lDskTpOpt))
     else
-      Result := TDesktopOpt(lDskTpOpt);
+      Result := TDesktopOpt(lDskTpOpt)
+  else if Assigned(lDskTpOpt) then
+    // the default name is taken by the desktop of another dock master,
+    // which would shadow the new one on the next load
+    FDesktops.Remove(lDskTpOpt);
 
   //recreate desktop with ActiveDesktopName
   if Assigned(Result) then
@@ -1555,7 +1566,9 @@ begin
     else
       OldActiveDesktop := nil;
   end;
-  if Assigned(OldActiveDesktop) then
+  // the old name may resolve to the desktop just created; assigning an
+  // object to itself empties every list in it
+  if Assigned(OldActiveDesktop) and (OldActiveDesktop <> Result) then
     Result.Assign(TDesktopOpt(OldActiveDesktop), False, False);
 end;
 
