@@ -2690,6 +2690,8 @@ begin
     nil,@CreateIDEWindow,'250','250','','');
   IDEWindowCreators.Add(NonModalIDEWindowNames[nmiwEditorFileManager],
     nil,@CreateIDEWindow,'200','200','','');
+  IDEWindowCreators.Add(NonModalIDEWindowNames[nmiwMacroListViewer],
+    nil,@CreateIDEWindow,'250','250','','');
   IDEWindowCreators.SimpleLayoutStorage.MoveToTop('MainIDE');
 end;
 
