@@ -429,8 +429,13 @@ type
   private
     fBuilder: TLazarusBuilder;
     fOIActivateLastRow: Boolean;
+    // owner of the extra window instances; a name taken by a first instance is free here
+    FExtraWindowsOwner: TComponent;
     function DoBuildLazarusSub(Flags: TBuildLazarusFlags): TModalResult;
     procedure SwapBuiltIDEExecutable;
+    procedure SetupProjectInspector(Inspector: TProjectInspectorForm);
+    procedure SetupExtraIDEWindow(Extra: TCustomForm);
+    function CreateExtraIDEWindow(const aFormName: string; State: TIWGetFormState): TCustomForm;
     procedure ProjectOptionsHelper(const AFilter: array of TAbstractIDEOptionsClass);
     // Global IDE event handlers
     procedure ProcessIDECommand(Sender: TObject; Command: word; var Handled: boolean);
@@ -528,6 +533,7 @@ type
     fOIAnchorEditorMenuItem: TMenuItem;
     fOITabOrderDlgMenuItem: TMenuItem;
     procedure CreateObjectInspector(aDisableAutoSize: boolean);
+    procedure WireObjectInspector(AnInspector: TObjectInspectorDlg);
     procedure OIOnSelectPersistents(Sender: TObject);
     procedure OIOnMainPopupMenu(Sender: TObject);
     procedure OIOnShowOptions(Sender: TObject);
@@ -1880,6 +1886,8 @@ begin
   end;
 
   FreeAndNil(FDesignerToBeFreed);
+  // the extra instances go with their originals, before the hooks they hang on
+  FreeAndNil(FExtraWindowsOwner);
   FreeAndNil(JumpHistoryViewWin);
   FreeAndNil(ComponentListForm);
   FreeThenNil(ProjInspector);
@@ -1968,9 +1976,10 @@ end;
 
 procedure TMainIDE.OIOnSelectPersistents(Sender: TObject);
 begin
-  if ObjectInspector1=nil then exit;
-  TheControlSelection.AssignSelection(ObjectInspector1.Selection);
-  GlobalDesignHook.SetSelection(ObjectInspector1.Selection);
+  if not (Sender is TObjectInspectorDlg) then Sender:=ObjectInspector1;
+  if Sender=nil then exit;
+  TheControlSelection.AssignSelection(TObjectInspectorDlg(Sender).Selection);
+  GlobalDesignHook.SetSelection(TObjectInspectorDlg(Sender).Selection);
 end;
 
 procedure TMainIDE.OIOnMainPopupMenu(Sender: TObject);
@@ -1993,12 +2002,13 @@ procedure TMainIDE.OIOnViewRestricted(Sender: TObject);
 var
   C: TClass;
 begin
-  if ObjectInspector1=nil then exit;
+  if not (Sender is TObjectInspectorDlg) then Sender:=ObjectInspector1;
+  if Sender=nil then exit;
   C := nil;
-  if (ObjectInspector1.Selection <> nil) and
-      (ObjectInspector1.Selection.Count > 0) then
+  if (TObjectInspectorDlg(Sender).Selection <> nil) and
+      (TObjectInspectorDlg(Sender).Selection.Count > 0) then
   begin
-    C := ObjectInspector1.Selection[0].ClassType;
+    C := TObjectInspectorDlg(Sender).Selection[0].ClassType;
     if C.InheritsFrom(TForm) then
       C := TForm
     else if C.InheritsFrom(TCustomForm) then
@@ -2056,14 +2066,16 @@ end;
 
 procedure TMainIDE.OIOnAddToFavorites(Sender: TObject);
 begin
-  if ObjectInspector1=nil then exit;
-  ShowAddRemoveFavoriteDialog(ObjectInspector1,true);
+  if not (Sender is TObjectInspectorDlg) then Sender:=ObjectInspector1;
+  if Sender=nil then exit;
+  ShowAddRemoveFavoriteDialog(TObjectInspectorDlg(Sender),true);
 end;
 
 procedure TMainIDE.OIOnRemoveFromFavorites(Sender: TObject);
 begin
-  if ObjectInspector1=nil then exit;
-  ShowAddRemoveFavoriteDialog(ObjectInspector1,false);
+  if not (Sender is TObjectInspectorDlg) then Sender:=ObjectInspector1;
+  if Sender=nil then exit;
+  ShowAddRemoveFavoriteDialog(TObjectInspectorDlg(Sender),false);
 end;
 
 procedure TMainIDE.OIOnFindDeclarationOfProperty(Sender: TObject);
@@ -5341,10 +5353,13 @@ begin
 end;
 
 procedure TMainIDE.CodeExplorerOptionsAfterWrite(Sender: TObject; Restore: boolean);
+var
+  i: Integer;
 begin
   if Restore then exit;
-  if CodeExplorerView<>nil then
-    CodeExplorerView.Refresh(true);
+  for i:=0 to Screen.CustomFormCount-1 do
+    if Screen.CustomForms[i] is TCodeExplorerView then
+      TCodeExplorerView(Screen.CustomForms[i]).Refresh(true);
 end;
 
 procedure TMainIDE.ProjectOptionsBeforeRead(Sender: TObject);
@@ -6350,6 +6365,11 @@ begin
     State:=iwgfDisabled
   else
     State:=iwgfEnabled;
+  // a numbered name asks for another instance of the window
+  if (aFormName<>'') and (aFormName[length(aFormName)] in ['0'..'9']) then begin
+    AForm:=CreateExtraIDEWindow(aFormName,State);
+    exit;
+  end;
   if ItIs(NonModalIDEWindowNames[nmiwMessagesView]) then
     AForm:=MessagesView
   else if ItIs(NonModalIDEWindowNames[nmiwUnitDependencies]) then
@@ -6836,26 +6856,74 @@ begin
   Result:=PublishAModule(Project1.PublishOptions);
 end;
 
+procedure TMainIDE.SetupProjectInspector(Inspector: TProjectInspectorForm);
+begin
+  Inspector.OnAddUnitToProject:=@ProjInspectorAddUnitToProject;
+  Inspector.OnAddDependency:=@PkgBoss.ProjectInspectorAddDependency;
+  Inspector.OnRemoveFile:=@ProjInspectorRemoveFile;
+  Inspector.OnRemoveDependency:=@PkgBoss.ProjectInspectorRemoveDependency;
+  Inspector.OnReAddDependency:=@PkgBoss.ProjectInspectorReAddDependency;
+  Inspector.OnDragOverTreeView:=@TPkgManager(PkgBoss).ProjectInspectorDragOverTreeView;
+  Inspector.OnDragDropTreeView:=@PkgBoss.ProjectInspectorDragDropTreeView;
+  Inspector.OnCopyMoveFiles:=@PkgBoss.ProjectInspectorCopyMoveFiles;
+end;
+
 procedure TMainIDE.DoShowProjectInspector(State: TIWGetFormState);
 begin
   if ProjInspector=nil then begin
     IDEWindowCreators.CreateForm(ProjInspector,TProjectInspectorForm,
        State=iwgfDisabled,OwningComponent);
-    ProjInspector.OnAddUnitToProject:=@ProjInspectorAddUnitToProject;
-    ProjInspector.OnAddDependency:=@PkgBoss.ProjectInspectorAddDependency;
-    ProjInspector.OnRemoveFile:=@ProjInspectorRemoveFile;
-    ProjInspector.OnRemoveDependency:=@PkgBoss.ProjectInspectorRemoveDependency;
-    ProjInspector.OnReAddDependency:=@PkgBoss.ProjectInspectorReAddDependency;
-    ProjInspector.OnDragOverTreeView:=@TPkgManager(PkgBoss).ProjectInspectorDragOverTreeView;
-    ProjInspector.OnDragDropTreeView:=@PkgBoss.ProjectInspectorDragDropTreeView;
-    ProjInspector.OnCopyMoveFiles:=@PkgBoss.ProjectInspectorCopyMoveFiles;
-
+    SetupProjectInspector(ProjInspector);
     ProjInspector.LazProject:=Project1;
   end else if STate=iwgfDisabled then
     ProjInspector.DisableAlign;
 
   if State>=iwgfShow then
     IDEWindowCreators.ShowForm(ProjInspector,State=iwgfShowOnTop);
+end;
+
+// the IDE side of an extra instance: the same handlers as the first one gets
+procedure TMainIDE.SetupExtraIDEWindow(Extra: TCustomForm);
+begin
+  if Extra is TProjectInspectorForm then begin
+    SetupProjectInspector(TProjectInspectorForm(Extra));
+    TProjectInspectorForm(Extra).LazProject:=Project1;
+  end else if Extra is TObjectInspectorDlg then
+    WireObjectInspector(TObjectInspectorDlg(Extra))
+  else if Extra is TComponentListForm then begin
+    TComponentListForm(Extra).OnOpenPackage:=@PkgBoss.IDEComponentPaletteOpenPackage;
+    TComponentListForm(Extra).OnOpenUnit:=@PkgBoss.IDEComponentPaletteOpenUnit;
+    TComponentListForm(Extra).OnClassSelected:=@ComponentPaletteClassSelected;
+  end else if Extra is TCodeExplorerView then begin
+    TCodeExplorerView(Extra).OnGetDirectivesTree:=@CodeExplorerGetDirectivesTree;
+    TCodeExplorerView(Extra).OnJumpToCode:=@CodeExplorerJumpToCode;
+    TCodeExplorerView(Extra).OnShowOptions:=@CodeExplorerShowOptions;
+  end else if Extra is TJumpHistoryViewWin then
+    TJumpHistoryViewWin(Extra).OnSelectionChanged:=@JumpHistoryViewSelectionChanged;
+end;
+
+// another instance of a window, named after the first one plus a number
+// (ComponentList2); the first one is created first when it is missing
+function TMainIDE.CreateExtraIDEWindow(const aFormName: string;
+  State: TIWGetFormState): TCustomForm;
+var
+  BaseName: String;
+  Base: TCustomForm;
+begin
+  Result:=nil;
+  BaseName:=aFormName;
+  while (BaseName<>'') and (BaseName[length(BaseName)] in ['0'..'9']) do
+    Delete(BaseName,length(BaseName),1);
+  Base:=IDEWindowCreators.GetForm(BaseName,true,false);
+  if Base=nil then exit;
+  if FExtraWindowsOwner=nil then
+    FExtraWindowsOwner:=TComponent.Create(OwningComponent);
+  IDEWindowCreators.CreateForm(Result,TCustomFormClass(Base.ClassType),
+     State=iwgfDisabled,FExtraWindowsOwner);
+  Result.Name:=aFormName;
+  SetupExtraIDEWindow(Result);
+  if State>=iwgfShow then
+    IDEWindowCreators.ShowForm(Result,State=iwgfShowOnTop);
 end;
 
 // the new executable takes the name of the running one, which becomes lazarus.old
@@ -11657,9 +11725,12 @@ begin
 end;
 
 procedure TMainIDE.SrcNotebookCurCodeBufferChanged(Sender: TObject);
+var
+  i: Integer;
 begin
-  if CodeExplorerView<>nil then
-    CodeExplorerView.CurrentCodeBufferChanged;
+  for i:=0 to Screen.CustomFormCount-1 do
+    if Screen.CustomForms[i] is TCodeExplorerView then
+      TCodeExplorerView(Screen.CustomForms[i]).CurrentCodeBufferChanged;
 end;
 
 procedure TMainIDE.HintWatchFreed(Sender: TObject);
@@ -12564,6 +12635,28 @@ begin
   end;
 end;
 
+// what every inspector gets, the first one and the extra instances alike
+procedure TMainIDE.WireObjectInspector(AnInspector: TObjectInspectorDlg);
+begin
+  AnInspector.ShowFavorites:=True;
+  AnInspector.ShowRestricted:=True;
+  AnInspector.Favorites:=LoadOIFavoriteProperties;
+  AnInspector.OnAddToFavorites:=@OIOnAddToFavorites;
+  AnInspector.OnFindDeclarationOfProperty:=@OIOnFindDeclarationOfProperty;
+  AnInspector.OnUpdateRestricted := @OIOnUpdateRestricted;
+  AnInspector.OnRemainingKeyDown:=@OIRemainingKeyDown;
+  AnInspector.OnRemoveFromFavorites:=@OIOnRemoveFromFavorites;
+  AnInspector.OnSelectPersistentsInOI:=@OIOnSelectPersistents;
+  AnInspector.OnShowOptions:=@OIOnShowOptions;
+  AnInspector.OnViewRestricted:=@OIOnViewRestricted;
+  AnInspector.OnSelectionChange:=@OIOnSelectionChange;
+  AnInspector.OnPropertyHint:=@OIOnPropertyHint;
+  AnInspector.OnAutoShow:=@OIOnAutoShow;
+  AnInspector.EnableHookGetSelection:=false; // the selection is stored in TheControlSelection
+  EnvironmentGuiOpts.ObjectInspectorOptions.AssignTo(AnInspector);
+  AnInspector.PropertyEditorHook:=GlobalDesignHook;
+end;
+
 procedure TMainIDE.CreateObjectInspector(aDisableAutoSize: boolean);
 begin
   if ObjectInspector1<>nil then begin
@@ -12575,22 +12668,8 @@ begin
   IDEWindowCreators.CreateForm(ObjectInspector1,TObjectInspectorDlg,
      aDisableAutoSize,OwningComponent);
   ObjectInspector1.Name:=DefaultObjectInspectorName;
-  ObjectInspector1.ShowFavorites:=True;
-  ObjectInspector1.ShowRestricted:=True;
-  ObjectInspector1.Favorites:=LoadOIFavoriteProperties;
-  ObjectInspector1.OnAddToFavorites:=@OIOnAddToFavorites;
-  ObjectInspector1.OnFindDeclarationOfProperty:=@OIOnFindDeclarationOfProperty;
-  ObjectInspector1.OnUpdateRestricted := @OIOnUpdateRestricted;
-  ObjectInspector1.OnRemainingKeyDown:=@OIRemainingKeyDown;
-  ObjectInspector1.OnRemoveFromFavorites:=@OIOnRemoveFromFavorites;
-  ObjectInspector1.OnSelectPersistentsInOI:=@OIOnSelectPersistents;
-  ObjectInspector1.OnShowOptions:=@OIOnShowOptions;
-  ObjectInspector1.OnViewRestricted:=@OIOnViewRestricted;
-  ObjectInspector1.OnSelectionChange:=@OIOnSelectionChange;
-  ObjectInspector1.OnPropertyHint:=@OIOnPropertyHint;
+  WireObjectInspector(ObjectInspector1);
   ObjectInspector1.OnDestroy:=@OIOnDestroy;
-  ObjectInspector1.OnAutoShow:=@OIOnAutoShow;
-  ObjectInspector1.EnableHookGetSelection:=false; // the selection is stored in TheControlSelection
 
   // after OI changes the Info box must be updated. Do that after some idle time
   OIChangedTimer:=TIdleTimer.Create(OwningComponent);
@@ -12599,10 +12678,7 @@ begin
     Interval:=50;                  // Info box can be updated with a short delay.
     OnTimer:=@OIChangedTimerTimer;
   end;
-  EnvironmentGuiOpts.ObjectInspectorOptions.AssignTo(ObjectInspector1);
-
   // connect to designers
-  ObjectInspector1.PropertyEditorHook:=GlobalDesignHook;
   if FormEditor1<>nil then
     FormEditor1.Obj_Inspector := ObjectInspector1;
 

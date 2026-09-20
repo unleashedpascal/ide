@@ -821,6 +821,8 @@ type
     PropertyGrid: TOICustomPropertyGrid;
     //
     constructor Create(AnOwner: TComponent); override;
+    // the first inspector; the IDE talks to it and it passes the calls on to the others
+    function IsPrimary: boolean;
     destructor Destroy; override;
     procedure RefreshSelection;
     procedure RefreshComponentTreeSelection;
@@ -921,6 +923,10 @@ implementation
 
 {$R *.lfm}
 {$R images\ideintf_images.res}
+
+var
+  // every inspector in creation order; the first one drives the others
+  OIInstances: TFPList = nil;
 
 const
   // counterparts of the Def*Color presets for dark palettes
@@ -1221,6 +1227,8 @@ destructor TOICustomPropertyGrid.Destroy;
 var
   a: integer;
 begin
+  if FPropertyEditorHook<>nil then
+    FPropertyEditorHook.RemoveHandlerGetCheckboxForBoolean(@HookGetCheckboxForBoolean);
   SetIdleEvent(false);
   FItemIndex := -1;
   for a := 0 to FRows.Count - 1 do
@@ -4343,6 +4351,7 @@ constructor TObjectInspectorDlg.Create(AnOwner: TComponent);
 
 begin
   inherited Create(AnOwner);
+  OIInstances.Add(Self);
   FEnableHookGetSelection := true;
   FPropertyEditorHook := nil;
   FSelection := TPersistentSelectionList.Create;
@@ -4562,6 +4571,9 @@ end;
 
 destructor TObjectInspectorDlg.Destroy;
 begin
+  // the hook outlives an extra inspector, so its handlers must not stay behind
+  PropertyEditorHook:=nil;
+  OIInstances.Remove(Self);
   FreeAndNil(FSelection);
   FreeAndNil(FComponentEditor);
   FreeAndNil(PropFilterLabel);
@@ -4592,6 +4604,11 @@ end;
 procedure TObjectInspectorDlg.NoteBookPageChange(Sender: TObject);
 begin
   PropFilterEditAfterFilter(Sender);
+end;
+
+function TObjectInspectorDlg.IsPrimary: boolean;
+begin
+  Result:=(OIInstances.Count>0) and (OIInstances[0]=Pointer(Self));
 end;
 
 procedure TObjectInspectorDlg.SetPropertyEditorHook(const AValue:TPropertyEditorHook);
@@ -4736,7 +4753,12 @@ begin
 end;
 
 procedure TObjectInspectorDlg.DeleteCompFromList(APersistent: TPersistent);
+var
+  i: Integer;
 begin
+  if IsPrimary then
+    for i:=1 to OIInstances.Count-1 do
+      TObjectInspectorDlg(OIInstances[i]).DeleteCompFromList(APersistent);
   if FShowComponentTree then begin
     if APersistent=nil then
       ComponentTree.BuildComponentNodes(True)
@@ -4748,19 +4770,29 @@ begin
 end;
 
 procedure TObjectInspectorDlg.FillComponentList(AWholeTree: Boolean);
+var
+  i: Integer;
 begin
   if FShowComponentTree then
     ComponentTree.BuildComponentNodes(AWholeTree)
   else
     FillPersistentComboBox;
+  if IsPrimary then
+    for i:=1 to OIInstances.Count-1 do
+      TObjectInspectorDlg(OIInstances[i]).FillComponentList(AWholeTree);
 end;
 
 procedure TObjectInspectorDlg.UpdateComponentValues;
+var
+  i: Integer;
 begin
   if FShowComponentTree then
     ComponentTree.UpdateComponentNodesValues
   else
     FillPersistentComboBox;
+  if IsPrimary then
+    for i:=1 to OIInstances.Count-1 do
+      TObjectInspectorDlg(OIInstances[i]).UpdateComponentValues;
 end;
 
 procedure TObjectInspectorDlg.FillPersistentComboBox;
@@ -4999,27 +5031,40 @@ begin
 end;
 
 procedure TObjectInspectorDlg.RefreshComponentTreeSelection;
+var
+  i: Integer;
 begin
   ComponentTree.Selection := FSelection;
   ComponentTree.MakeSelectionVisible;
+  if IsPrimary then
+    for i:=1 to OIInstances.Count-1 do
+      TObjectInspectorDlg(OIInstances[i]).RefreshComponentTreeSelection;
 end;
 
 procedure TObjectInspectorDlg.SaveChanges;
 var
   Page: TObjectInspectorPage;
+  i: Integer;
 begin
   for Page:=Low(TObjectInspectorPage) to High(TObjectInspectorPage) do
     if GridControl[Page]<>nil then
       GridControl[Page].SaveChanges;
+  if IsPrimary then
+    for i:=1 to OIInstances.Count-1 do
+      TObjectInspectorDlg(OIInstances[i]).SaveChanges;
 end;
 
 procedure TObjectInspectorDlg.RefreshPropertyValues;
 var
   Page: TObjectInspectorPage;
+  i: Integer;
 begin
   for Page:=Low(TObjectInspectorPage) to High(TObjectInspectorPage) do
     if GridControl[Page]<>nil then
       GridControl[Page].RefreshPropertyValues;
+  if IsPrimary then
+    for i:=1 to OIInstances.Count-1 do
+      TObjectInspectorDlg(OIInstances[i]).RefreshPropertyValues;
 end;
 
 procedure TObjectInspectorDlg.RebuildPropertyLists;
@@ -6315,6 +6360,12 @@ begin
     FreeAndNil(FPropertyEditorHook);
   inherited Destroy;
 end;
-  
+
+initialization
+  OIInstances:=TFPList.Create;
+
+finalization
+  FreeAndNil(OIInstances);
+
 end.
 

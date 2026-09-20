@@ -515,6 +515,8 @@ end;
 procedure TCodeExplorerView.CodeExplorerViewDestroy(Sender: TObject);
 begin
   //debugln('TCodeExplorerView.CodeExplorerViewDestroy');
+  Application.RemoveOnUserInputHandler(@UserInputHandler);
+  LazarusIDE.RemoveHandlerOnIDEClose(@CloseIDEHandler);
   fLastCodeTool:=nil;
   FreeAndNil(fNodesWithPath);
   FreeAndNil(fCodeSortedForStartPos);
