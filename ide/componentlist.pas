@@ -385,7 +385,8 @@ end;
 
 function TComponentListForm.IsDocked: Boolean;
 begin
-  Result := (HostDockSite<>Nil) and (HostDockSite.Parent<>Nil);
+  // a form embedded by a dock master has a parent instead of a dock site
+  Result := (Parent<>Nil) or ((HostDockSite<>Nil) and (HostDockSite.Parent<>Nil));
 end;
 
 procedure TComponentListForm.ComponentWasAdded(ALookupRoot, AComponent: TComponent;
