@@ -1451,8 +1451,8 @@ const
      Enabled:      False;                 ID:            'IgnLocked_OnlyActEdit';
      Caption: '';                         Desc: '' ),
     (SearchLocked: eoeaIgnoreLock;        SearchInView:  eoeaIgnoreInView;
-     SearchOrder:  eoeaOnlyCurrentWindow; SearchOpenNew: eoeaNoNewTab;
-     Enabled:      False;                 ID:            'IgnLocked_OnlyActWin';
+     SearchOrder:  eoeaOnlyCurrentWindow; SearchOpenNew: eoeaNewTabInExistingWindowOnly;
+     Enabled:      True;                  ID:            'IgnLocked_OnlyActWin';
      Caption: '';                         Desc: '' ),
     // Fallback (must be last)
     (SearchLocked: eoeaUnlockedOnly;      SearchInView:  eoeaIgnoreInView;
@@ -5552,13 +5552,17 @@ begin
 end;
 
 procedure TEditorOptionsEditAccessOrderList.InitDefaults;
+const
+  // the current window comes right after the locked editors, so a file open
+  // elsewhere still opens a tab in the window the jump was asked from
+  Order: array[0..8] of Integer = (0, 7, 1, 2, 3, 4, 5, 6, 8);
 var
   i: Integer;
   Entry: TEditorOptionsEditAccessOrderEntry;
 begin
-  for i := 0 to high(EditorOptionsEditAccessDefaults) do begin
+  for i := 0 to high(Order) do begin
     Entry := TEditorOptionsEditAccessOrderEntry.Create(Self);
-    Entry.InitFrom(EditorOptionsEditAccessDefaults[i]);
+    Entry.InitFrom(EditorOptionsEditAccessDefaults[Order[i]]);
     FList.Add(Entry);
   end;
   Entry.FIsFallback := True;

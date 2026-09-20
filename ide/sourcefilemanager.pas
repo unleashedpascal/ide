@@ -1030,6 +1030,11 @@ function TFileOpener.ChangeEditorPage: TModalResult;
 // file already open -> change source notebook page
 begin
   //DebugLn(['TFileOpener.ChangeEditorPage file already open ',FNewUnitInfo.Filename,' WindowIndex=',FNewEditorInfo.WindowID,' PageIndex=',FNewEditorInfo.PageIndex]);
+  // without a window asked for, the multi window access order picks the
+  // editor of the current window, or opens a tab there
+  if (FWindowIndex<0) and (FPageIndex<0) and (FEditorInfo=nil) then
+    FNewEditorInfo:=SourceFileManager.GetAvailableUnitEditorInfo(FNewUnitInfo,
+      TSourceEditor(FNewEditorInfo.EditorComponent).EditorComponent.LogicalCaretXY);
   SourceEditorManager.SetWindowByIDAndPage(FNewEditorInfo.WindowID, FNewEditorInfo.PageIndex);
   if ofDoLoadResource in FFlags then
     Result:=OpenResource
@@ -1717,6 +1722,7 @@ end;
 function TFileOpener.OpenMainUnit: TModalResult;
 var
   MainUnitInfo: TEditableUnitInfo;
+  Info: TUnitEditorInfo;
 begin
   {$IFDEF IDE_VERBOSE}
   debugln(['[TFileOpener.OpenMainUnit] A ProjectLoading=',ofProjectLoading in Flags,' MainUnitID=',Project1.MainUnitID]);
@@ -1728,7 +1734,13 @@ begin
   if (MainUnitInfo.OpenEditorInfoCount > 0) and (not (ofProjectLoading in FFlags)) then
   begin
     // already loaded -> switch to source editor
-    SourceEditorManager.ActiveEditor := TSourceEditor(MainUnitInfo.OpenEditorInfo[0].EditorComponent);
+    Info:=MainUnitInfo.OpenEditorInfo[0];
+    // without a window asked for, the multi window access order picks the
+    // editor of the current window, or opens a tab there
+    if (FWindowIndex<0) and (FPageIndex<0) and (FEditorInfo=nil) then
+      Info:=SourceFileManager.GetAvailableUnitEditorInfo(MainUnitInfo,
+        TSourceEditor(Info.EditorComponent).EditorComponent.LogicalCaretXY);
+    SourceEditorManager.ActiveEditor := TSourceEditor(Info.EditorComponent);
     SourceEditorManager.ShowActiveWindowOnTop(True);
     exit(mrOk);
   end;
