@@ -236,6 +236,7 @@ type
     function TreeViewGetImageIndex({%H-}Str: String; Data: TObject; var {%H-}AIsEnabled: Boolean): Integer;
     procedure ProjectBeginUpdate(Sender: TObject);
     procedure ProjectEndUpdate(Sender: TObject; ProjectChanged: boolean);
+    function IsPrimary: boolean;
     procedure EnableI18NForSelectedLFM(TheEnable: boolean);
     procedure PackageListAvailable(Sender: TObject);
     function CanUpdate(Flag: TPEFlag; Immediately: boolean): boolean;
@@ -319,6 +320,8 @@ type
 
 var
   ProjInspector: TProjectInspectorForm = nil;
+  // every inspector; ProjInspector listens to the project and drives the others
+  ProjInspectors: TFPList = nil;
 
 
 function UpdateUnitInfoResourceBaseClass(AnUnitInfo: TUnitInfo; Quiet: boolean): boolean;
@@ -1337,21 +1340,36 @@ begin
 end;
 
 procedure TProjectInspectorForm.SetLazProject(const AValue: TProject);
+var
+  i: Integer;
 begin
   if FLazProject=AValue then exit;
   if FLazProject<>nil then begin       // Old Project
     dec(FUpdateLock,LazProject.UpdateLock);
-    FLazProject.OnBeginUpdate:=nil;
-    FLazProject.OnEndUpdate:=nil;
+    if IsPrimary then begin
+      FLazProject.OnBeginUpdate:=nil;
+      FLazProject.OnEndUpdate:=nil;
+    end;
   end;
   FLazProject:=AValue;
   if FLazProject<>nil then begin       // New Project
     inc(FUpdateLock,LazProject.UpdateLock);
-    FLazProject.OnBeginUpdate:=@ProjectBeginUpdate;
-    FLazProject.OnEndUpdate:=@ProjectEndUpdate;
+    if IsPrimary then begin
+      FLazProject.OnBeginUpdate:=@ProjectBeginUpdate;
+      FLazProject.OnEndUpdate:=@ProjectEndUpdate;
+    end;
   end
   else // Only update when no project. ProjectEndUpdate will update a project.
     UpdateAll;
+  if IsPrimary then
+    for i:=0 to ProjInspectors.Count-1 do
+      if ProjInspectors[i]<>Pointer(Self) then
+        TProjectInspectorForm(ProjInspectors[i]).LazProject:=AValue;
+end;
+
+function TProjectInspectorForm.IsPrimary: boolean;
+begin
+  Result:=ProjInspector=Self;
 end;
 
 procedure TProjectInspectorForm.SetShowDirectoryHierarchy(const AValue: boolean);
@@ -1622,15 +1640,27 @@ begin
 end;
 
 procedure TProjectInspectorForm.ProjectBeginUpdate(Sender: TObject);
+var
+  i: Integer;
 begin
   BeginUpdate;
+  if IsPrimary then
+    for i:=0 to ProjInspectors.Count-1 do
+      if ProjInspectors[i]<>Pointer(Self) then
+        TProjectInspectorForm(ProjInspectors[i]).ProjectBeginUpdate(Sender);
 end;
 
 procedure TProjectInspectorForm.ProjectEndUpdate(Sender: TObject; ProjectChanged: boolean);
+var
+  i: Integer;
 begin
   if ProjectChanged then
     UpdateAll;
   EndUpdate;
+  if IsPrimary then
+    for i:=0 to ProjInspectors.Count-1 do
+      if ProjInspectors[i]<>Pointer(Self) then
+        TProjectInspectorForm(ProjInspectors[i]).ProjectEndUpdate(Sender,ProjectChanged);
 end;
 
 procedure TProjectInspectorForm.EnableI18NForSelectedLFM(TheEnable: boolean);
@@ -1711,6 +1741,7 @@ end;
 constructor TProjectInspectorForm.Create(TheOwner: TComponent);
 begin
   inherited Create(TheOwner);
+  ProjInspectors.Add(Self);
   Name:=NonModalIDEWindowNames[nmiwProjectInspector];
   Caption:=lisMenuProjectInspector;
   KeyPreview:=true;
@@ -1730,9 +1761,11 @@ end;
 destructor TProjectInspectorForm.Destroy;
 begin
   IdleConnected:=false;
+  EnvironmentOptions.RemoveHandlerAfterWrite(@OptionsChanged);
   LazProject:=nil;
   inherited Destroy;
   FreeAndNil(FPropGui);
+  ProjInspectors.Remove(Self);
   if ProjInspector=Self then
     ProjInspector:=nil;
 end;
@@ -1856,7 +1889,12 @@ procedure TProjectInspectorForm.UpdateTitle(Immediately: boolean);
 var
   NewCaption: String;
   IconStream: TStream;
+  i: Integer;
 begin
+  if IsPrimary then
+    for i:=0 to ProjInspectors.Count-1 do
+      if ProjInspectors[i]<>Pointer(Self) then
+        TProjectInspectorForm(ProjInspectors[i]).UpdateTitle(Immediately);
   if not CanUpdate(pefNeedUpdateTitle,Immediately) then exit;
   Icon.Clear;
   if (LazProject = nil) or
@@ -2148,11 +2186,15 @@ begin
 end;
 
 initialization
+  ProjInspectors := TFPList.Create;
   Project.OnHasDesigner := @HasDesigner;
   ProjectIcon.OnLoadProjectMainIcon := @LoadProjectMainIcon2Stream;
   ProjectUserResources.OnAddIDEMessage := @AddProjectIDEMessage;
   RegisterIDEOptionsGroup(GroupProject, TProjectIDEOptions);
   RegisterIDEOptionsGroup(GroupCompiler, TProjectCompilerOptions);
+
+finalization
+  FreeAndNil(ProjInspectors);
 
 end.
 

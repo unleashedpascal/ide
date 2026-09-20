@@ -695,6 +695,7 @@ destructor TComponentTreeView.Destroy;
 var
   Enumer: TPointerToPointerEnumerator;
 begin
+  PropertyEditorHook:=nil;
   IdleBuildNodes:=false;
   Enumer := FRoot2CollapasedMap.GetEnumerator;
   while Enumer.MoveNext do
