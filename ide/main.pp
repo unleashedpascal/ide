@@ -430,6 +430,7 @@ type
     fBuilder: TLazarusBuilder;
     fOIActivateLastRow: Boolean;
     function DoBuildLazarusSub(Flags: TBuildLazarusFlags): TModalResult;
+    procedure SwapBuiltIDEExecutable;
     procedure ProjectOptionsHelper(const AFilter: array of TAbstractIDEOptionsClass);
     // Global IDE event handlers
     procedure ProcessIDECommand(Sender: TObject; Command: word; var Handled: boolean);
@@ -6857,6 +6858,22 @@ begin
     IDEWindowCreators.ShowForm(ProjInspector,State=iwgfShowOnTop);
 end;
 
+// the new executable takes the name of the running one, which becomes lazarus.old
+procedure TMainIDE.SwapBuiltIDEExecutable;
+var
+  Dir, NewFilename, CurFilename, OldFilename: String;
+begin
+  Dir:=AppendPathDelim(EnvironmentOptions.GetParsedLazarusDirectory);
+  NewFilename:=Dir+'lazarus.new'+GetExeExt;
+  CurFilename:=Dir+'lazarus'+GetExeExt;
+  OldFilename:=Dir+'lazarus.old'+GetExeExt;
+  if not FileExistsUTF8(NewFilename) then exit;
+  if FileExistsUTF8(OldFilename) and not DeleteFileUTF8(OldFilename) then exit;
+  if FileExistsUTF8(CurFilename) and not RenameFileUTF8(CurFilename,OldFilename) then exit;
+  RenameFileUTF8(NewFilename,CurFilename);
+  InvalidateFileStateCache;
+end;
+
 function TMainIDE.GetProjectInspectorSelection: TFPList;
 begin
   if ProjInspector=nil then
@@ -8327,10 +8344,12 @@ begin
   Result:=DoBuildLazarusSub(Flags);
   if (Result=mrOK) then begin
     with MiscellaneousOptions do begin
-      if BuildLazProfiles.RestartAfterBuild
-      and (BuildLazProfiles.Current.TargetDirectory='')
+      if (BuildLazProfiles.Current.TargetDirectory='')
       and MainBuildBoss.BuildTargetIDEIsDefault then
-        mnuRestartClicked(nil);
+        if BuildLazProfiles.RestartAfterBuild then
+          mnuRestartClicked(nil)
+        else
+          SwapBuiltIDEExecutable;
     end;
   end else if Result=mrIgnore then
     Result:=mrOK;
