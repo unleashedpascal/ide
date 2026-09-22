@@ -151,7 +151,7 @@ object OIOptionsFrame: TOIOptionsFrame
     end
     object OIShowStatusBarCheckBox: TCheckBox
       AnchorSideLeft.Control = OIOptionsGroupBox
-      AnchorSideTop.Control = OIShowInfoBoxCheckBox
+      AnchorSideTop.Control = OIShowComponentTreeCheckBox
       AnchorSideTop.Side = asrBottom
       Left = 6
       Height = 23
@@ -178,6 +178,7 @@ object OIOptionsFrame: TOIOptionsFrame
       ParentShowHint = False
       ShowHint = True
       TabOrder = 6
+      Visible = False
     end
     object OIShowComponentTreeCheckBox: TCheckBox
       AnchorSideLeft.Control = OIOptionsGroupBox

@@ -4274,7 +4274,6 @@ begin
   AnObjInspector.FCheckboxForBoolean := FCheckboxForBoolean;
   AnObjInspector.ShowComponentTree := ShowComponentTree;
   AnObjInspector.ShowPropertyFilter := ShowPropertyFilter;
-  AnObjInspector.ShowInfoBox := ShowInfoBox;
   AnObjInspector.ComponentPanelHeight := ComponentTreeHeight;
   AnObjInspector.InfoBoxHeight := InfoBoxHeight;
   AnObjInspector.ShowStatusBar := ShowStatusBar;
@@ -4365,7 +4364,8 @@ begin
   FShowStatusBar := True;
   FInfoBoxHeight := 50;
   FPropFilterUpdating := False;
-  FShowInfoBox := True;
+  // the grid takes the whole height; no info box with a splitter under it
+  FShowInfoBox := False;
   FComponentEditor := nil;
   FFilter := DefaultOITypeKinds;
 
@@ -4432,7 +4432,7 @@ begin
 
   AddPopupMenuItem(ShowInfoBoxPopupMenuItem,nil
      ,'ShowInfoBoxPopupMenuItem',oisShowInfoBox, '', ''
-     ,@ShowInfoBoxPopupMenuItemClick,FShowInfoBox,true,true);
+     ,@ShowInfoBoxPopupMenuItemClick,FShowInfoBox,true,false);
   ShowInfoBoxPopupMenuItem.ShowAlwaysCheckable:=true;
 
   AddPopupMenuItem(ShowStatusBarPopupMenuItem,nil
