@@ -406,6 +406,20 @@ resourcestring
   lisAboutIDE = 'About IDE';
   lisMenuWhatNeedsBuilding = 'What Needs Building';
   lisMenuSyntaxHighlightProfile = 'Syntax Highlight Profile';
+  lisMenuCreateNewScheme = 'Create New Scheme ...';
+  lisSchemeCreatorTitle = 'Syntax Scheme Creator';
+  lisSchemeCreatorName = 'Scheme name:';
+  lisSchemeCreatorBackground = 'Background';
+  lisSchemeCreatorText = 'Text';
+  lisSchemeCreatorKeywords = 'Keywords';
+  lisSchemeCreatorStrings = 'Strings';
+  lisSchemeCreatorNumbers = 'Numbers';
+  lisSchemeCreatorComments = 'Comments';
+  lisSchemeCreatorDirectives = 'Directives';
+  lisSchemeCreatorApply = 'Apply after saving';
+  lisSchemeCreatorNameEmpty = 'Enter a name for the scheme.';
+  lisSchemeCreatorBuiltIn = '"%s" is a built-in scheme, choose another name.';
+  lisSchemeCreatorOverwrite = 'Replace the existing scheme "%s"?';
 
   lisMenuNewProject = 'New Project ...';
   lisMenuNewProjectFromFile = 'New Project from File ...';

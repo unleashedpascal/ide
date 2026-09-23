@@ -98,7 +98,7 @@
         <PackageName Value="UnleashedPanes"/>
       </Item19>
     </RequiredPackages>
-    <Units Count="211">
+    <Units Count="212">
       <Unit0>
         <Filename Value="lazarus.pp"/>
         <IsPartOfProject Value="True"/>
@@ -1444,6 +1444,14 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="SchemeMenu"/>
       </Unit210>
+      <Unit211>
+        <Filename Value="schemecreator.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="SchemeCreatorForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="SchemeCreator"/>
+      </Unit211>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
