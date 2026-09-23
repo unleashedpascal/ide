@@ -122,10 +122,9 @@ begin
   DefaultDrive := ExtractFileDrive(ProgramDirectory);
   DefaultFPCTarget:= GetCompiledTargetCPU + '-' + GetCompiledTargetOS;
   DefaultFPCVersion:= {$I %FPCVERSION%};
-  // the last part of the path returned by GetAppConfigDir is the application
-  // name. Replace that by 'lazarus', to make sure that lazbuild uses
-  // the same primary config path
-  PrimaryConfigPath:= ExtractFilePath(ChompPathDelim(GetAppConfigDirUTF8(False))) + 'lazarus';
+  // default config dir is config_lazarus beside the program directory,
+  // --pcp still overrides this
+  PrimaryConfigPath:= ExtractFilePath(ChompPathDelim(ProgramDirectory)) + 'config_lazarus';
   SecondaryConfigPath:=ChompPathDelim(ProgramDirectory);
   DefaultFPCSrcDirs[1] := AppendPathDelim(ProgramDirectory) + 'fpcsrc';
   DefaultLazarusSrcDirs[1] := DefaultDrive + '\lazarus';

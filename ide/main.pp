@@ -1268,6 +1268,48 @@ var
   MsgResult: TModalResult;
   CurPrgName: String;
   AltPrgName, PCP: String;
+  MovedFrom, MovedTo: String;
+
+  // when the Lazarus directory moved, rewrite stored paths that lived
+  // inside the old location; anything still broken hits the setup checks
+  procedure FixMovedInstallation;
+
+    function Remap(const APath: string): string;
+    begin
+      Result:=APath;
+      if (APath<>'')
+      and (CompareFilenames(MovedFrom,copy(APath,1,length(MovedFrom)))=0) then
+        Result:=MovedTo+copy(APath,length(MovedFrom)+1,MaxInt);
+    end;
+
+  var
+    Note: string;
+  begin
+    MovedFrom:=AppendPathDelim(TrimFilename(EnvironmentOptions.LazarusDirectory));
+    MovedTo:=AppendPathDelim(TrimFilename(ProgramDirectoryWithBundle));
+    if (EnvironmentOptions.LazarusDirectory='')
+    or (CompareFilenames(MovedFrom,MovedTo)=0)
+    or (CheckLazarusDirectoryQuality(MovedTo,Note)=sddqInvalid) then
+    begin
+      MovedFrom:='';
+      exit;
+    end;
+    debugln(['Note: (lazarus) [TMainIDE.LoadGlobalOptions] installation moved from "',
+      MovedFrom,'" to "',MovedTo,'", rewriting the stored paths']);
+    with EnvironmentOptions do
+    begin
+      LazarusDirectory:=ChompPathDelim(MovedTo);
+      CompilerFilename:=Remap(CompilerFilename);
+      FPCSourceDirectory:=Remap(FPCSourceDirectory);
+      MakeFilename:=Remap(MakeFilename);
+      TestBuildDirectory:=Remap(TestBuildDirectory);
+      FppkgConfigFile:=Remap(FppkgConfigFile);
+      // re-learn the calling executable without the mismatch warning
+      LastCalledByLazarusFullPath:='';
+    end;
+    SaveEnvironment(false);
+  end;
+
 begin
   PCP:=AppendPathDelim(GetPrimaryConfigPath);
 
@@ -1279,6 +1321,7 @@ begin
     CreateConfig;
     Load(false);
   end;
+  FixMovedInstallation;
   AddDefaultRecentProjects;
 
   // read language and lazarusdir parameters, needed for translation
@@ -1429,6 +1472,8 @@ begin
   DebuggerOptions.PrimaryConfigPath := GetPrimaryConfigPath;
   DebuggerOptions.CreateConfig;
   DebuggerOptions.Load;
+  if MovedFrom<>'' then
+    DebuggerOptions.RemapDebuggerFilenames(MovedFrom,MovedTo);
 
   Assert(InputHistories = nil, 'TMainIDE.LoadGlobalOptions: InputHistories is already assigned.');
   InputHistoriesSO := TInputHistoriesWithSearchOpt.Create;

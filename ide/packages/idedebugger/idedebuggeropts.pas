@@ -182,6 +182,7 @@ type
     function GetParsedDebuggerFilename(AProjectDbgFileName: String = ''): string;
 
     procedure SaveDebuggerPropertiesList;
+    procedure RemapDebuggerFilenames(const OldPrefix, NewPrefix: string);
     function  DebuggerPropertiesConfigList: TDebuggerPropertiesConfigList;
     function  CurrentDebuggerClass: TDebuggerClass;
     function  CurrentDebuggerPropertiesConfigEx(AnUID: String = ''): TDebuggerPropertiesConfig;
@@ -980,6 +981,31 @@ procedure TDebuggerOptions.SaveDebuggerPropertiesList;
 begin
   FDebuggerConfigList.SaveToXml(XMLCfg, 'Debugger/Backends/', True);
   EnvironmentOptions.XMLCfg.SetValue('EnvironmentOptions/Debugger/Deprecated', 'Backends/Class-Config moved to DebuggerOptions.xml');
+end;
+
+// point backend executables inside a moved installation to its new
+// location; paths outside OldPrefix stay untouched
+procedure TDebuggerOptions.RemapDebuggerFilenames(const OldPrefix, NewPrefix: string);
+var
+  i: Integer;
+  Entry: TDebuggerPropertiesConfig;
+  Changed: Boolean;
+begin
+  LoadDebuggerProperties;
+  Changed := false;
+  for i := 0 to FDebuggerConfigList.Count - 1 do begin
+    Entry := TDebuggerPropertiesConfig(FDebuggerConfigList.Objects[i]);
+    if (Entry = nil) or (Entry.DebuggerFilename = '') then continue;
+    if CompareFilenames(OldPrefix,
+      copy(Entry.DebuggerFilename, 1, length(OldPrefix))) = 0 then
+    begin
+      Entry.DebuggerFilename := NewPrefix
+        + copy(Entry.DebuggerFilename, length(OldPrefix) + 1, MaxInt);
+      Changed := true;
+    end;
+  end;
+  if Changed then
+    SaveDebuggerPropertiesList;
 end;
 
 function TDebuggerOptions.DebuggerPropertiesConfigList: TDebuggerPropertiesConfigList;
