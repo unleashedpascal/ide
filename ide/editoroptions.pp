@@ -1263,7 +1263,7 @@ type
              default mbaNone;
     // middle click
     property TextMiddleClick: TMouseOptButtonActionOld read FTextMiddleClick write SetTextMiddleClick
-             default mbaPaste;
+             default mbaSelectColumn;
     property TextShiftMiddleClick: TMouseOptButtonAction read FTextShiftMiddleClick write FTextShiftMiddleClick
              default mbaNone;
     property TextAltMiddleClick: TMouseOptButtonAction read FTextAltMiddleClick write FTextAltMiddleClick
@@ -4544,7 +4544,7 @@ begin
   FTextShiftCtrlLeftClick    := mbaMultiCaretToggle;
   FTextShiftAltCtrlLeftClick := mbaNone;
   // middle
-  FTextMiddleClick             := mbaPaste;
+  FTextMiddleClick             := mbaSelectColumn;
   FTextAltMiddleClick          := mbaNone;
   FTextCtrlMiddleClick         := mbaZoomReset;
   FTextShiftMiddleClick        := mbaNone;

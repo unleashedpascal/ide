@@ -1159,7 +1159,7 @@ begin
 
   ecMoveLineUp:          SetSingle(VK_UP,[XCtrl, ssShift, ssAlt]);
   ecMoveLineDown:        SetSingle(VK_DOWN,[XCtrl, ssShift, ssAlt]);
-  ecDuplicateLine:       SetSingle(VK_INSERT,[XCtrl, ssShift, ssAlt]);
+  ecDuplicateLine:       SetSingle(VK_D,[XCtrl], VK_INSERT,[XCtrl, ssShift, ssAlt]);
   ecMoveSelectUp:        SetSingle(VK_NUMPAD8,[XCtrl, ssAlt]);
   ecMoveSelectDown:      SetSingle(VK_NUMPAD2,[XCtrl, ssAlt]);
   ecMoveSelectLeft:      SetSingle(VK_NUMPAD4,[XCtrl, ssAlt]);
@@ -1247,7 +1247,7 @@ begin
   ecDeleteLastWord:      SetSingle(VK_BACK,[XCtrl]);
   ecDeleteBOL:           SetSingle(VK_UNKNOWN,[]);
   ecDeleteEOL:           SetCombo(VK_Y,[XCtrl,ssShift],VK_UNKNOWN,[], VK_Q,[XCtrl],VK_Y,[]);
-  ecDeleteLine:          SetSingle(VK_Y,[XCtrl]);
+  ecDeleteLine:          SetSingle(VK_K,[XCtrl,ssShift]);
   ecClearAll:            SetSingle(VK_UNKNOWN,[]);
   ecLineBreak:           SetSingle(VK_RETURN,[]);
   ecInsertLine:          SetSingle(VK_N,[XCtrl]);
@@ -1272,7 +1272,7 @@ begin
 
   // command commands
   ecUndo:                SetSingle(VK_Z,[XCtrl]);
-  ecRedo:                SetSingle(VK_Z,[XCtrl,ssShift]);
+  ecRedo:                SetSingle(VK_Y,[XCtrl], VK_Z,[XCtrl,ssShift]);
 
   // search & replace
   ecMatchBracket:        SetSingle(VK_UNKNOWN,[]);
@@ -1639,7 +1639,7 @@ begin
   case Command of
   // moving
   ecLeft:                SetSingle(VK_S,[ssCtrl], VK_LEFT,[]);
-  ecRight:               SetSingle(VK_D,[ssCtrl], VK_RIGHT,[]);
+  ecRight:               SetSingle(VK_RIGHT,[]);
   ecUp:                  SetSingle(VK_E,[ssCtrl], VK_UP,[]);
   ecDown:                SetSingle(VK_X,[ssCtrl], VK_DOWN,[]);
   ecWordLeft:            SetSingle(VK_A,[ssCtrl], VK_LEFT,[ssCtrl]);
@@ -1656,7 +1656,7 @@ begin
   ecEditorTop:           SetCombo(VK_Q,[ssCtrl],VK_R,[],   VK_PRIOR,[ssCtrl],VK_UNKNOWN,[]);
   ecEditorBottom:        SetCombo(VK_Q,[ssCtrl],VK_C,[],   VK_NEXT,[ssCtrl],VK_UNKNOWN,[]);
   ecScrollUp:            SetSingle(VK_W,[ssCtrl], VK_UP,[ssCtrl]);
-  ecScrollDown:          SetSingle(VK_Z,[ssCtrl], VK_DOWN,[ssCtrl]);
+  ecScrollDown:          SetSingle(VK_DOWN,[ssCtrl]);
   ecScrollLeft:          SetSingle(VK_UNKNOWN,[]);
   ecScrollRight:         SetSingle(VK_UNKNOWN,[]);
 
@@ -1668,6 +1668,7 @@ begin
   ecCopy:                SetSingle(VK_Insert,[ssCtrl]);
   ecCut:                 SetSingle(VK_Delete,[ssShift]);
   ecPaste:               SetSingle(VK_Insert,[ssShift]);
+  ecDuplicateLine:       SetSingle(VK_D,[ssCtrl]);
   ecMultiPaste:          SetSingle(VK_UNKNOWN,[]);
   ecNormalSelect:        SetCombo(VK_O,[ssCtrl],VK_K,[]);
   ecColumnSelect:        SetCombo(VK_O,[ssCtrl],VK_C,[]);
@@ -1744,7 +1745,7 @@ begin
   ecDeleteLastWord:      SetSingle(VK_BACK,[ssCtrl]);
   ecDeleteBOL:           SetCombo(VK_Q,[ssCtrl],VK_H,[]);
   ecDeleteEOL:           SetCombo(VK_Q,[ssCtrl],VK_Y,[]);
-  ecDeleteLine:          SetSingle(VK_Y,[ssCtrl]);
+  ecDeleteLine:          SetSingle(VK_K,[ssCtrl,ssShift]);
   ecClearAll:            SetSingle(VK_UNKNOWN,[]);
   ecLineBreak:           SetSingle(VK_RETURN,[],     VK_M,[ssCtrl]);
   ecInsertLine:          SetSingle(VK_N,[ssCtrl]);
@@ -1752,8 +1753,8 @@ begin
   // all insert text snippet keys have no default key
 
   // command commands
-  ecUndo:                SetSingle(VK_BACK,[ssALT],  VK_U,[ssCtrl]);
-  ecRedo:                SetSingle(VK_BACK,[ssALT,ssShift]);
+  ecUndo:                SetSingle(VK_Z,[ssCtrl], VK_BACK,[ssALT]);
+  ecRedo:                SetSingle(VK_Y,[ssCtrl], VK_BACK,[ssALT,ssShift]);
 
   // search & replace
   ecMatchBracket:        SetSingle(VK_UNKNOWN,[]);
@@ -2310,6 +2311,7 @@ begin
   ecCopy:                SetSingle(VK_C,[ssMeta],    VK_Insert,[ssCtrl]);
   ecCut:                 SetSingle(VK_X,[ssMeta],    VK_Delete,[ssShift]);
   ecPaste:               SetSingle(VK_V,[ssMeta],    VK_Insert,[ssShift]);
+  ecDuplicateLine:       SetSingle(VK_D,[ssCtrl]);
   ecMultiPaste:          SetSingle(VK_UNKNOWN,[]);
   ecNormalSelect:        SetSingle(VK_UNKNOWN,[]);
   ecColumnSelect:        SetSingle(VK_UNKNOWN,[]);
@@ -2389,7 +2391,7 @@ begin
   ecDeleteLastWord:      SetSingle(VK_BACK,[ssCtrl]);
   ecDeleteBOL:           SetSingle(VK_BACK,[ssMeta]);
   ecDeleteEOL:           SetSingle(VK_DELETE,[ssMeta]);
-  ecDeleteLine:          SetSingle(VK_Y,[ssCtrl]);
+  ecDeleteLine:          SetSingle(VK_K,[ssCtrl,ssShift]);
   ecClearAll:            SetSingle(VK_UNKNOWN,[]);
   ecLineBreak:           SetSingle(VK_RETURN,[]);
   ecInsertLine:          SetSingle(VK_N,[ssShift,ssMeta]);
@@ -2398,8 +2400,8 @@ begin
   // Note: all insert text snippet keys have no default key
 
   // command commands
-  ecUndo:                SetSingle(VK_Z,[ssMeta]);
-  ecRedo:                SetSingle(VK_Z,[ssMeta,ssShift]);
+  ecUndo:                SetSingle(VK_Z,[ssMeta], VK_Z,[ssCtrl]);
+  ecRedo:                SetSingle(VK_Z,[ssMeta,ssShift], VK_Y,[ssCtrl]);
 
   // search & replace
   ecMatchBracket:        SetSingle(VK_UNKNOWN,[]);
