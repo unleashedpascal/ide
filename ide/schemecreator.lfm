@@ -1,12 +1,12 @@
 object SchemeCreatorForm: TSchemeCreatorForm
   Left = 400
-  Height = 262
+  Height = 318
   Top = 200
   Width = 420
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'SchemeCreatorForm'
-  ClientHeight = 262
+  ClientHeight = 318
   ClientWidth = 420
   FormStyle = fsStayOnTop
   OnClose = FormClose
@@ -140,34 +140,83 @@ object SchemeCreatorForm: TSchemeCreatorForm
     ButtonColor = clBlack
     OnColorChanged = ColorChanged
   end
+  object ButtonRandomDark: TButton
+    Left = 12
+    Height = 26
+    Top = 178
+    Width = 96
+    Caption = 'ButtonRandomDark'
+    OnClick = ButtonRandomClick
+    TabOrder = 1
+  end
+  object ButtonRandomLight: TButton
+    Left = 114
+    Height = 26
+    Top = 178
+    Width = 96
+    Caption = 'ButtonRandomLight'
+    OnClick = ButtonRandomClick
+    TabOrder = 2
+  end
+  object ButtonPrevious: TButton
+    Left = 238
+    Height = 26
+    Top = 178
+    Width = 82
+    Caption = 'ButtonPrevious'
+    Enabled = False
+    OnClick = ButtonPreviousClick
+    TabOrder = 3
+  end
+  object ButtonNext: TButton
+    Left = 326
+    Height = 26
+    Top = 178
+    Width = 82
+    Caption = 'ButtonNext'
+    Enabled = False
+    OnClick = ButtonNextClick
+    TabOrder = 4
+  end
+  object CheckBoxMatchTheme: TCheckBox
+    Left = 12
+    Height = 19
+    Top = 214
+    Width = 396
+    Caption = 'CheckBoxMatchTheme'
+    Checked = True
+    State = cbChecked
+    OnChange = CheckBoxMatchThemeChange
+    TabOrder = 5
+  end
   object CheckBoxApply: TCheckBox
     Left = 12
     Height = 19
-    Top = 182
-    Width = 300
+    Top = 240
+    Width = 396
     Caption = 'CheckBoxApply'
     Checked = True
     State = cbChecked
-    TabOrder = 1
+    TabOrder = 6
   end
   object ButtonSave: TButton
     Left = 232
     Height = 28
-    Top = 222
+    Top = 278
     Width = 86
     Caption = 'ButtonSave'
     Default = True
     OnClick = ButtonSaveClick
-    TabOrder = 2
+    TabOrder = 7
   end
   object ButtonClose: TButton
     Left = 322
     Height = 28
-    Top = 222
+    Top = 278
     Width = 86
     Cancel = True
     Caption = 'ButtonClose'
     OnClick = ButtonCloseClick
-    TabOrder = 3
+    TabOrder = 8
   end
 end

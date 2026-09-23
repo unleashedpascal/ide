@@ -416,6 +416,11 @@ resourcestring
   lisSchemeCreatorNumbers = 'Numbers';
   lisSchemeCreatorComments = 'Comments';
   lisSchemeCreatorDirectives = 'Directives';
+  lisSchemeCreatorRandomDark = 'Random dark';
+  lisSchemeCreatorRandomLight = 'Random light';
+  lisSchemeCreatorPrevious = 'Previous';
+  lisSchemeCreatorNext = 'Next';
+  lisSchemeCreatorMatchTheme = 'Match background color to IDE theme';
   lisSchemeCreatorApply = 'Apply after saving';
   lisSchemeCreatorNameEmpty = 'Enter a name for the scheme.';
   lisSchemeCreatorBuiltIn = '"%s" is a built-in scheme, choose another name.';

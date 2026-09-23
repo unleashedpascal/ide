@@ -44,20 +44,35 @@ type
     ButtonComment: TColorButton;
     LabelDirective: TLabel;
     ButtonDirective: TColorButton;
+    ButtonRandomDark: TButton;
+    ButtonRandomLight: TButton;
+    ButtonPrevious: TButton;
+    ButtonNext: TButton;
+    CheckBoxMatchTheme: TCheckBox;
     CheckBoxApply: TCheckBox;
     ButtonSave: TButton;
     ButtonClose: TButton;
     procedure FormCreate({%H-}Sender: TObject);
     procedure FormClose({%H-}Sender: TObject; var CloseAction: TCloseAction);
     procedure ColorChanged({%H-}Sender: TObject);
+    procedure CheckBoxMatchThemeChange({%H-}Sender: TObject);
+    procedure ButtonRandomClick(Sender: TObject);
+    procedure ButtonPreviousClick({%H-}Sender: TObject);
+    procedure ButtonNextClick({%H-}Sender: TObject);
     procedure ButtonSaveClick({%H-}Sender: TObject);
     procedure ButtonCloseClick({%H-}Sender: TObject);
   private
     fLoading: boolean;
     fPreviewed: boolean;
+    fHistory: array of TSchemeSeed;
+    fHistPos: integer; // entry on screen, -1 before the first roll
     function seed: TSchemeSeed;
     procedure showSeed(const value: TSchemeSeed);
     procedure preview;
+    procedure pushHistory(const value: TSchemeSeed);
+    procedure walkHistory(step: integer);
+    procedure updateHistoryButtons;
+    procedure updateRollButtons;
   end;
 
 // shows the single creator window
@@ -66,13 +81,14 @@ procedure showSchemeCreator;
 implementation
 
 uses
-  SysUtils, TypInfo, LazFileUtils, Laz2_XMLCfg, SynEditStrConst, SourceMarks, EditorOptions, SourceEditor, LazarusIDEStrConsts, SchemeMenu;
+  SysUtils, Math, TypInfo, GraphUtil, LazFileUtils, Laz2_XMLCfg, SynEditStrConst, SourceMarks, EditorOptions, SourceEditor, LazarusIDEStrConsts, SchemeMenu;
 
 {$R *.lfm}
 
 const
   SCHEME_PATH = 'Lazarus/ColorSchemes/';
   PREVIEW_NAME = 'SchemePreview';
+  HISTORY_SIZE = 100;
   ERROR_RED = TColor($3C3CD8);
   RUN_GREEN = TColor($50A050);
   WARN_AMBER = TColor($30A0D8);
@@ -93,6 +109,56 @@ end;
 function caretMask(shown, under: TColor): TColor;
 begin
   result := TColor((ColorToRGB(shown) xor ColorToRGB(under)) xor $FFFFFF);
+end;
+
+function between(lo, hi: integer): integer;
+begin
+  result := lo+random(hi-lo+1);
+end;
+
+// hue wraps around, luminance and saturation are 0..255
+function hls(h, l, s: integer): TColor;
+begin
+  result := HLStoColor(byte(h and 255), byte(l), byte(s));
+end;
+
+// the color nudged a little, so a roll matched to the theme still varies
+function nearTheme(c: TColor): TColor;
+begin
+  ColorToHLS(c, var h, var l, var s);
+  result := hls(h+between(-8, 8), EnsureRange(l+between(-8, 8), 0, 255), EnsureRange(s+between(-20, 20), 0, 255));
+end;
+
+// a random scheme around one base hue: four accents a quarter turn apart, comments on the opposite side;
+// matched to the theme, the surface follows the window colors and the accents start from the highlight hue
+function rollSeed(dark, matchTheme: boolean): TSchemeSeed;
+begin
+  var base := random(256);
+  if matchTheme then begin
+    ColorToHLS(clHighlight, var h, _, _);
+    base := h;
+  end;
+  var accent: array[4] of TColor;
+  var spin := random(4);
+  for var i := 0 to 3 do begin
+    var hue := base+64*((i+spin) mod 4)+between(-18, 18);
+    accent[i] := if dark then hls(hue, between(150, 190), between(110, 200)) else hls(hue, between(70, 110), between(120, 220));
+  end;
+  if matchTheme then begin
+    result.background := nearTheme(clWindow);
+    result.foreground := nearTheme(clWindowText);
+  end else if dark then begin
+    result.background := hls(base, between(16, 36), between(20, 60));
+    result.foreground := hls(base, between(215, 235), between(10, 40));
+  end else begin
+    result.background := hls(base, between(232, 248), between(30, 90));
+    result.foreground := hls(base, between(25, 50), between(20, 60));
+  end;
+  result.comment := if dark then hls(base+128+between(-30, 30), between(115, 145), between(30, 70)) else hls(base+128+between(-30, 30), between(100, 130), between(30, 70));
+  result.keyword := accent[0];
+  result.str := accent[1];
+  result.number := accent[2];
+  result.directive := accent[3];
 end;
 
 // the mapping the scheme loader applies to stored names
@@ -258,9 +324,18 @@ begin
   LabelNumber.Caption := lisSchemeCreatorNumbers;
   LabelComment.Caption := lisSchemeCreatorComments;
   LabelDirective.Caption := lisSchemeCreatorDirectives;
+  ButtonRandomDark.Caption := lisSchemeCreatorRandomDark;
+  ButtonRandomLight.Caption := lisSchemeCreatorRandomLight;
+  ButtonPrevious.Caption := lisSchemeCreatorPrevious;
+  ButtonNext.Caption := lisSchemeCreatorNext;
+  CheckBoxMatchTheme.Caption := lisSchemeCreatorMatchTheme;
   CheckBoxApply.Caption := lisSchemeCreatorApply;
   ButtonSave.Caption := lisSave;
   ButtonClose.Caption := lisClose;
+  Randomize;
+  fHistPos := -1;
+  updateHistoryButtons;
+  updateRollButtons;
   showSeed(DEFAULT_SEED);
 end;
 
@@ -315,6 +390,62 @@ begin
     lang.ApplyTo(editor);
   end;
   fPreviewed := true;
+end;
+
+procedure TSchemeCreatorForm.pushHistory(const value: TSchemeSeed);
+begin
+  // a roll after walking back drops the entries ahead, like an undo stack
+  SetLength(fHistory, fHistPos+1);
+  if length(fHistory) = HISTORY_SIZE then Delete(fHistory, 0, 1);
+  SetLength(fHistory, length(fHistory)+1);
+  fHistory[high(fHistory)] := value;
+  fHistPos := high(fHistory);
+  updateHistoryButtons;
+end;
+
+procedure TSchemeCreatorForm.walkHistory(step: integer);
+begin
+  fHistPos += step;
+  showSeed(fHistory[fHistPos]);
+  updateHistoryButtons;
+  preview;
+end;
+
+procedure TSchemeCreatorForm.updateHistoryButtons;
+begin
+  ButtonPrevious.Enabled := fHistPos > 0;
+  ButtonNext.Enabled := fHistPos < high(fHistory);
+end;
+
+// a matched roll can only go the way the theme goes, so the other button waits
+procedure TSchemeCreatorForm.updateRollButtons;
+begin
+  var darkTheme := ColorToGray(clWindow) < 128;
+  ButtonRandomDark.Enabled := (not CheckBoxMatchTheme.Checked) or darkTheme;
+  ButtonRandomLight.Enabled := (not CheckBoxMatchTheme.Checked) or (not darkTheme);
+end;
+
+procedure TSchemeCreatorForm.CheckBoxMatchThemeChange(Sender: TObject);
+begin
+  updateRollButtons;
+end;
+
+procedure TSchemeCreatorForm.ButtonRandomClick(Sender: TObject);
+begin
+  var value := rollSeed(Sender = ButtonRandomDark, CheckBoxMatchTheme.Checked);
+  showSeed(value);
+  pushHistory(value);
+  preview;
+end;
+
+procedure TSchemeCreatorForm.ButtonPreviousClick(Sender: TObject);
+begin
+  walkHistory(-1);
+end;
+
+procedure TSchemeCreatorForm.ButtonNextClick(Sender: TObject);
+begin
+  walkHistory(1);
 end;
 
 procedure TSchemeCreatorForm.ButtonSaveClick(Sender: TObject);
