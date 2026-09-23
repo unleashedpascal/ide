@@ -98,7 +98,7 @@
         <PackageName Value="UnleashedPanes"/>
       </Item19>
     </RequiredPackages>
-    <Units Count="210">
+    <Units Count="211">
       <Unit0>
         <Filename Value="lazarus.pp"/>
         <IsPartOfProject Value="True"/>
@@ -1439,6 +1439,11 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
       </Unit209>
+      <Unit210>
+        <Filename Value="schememenu.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="SchemeMenu"/>
+      </Unit210>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

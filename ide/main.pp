@@ -115,7 +115,7 @@ uses
   // source editing
   SourceEditor, CodeToolsOptions, IDEOptionDefs,
   CodeToolsDefines, DiffDialog, UnitInfoDlg, EditorOptions,
-  SourceEditProcs, ViewUnit_dlg, FPDocEditWindow,
+  SourceEditProcs, ViewUnit_dlg, FPDocEditWindow, SchemeMenu,
   etQuickFixes, etMessageFrame, etMessagesWnd,
   // converter
   ChgEncodingDlg, ConvertMainPlugin, ConvMissingProp, LazXMLForms,
@@ -2954,6 +2954,7 @@ begin
     itmViewIDEInfo.OnClick:=@mnuViewIDEInfoClicked;
     itmViewNeedBuild.OnClick:=@mnuViewNeedBuildClicked;
   end;
+  SetupSchemeMenu;
 end;
 
 procedure TMainIDE.SetupSourceMenu;

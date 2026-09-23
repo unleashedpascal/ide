@@ -405,6 +405,7 @@ resourcestring
   lisMenuAboutFPC = 'About FPC';
   lisAboutIDE = 'About IDE';
   lisMenuWhatNeedsBuilding = 'What Needs Building';
+  lisMenuSyntaxHighlightProfile = 'Syntax Highlight Profile';
 
   lisMenuNewProject = 'New Project ...';
   lisMenuNewProjectFromFile = 'New Project from File ...';
