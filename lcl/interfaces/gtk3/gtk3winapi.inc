@@ -4981,7 +4981,7 @@ var
       Adjustment^.lower := ATarget;
 
       ATarget := Adjustment^.upper;
-      SetGDouble(ATarget, ScrollInfo.nMax - ScrollInfo.nMin, HasChanged);
+      SetGDouble(ATarget, ScrollInfo.nMax, HasChanged);
       Adjustment^.upper := ATarget;
     end;
 
