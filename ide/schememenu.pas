@@ -21,11 +21,13 @@ procedure setupSchemeMenu;
 procedure addSchemeMenuItem(const name: string);
 // makes the scheme current for every highlighter and repaints the open editors
 procedure activateColorScheme(const name: string);
+// pushes the stored color settings back onto the open editors
+procedure reloadEditorColors;
 
 implementation
 
 uses
-  Classes, SysUtils, Forms, MenuIntf, EditorSyntaxHighlighterDef, EditorOptions, SourceEditor, MainIntf, LazarusIDEStrConsts;
+  Classes, SysUtils, Forms, MenuIntf, EditorSyntaxHighlighterDef, EditorOptions, SourceEditor, MainIntf, LazarusIDEStrConsts, SchemeCreator;
 
 type
 
@@ -33,6 +35,7 @@ type
 
   TMenuGlue = class(TComponent)
     procedure schemeClicked(Sender: TObject);
+    procedure createClicked({%H-}Sender: TObject);
     procedure menuShown({%H-}Sender: TObject);
   end;
 
@@ -40,15 +43,20 @@ var
   glue: TMenuGlue = nil;
   schemeList: TIDEMenuSection = nil;
 
+procedure reloadEditorColors;
+begin
+  SourceEditorManager.BeginGlobalUpdate;
+  defer SourceEditorManager.EndGlobalUpdate;
+  MainIDEInterface.UpdateHighlighters(true);
+  SourceEditorManager.ReloadEditorOptions;
+end;
+
 procedure activateColorScheme(const name: string);
 begin
   if ColorSchemeFactory.ColorSchemeGroup[name] = nil then exit;
   for var i := IdeHighlighterStartId to HighlighterList.Count-1 do EditorOpts.WriteColorScheme(HighlighterList[i].SynInstance.LanguageName, name);
   EditorOpts.Save;
-  SourceEditorManager.BeginGlobalUpdate;
-  defer SourceEditorManager.EndGlobalUpdate;
-  MainIDEInterface.UpdateHighlighters(true);
-  SourceEditorManager.ReloadEditorOptions;
+  reloadEditorColors;
 end;
 
 procedure addSchemeMenuItem(const name: string);
@@ -64,6 +72,7 @@ begin
   var names := autofree TStringList.Create;
   ColorSchemeFactory.GetRegisteredSchemes(names);
   for var i := 0 to names.Count-1 do addSchemeMenuItem(names[i]);
+  RegisterIDEMenuCommand(RegisterIDEMenuSection(menu, 'itmViewSchemeCreate'), 'itmViewSchemeCreateNew', lisMenuCreateNewScheme, @glue.createClicked);
   menu.AddHandlerOnShow(@glue.menuShown);
 end;
 
@@ -72,6 +81,11 @@ end;
 procedure TMenuGlue.schemeClicked(Sender: TObject);
 begin
   activateColorScheme((Sender as TIDEMenuCommand).Caption);
+end;
+
+procedure TMenuGlue.createClicked(Sender: TObject);
+begin
+  showSchemeCreator;
 end;
 
 procedure TMenuGlue.menuShown(Sender: TObject);

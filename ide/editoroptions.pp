@@ -555,6 +555,7 @@ type
     procedure SaveToXml(aXMLConfig: TRttiXMLConfig; const aPath: String;
       Defaults: TColorSchemeFactory);
     procedure RegisterScheme(AColorScheme: TColorScheme);
+    procedure UnregisterScheme(const AName: String);
     procedure GetRegisteredSchemes(AList: TStrings);
     procedure AddAttribAddedEvent(AnEvent: TColorSchemeAttribAddedEvent);
     procedure RemoveAttribAddedEvent(AnEvent: TColorSchemeAttribAddedEvent);
@@ -8956,6 +8957,17 @@ begin
     //DebugLn(['TColorSchemeFactory.RegisterScheme: Adjusting AName to ', AName]);
   end;
   FMappings.AddObject(AName, AColorScheme);
+end;
+
+procedure TColorSchemeFactory.UnregisterScheme(const AName: String);
+var
+  i: integer;
+begin
+  i := FMappings.IndexOf(AName);
+  if i < 0 then
+    exit;
+  FMappings.Objects[i].Free;
+  FMappings.Delete(i);
 end;
 
 procedure TColorSchemeFactory.GetRegisteredSchemes(AList: TStrings);
