@@ -115,7 +115,7 @@ uses
   // source editing
   SourceEditor, CodeToolsOptions, IDEOptionDefs,
   CodeToolsDefines, DiffDialog, UnitInfoDlg, EditorOptions,
-  SourceEditProcs, ViewUnit_dlg, FPDocEditWindow, SchemeMenu,
+  SourceEditProcs, ViewUnit_dlg, FPDocEditWindow, SchemeMenu, SchemeIdeColors,
   etQuickFixes, etMessageFrame, etMessagesWnd,
   // converter
   ChgEncodingDlg, ConvertMainPlugin, ConvMissingProp, LazXMLForms,
@@ -5183,8 +5183,10 @@ begin
   if ConsoleVerbosity>0 then
     DebugLn(['Hint: (lazarus) TMainIDE.SaveDesktopSettings']);
   EnvironmentGuiOpts.Desktop.ImportSettingsFromIDE(aOptions);
-  if ObjectInspector1<>nil then
+  if ObjectInspector1<>nil then begin
     aOptions.ObjectInspectorOptions.Assign(ObjectInspector1);
+    keepStoredOiColors(aOptions.ObjectInspectorOptions);
+  end;
 end;
 
 procedure TMainIDE.IDEOptionsLoader(Sender: TObject; AOptions: TAbstractIDEOptions);
