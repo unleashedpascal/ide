@@ -515,6 +515,10 @@ msgstr "Carácter Ctrl (cursor)"
 msgid "Ordinal Char (Hash)"
 msgstr "Carácter ordinal (hash)"
 
+#: syneditstrconst.syns_attrstringinterp
+msgid "Interpolated String"
+msgstr ""
+
 #: syneditstrconst.syns_attrstringsingle
 msgid "Single quoted String"
 msgstr "Cadeia entre plicas"
