@@ -28,9 +28,10 @@ type
     color: TColor;
   end;
 
-  // the colors a whole scheme is derived from
+  // the colors a whole scheme is derived from; strFill is the background behind string literals
   TSchemeSeed = record
     background, foreground, keyword, str, number, comment, directive: TColor;
+    strFill: TDividerSeed;
     oiReference, oiValue: TColor;
     sections, usesClause, types: TDividerSeed;
   end;
@@ -50,6 +51,8 @@ type
     ButtonKeyword: TColorButton;
     LabelString: TLabel;
     ButtonString: TColorButton;
+    CheckBoxStringFill: TCheckBox;
+    ButtonStringFill: TColorButton;
     LabelNumber: TLabel;
     ButtonNumber: TColorButton;
     LabelComment: TLabel;
@@ -128,7 +131,7 @@ const
   RUN_GREEN = TColor($50A050);
   WARN_AMBER = TColor($30A0D8);
   DEFAULT_SEED: TSchemeSeed = (background: $242018; foreground: $E2DEDC; keyword: $5A96C8; str: $78BE8C; number: $DCB478; comment: $888078; directive: $C88CBE;
-    oiReference: $C87850; oiValue: $3C8CD2; sections: (enabled: true; color: $4A7293); usesClause: (enabled: true; color: $527758); types: (enabled: true; color: $5D5953));
+    strFill: (enabled: false; color: $262D24); oiReference: $C87850; oiValue: $3C8CD2; sections: (enabled: true; color: $4A7293); usesClause: (enabled: true; color: $527758); types: (enabled: true; color: $5D5953));
 
 type
   TPreviewGlue = class(TComponent)
@@ -212,6 +215,9 @@ begin
   result.str := accent[1];
   result.number := accent[2];
   result.directive := accent[3];
+  // most rolls tint the background behind strings a little toward their color
+  result.strFill.enabled := random(4) < 3;
+  result.strFill.color := mix(result.background, result.str, between(10, 22));
   // divider lines are tints on the editor background
   if smDividers in themed then begin
     result.sections.color := mix(result.background, clHighlight, 70);
@@ -357,7 +363,7 @@ begin
   attr(p(SYNS_XML_AttrComment), seed.comment, clNone, clNone, 'fsItalic');
   attr(p(SYNS_XML_AttrReservedWord), seed.keyword, clNone, clNone, 'fsBold');
   attr(p(SYNS_XML_AttrModifier), seed.keyword);
-  attr(p(SYNS_XML_AttrString), seed.str);
+  attr(p(SYNS_XML_AttrString), seed.str, if seed.strFill.enabled then seed.strFill.color else clNone);
   attr(p(SYNS_XML_AttrNumber), seed.number);
   attr(p(SYNS_XML_AttrSymbol), mix(fg, seed.keyword, 25));
   attr(p(SYNS_XML_AttrIdentifier), fg);
@@ -430,6 +436,7 @@ begin
   LabelText.Caption := lisSchemeCreatorText;
   LabelKeyword.Caption := lisSchemeCreatorKeywords;
   LabelString.Caption := lisSchemeCreatorStrings;
+  CheckBoxStringFill.Caption := lisSchemeCreatorStringFill;
   LabelNumber.Caption := lisSchemeCreatorNumbers;
   LabelComment.Caption := lisSchemeCreatorComments;
   LabelDirective.Caption := lisSchemeCreatorDirectives;
@@ -470,6 +477,8 @@ begin
   result.foreground := ButtonText.ButtonColor;
   result.keyword := ButtonKeyword.ButtonColor;
   result.str := ButtonString.ButtonColor;
+  result.strFill.enabled := CheckBoxStringFill.Checked;
+  result.strFill.color := ButtonStringFill.ButtonColor;
   result.number := ButtonNumber.ButtonColor;
   result.comment := ButtonComment.ButtonColor;
   result.directive := ButtonDirective.ButtonColor;
@@ -491,6 +500,8 @@ begin
   ButtonText.ButtonColor := value.foreground;
   ButtonKeyword.ButtonColor := value.keyword;
   ButtonString.ButtonColor := value.str;
+  CheckBoxStringFill.Checked := value.strFill.enabled;
+  ButtonStringFill.ButtonColor := value.strFill.color;
   ButtonNumber.ButtonColor := value.number;
   ButtonComment.ButtonColor := value.comment;
   ButtonDirective.ButtonColor := value.directive;
@@ -591,9 +602,10 @@ begin
   ButtonRandomLight.Enabled := (not CheckBoxMatchTheme.Checked) or (not darkTheme);
 end;
 
-// an unchecked divider keeps its color, shown disabled
+// an unchecked divider or string fill keeps its color, shown disabled
 procedure TSchemeCreatorForm.updateDividerButtons;
 begin
+  ButtonStringFill.Enabled := CheckBoxStringFill.Checked;
   ButtonSections.Enabled := CheckBoxSections.Checked;
   ButtonUses.Enabled := CheckBoxUses.Checked;
   ButtonTypes.Enabled := CheckBoxTypes.Checked;

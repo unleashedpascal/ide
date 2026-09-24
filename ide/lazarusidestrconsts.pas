@@ -413,6 +413,7 @@ resourcestring
   lisSchemeCreatorText = 'Text';
   lisSchemeCreatorKeywords = 'Keywords';
   lisSchemeCreatorStrings = 'Strings';
+  lisSchemeCreatorStringFill = 'String fill';
   lisSchemeCreatorNumbers = 'Numbers';
   lisSchemeCreatorComments = 'Comments';
   lisSchemeCreatorDirectives = 'Directives';
