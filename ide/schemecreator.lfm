@@ -1,12 +1,12 @@
 object SchemeCreatorForm: TSchemeCreatorForm
   Left = 400
-  Height = 318
+  Height = 573
   Top = 200
   Width = 420
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'SchemeCreatorForm'
-  ClientHeight = 318
+  ClientHeight = 573
   ClientWidth = 420
   FormStyle = fsStayOnTop
   OnClose = FormClose
@@ -28,10 +28,17 @@ object SchemeCreatorForm: TSchemeCreatorForm
     TabOrder = 0
     Text = 'MyScheme'
   end
+  object LineSyntax: TPaintBox
+    Left = 12
+    Height = 17
+    Top = 43
+    Width = 396
+    OnPaint = LinePaint
+  end
   object LabelBackground: TLabel
     Left = 12
     Height = 15
-    Top = 52
+    Top = 70
     Width = 90
     Caption = 'LabelBackground'
     ParentColor = False
@@ -39,7 +46,7 @@ object SchemeCreatorForm: TSchemeCreatorForm
   object ButtonBackground: TColorButton
     Left = 108
     Height = 24
-    Top = 48
+    Top = 66
     Width = 92
     ButtonColor = clBlack
     OnColorChanged = ColorChanged
@@ -47,7 +54,7 @@ object SchemeCreatorForm: TSchemeCreatorForm
   object LabelKeyword: TLabel
     Left = 220
     Height = 15
-    Top = 52
+    Top = 70
     Width = 90
     Caption = 'LabelKeyword'
     ParentColor = False
@@ -55,7 +62,7 @@ object SchemeCreatorForm: TSchemeCreatorForm
   object ButtonKeyword: TColorButton
     Left = 316
     Height = 24
-    Top = 48
+    Top = 66
     Width = 92
     ButtonColor = clBlack
     OnColorChanged = ColorChanged
@@ -63,7 +70,7 @@ object SchemeCreatorForm: TSchemeCreatorForm
   object LabelText: TLabel
     Left = 12
     Height = 15
-    Top = 82
+    Top = 100
     Width = 90
     Caption = 'LabelText'
     ParentColor = False
@@ -71,7 +78,7 @@ object SchemeCreatorForm: TSchemeCreatorForm
   object ButtonText: TColorButton
     Left = 108
     Height = 24
-    Top = 78
+    Top = 96
     Width = 92
     ButtonColor = clBlack
     OnColorChanged = ColorChanged
@@ -79,7 +86,7 @@ object SchemeCreatorForm: TSchemeCreatorForm
   object LabelString: TLabel
     Left = 220
     Height = 15
-    Top = 82
+    Top = 100
     Width = 90
     Caption = 'LabelString'
     ParentColor = False
@@ -87,7 +94,7 @@ object SchemeCreatorForm: TSchemeCreatorForm
   object ButtonString: TColorButton
     Left = 316
     Height = 24
-    Top = 78
+    Top = 96
     Width = 92
     ButtonColor = clBlack
     OnColorChanged = ColorChanged
@@ -95,7 +102,7 @@ object SchemeCreatorForm: TSchemeCreatorForm
   object LabelComment: TLabel
     Left = 12
     Height = 15
-    Top = 112
+    Top = 130
     Width = 90
     Caption = 'LabelComment'
     ParentColor = False
@@ -103,7 +110,7 @@ object SchemeCreatorForm: TSchemeCreatorForm
   object ButtonComment: TColorButton
     Left = 108
     Height = 24
-    Top = 108
+    Top = 126
     Width = 92
     ButtonColor = clBlack
     OnColorChanged = ColorChanged
@@ -111,7 +118,7 @@ object SchemeCreatorForm: TSchemeCreatorForm
   object LabelNumber: TLabel
     Left = 220
     Height = 15
-    Top = 112
+    Top = 130
     Width = 90
     Caption = 'LabelNumber'
     ParentColor = False
@@ -119,7 +126,7 @@ object SchemeCreatorForm: TSchemeCreatorForm
   object ButtonNumber: TColorButton
     Left = 316
     Height = 24
-    Top = 108
+    Top = 126
     Width = 92
     ButtonColor = clBlack
     OnColorChanged = ColorChanged
@@ -127,7 +134,7 @@ object SchemeCreatorForm: TSchemeCreatorForm
   object LabelDirective: TLabel
     Left = 12
     Height = 15
-    Top = 142
+    Top = 160
     Width = 90
     Caption = 'LabelDirective'
     ParentColor = False
@@ -135,88 +142,219 @@ object SchemeCreatorForm: TSchemeCreatorForm
   object ButtonDirective: TColorButton
     Left = 108
     Height = 24
-    Top = 138
+    Top = 156
     Width = 92
     ButtonColor = clBlack
     OnColorChanged = ColorChanged
   end
+  object LineInspector: TPaintBox
+    Left = 12
+    Height = 17
+    Top = 188
+    Width = 396
+    OnPaint = LinePaint
+  end
+  object LabelReference: TLabel
+    Left = 12
+    Height = 15
+    Top = 215
+    Width = 90
+    Caption = 'LabelReference'
+    ParentColor = False
+  end
+  object ButtonReference: TColorButton
+    Left = 108
+    Height = 24
+    Top = 211
+    Width = 92
+    ButtonColor = clBlack
+    OnColorChanged = ColorChanged
+  end
+  object LabelValue: TLabel
+    Left = 220
+    Height = 15
+    Top = 215
+    Width = 90
+    Caption = 'LabelValue'
+    ParentColor = False
+  end
+  object ButtonValue: TColorButton
+    Left = 316
+    Height = 24
+    Top = 211
+    Width = 92
+    ButtonColor = clBlack
+    OnColorChanged = ColorChanged
+  end
+  object LineDividers: TPaintBox
+    Left = 12
+    Height = 17
+    Top = 243
+    Width = 396
+    OnPaint = LinePaint
+  end
+  object CheckBoxSections: TCheckBox
+    Left = 12
+    Height = 19
+    Top = 269
+    Width = 290
+    Caption = 'CheckBoxSections'
+    OnChange = DividerToggled
+    TabOrder = 1
+  end
+  object ButtonSections: TColorButton
+    Left = 316
+    Height = 24
+    Top = 266
+    Width = 92
+    ButtonColor = clBlack
+    OnColorChanged = ColorChanged
+  end
+  object CheckBoxUses: TCheckBox
+    Left = 12
+    Height = 19
+    Top = 299
+    Width = 290
+    Caption = 'CheckBoxUses'
+    OnChange = DividerToggled
+    TabOrder = 2
+  end
+  object ButtonUses: TColorButton
+    Left = 316
+    Height = 24
+    Top = 296
+    Width = 92
+    ButtonColor = clBlack
+    OnColorChanged = ColorChanged
+  end
+  object CheckBoxTypes: TCheckBox
+    Left = 12
+    Height = 19
+    Top = 329
+    Width = 290
+    Caption = 'CheckBoxTypes'
+    OnChange = DividerToggled
+    TabOrder = 3
+  end
+  object ButtonTypes: TColorButton
+    Left = 316
+    Height = 24
+    Top = 326
+    Width = 92
+    ButtonColor = clBlack
+    OnColorChanged = ColorChanged
+  end
+  object LineRoll: TPaintBox
+    Left = 12
+    Height = 17
+    Top = 358
+    Width = 396
+    OnPaint = LinePaint
+  end
   object ButtonRandomDark: TButton
     Left = 12
     Height = 26
-    Top = 178
+    Top = 381
     Width = 96
     Caption = 'ButtonRandomDark'
     OnClick = ButtonRandomClick
-    TabOrder = 1
+    TabOrder = 4
   end
   object ButtonRandomLight: TButton
     Left = 114
     Height = 26
-    Top = 178
+    Top = 381
     Width = 96
     Caption = 'ButtonRandomLight'
     OnClick = ButtonRandomClick
-    TabOrder = 2
+    TabOrder = 5
   end
   object ButtonPrevious: TButton
     Left = 238
     Height = 26
-    Top = 178
+    Top = 381
     Width = 82
     Caption = 'ButtonPrevious'
     Enabled = False
     OnClick = ButtonPreviousClick
-    TabOrder = 3
+    TabOrder = 6
   end
   object ButtonNext: TButton
     Left = 326
     Height = 26
-    Top = 178
+    Top = 381
     Width = 82
     Caption = 'ButtonNext'
     Enabled = False
     OnClick = ButtonNextClick
-    TabOrder = 4
+    TabOrder = 7
   end
   object CheckBoxMatchTheme: TCheckBox
     Left = 12
     Height = 19
-    Top = 214
+    Top = 415
     Width = 396
     Caption = 'CheckBoxMatchTheme'
     Checked = True
     State = cbChecked
     OnChange = CheckBoxMatchThemeChange
-    TabOrder = 5
+    TabOrder = 8
+  end
+  object CheckBoxMatchDividers: TCheckBox
+    Left = 12
+    Height = 19
+    Top = 437
+    Width = 396
+    Caption = 'CheckBoxMatchDividers'
+    Checked = True
+    State = cbChecked
+    TabOrder = 9
+  end
+  object CheckBoxMatchInspector: TCheckBox
+    Left = 12
+    Height = 19
+    Top = 459
+    Width = 396
+    Caption = 'CheckBoxMatchInspector'
+    Checked = True
+    State = cbChecked
+    TabOrder = 10
   end
   object CheckBoxApply: TCheckBox
     Left = 12
     Height = 19
-    Top = 240
+    Top = 481
     Width = 396
     Caption = 'CheckBoxApply'
     Checked = True
     State = cbChecked
-    TabOrder = 6
+    TabOrder = 11
+  end
+  object LineButtons: TPaintBox
+    Left = 12
+    Height = 17
+    Top = 508
+    Width = 396
+    OnPaint = LinePaint
   end
   object ButtonSave: TButton
     Left = 232
     Height = 28
-    Top = 278
+    Top = 533
     Width = 86
     Caption = 'ButtonSave'
     Default = True
     OnClick = ButtonSaveClick
-    TabOrder = 7
+    TabOrder = 12
   end
   object ButtonClose: TButton
     Left = 322
     Height = 28
-    Top = 278
+    Top = 533
     Width = 86
     Cancel = True
     Caption = 'ButtonClose'
     OnClick = ButtonCloseClick
-    TabOrder = 8
+    TabOrder = 13
   end
 end

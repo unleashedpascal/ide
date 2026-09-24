@@ -421,6 +421,16 @@ resourcestring
   lisSchemeCreatorPrevious = 'Previous';
   lisSchemeCreatorNext = 'Next';
   lisSchemeCreatorMatchTheme = 'Match background color to IDE theme';
+  lisSchemeCreatorMatchDividers = 'Match divider colors to IDE theme';
+  lisSchemeCreatorMatchInspector = 'Match object inspector colors to IDE theme';
+  lisSchemeCreatorSyntax = 'Syntax';
+  lisSchemeCreatorInspector = 'Object Inspector';
+  lisSchemeCreatorReference = 'Reference';
+  lisSchemeCreatorValue = 'Value';
+  lisSchemeCreatorDividers = 'Dividers';
+  lisSchemeCreatorUnitSections = 'Unit sections';
+  lisSchemeCreatorUsesClause = 'Uses clause';
+  lisSchemeCreatorTypesAndRoutines = 'Types and routines';
   lisSchemeCreatorApply = 'Apply after saving';
   lisSchemeCreatorNameEmpty = 'Enter a name for the scheme.';
   lisSchemeCreatorBuiltIn = '"%s" is a built-in scheme, choose another name.';
