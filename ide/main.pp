@@ -12615,26 +12615,17 @@ begin
     exit;
   end;
 
-  CloseAction := caHide;
-  case IDEQuestionDialog(lisCloseAllTabsTitle, lisCloseAllTabsQuestion,
-          mtConfirmation, [mrYes, lisCloseAllTabsClose,
-                           mrNo, lisCloseAllTabsHide,
-                           mrCancel])
-  of
-    mrYes : begin
-        SourceEditorManager.IncUpdateLock;
-        try
-          while (SrcNB.EditorCount > 0) and
-                (DoCloseEditorFile(SrcNB.Editors[0], [cfSaveFirst]) = mrOK)
-          do ;
-          if SrcNB.EditorCount = 0 then
-            CloseAction := caFree;
-        finally
-          SourceEditorManager.DecUpdateLock;
-        end;
-      end;
-    mrNo : CloseAction := caHide;
-    mrCancel : CloseAction := caNone;
+  // a window with several files closes them all, like a window with one
+  CloseAction := caNone;
+  SourceEditorManager.IncUpdateLock;
+  try
+    while (SrcNB.EditorCount > 0) and
+          (DoCloseEditorFile(SrcNB.Editors[0], [cfSaveFirst]) = mrOK)
+    do ;
+    if SrcNB.EditorCount = 0 then
+      CloseAction := caFree;
+  finally
+    SourceEditorManager.DecUpdateLock;
   end;
 end;
 
