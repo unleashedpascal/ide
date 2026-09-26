@@ -1,0 +1,127 @@
+object SchemeManagerForm: TSchemeManagerForm
+  Left = 400
+  Height = 400
+  Top = 200
+  Width = 520
+  BorderIcons = [biSystemMenu]
+  Caption = 'SchemeManagerForm'
+  ClientHeight = 400
+  ClientWidth = 520
+  Constraints.MinHeight = 200
+  Constraints.MinWidth = 260
+  OnActivate = FormActivate
+  OnClose = FormClose
+  OnCreate = FormCreate
+  Position = poScreenCenter
+  object ListSchemes: TListView
+    Left = 8
+    Height = 344
+    Top = 8
+    Width = 504
+    Align = alClient
+    BorderSpacing.Left = 8
+    BorderSpacing.Top = 8
+    BorderSpacing.Right = 8
+    Columns = <
+      item
+        Caption = '#'
+        Width = 44
+      end
+      item
+        AutoSize = True
+        Caption = 'Name'
+        Width = 240
+      end
+      item
+        Caption = 'Built-in'
+        Width = 70
+      end
+      item
+        Caption = 'Last modified'
+        Width = 130
+      end>
+    HideSelection = False
+    PopupMenu = PopupScheme
+    ReadOnly = True
+    RowSelect = True
+    TabOrder = 0
+    ViewStyle = vsReport
+    OnColumnClick = ListSchemesColumnClick
+    OnDblClick = ListSchemesDblClick
+    OnKeyDown = ListSchemesKeyDown
+  end
+  object EditRename: TEdit
+    Left = 52
+    Height = 21
+    Top = 30
+    Width = 200
+    AutoSize = False
+    OnExit = EditRenameExit
+    OnKeyDown = EditRenameKeyDown
+    TabOrder = 2
+    Visible = False
+  end
+  object PanelButtons: TPanel
+    Left = 0
+    Height = 48
+    Top = 352
+    Width = 520
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 48
+    ClientWidth = 520
+    TabOrder = 1
+    object ButtonClose: TButton
+      AnchorSideRight.Control = PanelButtons
+      AnchorSideRight.Side = asrBottom
+      AnchorSideBottom.Control = PanelButtons
+      AnchorSideBottom.Side = asrBottom
+      Left = 426
+      Height = 28
+      Top = 12
+      Width = 86
+      Anchors = [akRight, akBottom]
+      BorderSpacing.Right = 8
+      BorderSpacing.Bottom = 8
+      Cancel = True
+      Caption = 'ButtonClose'
+      OnClick = ButtonCloseClick
+      TabOrder = 1
+    end
+    object ButtonCreate: TButton
+      AnchorSideRight.Control = ButtonClose
+      AnchorSideBottom.Control = PanelButtons
+      AnchorSideBottom.Side = asrBottom
+      Left = 296
+      Height = 28
+      Top = 12
+      Width = 126
+      Anchors = [akRight, akBottom]
+      AutoSize = True
+      BorderSpacing.Right = 4
+      BorderSpacing.Bottom = 8
+      Caption = 'ButtonCreate'
+      Constraints.MinHeight = 28
+      Constraints.MinWidth = 86
+      OnClick = ButtonCreateClick
+      TabOrder = 0
+    end
+  end
+  object PopupScheme: TPopupMenu
+    OnPopup = PopupSchemePopup
+    Left = 160
+    Top = 120
+    object ItemApply: TMenuItem
+      Caption = 'Apply'
+      OnClick = ItemApplyClick
+    end
+    object ItemRename: TMenuItem
+      Caption = 'Rename'
+      OnClick = ItemRenameClick
+    end
+    object ItemDelete: TMenuItem
+      Caption = 'Delete'
+      OnClick = ItemDeleteClick
+    end
+  end
+end

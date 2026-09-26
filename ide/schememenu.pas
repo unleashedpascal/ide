@@ -19,6 +19,8 @@ interface
 procedure setupSchemeMenu;
 // appends an entry for a scheme registered after the menu was built
 procedure addSchemeMenuItem(const name: string);
+procedure renameSchemeMenuItem(const oldName, newName: string);
+procedure removeSchemeMenuItem(const name: string);
 // makes the scheme current for every highlighter and repaints the open editors
 procedure activateColorScheme(const name: string);
 // pushes the stored color settings back onto the open editors
@@ -27,7 +29,7 @@ procedure reloadEditorColors;
 implementation
 
 uses
-  Classes, SysUtils, Forms, MenuIntf, LazIDEIntf, EditorSyntaxHighlighterDef, EditorOptions, SourceEditor, MainIntf, LazarusIDEStrConsts, SchemeCreator, SchemeIdeColors;
+  Classes, SysUtils, Forms, MenuIntf, LazIDEIntf, EditorSyntaxHighlighterDef, EditorOptions, SourceEditor, MainIntf, LazarusIDEStrConsts, SchemeCreator, SchemeManager, SchemeIdeColors;
 
 type
 
@@ -36,6 +38,7 @@ type
   TMenuGlue = class(TComponent)
     procedure schemeClicked(Sender: TObject);
     procedure createClicked({%H-}Sender: TObject);
+    procedure manageClicked({%H-}Sender: TObject);
     procedure menuShown({%H-}Sender: TObject);
     procedure optionsWritten({%H-}Sender: TObject; Restore: boolean);
   end;
@@ -43,6 +46,7 @@ type
 var
   glue: TMenuGlue = nil;
   schemeList: TIDEMenuSection = nil;
+  schemeItemCount: integer = 0; // numbers the item names, which stay unique after a removal
   activeScheme: string; // the pascal scheme whose IDE colors are in place
 
 procedure reloadEditorColors;
@@ -66,7 +70,25 @@ end;
 
 procedure addSchemeMenuItem(const name: string);
 begin
-  RegisterIDEMenuCommand(schemeList, 'itmViewScheme'+IntToStr(schemeList.Count), name, @glue.schemeClicked);
+  RegisterIDEMenuCommand(schemeList, 'itmViewScheme'+IntToStr(schemeItemCount), name, @glue.schemeClicked);
+  inc(schemeItemCount);
+end;
+
+function findSchemeMenuItem(const name: string): TIDEMenuItem;
+begin
+  for var i := 0 to schemeList.Count-1 do if schemeList[i].Caption = name then exit(schemeList[i]);
+  result := nil;
+end;
+
+procedure renameSchemeMenuItem(const oldName, newName: string);
+begin
+  var item := findSchemeMenuItem(oldName);
+  if item <> nil then item.Caption := newName;
+end;
+
+procedure removeSchemeMenuItem(const name: string);
+begin
+  findSchemeMenuItem(name).Free;
 end;
 
 procedure setupSchemeMenu;
@@ -77,7 +99,9 @@ begin
   var names := autofree TStringList.Create;
   ColorSchemeFactory.GetRegisteredSchemes(names);
   for var i := 0 to names.Count-1 do addSchemeMenuItem(names[i]);
-  RegisterIDEMenuCommand(RegisterIDEMenuSection(menu, 'itmViewSchemeCreate'), 'itmViewSchemeCreateNew', lisMenuCreateNewScheme, @glue.createClicked);
+  var tools := RegisterIDEMenuSection(menu, 'itmViewSchemeCreate');
+  RegisterIDEMenuCommand(tools, 'itmViewSchemeCreateNew', lisMenuCreateNewScheme, @glue.createClicked);
+  RegisterIDEMenuCommand(tools, 'itmViewSchemeManage', lisMenuManageSchemes, @glue.manageClicked);
   menu.AddHandlerOnShow(@glue.menuShown);
   activeScheme := EditorOpts.ReadPascalColorScheme;
   EditorOpts.AddHandlerAfterWrite(@glue.optionsWritten);
@@ -94,6 +118,11 @@ end;
 procedure TMenuGlue.createClicked(Sender: TObject);
 begin
   showSchemeCreator;
+end;
+
+procedure TMenuGlue.manageClicked(Sender: TObject);
+begin
+  showSchemeManager;
 end;
 
 procedure TMenuGlue.menuShown(Sender: TObject);

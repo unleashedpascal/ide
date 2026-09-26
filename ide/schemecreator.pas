@@ -16,7 +16,7 @@ unit SchemeCreator;
 interface
 
 uses
-  Classes, Graphics, Forms, Controls, StdCtrls, ExtCtrls, Dialogs;
+  Classes, Graphics, Forms, Controls, StdCtrls, ExtCtrls, Dialogs, Laz2_XMLCfg;
 
 type
   // the parts of a scheme a roll derives from the IDE theme instead of the palette
@@ -119,11 +119,13 @@ procedure showSchemeCreator;
 procedure rollThemeScheme(keepExisting: boolean);
 // forgets the unsaved scheme; the caller brings the stored colors back
 procedure dropSchemePreview;
+// registers a scheme read from a user scheme file in the global list and in the working copy
+procedure registerUserScheme(cfg: TRttiXMLConfig; const fileName, name: string);
 
 implementation
 
 uses
-  SysUtils, Math, TypInfo, GraphUtil, LazFileUtils, Laz2_XMLCfg, SynEditStrConst, SrcEditorIntf, EditorSyntaxHighlighterDef, SourceMarks, EditorOptions, SourceEditor, LazarusIDEStrConsts, SchemeMenu, SchemeIdeColors;
+  SysUtils, Math, TypInfo, GraphUtil, LazFileUtils, SynEditStrConst, SrcEditorIntf, EditorSyntaxHighlighterDef, SourceMarks, EditorOptions, SourceEditor, LazarusIDEStrConsts, SchemeMenu, SchemeIdeColors;
 
 {$R *.lfm}
 
@@ -423,6 +425,15 @@ begin
   restorePreviewOiColors;
 end;
 
+procedure registerUserScheme(cfg: TRttiXMLConfig; const fileName, name: string);
+begin
+  var scheme := TColorSchemeFromFile.CreateFrom(cfg, fileName, name, SCHEME_PATH);
+  ColorSchemeFactory.RegisterScheme(scheme);
+  var working := TColorScheme.Create(name);
+  working.Assign(scheme);
+  EditorOpts.UserColorSchemeGroup.RegisterScheme(working);
+end;
+
 // writes the user scheme file and registers the scheme, replacing an existing one of that name
 procedure storeScheme(const name: string; const seed: TSchemeSeed; existing: TColorScheme);
 begin
@@ -434,12 +445,7 @@ begin
     ColorSchemeFactory.UnregisterScheme(name);
     EditorOpts.UserColorSchemeGroup.UnregisterScheme(name);
   end;
-  // registered in both factories: the global list and the working copy the editors read
-  var scheme := TColorSchemeFromFile.CreateFrom(cfg, fileName, name, SCHEME_PATH);
-  ColorSchemeFactory.RegisterScheme(scheme);
-  var working := TColorScheme.Create(name);
-  working.Assign(scheme);
-  EditorOpts.UserColorSchemeGroup.RegisterScheme(working);
+  registerUserScheme(cfg, fileName, name);
   if existing = nil then addSchemeMenuItem(name);
 end;
 

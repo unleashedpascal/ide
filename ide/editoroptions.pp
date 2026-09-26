@@ -509,6 +509,7 @@ type
   public
     constructor CreateFrom(aXMLConfig: TRttiXMLConfig; const AFileName, AName, aPath: String);
     destructor Destroy; override;
+    property FileName: string read FFileName;
   end;
 
   TColorSchemeFactory = class;
