@@ -39,6 +39,10 @@ procedure pushOiColors(reference, value: TColor);
 procedure restorePreviewOiColors;
 // call right after the options took their colors from the inspector: a previewed pair goes back to the stored one
 procedure keepStoredOiColors(options: TOIOptions);
+// the colors the object inspector shows now
+procedure currentOiColors(out reference, value: TColor);
+// a divider of the pascal highlighter as the editors draw it now; false for a name it does not have
+function currentPascalDivider(const divider: string; out depth: integer; out color: TColor): boolean;
 
 implementation
 
@@ -137,6 +141,34 @@ begin
   end;
   options.ReferencesColor := oiPreview.storedReference;
   options.ValueColor := oiPreview.storedValue;
+end;
+
+procedure currentOiColors(out reference, value: TColor);
+begin
+  var options := EnvironmentGuiOpts.ObjectInspectorOptions;
+  reference := options.ReferencesColor;
+  value := options.ValueColor;
+  if ObjectInspector1 = nil then exit;
+  reference := ObjectInspector1.PropertyGrid.ReferencesColor;
+  value := ObjectInspector1.PropertyGrid.ValueFont.Color;
+end;
+
+function currentPascalDivider(const divider: string; out depth: integer; out color: TColor): boolean;
+begin
+  result := false;
+  depth := 0;
+  color := clNone;
+  var h := HighlighterList.GetIdForLazSyntaxHighlighter(lshFreePascal);
+  if h < IdeHighlighterStartId then exit;
+  var syn := HighlighterList[h].SynInstance;
+  var info := EditorOptionsDividerDefaults[HighlighterList[h].TheType];
+  if syn = nil then exit;
+  for var i := 0 to info.Count-1 do if info.Info[i].Xml = divider then begin
+    var conf := syn.DividerDrawConfig[i];
+    depth := conf.MaxDrawDepth;
+    color := conf.TopColor;
+    exit(true);
+  end;
 end;
 
 // the editors share one highlighter per language, so the dividers land on all of them at once;
