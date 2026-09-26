@@ -27,7 +27,7 @@ procedure reloadEditorColors;
 implementation
 
 uses
-  Classes, SysUtils, Forms, MenuIntf, EditorSyntaxHighlighterDef, EditorOptions, SourceEditor, MainIntf, LazarusIDEStrConsts, SchemeCreator, SchemeIdeColors;
+  Classes, SysUtils, Forms, MenuIntf, LazIDEIntf, EditorSyntaxHighlighterDef, EditorOptions, SourceEditor, MainIntf, LazarusIDEStrConsts, SchemeCreator, SchemeIdeColors;
 
 type
 
@@ -81,6 +81,7 @@ begin
   menu.AddHandlerOnShow(@glue.menuShown);
   activeScheme := EditorOpts.ReadPascalColorScheme;
   EditorOpts.AddHandlerAfterWrite(@glue.optionsWritten);
+  OnRollThemeScheme := @rollThemeScheme;
 end;
 
 { TMenuGlue }

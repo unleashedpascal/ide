@@ -432,7 +432,7 @@ resourcestring
   lisSchemeCreatorUnitSections = 'Unit sections';
   lisSchemeCreatorUsesClause = 'Uses clause';
   lisSchemeCreatorTypesAndRoutines = 'Types and routines';
-  lisSchemeCreatorApply = 'Apply after saving';
+  lisSchemeCreatorApply = 'Apply after closing';
   lisSchemeCreatorNameEmpty = 'Enter a name for the scheme.';
   lisSchemeCreatorBuiltIn = '"%s" is a built-in scheme, choose another name.';
   lisSchemeCreatorOverwrite = 'Replace the existing scheme "%s"?';

@@ -619,6 +619,9 @@ var
   IDETabMaster: TIDETabMaster = nil;
   // set by a docking package whose windows hold forms
   OnPickDesignerEditor: TPickDesignerEditor = nil;
+  // set by the IDE: rolls a random editor color scheme for the current IDE colors and makes it
+  // current; with keepExisting a scheme rolled earlier stays as it is
+  OnRollThemeScheme: procedure(keepExisting: boolean) = nil;
 
 type
   TLazarusIDEBootHandlerType = (
