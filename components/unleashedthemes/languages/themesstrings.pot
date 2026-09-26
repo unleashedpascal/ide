@@ -1,6 +1,10 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
+#: themesstrings.menu_auto_scheme
+msgid "Auto-generate new syntax highlight profile"
+msgstr ""
+
 #: themesstrings.menu_dark
 msgid "Dark"
 msgstr ""

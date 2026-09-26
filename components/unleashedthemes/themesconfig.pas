@@ -27,11 +27,15 @@ type
 
 function loadThemeKind: TThemeKind;
 procedure saveThemeKind(kind: TThemeKind);
+// a theme picked from the menu rolls a new syntax highlight profile
+function loadAutoScheme: boolean;
+procedure saveAutoScheme(enabled: boolean);
 
 implementation
 
 const
   KEY_THEME = 'Theme';
+  KEY_AUTO_SCHEME = 'AutoScheme';
   KIND_NAMES: array[TThemeKind] of string = ('default', 'system', 'light', 'dark', 'ocean', 'frost', 'paper', 'ember', 'midnight', 'dusk');
 
 function loadThemeKind: TThemeKind;
@@ -48,6 +52,22 @@ begin
   if not Assigned(GetIDEConfigStorage) then exit;
   var cfg := autofree GetIDEConfigStorage(CONFIG_FILE, True);
   cfg.SetDeleteValue(KEY_THEME, KIND_NAMES[kind], KIND_NAMES[tkSystem]);
+  cfg.WriteToDisk;
+end;
+
+function loadAutoScheme: boolean;
+begin
+  result := true;
+  if not Assigned(GetIDEConfigStorage) then exit;
+  var cfg := autofree GetIDEConfigStorage(CONFIG_FILE, True);
+  result := cfg.GetValue(KEY_AUTO_SCHEME, true);
+end;
+
+procedure saveAutoScheme(enabled: boolean);
+begin
+  if not Assigned(GetIDEConfigStorage) then exit;
+  var cfg := autofree GetIDEConfigStorage(CONFIG_FILE, True);
+  cfg.SetDeleteValue(KEY_AUTO_SCHEME, enabled, true);
   cfg.WriteToDisk;
 end;
 
