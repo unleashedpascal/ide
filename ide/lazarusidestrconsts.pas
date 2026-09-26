@@ -436,6 +436,18 @@ resourcestring
   lisSchemeCreatorNameEmpty = 'Enter a name for the scheme.';
   lisSchemeCreatorBuiltIn = '"%s" is a built-in scheme, choose another name.';
   lisSchemeCreatorOverwrite = 'Replace the existing scheme "%s"?';
+  lisMenuManageSchemes = 'Manage Schemes ...';
+  lisSchemeManagerTitle = 'Syntax Schemes';
+  lisSchemeManagerName = 'Name';
+  lisSchemeManagerBuiltIn = 'Built-in';
+  lisSchemeManagerModified = 'Last modified';
+  lisSchemeManagerYes = 'Yes';
+  lisSchemeManagerApply = 'Apply';
+  lisSchemeManagerRename = 'Rename';
+  lisSchemeManagerDelete = 'Delete';
+  lisSchemeManagerCreate = 'Create new scheme';
+  lisSchemeManagerDeleteAsk = 'Delete the scheme "%s"?';
+  lisSchemeManagerNameTaken = 'The name "%s" is already taken.';
 
   lisMenuNewProject = 'New Project ...';
   lisMenuNewProjectFromFile = 'New Project from File ...';

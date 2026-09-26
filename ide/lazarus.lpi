@@ -98,7 +98,7 @@
         <PackageName Value="UnleashedPanes"/>
       </Item19>
     </RequiredPackages>
-    <Units Count="213">
+    <Units Count="214">
       <Unit0>
         <Filename Value="lazarus.pp"/>
         <IsPartOfProject Value="True"/>
@@ -1457,6 +1457,14 @@
         <IsPartOfProject Value="True"/>
         <UnitName Value="SchemeIdeColors"/>
       </Unit212>
+      <Unit213>
+        <Filename Value="schememanager.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="SchemeManagerForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="SchemeManager"/>
+      </Unit213>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
