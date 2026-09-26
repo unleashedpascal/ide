@@ -27,11 +27,14 @@ type
 
   TMenuGlue = class(TComponent)
     procedure clicked(Sender: TObject);
+    procedure autoSchemeClicked({%H-}Sender: TObject);
+    procedure windowsRestored({%H-}Sender: TObject);
   end;
 
 var
   glue: TMenuGlue = nil;
   items: array[TThemeKind] of TIDEMenuCommand;
+  autoSchemeItem: TIDEMenuCommand = nil;
 
 procedure syncChecks;
 begin
@@ -43,11 +46,26 @@ begin
   applyThemeKind(kind);
   saveThemeKind(kind);
   syncChecks;
+  // the palette is on screen already, so the roll reads the new colors
+  if autoSchemeItem.Checked and Assigned(OnRollThemeScheme) then OnRollThemeScheme(false);
 end;
 
 procedure TMenuGlue.clicked(Sender: TObject);
 begin
   for var kind := low(TThemeKind) to high(TThemeKind) do if items[kind] = Sender then choose(kind);
+end;
+
+procedure TMenuGlue.autoSchemeClicked(Sender: TObject);
+begin
+  autoSchemeItem.Checked := not autoSchemeItem.Checked;
+  saveAutoScheme(autoSchemeItem.Checked);
+  if autoSchemeItem.Checked and Assigned(OnRollThemeScheme) then OnRollThemeScheme(false);
+end;
+
+// the first start has no scheme for the theme yet, so it rolls one the way a theme change does
+procedure TMenuGlue.windowsRestored(Sender: TObject);
+begin
+  if autoSchemeItem.Checked and Assigned(OnRollThemeScheme) then OnRollThemeScheme(true);
 end;
 
 function addItem(parent: TIDEMenuSection; kind: TThemeKind; const name, caption: string): TIDEMenuCommand;
@@ -77,6 +95,10 @@ begin
   addItem(dark, tkEmber, 'itmViewThemeEmber', MENU_EMBER);
   addItem(dark, tkMidnight, 'itmViewThemeMidnight', MENU_MIDNIGHT);
   addItem(dark, tkDusk, 'itmViewThemeDusk', MENU_DUSK);
+  autoSchemeItem := RegisterIDEMenuCommand(RegisterIDEMenuSection(menu, 'itmViewThemeOptions'), 'itmViewThemeAutoScheme', MENU_AUTO_SCHEME, @glue.autoSchemeClicked);
+  autoSchemeItem.ShowAlwaysCheckable := True;
+  autoSchemeItem.Checked := loadAutoScheme;
+  LazarusIDE.AddHandlerOnIDERestoreWindows(@glue.windowsRestored);
   syncChecks;
 end;
 
