@@ -15,7 +15,8 @@ unit SchemeMenu;
 
 interface
 
-// View > Syntax Highlight Profile, one entry per registered color scheme; call once after the main menu exists
+// the color group at the end of View: Syntax Highlight Profile with one entry per registered color
+// scheme, and Misc Look; a theme package puts its menu in front. Call once after the main menu exists
 procedure setupSchemeMenu;
 // appends an entry for a scheme registered after the menu was built
 procedure addSchemeMenuItem(const name: string);
@@ -29,7 +30,7 @@ procedure reloadEditorColors;
 implementation
 
 uses
-  Classes, SysUtils, Forms, MenuIntf, LazIDEIntf, EditorSyntaxHighlighterDef, EditorOptions, SourceEditor, MainIntf, LazarusIDEStrConsts, SchemeCreator, SchemeManager, SchemeIdeColors;
+  Classes, SysUtils, Forms, MenuIntf, LazIDEIntf, EditorSyntaxHighlighterDef, EditorOptions, SourceEditor, MainIntf, LazarusIDEStrConsts, SchemeCreator, SchemeManager, SchemeIdeColors, MiscLook;
 
 type
 
@@ -39,6 +40,7 @@ type
     procedure schemeClicked(Sender: TObject);
     procedure createClicked({%H-}Sender: TObject);
     procedure manageClicked({%H-}Sender: TObject);
+    procedure miscClicked({%H-}Sender: TObject);
     procedure menuShown({%H-}Sender: TObject);
     procedure optionsWritten({%H-}Sender: TObject; Restore: boolean);
   end;
@@ -94,7 +96,8 @@ end;
 procedure setupSchemeMenu;
 begin
   glue := TMenuGlue.Create(Application);
-  var menu := RegisterIDESubMenu(RegisterIDEMenuSection(mnuView, 'itmViewSchemes'), 'itmViewSchemeMenu', lisMenuSyntaxHighlightProfile);
+  var colors := RegisterIDEMenuSection(mnuView, 'itmViewColors');
+  var menu := RegisterIDESubMenu(colors, 'itmViewSchemeMenu', lisMenuSyntaxHighlightProfile);
   schemeList := RegisterIDEMenuSection(menu, 'itmViewSchemeList');
   var names := autofree TStringList.Create;
   ColorSchemeFactory.GetRegisteredSchemes(names);
@@ -103,9 +106,11 @@ begin
   RegisterIDEMenuCommand(tools, 'itmViewSchemeCreateNew', lisMenuCreateNewScheme, @glue.createClicked);
   RegisterIDEMenuCommand(tools, 'itmViewSchemeManage', lisMenuManageSchemes, @glue.manageClicked);
   menu.AddHandlerOnShow(@glue.menuShown);
+  RegisterIDEMenuCommand(colors, 'itmViewMiscLook', lisMenuMiscLook, @glue.miscClicked);
   activeScheme := EditorOpts.ReadPascalColorScheme;
   EditorOpts.AddHandlerAfterWrite(@glue.optionsWritten);
   OnRollThemeScheme := @rollThemeScheme;
+  OnRollThemeColors := @rollThemeMiscColors;
 end;
 
 { TMenuGlue }
@@ -123,6 +128,11 @@ end;
 procedure TMenuGlue.manageClicked(Sender: TObject);
 begin
   showSchemeManager;
+end;
+
+procedure TMenuGlue.miscClicked(Sender: TObject);
+begin
+  showMiscLook;
 end;
 
 procedure TMenuGlue.menuShown(Sender: TObject);

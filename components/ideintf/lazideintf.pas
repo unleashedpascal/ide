@@ -622,6 +622,9 @@ var
   // set by the IDE: rolls a random editor color scheme for the current IDE colors and makes it
   // current; with keepExisting a scheme rolled earlier stays as it is
   OnRollThemeScheme: procedure(keepExisting: boolean) = nil;
+  // set by the IDE: rolls the IDE colors outside the theme and the scheme (the messages window)
+  // for the current IDE colors when they are set to follow the theme; keepExisting as above
+  OnRollThemeColors: procedure(keepExisting: boolean) = nil;
 
 type
   TLazarusIDEBootHandlerType = (

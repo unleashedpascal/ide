@@ -122,6 +122,17 @@ procedure dropSchemePreview;
 // registers a scheme read from a user scheme file in the global list and in the working copy
 procedure registerUserScheme(cfg: TRttiXMLConfig; const fileName, name: string);
 
+// shared with the other color tools
+// percent of tint blended into base, per channel
+function mix(base, tint: TColor; percent: integer): TColor;
+function between(lo, hi: integer): integer;
+// hue wraps around, luminance and saturation are 0..255
+function hls(h, l, s: integer): TColor;
+// the color nudged a little, so a roll matched to the theme still varies
+function nearTheme(c: TColor): TColor;
+// a group line with its name set into it, in plain colors so it shows under any theme
+procedure paintGroupLine(box: TPaintBox);
+
 implementation
 
 uses
@@ -617,13 +628,11 @@ begin
   if not fLoading then preview;
 end;
 
-// a group line with its name set into it, in plain colors so it shows under any theme
-procedure TSchemeCreatorForm.LinePaint(Sender: TObject);
+procedure paintGroupLine(box: TPaintBox);
 const
   INDENT = 10;
   GAP = 6;
 begin
-  var box := Sender as TPaintBox;
   var canvas := box.Canvas;
   var y := box.Height div 2;
   canvas.Pen.Color := mix(box.Color, clWindowText, 35);
@@ -637,6 +646,11 @@ begin
   canvas.Line(0, y, INDENT, y);
   canvas.TextOut(INDENT+GAP, (box.Height-text.cy) div 2, box.Caption);
   canvas.Line(INDENT+GAP+text.cx+GAP, y, box.Width, y);
+end;
+
+procedure TSchemeCreatorForm.LinePaint(Sender: TObject);
+begin
+  paintGroupLine(Sender as TPaintBox);
 end;
 
 procedure TSchemeCreatorForm.DividerToggled(Sender: TObject);

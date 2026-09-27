@@ -101,6 +101,16 @@ const
     );
 
 type
+  // the font of the messages window and the room around each line; an empty name or a zero
+  // size keeps the IDE font, the other values are pixels at 96 dpi
+  TMsgWndTextStyle = record
+    FontName: string;
+    FontSize: integer;
+    CharSpacing: integer;
+    PaddingTop, PaddingBottom, PaddingLeft, PaddingRight: integer;
+  end;
+
+type
   { TCustomDesktopOpt }
 
   TCustomDesktopOpt = class
@@ -319,6 +329,7 @@ type
     FMsgViewFilenameStyle: TMsgWndFileNameStyle;
     FMsgViewColors: array[TMsgWndColor] of TColor;
     FMsgColors: array[TMessageLineUrgency] of TColor;
+    FMsgViewTextStyle: TMsgWndTextStyle;
     FMsgViewFilters: TLMsgViewFilters;
     // desktops
     FDesktops: TDesktopOptList;
@@ -427,6 +438,7 @@ type
     property MsgViewColors[c: TMsgWndColor]: TColor read GetMsgViewColors write SetMsgViewColors;
     property MsgViewFilters: TLMsgViewFilters read FMsgViewFilters;
     property MsgColors[u: TMessageLineUrgency]: TColor read GetMsgColors write SetMsgColors;
+    property MsgViewTextStyle: TMsgWndTextStyle read FMsgViewTextStyle write FMsgViewTextStyle;
     // desktops
     property Desktops: TDesktopOptList read FDesktops;
     property Desktop: TDesktopOpt read FDesktop;               // the working desktop, standalone
@@ -1215,6 +1227,15 @@ begin
   for u:=low(TMessageLineUrgency) to high(TMessageLineUrgency) do
     fMsgColors[u] := XMLCfg.GetValue(
       Path+'MsgView/MsgColors/'+dbgs(u),clDefault);
+  with FMsgViewTextStyle do begin
+    FontName:=XMLCfg.GetValue(Path+'MsgView/Text/FontName','');
+    FontSize:=XMLCfg.GetValue(Path+'MsgView/Text/FontSize',0);
+    CharSpacing:=XMLCfg.GetValue(Path+'MsgView/Text/CharSpacing',0);
+    PaddingTop:=XMLCfg.GetValue(Path+'MsgView/Text/PaddingTop',0);
+    PaddingBottom:=XMLCfg.GetValue(Path+'MsgView/Text/PaddingBottom',0);
+    PaddingLeft:=XMLCfg.GetValue(Path+'MsgView/Text/PaddingLeft',0);
+    PaddingRight:=XMLCfg.GetValue(Path+'MsgView/Text/PaddingRight',0);
+  end;
   FMsgViewFilters.LoadFromXMLConfig(XMLCfg,'MsgView/Filters/');
   // IDEEditorGroups
   for i := 0 to IDEEditorGroups.Count-1 do
@@ -1347,6 +1368,15 @@ begin
   for u:=low(TMessageLineUrgency) to high(TMessageLineUrgency) do
     XMLCfg.SetDeleteValue(Path+'MsgView/MsgColors/'+dbgs(u),
     fMsgColors[u],clDefault);
+  with FMsgViewTextStyle do begin
+    XMLCfg.SetDeleteValue(Path+'MsgView/Text/FontName',FontName,'');
+    XMLCfg.SetDeleteValue(Path+'MsgView/Text/FontSize',FontSize,0);
+    XMLCfg.SetDeleteValue(Path+'MsgView/Text/CharSpacing',CharSpacing,0);
+    XMLCfg.SetDeleteValue(Path+'MsgView/Text/PaddingTop',PaddingTop,0);
+    XMLCfg.SetDeleteValue(Path+'MsgView/Text/PaddingBottom',PaddingBottom,0);
+    XMLCfg.SetDeleteValue(Path+'MsgView/Text/PaddingLeft',PaddingLeft,0);
+    XMLCfg.SetDeleteValue(Path+'MsgView/Text/PaddingRight',PaddingRight,0);
+  end;
   MsgViewFilters.SaveToXMLConfig(XMLCfg,'MsgView/Filters/');
   // IDEEditorGroups
   for i := 0 to IDEEditorGroups.Count-1 do

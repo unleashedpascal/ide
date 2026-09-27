@@ -196,6 +196,7 @@ type
     fScrollTopMax: integer;
     FSourceMarks: TETMarks;
     FTextColor: TColor;
+    FTextStyle: TMsgWndTextStyle;
     fUpdateLock: integer;
     FUpdateTimer: TTimer;
     fSomeViewsRunning: boolean;
@@ -247,6 +248,8 @@ type
     procedure SetSearchText(AValue: string);
     procedure SetSourceMarks(AValue: TETMarks);
     procedure SetTextColor(AValue: TColor);
+    procedure SetTextStyle(const AValue: TMsgWndTextStyle);
+    procedure UpdateItemHeight;
     procedure SetUrgencyStyles(Urgency: TMessageLineUrgency;
       AValue: TMsgCtrlUrgencyStyle);
     procedure SetAutoHeaderBackground(AValue: TColor);
@@ -266,6 +269,7 @@ type
     procedure Notification(AComponent: TComponent; Operation: TOperation); override;
     procedure Paint; override;
     procedure CreateWnd; override;
+    procedure FontChanged(Sender: TObject); override;
     procedure DoSetBounds(ALeft, ATop, AWidth, AHeight: integer); override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
@@ -351,6 +355,7 @@ type
     property ShowHint default true;
     property SourceMarks: TETMarks read FSourceMarks write SetSourceMarks;
     property TextColor: TColor read FTextColor write SetTextColor default MsgWndDefTextColor;
+    property TextStyle: TMsgWndTextStyle read FTextStyle write SetTextStyle;
     property UrgencyStyles[Urgency: TMessageLineUrgency]: TMsgCtrlUrgencyStyle read GetUrgencyStyles write SetUrgencyStyles;
   end;
 
@@ -1689,6 +1694,27 @@ begin
   Invalidate;
 end;
 
+// the IDE font first, so a cleared name or size falls back to it
+procedure TMessagesCtrl.SetTextStyle(const AValue: TMsgWndTextStyle);
+begin
+  FTextStyle:=AValue;
+  ParentFont:=true;
+  if AValue.FontName<>'' then
+    Font.Name:=AValue.FontName;
+  if AValue.FontSize>0 then
+    Font.Size:=AValue.FontSize;
+  UpdateItemHeight;
+  Invalidate;
+end;
+
+// the text height plus the room above and below a line
+procedure TMessagesCtrl.UpdateItemHeight;
+begin
+  if not HandleAllocated then exit;
+  ItemHeight:=Canvas.TextHeight('Mg')+2
+    +Scale96ToFont(FTextStyle.PaddingTop)+Scale96ToFont(FTextStyle.PaddingBottom);
+end;
+
 procedure TMessagesCtrl.SetUrgencyStyles(Urgency: TMessageLineUrgency;
   AValue: TMsgCtrlUrgencyStyle);
 begin
@@ -1959,6 +1985,48 @@ end;
 procedure TMessagesCtrl.Paint;
 var
   LoSearchText: string;
+  PadTop, PadBottom, PadLeft, PadRight, CharSpacing: integer;
+
+  // with CharSpacing the glyphs are measured one by one, the same way they are drawn
+  function TextWidth(const aTxt: string): integer;
+  var
+    p, l: integer;
+  begin
+    if CharSpacing=0 then
+      exit(Canvas.TextWidth(aTxt));
+    Result:=0;
+    p:=1;
+    while p<=length(aTxt) do begin
+      l:=UTF8CodepointSize(@aTxt[p]);
+      inc(Result,Canvas.TextWidth(copy(aTxt,p,l))+CharSpacing);
+      inc(p,l);
+    end;
+  end;
+
+  // glyph by glyph with CharSpacing between them; a selected line goes through the theme so
+  // the text keeps the selection color
+  procedure DrawSpaced(const TextRect: TRect; const aTxt: string;
+    const Details: TThemedElementDetails; Themed: boolean);
+  var
+    p, l, x, w, y: integer;
+    Glyph: string;
+  begin
+    x:=TextRect.Left+2;
+    y:=(TextRect.Top+TextRect.Bottom-Canvas.TextHeight('Mg')) div 2;
+    p:=1;
+    while p<=length(aTxt) do begin
+      l:=UTF8CodepointSize(@aTxt[p]);
+      Glyph:=copy(aTxt,p,l);
+      w:=Canvas.TextWidth(Glyph);
+      if Themed then
+        ThemeServices.DrawText(Canvas, Details, Glyph, Rect(x,TextRect.Top,x+w,TextRect.Bottom),
+          DT_LEFT or DT_VCENTER or DT_SINGLELINE or DT_NOPREFIX, 0)
+      else
+        Canvas.TextOut(x,y,Glyph);
+      inc(x,w+CharSpacing);
+      inc(p,l);
+    end;
+  end;
 
   procedure DrawText(ARect: TRect; aTxt: string; IsSelected: boolean;
     TxtColor: TColor);
@@ -1973,16 +2041,21 @@ var
   begin
     Canvas.Font.Color:=Font.Color;
     TextRect:=ARect;
-    TextRect.Right:=TextRect.Left+Canvas.TextWidth(aTxt)+2;
+    inc(TextRect.Left,PadLeft);
+    TextRect.Right:=TextRect.Left+TextWidth(aTxt)+2;
     if IsSelected then begin
       if (mcsFocused in FStates) or (mcoAlwaysDrawFocused in Options) then
         Details:=ThemeServices.GetElementDetails(ttItemSelected)
       else
         Details:=ThemeServices.GetElementDetails(ttItemSelectedNotFocus);
-      ThemeServices.DrawElement(Canvas.Handle, Details, TextRect, nil);
+      ThemeServices.DrawElement(Canvas.Handle, Details,
+        Rect(TextRect.Left,TextRect.Top,TextRect.Right+PadRight,TextRect.Bottom), nil);
       TxtColor:=clDefault;
     end else
       Details:=ThemeServices.GetElementDetails(ttItemNormal);
+    // the text and its search marks sit between the paddings
+    inc(TextRect.Top,PadTop);
+    dec(TextRect.Bottom,PadBottom);
     if LoSearchText<>'' then begin
       LoTxt:=UTF8LowerCase(aTxt);
       p:=1;
@@ -1991,19 +2064,22 @@ var
         p:=PosEx(LoSearchText,LoTxt,LastP);
         if p<1 then break;
         Canvas.Brush.Color:=clHighlight;
-        aLeft:=TextRect.Left+Canvas.TextWidth(copy(ATxt,1,p-1));
-        aRight:=aLeft+Canvas.TextWidth(copy(ATxt,p,length(LoSearchText)));
+        aLeft:=TextRect.Left+TextWidth(copy(ATxt,1,p-1));
+        aRight:=aLeft+TextWidth(copy(ATxt,p,length(LoSearchText)));
         Canvas.FillRect(aLeft,TextRect.Top+1,aRight,TextRect.Bottom-1);
         LastP:=p+length(LoSearchText);
       end;
       Canvas.Brush.Color:=BackgroundColor;
     end;
-    if TxtColor=clDefault then
+    if TxtColor<>clDefault then
+      Canvas.Font.Color:=TxtColor;
+    if CharSpacing<>0 then
+      DrawSpaced(TextRect,ATxt,Details,TxtColor=clDefault)
+    else if TxtColor=clDefault then
       ThemeServices.DrawText(Canvas, Details, ATxt, TextRect,
         DT_CENTER or DT_VCENTER or DT_SINGLELINE or DT_NOPREFIX, 0)
     else begin
       p:=(TextRect.Top+TextRect.Bottom-Canvas.TextHeight('Mg')) div 2;
-      Canvas.Font.Color:=TxtColor;
       Canvas.TextOut(TextRect.Left+2,p,ATxt);
     end;
   end;
@@ -2032,6 +2108,11 @@ begin
   Canvas.FillRect(0,0,ClientWidth,ClientHeight);
   Indent:=BorderWidth+2;
   LoSearchText:=fLastLoSearchText;
+  PadTop:=Scale96ToFont(FTextStyle.PaddingTop);
+  PadBottom:=Scale96ToFont(FTextStyle.PaddingBottom);
+  PadLeft:=Scale96ToFont(FTextStyle.PaddingLeft);
+  PadRight:=Scale96ToFont(FTextStyle.PaddingRight);
+  CharSpacing:=Scale96ToFont(FTextStyle.CharSpacing);
   fHasHeaderHint:=False;
 
   // paint from top to bottom
@@ -2174,8 +2255,14 @@ end;
 procedure TMessagesCtrl.CreateWnd;
 begin
   inherited CreateWnd;
-  ItemHeight:=Canvas.TextHeight('Mg')+2;
+  UpdateItemHeight;
   UpdateScrollBar(false);
+end;
+
+procedure TMessagesCtrl.FontChanged(Sender: TObject);
+begin
+  inherited FontChanged(Sender);
+  UpdateItemHeight;
 end;
 
 procedure TMessagesCtrl.DoSetBounds(ALeft, ATop, AWidth, AHeight: integer);
@@ -3134,6 +3221,7 @@ begin
   HeaderBackground[lmvtsSuccess]:=EnvironmentGuiOpts.MsgViewColors[mwSuccess];
   HeaderBackground[lmvtsFailed]:=EnvironmentGuiOpts.MsgViewColors[mwFailed];
   TextColor:=EnvironmentGuiOpts.MsgViewColors[mwTextColor];
+  TextStyle:=EnvironmentGuiOpts.MsgViewTextStyle;
   NewOptions:=Options;
   SetOption(mcoSingleClickOpensFile,not EnvironmentGuiOpts.PreferDoubleClick);
   SetOption(mcoShowMsgIcons,EnvironmentGuiOpts.ShowMessagesIcons);

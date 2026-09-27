@@ -1,0 +1,411 @@
+object MiscLookForm: TMiscLookForm
+  Left = 400
+  Height = 520
+  Top = 200
+  Width = 420
+  BorderIcons = [biSystemMenu]
+  BorderStyle = bsSingle
+  Caption = 'MiscLookForm'
+  ClientHeight = 520
+  ClientWidth = 420
+  FormStyle = fsStayOnTop
+  OnClose = FormClose
+  OnCreate = FormCreate
+  Position = poScreenCenter
+  object LineMessages: TPaintBox
+    Left = 12
+    Height = 17
+    Top = 12
+    Width = 396
+    OnPaint = LinePaint
+  end
+  object LabelBackground: TLabel
+    Left = 12
+    Height = 15
+    Top = 43
+    Width = 90
+    Caption = 'LabelBackground'
+    ParentColor = False
+  end
+  object ButtonBackground: TColorButton
+    Left = 108
+    Height = 24
+    Top = 39
+    Width = 92
+    ButtonColor = clBlack
+    OnColorChanged = ColorChanged
+  end
+  object LabelText: TLabel
+    Left = 220
+    Height = 15
+    Top = 43
+    Width = 90
+    Caption = 'LabelText'
+    ParentColor = False
+  end
+  object ButtonText: TColorButton
+    Left = 316
+    Height = 24
+    Top = 39
+    Width = 92
+    ButtonColor = clBlack
+    OnColorChanged = ColorChanged
+  end
+  object LabelRunning: TLabel
+    Left = 12
+    Height = 15
+    Top = 73
+    Width = 90
+    Caption = 'LabelRunning'
+    ParentColor = False
+  end
+  object ButtonRunning: TColorButton
+    Left = 108
+    Height = 24
+    Top = 69
+    Width = 92
+    ButtonColor = clBlack
+    OnColorChanged = ColorChanged
+  end
+  object LabelSuccess: TLabel
+    Left = 220
+    Height = 15
+    Top = 73
+    Width = 90
+    Caption = 'LabelSuccess'
+    ParentColor = False
+  end
+  object ButtonSuccess: TColorButton
+    Left = 316
+    Height = 24
+    Top = 69
+    Width = 92
+    ButtonColor = clBlack
+    OnColorChanged = ColorChanged
+  end
+  object LabelFailed: TLabel
+    Left = 12
+    Height = 15
+    Top = 103
+    Width = 90
+    Caption = 'LabelFailed'
+    ParentColor = False
+  end
+  object ButtonFailed: TColorButton
+    Left = 108
+    Height = 24
+    Top = 99
+    Width = 92
+    ButtonColor = clBlack
+    OnColorChanged = ColorChanged
+  end
+  object LabelAutoHeader: TLabel
+    Left = 220
+    Height = 15
+    Top = 103
+    Width = 90
+    Caption = 'LabelAutoHeader'
+    ParentColor = False
+  end
+  object ButtonAutoHeader: TColorButton
+    Left = 316
+    Height = 24
+    Top = 99
+    Width = 92
+    ButtonColor = clBlack
+    OnColorChanged = ColorChanged
+  end
+  object LabelHint: TLabel
+    Left = 12
+    Height = 15
+    Top = 133
+    Width = 90
+    Caption = 'LabelHint'
+    ParentColor = False
+  end
+  object ButtonHint: TColorButton
+    Left = 108
+    Height = 24
+    Top = 129
+    Width = 92
+    ButtonColor = clBlack
+    OnColorChanged = ColorChanged
+  end
+  object LabelNote: TLabel
+    Left = 220
+    Height = 15
+    Top = 133
+    Width = 90
+    Caption = 'LabelNote'
+    ParentColor = False
+  end
+  object ButtonNote: TColorButton
+    Left = 316
+    Height = 24
+    Top = 129
+    Width = 92
+    ButtonColor = clBlack
+    OnColorChanged = ColorChanged
+  end
+  object LabelWarning: TLabel
+    Left = 12
+    Height = 15
+    Top = 163
+    Width = 90
+    Caption = 'LabelWarning'
+    ParentColor = False
+  end
+  object ButtonWarning: TColorButton
+    Left = 108
+    Height = 24
+    Top = 159
+    Width = 92
+    ButtonColor = clBlack
+    OnColorChanged = ColorChanged
+  end
+  object LabelError: TLabel
+    Left = 220
+    Height = 15
+    Top = 163
+    Width = 90
+    Caption = 'LabelError'
+    ParentColor = False
+  end
+  object ButtonError: TColorButton
+    Left = 316
+    Height = 24
+    Top = 159
+    Width = 92
+    ButtonColor = clBlack
+    OnColorChanged = ColorChanged
+  end
+  object LabelFatal: TLabel
+    Left = 12
+    Height = 15
+    Top = 193
+    Width = 90
+    Caption = 'LabelFatal'
+    ParentColor = False
+  end
+  object ButtonFatal: TColorButton
+    Left = 108
+    Height = 24
+    Top = 189
+    Width = 92
+    ButtonColor = clBlack
+    OnColorChanged = ColorChanged
+  end
+  object CheckBoxAutoMatch: TCheckBox
+    Left = 12
+    Height = 19
+    Top = 222
+    Width = 396
+    Caption = 'CheckBoxAutoMatch'
+    Checked = True
+    State = cbChecked
+    OnChange = CheckBoxAutoMatchChange
+    TabOrder = 0
+  end
+  object LineRoll: TPaintBox
+    Left = 12
+    Height = 17
+    Top = 249
+    Width = 396
+    OnPaint = LinePaint
+  end
+  object ButtonRandomDark: TButton
+    Left = 12
+    Height = 26
+    Top = 272
+    Width = 96
+    Caption = 'ButtonRandomDark'
+    OnClick = ButtonRandomClick
+    TabOrder = 1
+  end
+  object ButtonRandomLight: TButton
+    Left = 114
+    Height = 26
+    Top = 272
+    Width = 96
+    Caption = 'ButtonRandomLight'
+    OnClick = ButtonRandomClick
+    TabOrder = 2
+  end
+  object ButtonPrevious: TButton
+    Left = 238
+    Height = 26
+    Top = 272
+    Width = 82
+    Caption = 'ButtonPrevious'
+    Enabled = False
+    OnClick = ButtonPreviousClick
+    TabOrder = 3
+  end
+  object ButtonNext: TButton
+    Left = 326
+    Height = 26
+    Top = 272
+    Width = 82
+    Caption = 'ButtonNext'
+    Enabled = False
+    OnClick = ButtonNextClick
+    TabOrder = 4
+  end
+  object LineText: TPaintBox
+    Left = 12
+    Height = 17
+    Top = 306
+    Width = 396
+    OnPaint = LinePaint
+  end
+  object LabelFont: TLabel
+    Left = 12
+    Height = 15
+    Top = 337
+    Width = 90
+    Caption = 'LabelFont'
+    ParentColor = False
+  end
+  object ComboFont: TComboBox
+    Left = 108
+    Height = 23
+    Top = 333
+    Width = 300
+    AutoComplete = True
+    ItemHeight = 15
+    OnChange = TextStyleChanged
+    Sorted = True
+    TabOrder = 5
+    Text = ''
+  end
+  object LabelSize: TLabel
+    Left = 12
+    Height = 15
+    Top = 367
+    Width = 90
+    Caption = 'LabelSize'
+    ParentColor = False
+  end
+  object SpinSize: TSpinEdit
+    Left = 108
+    Height = 23
+    Top = 363
+    Width = 92
+    MaxValue = 72
+    OnChange = TextStyleChanged
+    TabOrder = 6
+  end
+  object LabelSpacing: TLabel
+    Left = 220
+    Height = 15
+    Top = 367
+    Width = 90
+    Caption = 'LabelSpacing'
+    ParentColor = False
+  end
+  object SpinSpacing: TSpinEdit
+    Left = 316
+    Height = 23
+    Top = 363
+    Width = 92
+    MaxValue = 20
+    MinValue = -5
+    OnChange = TextStyleChanged
+    TabOrder = 7
+  end
+  object LabelPaddingTop: TLabel
+    Left = 12
+    Height = 15
+    Top = 397
+    Width = 90
+    Caption = 'LabelPaddingTop'
+    ParentColor = False
+  end
+  object SpinPaddingTop: TSpinEdit
+    Left = 108
+    Height = 23
+    Top = 393
+    Width = 92
+    MaxValue = 50
+    OnChange = TextStyleChanged
+    TabOrder = 8
+  end
+  object LabelPaddingBottom: TLabel
+    Left = 220
+    Height = 15
+    Top = 397
+    Width = 90
+    Caption = 'LabelPaddingBottom'
+    ParentColor = False
+  end
+  object SpinPaddingBottom: TSpinEdit
+    Left = 316
+    Height = 23
+    Top = 393
+    Width = 92
+    MaxValue = 50
+    OnChange = TextStyleChanged
+    TabOrder = 9
+  end
+  object LabelPaddingLeft: TLabel
+    Left = 12
+    Height = 15
+    Top = 427
+    Width = 90
+    Caption = 'LabelPaddingLeft'
+    ParentColor = False
+  end
+  object SpinPaddingLeft: TSpinEdit
+    Left = 108
+    Height = 23
+    Top = 423
+    Width = 92
+    MaxValue = 50
+    OnChange = TextStyleChanged
+    TabOrder = 10
+  end
+  object LabelPaddingRight: TLabel
+    Left = 220
+    Height = 15
+    Top = 427
+    Width = 90
+    Caption = 'LabelPaddingRight'
+    ParentColor = False
+  end
+  object SpinPaddingRight: TSpinEdit
+    Left = 316
+    Height = 23
+    Top = 423
+    Width = 92
+    MaxValue = 50
+    OnChange = TextStyleChanged
+    TabOrder = 11
+  end
+  object LineButtons: TPaintBox
+    Left = 12
+    Height = 17
+    Top = 455
+    Width = 396
+    OnPaint = LinePaint
+  end
+  object ButtonSave: TButton
+    Left = 232
+    Height = 28
+    Top = 480
+    Width = 86
+    Caption = 'ButtonSave'
+    Default = True
+    OnClick = ButtonSaveClick
+    TabOrder = 12
+  end
+  object ButtonClose: TButton
+    Left = 322
+    Height = 28
+    Top = 480
+    Width = 86
+    Cancel = True
+    Caption = 'ButtonClose'
+    OnClick = ButtonCloseClick
+    TabOrder = 13
+  end
+end
