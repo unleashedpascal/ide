@@ -46,6 +46,6 @@ msgid "Follow system"
 msgstr ""
 
 #: themesstrings.menu_theme
-msgid "Theme"
+msgid "Themes"
 msgstr ""
 
