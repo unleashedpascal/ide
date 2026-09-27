@@ -15,7 +15,7 @@ unit ThemesStrings;
 interface
 
 resourcestring
-  MENU_THEME   = 'Theme';
+  MENU_THEME   = 'Themes';
   MENU_DEFAULT = 'None';
   MENU_SYSTEM  = 'Follow system';
   MENU_LIGHT  = 'Light';

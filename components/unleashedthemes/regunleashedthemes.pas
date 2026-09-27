@@ -48,6 +48,7 @@ begin
   syncChecks;
   // the palette is on screen already, so the roll reads the new colors
   if autoSchemeItem.Checked and Assigned(OnRollThemeScheme) then OnRollThemeScheme(false);
+  if Assigned(OnRollThemeColors) then OnRollThemeColors(false);
 end;
 
 procedure TMenuGlue.clicked(Sender: TObject);
@@ -62,10 +63,12 @@ begin
   if autoSchemeItem.Checked and Assigned(OnRollThemeScheme) then OnRollThemeScheme(false);
 end;
 
-// the first start has no scheme for the theme yet, so it rolls one the way a theme change does
+// the first start has no scheme and no colors for the theme yet, so it rolls them the way a theme
+// change does
 procedure TMenuGlue.windowsRestored(Sender: TObject);
 begin
   if autoSchemeItem.Checked and Assigned(OnRollThemeScheme) then OnRollThemeScheme(true);
+  if Assigned(OnRollThemeColors) then OnRollThemeColors(true);
 end;
 
 function addItem(parent: TIDEMenuSection; kind: TThemeKind; const name, caption: string): TIDEMenuCommand;
@@ -79,8 +82,16 @@ end;
 procedure Register;
 begin
   glue := TMenuGlue.Create(Application);
-  var section := RegisterIDEMenuSection(mnuView, 'itmViewTheme');
-  var menu := RegisterIDESubMenu(section, 'itmViewThemeMenu', MENU_THEME);
+  // the IDE keeps its color tools in one group at the end of View, the themes go first
+  var host := mnuView.FindByName('itmViewColors');
+  var menu: TIDEMenuSection;
+  if host is TIDEMenuSection then begin
+    menu := TIDEMenuSection.Create('itmViewThemeMenu');
+    menu.ChildrenAsSubMenu := true;
+    menu.Caption := MENU_THEME;
+    TIDEMenuSection(host).AddFirst(menu);
+  end else
+    menu := RegisterIDESubMenu(RegisterIDEMenuSection(mnuView, 'itmViewTheme'), 'itmViewThemeMenu', MENU_THEME);
   // sections draw the separators: basic choices, light themes, dark themes
   var basic := RegisterIDEMenuSection(menu, 'itmViewThemeBasic');
   addItem(basic, tkDefault, 'itmViewThemeDefault', MENU_DEFAULT);
