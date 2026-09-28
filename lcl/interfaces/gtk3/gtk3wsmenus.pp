@@ -316,6 +316,8 @@ begin
   if AMenuItem.IsCheckItem and
      not Gtk3WidgetIsA(Item.Widget, gtk_check_menu_item_get_type) then
     Item.ReplaceWidget;
+  if AMenuItem.RadioItem then
+    Item.SyncRadioGroup;
   Item.SetCheck(Checked);
   Result := True;
 end;

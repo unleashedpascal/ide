@@ -621,6 +621,7 @@ type
     procedure InitializeWidget; override;
     procedure ReplaceWidget;
     procedure SetCheck(ACheck:boolean);
+    procedure SyncRadioGroup;
     procedure SetShortCut(AShortCut, AShortCutKey2: TShortCut);
     property Caption: string read GetCaption write SetCaption;
   end;
@@ -9757,6 +9758,42 @@ begin
     PGtkCheckMenuItem(FWidget)^.active := ACheck;
   finally
     dec(Lock);
+  end;
+end;
+
+// joins the gtk radio group of a sibling with the same GroupIndex. CreateWidget
+// picks the group once, so a GroupIndex assigned after RadioItem leaves the
+// item alone in a group of one, where gtk refuses to uncheck it.
+procedure TGtk3MenuItem.SyncRadioGroup;
+var
+  i: Integer;
+  Sibling: TMenuItem;
+  SiblingWidget: PGtkWidget;
+  Group: PGSList;
+begin
+  if not IsValidHandle or not Gtk3IsRadioMenuItem(PGObject(FWidget)) or
+     not Assigned(MenuItem) or not Assigned(MenuItem.Parent) then
+    Exit;
+  for i := 0 to MenuItem.Parent.Count - 1 do
+  begin
+    Sibling := MenuItem.Parent.Items[i];
+    if (Sibling = MenuItem) or not Sibling.RadioItem or
+       (Sibling.GroupIndex <> MenuItem.GroupIndex) or not Sibling.HandleAllocated then
+      Continue;
+    SiblingWidget := TGtk3MenuItem(Sibling.Handle).Widget;
+    if not Gtk3IsRadioMenuItem(PGObject(SiblingWidget)) then
+      Continue;
+    Group := PGtkRadioMenuItem(SiblingWidget)^.get_group;
+    if g_slist_find(Group, Pgpointer(FWidget)) = nil then
+    begin
+      inc(Lock);
+      try
+        PGtkRadioMenuItem(FWidget)^.set_group(Group);
+      finally
+        dec(Lock);
+      end;
+    end;
+    Exit;
   end;
 end;
 
