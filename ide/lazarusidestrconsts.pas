@@ -6305,6 +6305,16 @@ resourcestring
   lisWhenOpeningASymlinkFileOpenTheTargetFileTheSymlink = 'When opening a symlink file, open the '
     +'target file, the symlink file, or ask';
   lisWhenOpeningSymlink = 'When opening a Symlink';
+  lisInstallRootTitle = 'Installation moved';
+  lisInstallRootUpdated = 'The installation was moved. Paths in the configuration were updated to the new location.';
+  lisInstallRootFailed = 'The installation was moved, but some configuration files could not be updated. Fix the errors below and start the IDE again.';
+  lisInstallRootPrevious = 'Previous location: %s';
+  lisInstallRootCurrent = 'Current location: %s';
+  lisInstallRootPathsUpdated = '%d paths updated';
+  lisInstallRootCannotWrite = 'cannot write %s';
+  lisInstallRootCopyAll = 'Copy all';
+  lisInstallRootContinue = 'Continue';
+  lisInstallRootContinueIn = 'Continue (%d...)';
 
 implementation
 

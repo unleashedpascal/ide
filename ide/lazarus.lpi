@@ -98,7 +98,7 @@
         <PackageName Value="UnleashedPanes"/>
       </Item19>
     </RequiredPackages>
-    <Units Count="215">
+    <Units Count="217">
       <Unit0>
         <Filename Value="lazarus.pp"/>
         <IsPartOfProject Value="True"/>
@@ -1473,6 +1473,19 @@
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="MiscLook"/>
       </Unit214>
+      <Unit215>
+        <Filename Value="installroot.pas"/>
+        <IsPartOfProject Value="True"/>
+        <UnitName Value="InstallRoot"/>
+      </Unit215>
+      <Unit216>
+        <Filename Value="installrootdlg.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="InstallRootForm"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Form"/>
+        <UnitName Value="InstallRootDlg"/>
+      </Unit216>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

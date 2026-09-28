@@ -1,0 +1,86 @@
+object InstallRootForm: TInstallRootForm
+  Left = 400
+  Height = 480
+  Top = 200
+  Width = 720
+  BorderIcons = [biSystemMenu]
+  Caption = 'InstallRootForm'
+  ClientHeight = 480
+  ClientWidth = 720
+  Constraints.MinHeight = 240
+  Constraints.MinWidth = 400
+  OnCreate = FormCreate
+  Position = poScreenCenter
+  object LabelInfo: TLabel
+    Left = 8
+    Height = 15
+    Top = 8
+    Width = 704
+    Align = alTop
+    BorderSpacing.Left = 8
+    BorderSpacing.Top = 8
+    BorderSpacing.Right = 8
+    Caption = 'LabelInfo'
+    WordWrap = True
+  end
+  object ListLog: TListBox
+    Left = 8
+    Height = 407
+    Top = 31
+    Width = 704
+    Align = alClient
+    BorderSpacing.Left = 8
+    BorderSpacing.Top = 8
+    BorderSpacing.Right = 8
+    ExtendedSelect = True
+    MultiSelect = True
+    OnDrawItem = ListLogDrawItem
+    PopupMenu = PopupLog
+    Style = lbOwnerDrawFixed
+    TabOrder = 0
+  end
+  object PanelButtons: TPanel
+    Left = 0
+    Height = 42
+    Top = 438
+    Width = 720
+    Align = alBottom
+    BevelOuter = bvNone
+    ClientHeight = 42
+    ClientWidth = 720
+    TabOrder = 1
+    object ButtonOk: TButton
+      Left = 612
+      Height = 26
+      Top = 8
+      Width = 100
+      Anchors = [akTop, akRight]
+      Caption = 'Continue'
+      Default = True
+      ModalResult = 1
+      TabOrder = 0
+    end
+  end
+  object TimerCountdown: TTimer
+    Enabled = False
+    OnTimer = TimerCountdownTimer
+    Left = 240
+    Top = 200
+  end
+  object PopupLog: TPopupMenu
+    Left = 336
+    Top = 200
+    object ItemCopy: TMenuItem
+      Caption = 'Copy'
+      OnClick = ItemCopyClick
+    end
+    object ItemCopyAll: TMenuItem
+      Caption = 'Copy all'
+      OnClick = ItemCopyAllClick
+    end
+    object ItemSelectAll: TMenuItem
+      Caption = 'Select all'
+      OnClick = ItemSelectAllClick
+    end
+  end
+end
