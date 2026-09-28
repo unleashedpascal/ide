@@ -135,6 +135,10 @@ begin
     FVisible := XMLConfig.GetValue(Path + 'Visible', cDefaultVisible);
     FPosition := XMLConfig.GetValue(Path + 'Position', cDefaultPosition);
     LoadButtonNames(XMLConfig, Path);
+    // Save drops the Count of an empty list, so a zero written by another
+    // tool means the same as no list at all
+    if ButtonNames.Count = 0 then
+      CreateDefaults;
   end
   else begin
     // Plan B: Load the old configuration. User settings are not lost.
