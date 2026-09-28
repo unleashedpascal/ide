@@ -56,6 +56,9 @@ uses
   {$IFDEF LCLCocoa}
   CocoaConfig,
   {$ENDIF}
+  {$IFDEF LCLGtk3}
+  LazGLib2, LazGdk3,
+  {$ENDIF}
   SysUtils,
   Interfaces,
   IDEInstances,//keep IDEInstances up so that it will be initialized soon
@@ -139,6 +142,14 @@ begin
   {$IF DEFINED(MSWINDOWS) AND DECLARED(GlobalSkipIfNoLeaks)}
   // don't show empty heaptrc output dialog on windows
   GlobalSkipIfNoLeaks := True;
+  {$ENDIF}
+
+  {$IFDEF LCLGtk3}
+  // the window manager names the application and finds its .desktop entry by
+  // the window class; the stock "lazarus" class matches any Lazarus installed
+  // before. Gdk reads both when it realizes the first window
+  g_set_prgname('unleashed-pascal-ide');
+  gdk_set_program_class('Unleashed Pascal IDE');
   {$ENDIF}
 
   Application.Initialize;
