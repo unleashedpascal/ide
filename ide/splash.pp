@@ -32,8 +32,7 @@ interface
 
 uses
   Classes, SysUtils,
-  Buttons, Controls, ExtCtrls, Forms, Graphics,
-  LazConf;
+  Buttons, Controls, ExtCtrls, Forms, Graphics;
 
 var
   ShowSplashScreen: boolean = true;
@@ -45,7 +44,6 @@ type
   TSplashForm = class(TForm)
     Image: TImage;
     procedure ApplicationOnIdle(Sender: TObject; var {%H-}Done: boolean);
-    procedure ImagePaint(Sender: TObject);
   private
     procedure LoadSplash;
   protected
@@ -66,24 +64,6 @@ uses
 {$R *.lfm}
 {$R ../images/splash_logo.res}
 
-const
-  VersionStyle: TTextStyle =
-    (
-      Alignment  : taCenter;
-      Layout     : tlCenter;
-      SingleLine : True;
-      Clipping   : True;
-      ExpandTabs : False;
-      ShowPrefix : False;
-      Wordbreak  : False;
-      Opaque     : False;
-      SystemFont : False;
-      RightToLeft: False;
-      EndEllipsis: False;
-    );
-  VersionFontStyle: TFontStyles = [fsBold];
-  VersionFontColor: TColor = clBlue;
-
 constructor TSplashForm.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -103,20 +83,6 @@ end;
 procedure TSplashForm.ApplicationOnIdle(Sender: TObject; var Done: boolean);
 begin
   Hide;
-end;
-
-procedure TSplashForm.ImagePaint(Sender: TObject);
-var
-  ATextRect: TRect;
-begin
-  ATextRect := Rect(
-    Image.Left,
-    Image.Height - Image.Canvas.TextHeight('Hg')*5 div 4,
-    Image.Width,
-    Image.Height);
-  Image.Canvas.Font.Style := VersionFontStyle;
-  Image.Canvas.Font.Color := VersionFontColor;
-  Image.Canvas.TextRect(ATextRect, ATextRect.Left, ATextRect.Top, LazarusVersionStr, VersionStyle);
 end;
 
 procedure TSplashForm.LoadSplash;
