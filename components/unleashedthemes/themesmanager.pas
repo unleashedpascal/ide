@@ -24,7 +24,7 @@ function currentThemeKind: TThemeKind;
 implementation
 
 uses
-  Classes, Forms, Themes{$ifdef LCLWin32}, ThemesPalette, ThemesWin32{$endif};
+  Classes, Forms, Themes{$ifdef LCLWin32}, ThemesPalette, ThemesWin32{$endif}{$ifdef LCLGtk3}, ThemesPalette, ThemesGtk3{$endif};
 
 type
 
@@ -52,7 +52,7 @@ begin
   var want := paletteKind(kind);
   if want = shown then exit;
   shown := want;
-  {$ifdef LCLWin32}
+  {$if defined(LCLWin32) or defined(LCLGtk3)}
   match want of
     tkLight: applyPalette(lightPalette);
     tkDark: applyPalette(darkPalette);

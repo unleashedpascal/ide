@@ -45,6 +45,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="themeswin32.pas"/>
         <UnitName Value="ThemesWin32"/>
       </Item>
+      <Item>
+        <Filename Value="themesgtk3.pas"/>
+        <UnitName Value="ThemesGtk3"/>
+      </Item>
     </Files>
     <i18n>
       <EnableI18N Value="True"/>
