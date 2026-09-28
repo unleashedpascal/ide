@@ -1797,8 +1797,13 @@ begin
   // exists, so we force uAllEditorToolbars.ReloadAll to rebuild it once the
   // optional button is appended.
   if (not EnvironmentOptions.InitialEditorToolbarAddonsDone) and (PackageGraph<>nil) then begin
-    with EnvironmentGuiOpts.Desktop.EditorToolBarOptions.ButtonNames do begin
-      if (IndexOf('CPU-View')<0) and (PackageGraph.FindInstalledPackageMatching('CPUView_*')<>nil) then Add('CPU-View');
+    if PackageGraph.FindInstalledPackageMatching('CPUView_*')<>nil then begin
+      // the working copy and the stored desktop are separate objects and
+      // either one replaces the other later on, so both get the button
+      with EnvironmentGuiOpts.Desktop.EditorToolBarOptions.ButtonNames do
+        if IndexOf('CPU-View')<0 then Add('CPU-View');
+      with EnvironmentGuiOpts.ActiveDesktop.EditorToolBarOptions.ButtonNames do
+        if IndexOf('CPU-View')<0 then Add('CPU-View');
     end;
     EnvironmentOptions.InitialEditorToolbarAddonsDone := true;
     if Assigned(uAllEditorToolbars) then
