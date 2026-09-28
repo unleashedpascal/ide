@@ -105,6 +105,16 @@ const
   );
 
 const
+  // the install root recorded inside the config directory
+  RootPathFile = '.rootpath';
+
+// the config_lazarus directory beside the program directory
+function SiblingConfigPath: string;
+// true when the program runs outside the install root recorded in the
+// config_lazarus beside it, i.e. the install was copied or moved
+function InstallRootMismatch: boolean;
+
+const
   // startlazarus options
   StartLazarusPidOpt   = '--lazarus-pid=';
   StartLazarusDebugOpt = '--debug';
@@ -162,6 +172,40 @@ begin
     CfgFileContent.LoadFromFile(GetCfgFileName);
   end;
   Result := CfgFileContent;
+end;
+
+function SiblingConfigPath: string;
+begin
+  Result:=ExtractFilePath(ChompPathDelim(ProgramDirectoryWithBundle))+'config_lazarus';
+end;
+
+function InstallRootMismatch: boolean;
+var
+  Recorded: String;
+begin
+  Result:=false;
+  Recorded:=AppendPathDelim(SiblingConfigPath)+RootPathFile;
+  if not FileExistsUTF8(Recorded) then exit;
+  Recorded:=Trim(ReadFileToString(Recorded));
+  Result:=(Recorded<>'') and (CompareFilenames(AppendPathDelim(Recorded),
+    ExtractFilePath(ChompPathDelim(ProgramDirectoryWithBundle)))<>0);
+end;
+
+// true for a --pcp option to drop in favor of the config_lazarus beside the
+// program directory: the install was copied or moved, or the directory is gone
+function PrimaryConfigPathIgnored(const aParam: string): boolean;
+var
+  Path: String;
+begin
+  Result:=false;
+  if LazStartsText(PrimaryConfPathOptLong,aParam) then
+    Path:=copy(aParam,length(PrimaryConfPathOptLong)+1,length(aParam))
+  else if LazStartsText(PrimaryConfPathOptShort,aParam) then
+    Path:=copy(aParam,length(PrimaryConfPathOptShort)+1,length(aParam))
+  else
+    exit;
+  Result:=InstallRootMismatch
+    or ((not DirectoryExistsUTF8(Path)) and DirectoryExistsUTF8(SiblingConfigPath));
 end;
 
 function GetParamsAndCfgFile: TStrings;
@@ -247,6 +291,11 @@ begin
 
           ExpandCfgFilename(s);
 
+          if PrimaryConfigPathIgnored(s) then begin
+            debugln('NOTE: lazarus.cfg --pcp ignored, using config_lazarus beside the program: ',s);
+            continue;
+          end;
+
           ParamsAndCfgFileContent.Add(s);
         end
       else
@@ -259,9 +308,16 @@ begin
     end;
   end;
 
-  // append the cmd line params
-  for i := 1 to Paramcount do
-    ParamsAndCfgFileContent.Add(ParamStrUTF8(i));
+  // append the cmd line params; a shortcut made before the install was
+  // copied or moved still carries the old config path
+  for i := 1 to Paramcount do begin
+    s := ParamStrUTF8(i);
+    if PrimaryConfigPathIgnored(s) then begin
+      debugln('NOTE: --pcp ignored, using config_lazarus beside the program: ',s);
+      continue;
+    end;
+    ParamsAndCfgFileContent.Add(s);
+  end;
 
   // delete duplicates, last wins
   CleanDuplicates([PrimaryConfPathOptShort,PrimaryConfPathOptLong]);

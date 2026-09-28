@@ -133,7 +133,11 @@ begin
   // The RTL defines AllowDirectorySeparators ['/','\'] for historical reasons.
   AllowDirectorySeparators:=['/'];
 
-  PrimaryConfigPath:=ExpandFileNameUTF8('~/.lazarus');
+  // config_lazarus beside the program directory wins when it exists,
+  // --pcp still overrides this
+  PrimaryConfigPath:=ExtractFilePath(ChompPathDelim(ProgramDirectory))+'config_lazarus';
+  if not DirPathExists(PrimaryConfigPath) then
+    PrimaryConfigPath:=ExpandFileNameUTF8('~/.lazarus');
   SecondaryConfigPath:='/etc/lazarus';
 end;
 

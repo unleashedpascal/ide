@@ -62,7 +62,7 @@ uses
   Forms, LazUtilities, LazLoggerBase, ColorTTY,
   IDEOptionsIntf,
   LazConf, IDEGuiCmdLine,
-  Splash,
+  Splash, InstallRootDlg,
   Main,
   LazDebuggerFpLldb, LazDebuggerFp, laz.virtualtreeview_package,
   LazControlDsgn,
@@ -149,6 +149,7 @@ begin
   TMainIDE.ParseCmdLineOptions;
   if not SetupMainIDEInstance then exit;
   if Application.Terminated then exit;
+  if not CheckInstallRoot then exit;
 
   // Show splashform
   if ShowSplashScreen then
