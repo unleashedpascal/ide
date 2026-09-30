@@ -57,7 +57,7 @@ uses
   CocoaConfig,
   {$ENDIF}
   {$IFDEF LCLGtk3}
-  LazGLib2, LazGdk3,
+  LazGLib2, LazGdk3, Gtk3Startup,
   {$ENDIF}
   SysUtils,
   Interfaces,
@@ -150,6 +150,7 @@ begin
   // before. Gdk reads both when it realizes the first window
   g_set_prgname('unleashed-pascal-ide');
   gdk_set_program_class('Unleashed Pascal IDE');
+  useClassicScrollBars;
   {$ENDIF}
 
   Application.Initialize;
