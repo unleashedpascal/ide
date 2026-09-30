@@ -31,7 +31,7 @@ implementation
 {$ifdef LCLGtk3}
 uses
   Classes, SysUtils, Forms, Controls, Graphics, LCLType, LCLIntf, WSControls,
-  LazGtk3, LazGdk3, LazGObject2, LazGLib2, Gtk3Procs, Gtk3Objects;
+  LazGtk3, LazGdk3, LazGObject2, LazGLib2, Gtk3Int, Gtk3Procs, Gtk3Objects;
 
 var
   provider: PGtkCssProvider = nil;
@@ -130,6 +130,8 @@ begin
     'scrollbar, scrollbar trough, scrollbar contents { background-color: '+hex(pal[COLOR_SCROLLBAR])+'; background-image: none; border-color: '+hex(pal[COLOR_SCROLLBAR])+'; }'+
     'scrollbar slider { background-color: '+shadow+'; border-color: '+hex(pal[COLOR_SCROLLBAR])+'; }'+
     'scrollbar slider:hover, scrollbar slider:active { background-color: '+gray+'; }'+
+    // the corner where the two bars meet
+    'scrolledwindow junction { background-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-image: none; }'+
     'scale trough, progressbar trough { background-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-color: '+shadow+'; background-image: none; }'+
     'scale highlight, progressbar progress { background-color: '+highlight+'; border-color: '+highlight+'; background-image: none; }'+
     // separators and tooltips
@@ -208,6 +210,8 @@ begin
   var colors: array[0..MAX_SYS_COLORS] of DWORD;
   for var i := 0 to MAX_SYS_COLORS do colors[i] := newPal[i];
   pushSysColors(colors);
+  // the palette paints flat, like the win32 engine: no 3D rings on tool bars
+  Gtk3WidgetSet.FlatEdges := true;
   refreshLCL;
 end;
 
@@ -219,6 +223,7 @@ begin
   provider := nil;
   setPreferDark(stockDark);
   pushSysColors(stockColors);
+  Gtk3WidgetSet.FlatEdges := false;
   refreshLCL;
 end;
 {$endif}
