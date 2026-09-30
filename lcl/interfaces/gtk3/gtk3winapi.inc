@@ -978,16 +978,18 @@ begin
 
     BInner := False;
     BOuter := False;
+    // the color roles gdi gives the four edge styles, so a raised inner edge
+    // is the faint 3D light line and not the bright highlight
     if (Edge and BDR_RAISEDINNER) = BDR_RAISEDINNER then
     begin
-      InnerTL := TColorToTGdkRGBA(clBtnHighlight);
+      InnerTL := TColorToTGdkRGBA(cl3DLight);
       InnerBR := TColorToTGdkRGBA(clBtnShadow);
       BInner := True;
     end;
     if (Edge and BDR_SUNKENINNER) = BDR_SUNKENINNER then
     begin
-      InnerTL := TColorToTGdkRGBA(clBtnShadow);
-      InnerBR := TColorToTGdkRGBA(clBtnHighlight);
+      InnerTL := TColorToTGdkRGBA(cl3DDkShadow);
+      InnerBR := TColorToTGdkRGBA(cl3DLight);
       BInner := True;
     end;
     if (Edge and BDR_RAISEDOUTER) = BDR_RAISEDOUTER then
@@ -998,7 +1000,7 @@ begin
     end;
     if (Edge and BDR_SUNKENOUTER) = BDR_SUNKENOUTER then
     begin
-      OuterTL := TColorToTGdkRGBA(cl3DDkShadow);
+      OuterTL := TColorToTGdkRGBA(clBtnShadow);
       OuterBR := TColorToTGdkRGBA(clBtnHighlight);
       BOuter := True;
     end;
