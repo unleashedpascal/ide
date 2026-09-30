@@ -632,6 +632,7 @@ type
   private
     FBorderStyle: TBorderStyle;
     FHBarInitialized, FVBarInitialized: boolean;
+    FHOverlayBand, FVOverlayBand: gint;
     function GetHScrollBarPolicy: TGtkPolicyType;
     function GetVScrollBarPolicy: TGtkPolicyType;
     procedure SetBorderStyle(AValue: TBorderStyle);
@@ -660,6 +661,7 @@ type
     procedure Update(ARect: PRect); override;
     procedure SetScrollBarsSignalHandlers(const AIsHorizontalScrollBar: boolean);
     function getClientBounds: TRect; override;
+    function overlayBand(ABar: PGtkScrollbar; AVertical: boolean): gint;
     function getViewport: PGtkViewport; virtual;
     function getHorizontalScrollbar: PGtkScrollbar; virtual; abstract;
     function getVerticalScrollbar: PGtkScrollbar; virtual; abstract;
@@ -10586,6 +10588,32 @@ begin
 end;
 {$ENDIF}
 
+// the space an overlay bar takes while the pointer is away. Under the pointer
+// gtk widens the bar, and that width kept out of the client rect keeps the
+// layout from shifting on hover
+function TGtk3ScrollableWin.overlayBand(ABar: PGtkScrollbar; AVertical: boolean): gint;
+var
+  Size: gint;
+begin
+  if AVertical then
+    Size := ABar^.get_allocated_width
+  else
+    Size := ABar^.get_allocated_height;
+  if not ABar^.get_style_context^.has_class('hovering') then
+  begin
+    if AVertical then
+      FVOverlayBand := Size
+    else
+      FHOverlayBand := Size;
+  end;
+  if AVertical then
+    Result := FVOverlayBand
+  else
+    Result := FHOverlayBand;
+  if Result = 0 then
+    Result := Size;
+end;
+
 function TGtk3ScrollableWin.getClientBounds: TRect;
 var
   Allocation: TGtkAllocation;
@@ -10609,12 +10637,12 @@ begin
       begin
         Bar := getHorizontalScrollbar;
         if (Bar <> nil) and Gtk3IsWidget(Bar) and Bar^.get_visible and GTK3WidgetSet.OverlayScrolling then
-          HOffset := Bar^.get_allocated_height
+          HOffset := overlayBand(Bar, False)
         else
           HOffset := 0;
         Bar := getVerticalScrollbar;
         if (Bar <> nil) and Gtk3IsWidget(Bar) and Bar^.get_visible and GTK3WidgetSet.OverlayScrolling then
-          VOffset := Bar^.get_allocated_width
+          VOffset := overlayBand(Bar, True)
         else
           VOffset := 0;
         AWindow^.get_geometry(@x, @y, @w, @h);
@@ -10631,12 +10659,12 @@ begin
       begin
         Bar := getHorizontalScrollbar;
         if (Bar <> nil) and Gtk3IsWidget(Bar) and Bar^.get_visible and GTK3WidgetSet.OverlayScrolling then
-          HOffset := Bar^.get_allocated_height
+          HOffset := overlayBand(Bar, False)
         else
           HOffset := 0;
         Bar := getVerticalScrollbar;
         if (Bar <> nil) and Gtk3IsWidget(Bar) and Bar^.get_visible and GTK3WidgetSet.OverlayScrolling then
-          VOffset := Bar^.get_allocated_width
+          VOffset := overlayBand(Bar, True)
         else
           VOffset := 0;
         AViewPort^.get_view_window^.get_geometry(@x, @y, @w, @h);
@@ -13971,13 +13999,13 @@ begin
     begin
       Bar := getHorizontalScrollbar;
       if (Bar <> nil) and Gtk3IsWidget(Bar) and Bar^.get_visible and GTK3WidgetSet.OverlayScrolling then
-        HOffset := Bar^.get_allocated_height;
+        HOffset := overlayBand(Bar, False);
     end;
     if AVertPolicy < GTK_POLICY_NEVER then
     begin
       Bar := getVerticalScrollbar;
       if (Bar <> nil) and Gtk3IsWidget(Bar) and Bar^.get_visible and GTK3WidgetSet.OverlayScrolling then
-        VOffset := Bar^.get_allocated_width;
+        VOffset := overlayBand(Bar, True);
     end;
 
     ContW := Min(GetContainerWidget^.get_allocated_width, Widget^.get_allocated_width);
@@ -14010,13 +14038,13 @@ begin
 
       Bar := getHorizontalScrollbar;
       if (Bar <> nil) and Gtk3IsWidget(Bar) and Bar^.get_visible and GTK3WidgetSet.OverlayScrolling then
-        HOffset := Bar^.get_allocated_height
+        HOffset := overlayBand(Bar, False)
       else
         HOffset := 0;
 
       Bar := getVerticalScrollbar;
       if (Bar <> nil) and Gtk3IsWidget(Bar) and Bar^.get_visible and GTK3WidgetSet.OverlayScrolling then
-        VOffset := Bar^.get_allocated_width
+        VOffset := overlayBand(Bar, True)
       else
         VOffset := 0;
 
@@ -15566,9 +15594,9 @@ begin
   Types.OffsetRect(Result, -Result.Left, -Result.Top);
 
   if GTK3WidgetSet.OverlayScrolling and getHorizontalScrollbar^.is_visible then
-    Result.Height := Result.Height - getHorizontalScrollbar^.get_allocated_height;
+    Result.Height := Result.Height - overlayBand(getHorizontalScrollbar, False);
   if GTK3WidgetSet.OverlayScrolling and getVerticalScrollbar^.is_visible then
-    Result.Width := Result.Width - getVerticalScrollbar^.get_allocated_width;
+    Result.Width := Result.Width - overlayBand(getVerticalScrollbar, True);
 
   {$IF DEFINED(GTK3DEBUGFORMS) OR DEFINED(GTK3DEBUGSIZE)}
   DebugLn(Format('TGtk3Window.getClientRect %s Result=%s LCL=%dx%d Alloc=%dx%d shadow=%dx%d CW(real=%s map=%s)',
