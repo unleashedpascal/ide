@@ -2849,6 +2849,12 @@ resourcestring
   lisPEShowDirectoryHierarchy = 'Show directory hierarchy';
   lisPEOffSortForReorder = 'Please disable alphabetical sorting if you need to reorder items manually.';
   lisPEShowPropsPanel = 'Show properties panel';
+  lisPEToolBarMode = 'Mode';
+  lisPEToolBarModeHint = 'Tool bar layout';
+  lisPEToolBarClassic = 'Classic';
+  lisPEToolBarCompact = 'Compact';
+  lisPEToolBarBuildModeOnly = 'Build mode only';
+  lisProjInspProject = 'Project: %s';
   lisClearFilter = 'Clear filter';
   dlgCaseSensitive = '&Case sensitive';
   lisDistinguishBigAndSmallLettersEGAAndA = 'Distinguish big and small letters e.g. A and a';

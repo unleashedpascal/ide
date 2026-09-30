@@ -141,10 +141,11 @@ type
     // toolbar
     ToolBar: TToolBar;
     // toolbuttons
+    ModeBitBtn: TToolButton;
     AddBitBtn: TToolButton;
     RemoveBitBtn: TToolButton;
     OptionsBitBtn: TToolButton;
-    HelpBitBtn: TToolButton;
+    BuildModeComboBox: TComboBox;
     procedure AddPopupMenuPopup(Sender: TObject);
     procedure CopyMoveToDirMenuItemClick(Sender: TObject);
     procedure DirectoryHierarchyButtonClick(Sender: TObject);
@@ -222,7 +223,12 @@ type
     procedure DoAddFPMakeDepDialog;
     function CreateToolButton(AName, ACaption, AHint, AImageName: String;
       AOnClick: TNotifyEvent): TToolButton;
-    function CreateDivider: TToolButton;
+    procedure ModeMenuItemClick(Sender: TObject);
+    procedure BuildModeComboBoxDropDown({%H-}Sender: TObject);
+    procedure BuildModeComboBoxSelect({%H-}Sender: TObject);
+    procedure ToolBarResize({%H-}Sender: TObject);
+    procedure ApplyToolBarStyle;
+    procedure FillBuildModeComboBox;
     procedure OptionsChanged(Sender: TObject; {%H-}Restore: boolean);
     procedure SetDependencyDefaultFilename(AsPreferred: boolean);
     procedure SetIdleConnected(AValue: boolean);
@@ -546,6 +552,27 @@ end;
 function HasDesigner(APersistent: TPersistent): boolean;
 begin
   Result:=Assigned(FindRootDesigner(APersistent));
+end;
+
+// switches the build mode of the main project unless a build is running
+procedure ActivateBuildMode(NewMode: TProjectBuildMode);
+begin
+  if NewMode = Project1.ActiveBuildMode then exit;
+  if not (MainIDE.ToolStatus in [itNone,itDebugger]) then begin
+    IDEMessageDialog(dlgMsgWinColorUrgentError,
+      lisYouCanNotChangeTheBuildModeWhileCompiling,
+      mtError,[mbOk]);
+    exit;
+  end;
+
+  Project1.ActiveBuildMode := NewMode;
+  Project1.DefineTemplates.AllChanged(false);
+  IncreaseCompilerParseStamp;
+  MainBuildBoss.SetBuildTargetProject1(false);
+  MainIDE.UpdateCaption;
+  MainIDE.UpdateDefineTemplates;
+  if Assigned(ProjInspector) then
+    ProjInspector.UpdateTitle;
 end;
 
 { TProjectInspectorForm }
@@ -1467,12 +1494,98 @@ begin
   Result.Parent := ToolBar;
 end;
 
-function TProjectInspectorForm.CreateDivider: TToolButton;
+procedure TProjectInspectorForm.ModeMenuItemClick(Sender: TObject);
+var
+  i: Integer;
 begin
-  Result := TToolButton.Create(Self);
-  Result.Style := tbsDivider;
-  Result.AutoSize := True;
-  Result.Parent := ToolBar;
+  EnvironmentOptions.ProjInspToolBarStyle:=TProjInspToolBarStyle((Sender as TMenuItem).Tag);
+  // the setting is shared, so every inspector follows it
+  for i:=0 to ProjInspectors.Count-1 do
+    TProjectInspectorForm(ProjInspectors[i]).ApplyToolBarStyle;
+end;
+
+procedure TProjectInspectorForm.BuildModeComboBoxDropDown(Sender: TObject);
+begin
+  // modes may have been added or renamed since the last fill
+  FillBuildModeComboBox;
+end;
+
+procedure TProjectInspectorForm.BuildModeComboBoxSelect(Sender: TObject);
+begin
+  if (Project1=nil) or (BuildModeComboBox.ItemIndex<0)
+  or (BuildModeComboBox.ItemIndex>=Project1.BuildModes.Count) then exit;
+  ActivateBuildMode(Project1.BuildModes[BuildModeComboBox.ItemIndex]);
+  // the switch is refused while compiling, so show the mode really active
+  FillBuildModeComboBox;
+end;
+
+procedure TProjectInspectorForm.ToolBarResize(Sender: TObject);
+var
+  NewWidth: Integer;
+begin
+  if not BuildModeComboBox.Visible then exit;
+  // the box takes what the mode button leaves of the row
+  NewWidth:=ToolBar.ClientWidth-ModeBitBtn.Width-Scale96ToForm(8);
+  if NewWidth<Scale96ToForm(60) then
+    NewWidth:=Scale96ToForm(60);
+  if BuildModeComboBox.Constraints.MinWidth<>NewWidth then begin
+    BuildModeComboBox.Constraints.MinWidth:=NewWidth;
+    BuildModeComboBox.Constraints.MaxWidth:=NewWidth;
+  end;
+end;
+
+procedure TProjectInspectorForm.ApplyToolBarStyle;
+var
+  Style: TProjInspToolBarStyle;
+  i: Integer;
+begin
+  Style:=EnvironmentOptions.ProjInspToolBarStyle;
+  for i:=0 to ModeBitBtn.DropdownMenu.Items.Count-1 do
+    ModeBitBtn.DropdownMenu.Items[i].Checked:=i=ord(Style);
+  ToolBar.DisableAlign;
+  try
+    ToolBar.ShowCaptions:=Style=pitsClassic;
+    if Style=pitsClassic then
+      ToolBar.ButtonHeight:=Scale96ToForm(46)
+    else
+      ToolBar.ButtonHeight:=Scale96ToForm(24);
+    AddBitBtn.Visible:=Style<>pitsBuildMode;
+    RemoveBitBtn.Visible:=Style<>pitsBuildMode;
+    OptionsBitBtn.Visible:=Style<>pitsBuildMode;
+    BuildModeComboBox.Visible:=Style=pitsBuildMode;
+    // the tool bar orders a row by top edge, then by left edge, and a hidden
+    // control keeps the place of its last layout; with all in the corner the
+    // creation order decides
+    ModeBitBtn.SetBounds(0,0,ModeBitBtn.Width,ModeBitBtn.Height);
+    AddBitBtn.SetBounds(0,0,AddBitBtn.Width,AddBitBtn.Height);
+    RemoveBitBtn.SetBounds(0,0,RemoveBitBtn.Width,RemoveBitBtn.Height);
+    OptionsBitBtn.SetBounds(0,0,OptionsBitBtn.Width,OptionsBitBtn.Height);
+    BuildModeComboBox.SetBounds(0,0,BuildModeComboBox.Width,BuildModeComboBox.Height);
+  finally
+    ToolBar.EnableAlign;
+  end;
+  ToolBarResize(nil);
+  FillBuildModeComboBox;
+  UpdateTitle(true);
+end;
+
+procedure TProjectInspectorForm.FillBuildModeComboBox;
+var
+  i: Integer;
+begin
+  BuildModeComboBox.Items.BeginUpdate;
+  try
+    BuildModeComboBox.Items.Clear;
+    if LazProject<>nil then
+      for i:=0 to LazProject.BuildModes.Count-1 do
+        BuildModeComboBox.Items.Add(LazProject.BuildModes[i].GetCaption);
+  finally
+    BuildModeComboBox.Items.EndUpdate;
+  end;
+  if LazProject<>nil then
+    BuildModeComboBox.ItemIndex:=LazProject.BuildModes.IndexOf(LazProject.ActiveBuildMode)
+  else
+    BuildModeComboBox.ItemIndex:=-1;
 end;
 
 procedure TProjectInspectorForm.OptionsChanged(Sender: TObject; Restore: boolean);
@@ -1484,6 +1597,9 @@ begin
 end;
 
 procedure TProjectInspectorForm.SetupComponents;
+var
+  Style: TProjInspToolBarStyle;
+  MenuItem: TMenuItem;
 begin
   ImageIndexFiles           := IDEImages.LoadImage('pkg_files');
   ImageIndexProject         := IDEImages.LoadImage('item_project_source');
@@ -1497,14 +1613,40 @@ begin
   ToolBar.Images            := IDEImages.Images_16;
   FilterEdit.OnGetImageIndex:=@TreeViewGetImageIndex;
 
+  ModeBitBtn    := CreateToolButton('ModeBitBtn', lisPEToolBarMode, lisPEToolBarModeHint, 'preferences', nil);
+  ModeBitBtn.Style:=tbsButtonDrop;
+  ModeBitBtn.DropdownMenu:=TPopupMenu.Create(Self);
+  for Style:=Low(TProjInspToolBarStyle) to High(TProjInspToolBarStyle) do begin
+    MenuItem:=TMenuItem.Create(Self);
+    case Style of
+      pitsClassic: MenuItem.Caption:=lisPEToolBarClassic;
+      pitsCompact: MenuItem.Caption:=lisPEToolBarCompact;
+      pitsBuildMode: MenuItem.Caption:=lisPEToolBarBuildModeOnly;
+    end;
+    MenuItem.RadioItem:=true;
+    MenuItem.Tag:=ord(Style);
+    MenuItem.OnClick:=@ModeMenuItemClick;
+    ModeBitBtn.DropdownMenu.Items.Add(MenuItem);
+  end;
   AddBitBtn     := CreateToolButton('AddBitBtn', lisAdd, lisClickToSeeTheChoices, 'laz_add', nil);
   AddBitBtn.Style:=tbsButtonDrop;
   RemoveBitBtn  := CreateToolButton('RemoveBitBtn', lisRemove, lisPckEditRemoveSelectedItem, 'laz_delete', @RemoveBitBtnClick);
-  CreateDivider;
   OptionsBitBtn := CreateToolButton('OptionsBitBtn', lisOptions, lisPckEditEditGeneralOptions, 'menu_environment_options', @OptionsBitBtnClick);
   OptionsBitBtn.DropdownMenu := TSetBuildModeToolButton.TBuildModeMenu.Create(Self);
   OptionsBitBtn.Style := tbsDropDown;
-  HelpBitBtn    := CreateToolButton('HelpButton', GetButtonCaption(idButtonHelp), lisMenuOnlineHelp, 'btn_help', nil);
+  // the box sits to the right of the mode button and takes the rest of the row
+  BuildModeComboBox:=TComboBox.Create(Self);
+  BuildModeComboBox.Name:='BuildModeComboBox';
+  BuildModeComboBox.Style:=csDropDownList;
+  BuildModeComboBox.Hint:=lisBuildModes;
+  BuildModeComboBox.ShowHint:=true;
+  BuildModeComboBox.OnDropDown:=@BuildModeComboBoxDropDown;
+  BuildModeComboBox.OnSelect:=@BuildModeComboBoxSelect;
+  // the tool bar lays a child out at its own size only when it auto sizes;
+  // the width constraints then decide that size
+  BuildModeComboBox.AutoSize:=true;
+  BuildModeComboBox.Parent:=ToolBar;
+  ToolBar.OnResize:=@ToolBarResize;
 
   AddBitBtn.DropdownMenu:=AddPopupMenu;
 
@@ -1750,6 +1892,7 @@ begin
   KeyPreview:=true;
   SortAlphabetically := EnvironmentOptions.ProjInspSortAlphabetically;
   ShowDirectoryHierarchy := EnvironmentOptions.ProjInspShowDirHierarchy;
+  ApplyToolBarStyle;
 end;
 
 procedure TProjectInspectorForm.ActiveEditorChanged(Sender: TObject);
@@ -1905,8 +2048,14 @@ begin
     NewCaption:=LazProject.GetTitle;
     if NewCaption='' then
       NewCaption:=ExtractFilenameOnly(LazProject.ProjectInfoFile);
-    NewCaption:=Format(lisProjInspProjectInspector, [NewCaption]);
-    if (LazProject.ActiveBuildMode.GetCaption<>'') then
+    // the short tool bar styles leave the title row to the project name;
+    // the build mode stays out of it when the box shows it anyway
+    if EnvironmentOptions.ProjInspToolBarStyle=pitsClassic then
+      NewCaption:=Format(lisProjInspProjectInspector, [NewCaption])
+    else
+      NewCaption:=Format(lisProjInspProject, [NewCaption]);
+    if (EnvironmentOptions.ProjInspToolBarStyle<>pitsBuildMode)
+    and (LazProject.ActiveBuildMode.GetCaption<>'') then
       NewCaption := NewCaption + ' ['+LazProject.ActiveBuildMode.GetCaption+']';
     Caption := NewCaption;
 
@@ -1924,6 +2073,7 @@ begin
       end;
     end;
   end;
+  FillBuildModeComboBox;
 end;
 
 procedure TProjectInspectorForm.UpdateProperties(Immediately: boolean);
@@ -2151,28 +2301,9 @@ end;
 { TSetBuildModeToolButton.TBuildModeMenuItem }
 
 procedure TSetBuildModeToolButton.TBuildModeMenuItem.Click;
-var
-  NewMode: TProjectBuildMode;
 begin
   inherited Click;
-
-  NewMode := Project1.BuildModes[BuildModeIndex];
-  if NewMode = Project1.ActiveBuildMode then exit;
-  if not (MainIDE.ToolStatus in [itNone,itDebugger]) then begin
-    IDEMessageDialog(dlgMsgWinColorUrgentError,
-      lisYouCanNotChangeTheBuildModeWhileCompiling,
-      mtError,[mbOk]);
-    exit;
-  end;
-
-  Project1.ActiveBuildMode := NewMode;
-  Project1.DefineTemplates.AllChanged(false);
-  IncreaseCompilerParseStamp;
-  MainBuildBoss.SetBuildTargetProject1(false);
-  MainIDE.UpdateCaption;
-  MainIDE.UpdateDefineTemplates;
-  if Assigned(ProjInspector) then
-    ProjInspector.UpdateTitle;
+  ActivateBuildMode(Project1.BuildModes[BuildModeIndex]);
 end;
 
 { TSetBuildModeToolButton }

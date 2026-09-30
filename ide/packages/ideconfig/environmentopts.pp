@@ -211,6 +211,10 @@ type
     );
   TEnvOptParseTypes = set of TEnvOptParseType;
 
+  // the project inspector tool bar: big buttons with captions, icons only,
+  // or the build mode selector alone
+  TProjInspToolBarStyle = (pitsClassic, pitsCompact, pitsBuildMode);
+
 type
   TEnvironmentOptions = class;
 
@@ -282,6 +286,7 @@ type
     // project inspector
     FProjInspSortAlphabetically: boolean;
     FProjInspShowDirHierarchy: boolean;
+    FProjInspToolBarStyle: TProjInspToolBarStyle;
     // package editor
     FPackageEditorSortAlphabetically: boolean;
     FPackageEditorShowDirHierarchy: boolean;
@@ -434,6 +439,8 @@ type
                                                 write FProjInspSortAlphabetically;
     property ProjInspShowDirHierarchy: boolean read FProjInspShowDirHierarchy
                                               write FProjInspShowDirHierarchy;
+    property ProjInspToolBarStyle: TProjInspToolBarStyle read FProjInspToolBarStyle
+                                                         write FProjInspToolBarStyle;
     // package editor
     property PackageEditorSortAlphabetically: boolean read FPackageEditorSortAlphabetically
                                                      write FPackageEditorSortAlphabetically;
@@ -750,6 +757,7 @@ begin
   // project inspector
   FProjInspSortAlphabetically:=false;
   FProjInspShowDirHierarchy:=false;
+  FProjInspToolBarStyle:=pitsCompact;
   // package editor
   FPackageEditorSortAlphabetically:=false;
   FPackageEditorShowDirHierarchy:=false;
@@ -1092,6 +1100,9 @@ begin
     // project inspector
     FProjInspSortAlphabetically:=FXMLCfg.GetValue(Path+'ProjInspSortAlphabetically/Value',false);
     FProjInspShowDirHierarchy:=FXMLCfg.GetValue(Path+'ProjInspShowDirHierarchy/Value',false);
+    i:=FXMLCfg.GetValue(Path+'ProjInspToolBarStyle/Value',ord(pitsCompact));
+    if (i>=0) and (i<=ord(High(TProjInspToolBarStyle))) then
+      FProjInspToolBarStyle:=TProjInspToolBarStyle(i);
     // package editor
     FPackageEditorSortAlphabetically:=FXMLCfg.GetValue(Path+'PackageEditorSortAlphabetically/Value',false);
     FPackageEditorShowDirHierarchy:=FXMLCfg.GetValue(Path+'PackageEditorShowDirHierarchy/Value',false);
@@ -1303,6 +1314,7 @@ begin
     // project inspector
     FXMLCfg.SetDeleteValue(Path+'ProjInspSortAlphabetically/Value',FProjInspSortAlphabetically,false);
     FXMLCfg.SetDeleteValue(Path+'ProjInspShowDirHierarchy/Value',FProjInspShowDirHierarchy,false);
+    FXMLCfg.SetDeleteValue(Path+'ProjInspToolBarStyle/Value',ord(FProjInspToolBarStyle),ord(pitsCompact));
     // package editor
     FXMLCfg.SetDeleteValue(Path+'PackageEditorSortAlphabetically/Value',FPackageEditorSortAlphabetically,false);
     FXMLCfg.SetDeleteValue(Path+'PackageEditorShowDirHierarchy/Value',FPackageEditorShowDirHierarchy,false);
