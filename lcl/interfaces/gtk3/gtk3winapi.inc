@@ -965,6 +965,24 @@ begin
     exit;
   R := ARect;
 
+  // the flat look paints no rings; the space they took stays, so the
+  // callers keep their content offsets
+  if FFlatEdges then
+  begin
+    Result := not IsRectEmpty(R);
+    if not Result then
+      exit;
+    if (Edge and (BDR_RAISEDOUTER or BDR_SUNKENOUTER)) <> 0 then
+      InflateRect(R, -1, -1);
+    if (Edge and (BDR_RAISEDINNER or BDR_SUNKENINNER)) <> 0 then
+      InflateRect(R, -1, -1);
+    if (grfFlags and BF_MIDDLE) <> 0 then
+      FillRect(DC, R, GetSysColorBrush(COLOR_BTNFACE));
+    if (grfFlags and BF_ADJUST) <> 0 then
+      ARect := R;
+    exit;
+  end;
+
   R.Left := GtkDC.LToDX(R.Left);
   R.Top := GtkDC.LToDY(R.Top);
   R.Right := GtkDC.LToDX(R.Right);
