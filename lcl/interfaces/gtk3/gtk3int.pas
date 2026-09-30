@@ -84,6 +84,7 @@ type
     {$IFDEF UNIX}
     FChildSignalHandlers: PChildSignalEventHandler;
     FOverlayScrolling:gboolean;
+    FFlatEdges: Boolean;
     {$ELSE}
     {$IFDEF VerboseGtkToDos}{$warning no declaration of FChildSignalHandlers for this OS}{$ENDIF}
     {$ENDIF}
@@ -219,6 +220,8 @@ type
     property LastUserEventTime: guint32 read FLastUserEventTime write FLastUserEventTime;
     property TrackBarKnobSize: Integer read FTrackBarKnobSize write FTrackBarKnobSize;
     property OverlayScrolling: gboolean read FOverlayScrolling write FOverlayScrolling;
+    // DrawEdge paints no 3D rings, for a flat look
+    property FlatEdges: Boolean read FFlatEdges write FFlatEdges;
     property IMContext: PGtkIMContext read FIMContext;
     property IMCommitStr: string read FIMCommitStr write FIMCommitStr;
     property IMInFilter: Boolean read FIMInFilter write FIMInFilter;
