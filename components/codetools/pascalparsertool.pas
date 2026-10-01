@@ -3679,6 +3679,23 @@ function TPascalParserTool.IsMatchKeyword: boolean;
 var
   SavedPos: integer;
   PriorAtom: TAtomPosition;
+
+  // operator that can appear inside the subject expression (`n mod 12`,
+  // `a + 1`, `x in [1,2]`, `not b`); symbol operators carry cafNone
+  function AtomIsOperator: boolean;
+  begin
+    case CurPos.Flag of
+    cafEqual: Result:=true;
+    cafNone: Result:=(CurPos.StartPos<=SrcLen)
+                 and (Src[CurPos.StartPos] in ['+','-','*','/','<','>']);
+    cafWord: Result:=UpAtomIs('MOD') or UpAtomIs('DIV') or UpAtomIs('AND')
+                 or UpAtomIs('OR') or UpAtomIs('XOR') or UpAtomIs('SHL')
+                 or UpAtomIs('SHR') or UpAtomIs('IS') or UpAtomIs('AS')
+                 or UpAtomIs('IN') or UpAtomIs('NOT');
+    else Result:=false;
+    end;
+  end;
+
 begin
   Result:=false;
   PriorAtom:=LastAtoms.GetPriorAtom;
@@ -3733,8 +3750,9 @@ begin
         exit;
     end;
     // identifier subject or literal subject - peek for `of`/`:`/`,`,
-    // skipping past call-args `(...)`, subscripts `[...]` and dotted
-    // member access so subjects like `match obj.foo(x).bar of` resolve
+    // skipping past call-args `(...)`, subscripts `[...]`, dotted
+    // member access and operators so subjects like
+    // `match obj.foo(x).bar of` and `match n mod 12 of` resolve
     ReadNextAtom;
     if CurPos.StartPos>SrcLen then exit;
     while true do begin
@@ -3745,6 +3763,15 @@ begin
       end else if CurPos.Flag=cafPoint then begin
         ReadNextAtom;
         if (CurPos.StartPos>SrcLen) or (CurPos.Flag<>cafWord) then exit;
+        ReadNextAtom;
+        if CurPos.StartPos>SrcLen then exit;
+      end else if AtomIsOperator then begin
+        // step onto the operand that follows; a bracket or a unary
+        // operator is consumed by the next loop iteration
+        ReadNextAtom;
+        if CurPos.StartPos>SrcLen then exit;
+        if (CurPos.Flag in [cafRoundBracketOpen,cafEdgedBracketOpen])
+        or AtomIsOperator then continue;
         ReadNextAtom;
         if CurPos.StartPos>SrcLen then exit;
       end else
