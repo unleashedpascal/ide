@@ -135,8 +135,8 @@ begin
 
   fcMainMenu := RegisterIDESubMenu(itmSourceTools, FORMAT_MENU_NAME, FORMAT_MENU);
 
-  // Ctrl + D
-  Key := IDEShortCut(VK_D, [SSctrl]);
+  // no default shortcut, Ctrl+D duplicates the line in the editor
+  Key := IDEShortCut(VK_UNKNOWN, []);
   Cmd := RegisterIDECommand(Cat, FORMAT_CURRENT_NAME, FORMAT_CURRENT_IDECMD,
     Key, lcJCFIDE.DoFormatCurrentIDEWindow);
   RegisterIDEMenuCommand(fcMainMenu, FORMAT_CURRENT_NAME, FORMAT_CURRENT_MENU,
