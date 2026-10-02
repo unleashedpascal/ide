@@ -69,6 +69,7 @@ uses
   Main,
   LazDebuggerFpLldb, LazDebuggerFp, laz.virtualtreeview_package,
   LazControlDsgn,
+  DockedFormEditor, // preinstalled
   unleashedformplacer, // preinstalled
   unleashedthemes, // preinstalled
   unleashedminimap, // preinstalled
@@ -90,7 +91,6 @@ uses
     EditorMacroScript, ExampleProjects,
     OnlinePackageManager,
     SimpleWebServerGUI, LazProjectGroups, Pas2jsDsgn, charactermap_ide_pkg,
-    DockedFormEditor,
   {$ENDIF}
   MainBase;
 

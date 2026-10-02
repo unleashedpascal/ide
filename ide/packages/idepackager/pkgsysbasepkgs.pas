@@ -34,6 +34,7 @@ type
     libpIdePackager,
     libpIdeProject,
     libpIdeDebugger,
+    libpDockedFormEditor,
     libpUnleashedFormplacer,
     libpUnleashedThemes,
     libpUnleashedMinimap,
@@ -68,6 +69,7 @@ const
     'IdePackager',
     'IdeProject',
     'IdeDebugger',
+    'DockedFormEditor',
     'UnleashedFormplacer',
     'UnleashedThemes',
     'UnleashedMinimap',
@@ -75,9 +77,8 @@ const
     );
 
   // extra packages for the release, alias "bigide"
-  LazarusIDEReleasePkgNames: array[0..31] of string = (
+  LazarusIDEReleasePkgNames: array[0..30] of string = (
 	  'SyneditDsgn',
-    'DockedFormEditor',
     'OnlinePackageManager',
     'cairocanvas_pkg',
     'RunTimeTypeInfoControls',
