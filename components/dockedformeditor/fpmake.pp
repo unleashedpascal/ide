@@ -66,7 +66,6 @@ begin
     t.Dependencies.AddUnit('dockedanchorcontrol');
     t.Dependencies.AddUnit('dockedgrip');
     t.Dependencies.AddUnit('dockedresizecontrol');
-    t.Dependencies.AddUnit('dockedforminitialsetupframe');
 
     T:=P.Targets.AddUnit('source\dockedregister.pas');
     T:=P.Targets.AddUnit('dockedstrconsts.pas');
@@ -84,7 +83,6 @@ begin
     T:=P.Targets.AddUnit('source\dockedanchorcontrol.pas');
     T:=P.Targets.AddUnit('source\dockedgrip.pas');
     T:=P.Targets.AddUnit('source\dockedresizecontrol.pas');
-    T:=P.Targets.AddUnit('dockedforminitialsetupframe.pas');
 
     // copy the compiled file, so the IDE knows how the package was compiled
     P.Sources.AddSrc('dockedformeditor.compiled');

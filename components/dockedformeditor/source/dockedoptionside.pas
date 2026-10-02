@@ -70,8 +70,6 @@ type
     FAnchorTopColor: TColor;
     FCaptureDistance: Integer;
     FChangeStamp: Integer;
-    FDoneAskUserEnableDockedDesigner: boolean;
-    FEnableDockedDesigner: boolean;
     FForceRefreshing: Boolean;
     FLastSavedChangeStamp: Integer;
     FMouseBorderFactor: Integer;
@@ -90,8 +88,6 @@ type
     procedure SetAnchorTargetColor(AValue: TColor);
     procedure SetAnchorTopColor(AValue: TColor);
     procedure SetCaptureDistance(AValue: Integer);
-    procedure SetDoneAskUserEnableDockedDesigner(AValue: boolean);
-    procedure SetEnableDockedDesigner(AValue: boolean);
     procedure SetForceRefreshing(AValue: Boolean);
     procedure SetModified(AValue: Boolean);
     procedure SetMouseBorderFactor(AValue: Integer);
@@ -126,8 +122,6 @@ type
     property TabPosition: TTabPosition read FTabPosition write SetTabPosition;
     property TreatAlign: Boolean read FTreatAlign write SetTreatAlign;
     property TreatBorder: Boolean read FTreatBorder write SetTreatBorder;
-    property EnableDockedDesigner: boolean read FEnableDockedDesigner write SetEnableDockedDesigner default True;
-    property DoneAskUserEnableDockedDesigner: boolean read FDoneAskUserEnableDockedDesigner write SetDoneAskUserEnableDockedDesigner default False;
   end;
 
 const
@@ -216,20 +210,6 @@ begin
   IncreaseChangeStamp;
 end;
 
-procedure TDockedOptions.SetDoneAskUserEnableDockedDesigner(AValue: boolean);
-begin
-  if FDoneAskUserEnableDockedDesigner = AValue then Exit;
-  FDoneAskUserEnableDockedDesigner := AValue;
-  IncreaseChangeStamp;
-end;
-
-procedure TDockedOptions.SetEnableDockedDesigner(AValue: boolean);
-begin
-  if FEnableDockedDesigner = AValue then Exit;
-  FEnableDockedDesigner := AValue;
-  IncreaseChangeStamp;
-end;
-
 procedure TDockedOptions.SetForceRefreshing(AValue: Boolean);
 begin
   if FForceRefreshing = AValue then Exit;
@@ -298,8 +278,6 @@ begin
   FTabPosition        := DefaultTabPosition;
   FTreatAlign         := True;
   FTreatBorder        := True;
-  FEnableDockedDesigner            := True;
-  FDoneAskUserEnableDockedDesigner := False;
 end;
 
 procedure TDockedOptions.SaveSafe;
@@ -346,8 +324,6 @@ begin
     Cfg.SetDeleteValue('TabPosition/Value',        Integer(TabPosition), Integer(DefaultTabPosition));
     Cfg.SetDeleteValue('TreatAlign/Value',         TreatAlign,         True);
     Cfg.SetDeleteValue('TreatBorder/Value',        TreatBorder,        True);
-    Cfg.SetDeleteValue('EnableDockedDesigner/Value',             EnableDockedDesigner,            True);
-    Cfg.SetDeleteValue('DoneAskUserEnableDockedDesigner/Value',  DoneAskUserEnableDockedDesigner, False);
   finally
     Cfg.Free;
   end;
@@ -375,8 +351,6 @@ begin
     TabPosition        := TTabPosition(Cfg.GetValue('TabPosition/Value', Integer(DefaultTabPosition)));
     TreatAlign         := Cfg.GetValue('TreatAlign/Value',         True);
     TreatBorder        := Cfg.GetValue('TreatBorder/Value',        True);
-    EnableDockedDesigner            := Cfg.GetValue('EnableDockedDesigner/Value',             True);
-    DoneAskUserEnableDockedDesigner := Cfg.GetValue('DoneAskUserEnableDockedDesigner/Value',  False);
   finally
     Cfg.Free;
   end;

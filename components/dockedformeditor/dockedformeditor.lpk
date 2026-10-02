@@ -16,7 +16,7 @@
         <CustomOptions Value="$(IDEBuildOptions)"/>
       </Other>
     </CompilerOptions>
-    <Files Count="18">
+    <Files Count="17">
       <Item1>
         <Filename Value="source\dockedregister.pas"/>
         <HasRegisterProc Value="True"/>
@@ -87,10 +87,6 @@
         <Filename Value="source\dockedresizecontrol.pas"/>
         <UnitName Value="DockedResizeControl"/>
       </Item17>
-      <Item18>
-        <Filename Value="dockedforminitialsetupframe.pas"/>
-        <UnitName Value="DockedFormInitialSetupFrame"/>
-      </Item18>
     </Files>
     <CompatibilityMode Value="True"/>
     <i18n>

@@ -29,7 +29,6 @@ type
   { TFrameDockedOptions }
 
   TFrameDockedOptions = class(TAbstractIDEOptionsEditor)
-    cbEnableDockFormEd: TCheckBox;
     CheckBoxAnchorTabVisible: TCheckBox;
     CheckBoxForceRefreshing: TCheckBox;
     CheckBoxTreatAlign: TCheckBox;
@@ -49,7 +48,6 @@ type
     Panel1: TPanel;
     SpinEditCaptureDistance: TSpinEdit;
     SpinEditMouseBorderFactor: TSpinEdit;
-    procedure cbEnableDockFormEdChange(Sender: TObject);
     procedure CheckBoxAnchorTabVisibleChange(Sender: TObject);
     procedure AnchorsColorBoxChange(Sender: TObject);
     procedure AnchorsColorListBoxGetColors(Sender: TCustomColorListBox; Items: TStrings);
@@ -72,7 +70,6 @@ type
     FLastTreatAlign: Boolean;
     FLastTreatBorder: Boolean;
     FReady: Boolean;
-    FDisableChanged: Boolean;
   public
     function GetTitle: String; override;
     procedure Setup({%H-}ADialog: TAbstractOptionsEditorDialog); override;
@@ -80,12 +77,6 @@ type
     procedure WriteSettings({%H-}AOptions: TAbstractIDEOptions); override;
     procedure RestoreSettings({%H-}AOptions: TAbstractIDEOptions); override;
     class function SupportedOptionsClass: TAbstractIDEOptionsClass; override;
-  end;
-
-  { TFrameDisabledDockedOptions }
-
-  TFrameDisabledDockedOptions = class(TFrameDockedOptions)
-    constructor Create(AnOwner: TComponent); override;
   end;
 
 implementation
@@ -104,11 +95,6 @@ begin
   LabelMouseBorderFactor.Enabled    := CheckBoxAnchorTabVisible.Checked;
   SpinEditCaptureDistance.Enabled   := CheckBoxAnchorTabVisible.Checked;
   SpinEditMouseBorderFactor.Enabled := CheckBoxAnchorTabVisible.Checked;
-end;
-
-procedure TFrameDockedOptions.cbEnableDockFormEdChange(Sender: TObject);
-begin
-  FDisableChanged := True;
 end;
 
 procedure TFrameDockedOptions.AnchorsColorBoxChange(Sender: TObject);
@@ -160,7 +146,6 @@ begin
   LabelTabPosition.Caption         := STabPositionCaption;
   LabelCaptureDistance.Caption     := SCaptureDistanceCaption;
   LabelMouseBorderFactor.Caption   := SMouseBorderFactorCaption;
-  cbEnableDockFormEd.Caption       := SEnableDockedDsgner;
 
   CheckBoxAllowSizing.Hint       := SAllowSizingHint;
   CheckBoxAnchorTabVisible.Hint  := SAnchorTabVisibleHint;
@@ -191,8 +176,6 @@ begin
   FLastTabPosition        := DockedOptions.TabPosition;
   FLastTreatAlign         := DockedOptions.TreatAlign;
   FLastTreatBorder        := DockedOptions.TreatBorder;
-  cbEnableDockFormEd.Checked := DockedOptions.EnableDockedDesigner;
-  FDisableChanged := False;
   RestoreSettings(AOptions);
   FReady := true;
 end;
@@ -215,9 +198,6 @@ begin
   DockedOptions.TabPosition        := TTabPosition(ComboBoxTabPosition.ItemIndex);
   DockedOptions.TreatAlign         := CheckBoxTreatAlign.Checked;
   DockedOptions.TreatBorder        := CheckBoxTreatBorder.Checked;
-  if FDisableChanged then
-    DockedOptions.DoneAskUserEnableDockedDesigner := True;
-  DockedOptions.EnableDockedDesigner            := cbEnableDockFormEd.Checked;
 
   if DockedOptions.Modified then
   begin
@@ -251,14 +231,6 @@ end;
 class function TFrameDockedOptions.SupportedOptionsClass: TAbstractIDEOptionsClass;
 begin
   Result := IDEEditorGroups.GetByIndex(GroupEnvironment)^.GroupClass;
-end;
-
-{ TFrameDisabledDockedOptions }
-
-constructor TFrameDisabledDockedOptions.Create(AnOwner: TComponent);
-begin
-  inherited Create(AnOwner);
-  Panel1.Visible := False;
 end;
 
 end.
