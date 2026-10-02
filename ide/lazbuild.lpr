@@ -44,7 +44,7 @@ uses
   CompilerOptions, ModeMatrixOpts, BaseBuildManager, ApplicationBundle,
   IDETranslations, ExtToolsConsole, InitialSetupProc, MiscOptions, IdeBuilder,
   // IdePackager
-  IdePackagerStrConsts, PackageDefs, PackageLinks, PackageSystem, InterPkgConflictFiles,
+  IdePackagerStrConsts, PackageDefs, PackageLinks, PackageSystem, PkgSysBasePkgs, InterPkgConflictFiles,
   // IdeProject
   Project, BuildManager,
   // IDE
@@ -1667,6 +1667,7 @@ begin
     LongOptions.Add('language:');
     LongOptions.Add('add-package');
     LongOptions.Add('add-package-link');
+    LongOptions.Add('add-release-packages');
     LongOptions.Add('build-all');
     LongOptions.Add('build-ide::'); // value is optional
     LongOptions.Add('build-ide-minimal');
@@ -1758,6 +1759,18 @@ begin
 
     // files
     Files.Assign(NonOptions);
+
+    // PackageAction: install the release packages, the set a default install ships
+    if HasOption('add-release-packages') then begin
+      PrintInfo('Parameter: --add-release-packages');
+      if not (PackageAction in [lpaBuild,lpaInstall]) then
+        PrintErrorAndHalt(ErrorInvalidSyntax, 'Invalid combination of package actions');
+      PackageAction:=lpaInstall;
+      FilesNeeded:=false;
+      for i:=0 to High(LazarusIDEReleasePkgNames) do
+        Files.Add(LazarusIDEReleasePkgNames[i]);
+    end;
+
     if FilesNeeded and (Files.Count=0) then
       PrintErrorAndHalt(ErrorInvalidSyntax, 'Missing file');
 
@@ -1939,6 +1952,9 @@ begin
   writeln('');
   writeln('--add-package-link=<.lpk file>');
   w(lisOnlyRegisterTheLazarusPackageFilesLpkDoNotBuild);
+  writeln('');
+  writeln('--add-release-packages');
+  w(lisAddTheReleasePackagesToTheListOfInstalledPackages);
   writeln('');
   writeln('--create-makefile');
   w(lisInsteadOfCompilePackageCreateASimpleMakefile);

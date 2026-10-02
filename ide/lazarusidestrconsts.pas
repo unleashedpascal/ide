@@ -5371,6 +5371,9 @@ resourcestring
   lisDoNotCompileDependencies = 'Do not compile dependencies.';
   lisAddPackageSToListOfInstalledPackagesCombineWithBui = 'Add package(s) to the '
     +'list of installed packages (combine with --build-ide to rebuild IDE).';
+  lisAddTheReleasePackagesToTheListOfInstalledPackages = 'Add the release '
+    +'packages, the set a default install ships, to the list of installed '
+    +'packages (combine with --build-ide to rebuild IDE).';
   lisWriteWhatPackageFilesAreS = 'Write what package files are searched and '
     +'found.';
   lisBuildIDEWithPackages = 'Build IDE with packages. Optional compiler options '+
