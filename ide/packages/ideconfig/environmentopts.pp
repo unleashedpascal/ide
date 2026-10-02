@@ -792,7 +792,7 @@ begin
   FMaxRecentProjectFiles:=DefaultMaxRecentProjectFiles;
   FRecentPackageFiles:=TStringList.Create;
   FMaxRecentPackageFiles:=DefaultMaxRecentPackageFiles;
-  FOpenLastProjectAtStart:=true;
+  FOpenLastProjectAtStart:=false;
   FSimpleProgramAppName:='app';
   FSimpleProgramMainProc:='main';
   FSimpleProgramModeUnleashed:=true;
@@ -1084,7 +1084,7 @@ begin
     FAutoSaveProject:=FXMLCfg.GetValue(Path+'AutoSave/Project',true);
     FAutoSaveIntervalInSecs:=FXMLCfg.GetValue(Path+'AutoSave/IntervalInSecs',DefaultAutoSaveIntervalInSecs);
     FLastSavedProjectFile:=FXMLCfg.GetValue(Path+'AutoSave/LastSavedProjectFile','');
-    FOpenLastProjectAtStart:=FXMLCfg.GetValue(Path+'AutoSave/OpenLastProjectAtStart',true);
+    FOpenLastProjectAtStart:=FXMLCfg.GetValue(Path+'AutoSave/OpenLastProjectAtStart',false);
     FLastOpenPackages.Clear;
     if FOpenLastProjectAtStart then
     begin
@@ -1305,7 +1305,7 @@ begin
     FXMLCfg.SetDeleteValue(Path+'AutoSave/Project',FAutoSaveProject,true);
     FXMLCfg.SetDeleteValue(Path+'AutoSave/IntervalInSecs',FAutoSaveIntervalInSecs,DefaultAutoSaveIntervalInSecs);
     FXMLCfg.SetDeleteValue(Path+'AutoSave/LastSavedProjectFile',FLastSavedProjectFile,'');
-    FXMLCfg.SetDeleteValue(Path+'AutoSave/OpenLastProjectAtStart',FOpenLastProjectAtStart,true);
+    FXMLCfg.SetDeleteValue(Path+'AutoSave/OpenLastProjectAtStart',FOpenLastProjectAtStart,false);
     FXMLCfg.DeletePath(Path+'AutoSave/LastOpenPackages/');
     if FOpenLastProjectAtStart then
       for i := 0 to FLastOpenPackages.Count-1 do
