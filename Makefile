@@ -3142,7 +3142,7 @@ help:
 	@$(ECHO) "   distclean      Clean all targets and common leftovers."
 	@$(ECHO) "   lazbuild       build lazbuild"
 	@$(ECHO) "   bigide         as all, except that the IDE is built with a lot of extra packages"
-	@$(ECHO) "   useride        calls lazbuild to build an IDE with your active profile, requires lazbuild"
+	@$(ECHO) "   useride        calls lazbuild to build an IDE with the release packages and your active profile, requires lazbuild"
 	@$(ECHO) "   install        installs Lazarus under $(LAZARUS_INSTALL_DIR)"
 	@$(ECHO) "                  You can change the directory by appending INSTALL_PREFIX=/some/path"
 	@$(ECHO)
@@ -3213,6 +3213,7 @@ idemin:
 idebig:
 	$(LAZBUILDEXE) $(LAZBUILDOPTS) --build-ide-release --pkg-release
 useride:
+	$(LAZBUILDEXE) $(LAZBUILDOPTS) --add-release-packages
 	$(LAZBUILDEXE) $(LAZBUILDOPTS) --build-ide --pkg-release
 ide:
 	$(MAKE) -C ide ide
