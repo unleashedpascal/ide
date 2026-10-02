@@ -128,6 +128,9 @@ var
   CmdCat: TIDECommandCategory;
   IdeCmd: TIDECommand;
 begin
+  // another dock master owns the IDE: nothing of this one shows up
+  if (IDEDockMaster<>nil) and not (IDEDockMaster is TIDEAnchorDockMaster) then
+    exit;
   AnchorDockGlobalOptions.LoadSafe;
   if not AnchorDockGlobalOptions.EnableAnchorDock then begin
     AnchorDockOptionsID:=RegisterIDEOptionsEditor(GroupEnvironment,TAnchorDockIDEDisabledFrame,
