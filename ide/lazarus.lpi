@@ -37,7 +37,7 @@
     <RunParams>
       <FormatVersion Value="2"/>
     </RunParams>
-    <RequiredPackages Count="19">
+    <RequiredPackages Count="20">
       <Item1>
         <PackageName Value="IdePackager"/>
       </Item1>
@@ -97,6 +97,9 @@
       <Item19>
         <PackageName Value="UnleashedPanes"/>
       </Item19>
+      <Item20>
+        <PackageName Value="DockedFormEditor"/>
+      </Item20>
     </RequiredPackages>
     <Units Count="217">
       <Unit0>
