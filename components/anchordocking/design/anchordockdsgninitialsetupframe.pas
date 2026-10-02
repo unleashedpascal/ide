@@ -58,6 +58,9 @@ type
 
 implementation
 
+uses
+  RegisterAnchorDocking;
+
 var
   Registration: TAnchorDockDsgnSetup;
 
@@ -102,6 +105,8 @@ end;
 function TAnchorDockDsgnSetup.RequireSetup: boolean;
 begin
   if AnchorDockGlobalOptions = nil then exit(False);
+  // another dock master owns the IDE: nothing to ask
+  if (IDEDockMaster<>nil) and not (IDEDockMaster is TIDEAnchorDockMaster) then exit(False);
   AnchorDockGlobalOptions.LoadSafe;
   Result := not AnchorDockGlobalOptions.DoneAskUserEnableAnchorDock;
 end;
