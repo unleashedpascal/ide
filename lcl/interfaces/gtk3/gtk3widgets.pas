@@ -1357,6 +1357,10 @@ const
 // Usage in gdb:  call eg (void) Gtk3DbgWidget((void*)0xfbe920)
 procedure Gtk3DbgWidget(AWidget: PGtkWidget); cdecl;
 
+// tells the design color hook that a design-time control starts or ends
+// resolving its colors; nothing happens for any other control
+procedure Gtk3NotifyDesignColor(AWidget: TGtk3Widget; AActive: Boolean);
+
 implementation
 
 uses {$IFDEF GTK3DEBUGKEYPRESS}TypInfo,{$ENDIF}gtk3int, gtk3caret, imglist,
@@ -1371,6 +1375,13 @@ uses {$IFDEF GTK3DEBUGKEYPRESS}TypInfo,{$ENDIF}gtk3int, gtk3caret, imglist,
 {$i gtk3lclnotebook.inc}
 {$i gtk3lclmenuitem.inc}
 {$i gtk3lclscrolledwindow.inc}
+
+procedure Gtk3NotifyDesignColor(AWidget: TGtk3Widget; AActive: Boolean);
+begin
+  if Assigned(Gtk3WidgetSet.DesignColorHook) and Assigned(AWidget.LCLObject) and
+    (csDesigning in AWidget.LCLObject.ComponentState) then
+    Gtk3WidgetSet.DesignColorHook(AActive);
+end;
 
 class function TGtk3Widget.WidgetEvent(widget: PGtkWidget; event: PGdkEvent; data: GPointer): gboolean; cdecl;
 var
@@ -1691,7 +1702,9 @@ begin
   if Data <> nil then
   begin
     gdk_cairo_get_clip_rectangle(AContext, @ARect);
+    Gtk3NotifyDesignColor(TGtk3Widget(Data), True);
     Result := TGtk3Widget(Data).GtkEventPaint(AWidget, AContext);
+    Gtk3NotifyDesignColor(TGtk3Widget(Data), False);
   end;
 end;
 
@@ -16962,7 +16975,9 @@ begin
   NColor := This.LCLObject.Color;
   if (NColor = clNone) or (NColor = clDefault) or (NColor = clForm) then
     exit;
+  Gtk3NotifyDesignColor(This, True);
   RGB := ColorToRGB(NColor);
+  Gtk3NotifyDesignColor(This, False);
   W := AWidget^.get_allocated_width;
   H := AWidget^.get_allocated_height;
   cairo_save(AContext);
@@ -16983,7 +16998,9 @@ begin
     {$IFDEF GTK3DEBUGDESIGNER}
     writeln('>Gtk3DrawDesigner ');
     {$ENDIF}
+    Gtk3NotifyDesignColor(TGtk3Widget(Data), True);
     Result := TGtk3DesignWidget(Data).GtkEventPaint(AWidget, AContext);
+    Gtk3NotifyDesignColor(TGtk3Widget(Data), False);
     // workaround for lcl painted widgets until we found why gtk3 sends wrong rect
     // if (TGtk3Widget(Data).FHasPaint) and
     if (ARect.height < (TGtk3DesignWidget(Data).getContainerWidget^.get_allocated_height div 4) ) then
@@ -17021,6 +17038,8 @@ end;
 procedure TGtk3DesignWidget.InitializeWidget;
 begin
   inherited InitializeWidget;
+  // marks the designed form and everything in it for style sheets
+  gtk_style_context_add_class(Widget^.get_style_context, 'designer');
   g_signal_handler_disconnect(getContainerWidget, FDrawSignal);
   //connect background draw before, so it won't repaint over forms children.
   g_signal_connect_data(getContainerWidget, 'draw', TGCallback(@TGtk3DesignWidget.Gtk3DrawDesignerBg), Self, nil, G_CONNECT_DEFAULT);

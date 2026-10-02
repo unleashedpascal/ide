@@ -36,6 +36,11 @@ uses
 
 type
 
+  // runs with True before a design-time control paints or takes its color
+  // and with False after; a theme engine serves the stock system colors in
+  // between, so a designed form looks like the running program
+  TGtk3DesignColorHook = procedure(AActive: Boolean);
+
   { lazarus GtkInterface definition for additional timer data, not in gtk }
   PGtkITimerInfo = ^TGtkITimerinfo;
   TGtkITimerInfo = record
@@ -85,6 +90,7 @@ type
     FChildSignalHandlers: PChildSignalEventHandler;
     FOverlayScrolling:gboolean;
     FFlatEdges: Boolean;
+    FDesignColorHook: TGtk3DesignColorHook;
     {$ELSE}
     {$IFDEF VerboseGtkToDos}{$warning no declaration of FChildSignalHandlers for this OS}{$ENDIF}
     {$ENDIF}
@@ -222,6 +228,7 @@ type
     property OverlayScrolling: gboolean read FOverlayScrolling write FOverlayScrolling;
     // DrawEdge paints no 3D rings, for a flat look
     property FlatEdges: Boolean read FFlatEdges write FFlatEdges;
+    property DesignColorHook: TGtk3DesignColorHook read FDesignColorHook write FDesignColorHook;
     property IMContext: PGtkIMContext read FIMContext;
     property IMCommitStr: string read FIMCommitStr write FIMCommitStr;
     property IMInFilter: Boolean read FIMInFilter write FIMInFilter;

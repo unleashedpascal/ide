@@ -533,7 +533,12 @@ begin
   {$IFDEF GTK3DEBUGCORE}
   DebugLn('TGtk3WSWinControl.SetColor ',dbgsName(AWinControl));
   {$ENDIF}
-  TGtk3Widget(AWinControl.Handle).Color := AWinControl.Color;
+  Gtk3NotifyDesignColor(TGtk3Widget(AWinControl.Handle), True);
+  try
+    TGtk3Widget(AWinControl.Handle).Color := AWinControl.Color;
+  finally
+    Gtk3NotifyDesignColor(TGtk3Widget(AWinControl.Handle), False);
+  end;
 end;
 
 class procedure TGtk3WSWinControl.SetCursor(const AWinControl: TWinControl; const ACursor: HCursor);
