@@ -76,39 +76,27 @@ const
     'UnleashedPanes'
     );
 
-  // extra packages for the release, alias "bigide"
-  LazarusIDEReleasePkgNames: array[0..30] of string = (
-	  'SyneditDsgn',
-    'OnlinePackageManager',
-    'cairocanvas_pkg',
-    'RunTimeTypeInfoControls',
-    'Printer4Lazarus',
-    'Printers4LazIDE',
-    'LeakView',
-    'MemDSLaz',
+  // extra packages for the release, alias "bigide": the set the installer ships
+  LazarusIDEReleasePkgNames: array[0..18] of string = (
+    'SynEditDsgn',
+    'DateTimeCtrls',
+    'DateTimeCtrlsDsgn',
     'SDFLaz',
-    'InstantFPCLaz',
-    'ExternHelp',
-    'TurboPowerIPro',
-    'TurboPowerIProDsgn',
-    'JCFIDELazarus',
-    'ChmHelpPkg',
-    'FPCUnitTestRunner',
+    'Cody',
+    'ProjTemplates',
+    'SQLDBLaz',
+    'MemDSLaz',
+    'DBFLaz',
     'FPCUnitIDE',
     'LazTestInsight',
-    'ProjTemplates',
+    'lazdaemon',
+    'LeakView',
     'TAChartLazarusPkg',
-    'TodoListLaz',
-    'DateTimeCtrls',
-    'SQLDBLaz',
-    'DBFLaz',
-    'PascalScript',
-    'EditorMacroScript',
-    'ExampleProjects',
-    'SimpleWebServerGUI',
-    'LazProjectGroups',
-    'Pas2jsDsgn',
-    'Charactermap_ide_pkg'
+    'JCFIDELazarus',
+    'lhelpcontrolpkg',
+    'ChmHelpPkg',
+    'InstantFPCLaz',
+    'ExternHelp'
     );
 
 implementation
