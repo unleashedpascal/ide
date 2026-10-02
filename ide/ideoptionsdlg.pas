@@ -30,7 +30,7 @@ unit IDEOptionsDlg;
 interface
 
 uses
-  Classes, SysUtils, System.UITypes,
+  Classes, SysUtils, Math, System.UITypes,
   // LCL
   LCLType, Controls, Forms, ComCtrls, Buttons, ButtonPanel, ExtCtrls, StdCtrls,
   Dialogs, Graphics,
@@ -167,6 +167,8 @@ end;
 { TIDEOptionsDialog }
 
 constructor TIDEOptionsDialog.Create(AOwner: TComponent);
+var
+  WorkArea: TRect;
 begin
   inherited Create(AOwner);
   FPrevEditor := nil;
@@ -202,7 +204,15 @@ begin
   IDEImages.AssignImage(BuildModeManageButton, 'menu_compiler_options');
 
   BuildModeComboBox.DropDownCount := EnvironmentOptions.DropDownCount;
-  IDEDialogLayoutList.ApplyLayout(Self);
+  // no stored size: 900x720 at 96 dpi, or nine tenths of the work area when the
+  // screen is smaller than that
+  if Application.MainForm <> nil then
+    WorkArea := Application.MainForm.Monitor.WorkareaRect
+  else
+    WorkArea := Screen.PrimaryMonitor.WorkareaRect;
+  IDEDialogLayoutList.ApplyLayout(Self,
+    Min(Scale96ToForm(900), WorkArea.Width - WorkArea.Width div 10),
+    Min(Scale96ToForm(720), WorkArea.Height - WorkArea.Height div 10));
 end;
 
 procedure TIDEOptionsDialog.FormShow(Sender: TObject);

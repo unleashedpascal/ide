@@ -7,7 +7,7 @@ inherited IDEOptionsDialog: TIDEOptionsDialog
   Constraints.MinHeight = 350
   Constraints.MinWidth = 500
   KeyPreview = True
-  Position = poWorkAreaCenter
+  Position = poMainFormCenter
   OnClose = FormClose
   OnKeyDown = FormKeyDown
   OnShow = FormShow
