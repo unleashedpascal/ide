@@ -1488,7 +1488,7 @@ begin
   ecCompile:             SetSingle(VK_F9,[XCtrl]);
   ecBuild:               SetSingle(VK_F9,[ssShift]);
   ecQuickCompile:        SetSingle(VK_UNKNOWN,[]);
-  ecCleanUpAndBuild:     SetSingle(VK_UNKNOWN,[]);
+  ecCleanUpAndBuild:     SetSingle(VK_F9,[XCtrl, ssShift]);
   ecBuildManyModes:      SetSingle(VK_UNKNOWN,[]);
   ecAbortBuild:          SetSingle(VK_UNKNOWN,[]);
   ecRunWithoutDebugging: SetSingle(VK_F9, [XCtrl, ssAlt]);
