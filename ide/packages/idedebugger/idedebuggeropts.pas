@@ -966,6 +966,9 @@ begin
 end;
 
 procedure TDebuggerOptions.LoadDebuggerProperties;
+var
+  DbgClass: TDebuggerClass;
+  Entry: TDebuggerPropertiesConfig;
 begin
   if XMLCfg.HasPath('Debugger/Backends/', False) then begin
     FDebuggerConfigList.LoadFromXml(XMLCfg, 'Debugger/Backends/');
@@ -975,6 +978,18 @@ begin
   end;
 
   HasActiveDebuggerEntry := FDebuggerConfigList.HasActiveDebuggerEntry;
+
+  // no backend configured yet: FpDebug is the default, nothing to ask the user
+  if not HasActiveDebuggerEntry then begin
+    DbgClass := TBaseDebugManagerIntf.DebuggersByClassName['TFpDebugDebugger'];
+    if (DbgClass <> nil) and not (dfNotSuitableForOsArch in DbgClass.SupportedFeatures) then begin
+      Entry := TDebuggerPropertiesConfig.CreateForDebuggerClass(DbgClass, True);
+      Entry.ConfigName := 'Default';
+      FDebuggerConfigList.CurrentDebuggerPropertiesConfig := Entry;
+      FDebuggerConfigList.HasActiveDebuggerEntry := True;
+      HasActiveDebuggerEntry := True;
+    end;
+  end;
 end;
 
 procedure TDebuggerOptions.SaveDebuggerPropertiesList;
