@@ -54,18 +54,6 @@ resourceString
   STabPositionRight           = 'Right';
 
   SArgumentOutOfRange         = 'Argument out of range.';
-  setupDesignerClassic = 'Classic Form Editor (floating):';
-  setupDesignerFloat = 'The form editor shows the edited form as a normal window.';
-  setupDesignerModern = 'Modern Form Editor (docked/tabbed):';
-  setupDesignerDocked = 'The form editor is part of the IDE''s source editor (tabbed interface).';
-  setupDesignerInfo = 'The "classic" designer can be positioned on your screen independent of ' +
-    'other parts of the IDE. The "modern" docked designer will be embedded into the ' +
-    'source-edit window, and you will have a tab to toggle between source and form. ' +
-    'You can open a 2nd source-edit window to see both at the same time.';
-  setupMultiWindowIDEOption = 'You can change this in the IDE options under: "Docked Form Editor"';
-  SEnableDockedDsgner = 'Show the form-editor as (docked) tab in the editor window (Requires IDE restart)';
-  SIDELayout = 'IDE Layout';
-  SFormEditor = 'Form editor / Designer';
 
 const
   STabPosition: array [Low(TTabPosition)..High(TTabPosition)] of String = (

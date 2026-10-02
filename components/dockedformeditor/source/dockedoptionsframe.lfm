@@ -8,36 +8,23 @@ object FrameDockedOptions: TFrameDockedOptions
   TabOrder = 0
   DesignLeft = 336
   DesignTop = 249
-  object cbEnableDockFormEd: TCheckBox
-    AnchorSideLeft.Control = Owner
-    AnchorSideTop.Control = Owner
-    Left = 6
-    Height = 19
-    Top = 0
-    Width = 134
-    BorderSpacing.Left = 6
-    Caption = 'cbEnableDockFormEd'
-    TabOrder = 0
-    OnChange = cbEnableDockFormEdChange
-  end
   object Panel1: TPanel
     AnchorSideLeft.Control = Owner
-    AnchorSideTop.Control = cbEnableDockFormEd
-    AnchorSideTop.Side = asrBottom
+    AnchorSideTop.Control = Owner
     AnchorSideRight.Control = Owner
     AnchorSideRight.Side = asrBottom
     AnchorSideBottom.Control = Owner
     AnchorSideBottom.Side = asrBottom
     Left = 6
-    Height = 470
-    Top = 19
+    Height = 489
+    Top = 0
     Width = 565
     Anchors = [akTop, akLeft, akRight, akBottom]
     BorderSpacing.Left = 6
     BevelOuter = bvNone
-    ClientHeight = 470
+    ClientHeight = 489
     ClientWidth = 565
-    TabOrder = 1
+    TabOrder = 0
     object ComboBoxTabPosition: TComboBox
       AnchorSideLeft.Control = Panel1
       AnchorSideTop.Control = LabelTabPosition

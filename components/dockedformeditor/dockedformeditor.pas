@@ -11,7 +11,7 @@ uses
   DockedRegister, DockedStrConsts, DockedFormAccesses, DockedMainIDE, DockedResizer, 
   DockedOptionsIDE, DockedOptionsFrame, DockedTools, DockedDesignForm, DockedSourcePageControl, 
   DockedSourceWindow, DockedAnchorDesigner, DockedBasicAnchorDesigner, DockedAnchorControl, 
-  DockedGrip, DockedResizeControl, DockedFormInitialSetupFrame, LazarusPackageIntf;
+  DockedGrip, DockedResizeControl, LazarusPackageIntf;
 
 implementation
 
