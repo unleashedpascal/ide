@@ -36,7 +36,10 @@ uses
 var
   provider: PGtkCssProvider = nil;
   stockColors: array[0..MAX_SYS_COLORS] of DWORD;
+  palColors: array[0..MAX_SYS_COLORS] of DWORD;
   stockDark: gboolean = False;
+  // designed controls painting right now, nested
+  designDepth: integer = 0;
 
 function hex(color: TColor): string;
 begin
@@ -44,9 +47,55 @@ begin
   result := Format('#%.2x%.2x%.2x', [Red(rgb), Green(rgb), Blue(rgb)]);
 end;
 
-// the stylesheet for a palette. The named colors are what the LCL reads back
-// for its system colors, the rules cover the widgets the stock theme paints
-function styleSheet(const pal: TPalette): string;
+// every selector of the comma separated list, under the scope
+function scoped(const scope, selectors: string): string;
+begin
+  result := '';
+  for var sel in selectors.Split([',']) do begin
+    if result <> '' then result := result + ', ';
+    result := result + scope + sel.Trim;
+  end;
+end;
+
+// the named colors the LCL reads back for its system colors
+function namedColors(const pal: TPalette): string;
+begin
+  var face := hex(pal[COLOR_BTNFACE]);
+  var fore := hex(pal[COLOR_BTNTEXT]);
+  var base := hex(pal[COLOR_WINDOW]);
+  var highlight := hex(pal[COLOR_HIGHLIGHT]);
+  var highlightText := hex(pal[COLOR_HIGHLIGHTTEXT]);
+  result :=
+    '@define-color theme_bg_color '+face+';'+
+    '@define-color theme_fg_color '+fore+';'+
+    '@define-color theme_base_color '+base+';'+
+    '@define-color theme_text_color '+hex(pal[COLOR_WINDOWTEXT])+';'+
+    '@define-color theme_selected_bg_color '+highlight+';'+
+    '@define-color theme_selected_fg_color '+highlightText+';'+
+    '@define-color theme_unfocused_bg_color '+face+';'+
+    '@define-color theme_unfocused_fg_color '+fore+';'+
+    '@define-color theme_unfocused_base_color '+base+';'+
+    '@define-color theme_unfocused_selected_bg_color '+highlight+';'+
+    '@define-color theme_unfocused_selected_fg_color '+highlightText+';'+
+    '@define-color theme_tooltip_bg_color '+hex(pal[COLOR_INFOBK])+';'+
+    '@define-color theme_tooltip_fg_color '+hex(pal[COLOR_INFOTEXT])+';'+
+    '@define-color borders '+hex(pal[COLOR_WINDOWFRAME])+';'+
+    '@define-color unfocused_borders '+hex(pal[COLOR_WINDOWFRAME])+';'+
+    '@define-color insensitive_fg_color '+hex(pal[COLOR_GRAYTEXT])+';'+
+    '@define-color insensitive_bg_color '+face+';'+
+    '@define-color insensitive_base_color '+base+';';
+end;
+
+// the rules for a palette, covering the widgets the stock theme paints. The
+// scope goes in front of every selector: none for the IDE, the designer class
+// for the designed forms, which get the stock colors this way
+function styleSheet(const pal: TPalette; const scope: string): string;
+
+  function s(const selectors: string): string;
+  begin
+    result := scoped(scope, selectors);
+  end;
+
 begin
   var face := hex(pal[COLOR_BTNFACE]);
   var fore := hex(pal[COLOR_BTNTEXT]);
@@ -60,90 +109,80 @@ begin
   var menuBack := hex(pal[COLOR_MENU]);
   var menuText := hex(pal[COLOR_MENUTEXT]);
   result :=
-    '@define-color theme_bg_color '+face+';'+
-    '@define-color theme_fg_color '+fore+';'+
-    '@define-color theme_base_color '+base+';'+
-    '@define-color theme_text_color '+baseText+';'+
-    '@define-color theme_selected_bg_color '+highlight+';'+
-    '@define-color theme_selected_fg_color '+highlightText+';'+
-    '@define-color theme_unfocused_bg_color '+face+';'+
-    '@define-color theme_unfocused_fg_color '+fore+';'+
-    '@define-color theme_unfocused_base_color '+base+';'+
-    '@define-color theme_unfocused_selected_bg_color '+highlight+';'+
-    '@define-color theme_unfocused_selected_fg_color '+highlightText+';'+
-    '@define-color theme_tooltip_bg_color '+hex(pal[COLOR_INFOBK])+';'+
-    '@define-color theme_tooltip_fg_color '+hex(pal[COLOR_INFOTEXT])+';'+
-    '@define-color borders '+hex(pal[COLOR_WINDOWFRAME])+';'+
-    '@define-color unfocused_borders '+hex(pal[COLOR_WINDOWFRAME])+';'+
-    '@define-color insensitive_fg_color '+gray+';'+
-    '@define-color insensitive_bg_color '+face+';'+
-    '@define-color insensitive_base_color '+base+';'+
     // containers and everything windowless inside them
-    'window, dialog, .background, popover, popover > *, toolbar, headerbar, .titlebar, '+
+    s('window, dialog, .background, popover, popover > *, toolbar, headerbar, .titlebar, '+
     'paned, box, grid, fixed, layout, stack, scrolledwindow, viewport, frame, frame > border, '+
     'notebook, notebook > header, notebook > header > tabs, notebook > stack, expander, '+
-    'statusbar, actionbar, searchbar, revealer, overlay, infobar, infobar > revealer > box '+
-    '{ background-color: '+face+'; color: '+fore+'; background-image: none; }'+
+    'statusbar, actionbar, searchbar, revealer, overlay, infobar, infobar > revealer > box')+
+    ' { background-color: '+face+'; color: '+fore+'; background-image: none; }'+
     // inside a widget whose background follows its state (a hovered button, the
     // current tab) the containers around the text show through instead of
     // keeping the plain face color
-    'button box, button grid, button label, button image, button arrow, button cellview, '+
+    s('button box, button grid, button label, button image, button arrow, button cellview, '+
     'tab box, tab grid, tab label, tab image, '+
     'menuitem box, menuitem grid, menuitem label, menuitem image, menuitem arrow, '+
     'checkbutton box, checkbutton label, radiobutton box, radiobutton label, '+
-    'expander title box, expander title label, treeview header button box, treeview header button label '+
-    '{ background-color: transparent; background-image: none; }'+
+    'expander title box, expander title label, treeview header button box, treeview header button label')+
+    ' { background-color: transparent; background-image: none; }'+
     // gtk dashes the edges a scrolled window can still scroll past; an LCL
     // control scrolls on its own, so the dashes only frame it
-    'undershoot { background-image: none; }'+
+    s('undershoot')+' { background-image: none; }'+
     // data views
-    'entry, entry > text, spinbutton, spinbutton > text, textview, textview > text, text, '+
-    'treeview, treeview.view, list, listbox, row, iconview, .view, calendar, combobox entry '+
-    '{ background-color: '+base+'; color: '+baseText+'; background-image: none; caret-color: '+baseText+'; }'+
-    'entry, spinbutton { border-color: '+shadow+'; box-shadow: none; }'+
-    'entry:focus, spinbutton:focus { border-color: '+highlight+'; }'+
-    'treeview header button, treeview.view header button '+
-    '{ background-color: '+face+'; color: '+fore+'; border-color: '+shadow+'; background-image: none; }'+
+    s('entry, entry > text, spinbutton, spinbutton > text, textview, textview > text, text, '+
+    'treeview, treeview.view, list, listbox, row, iconview, .view, calendar, combobox entry')+
+    ' { background-color: '+base+'; color: '+baseText+'; background-image: none; caret-color: '+baseText+'; }'+
+    s('entry, spinbutton')+' { border-color: '+shadow+'; box-shadow: none; }'+
+    s('entry:focus, spinbutton:focus')+' { border-color: '+highlight+'; }'+
+    s('treeview header button, treeview.view header button')+
+    ' { background-color: '+face+'; color: '+fore+'; border-color: '+shadow+'; background-image: none; }'+
     // buttons and tabs
-    'button, button.text-button, button.image-button, button.flat, spinbutton button, combobox button, '+
-    'notebook > header tab, toolbar button, scale slider '+
-    '{ background-color: '+face+'; color: '+fore+'; border-color: '+shadow+'; '+
+    s('button, button.text-button, button.image-button, button.flat, spinbutton button, combobox button, '+
+    'notebook > header tab, toolbar button, scale slider')+
+    ' { background-color: '+face+'; color: '+fore+'; border-color: '+shadow+'; '+
     '  background-image: none; box-shadow: none; text-shadow: none; -gtk-icon-shadow: none; }'+
-    'button:hover, notebook > header tab:hover, toolbar button:hover { background-color: '+hover+'; }'+
-    'button:active, button:checked { background-color: '+hex(pal[COLOR_BTNHIGHLIGHT])+'; }'+
-    'notebook > header tab:checked { background-color: '+base+'; color: '+baseText+'; }'+
-    'check, radio { background-color: '+base+'; color: '+baseText+'; border-color: '+shadow+'; '+
+    s('button:hover, notebook > header tab:hover, toolbar button:hover')+' { background-color: '+hover+'; }'+
+    s('button:active, button:checked')+' { background-color: '+hex(pal[COLOR_BTNHIGHLIGHT])+'; }'+
+    s('notebook > header tab:checked')+' { background-color: '+base+'; color: '+baseText+'; }'+
+    s('check, radio')+' { background-color: '+base+'; color: '+baseText+'; border-color: '+shadow+'; '+
     '  background-image: none; box-shadow: none; -gtk-icon-shadow: none; }'+
-    'check:checked, radio:checked, check:indeterminate '+
-    '{ background-color: '+highlight+'; color: '+highlightText+'; border-color: '+highlight+'; }'+
+    s('check:checked, radio:checked, check:indeterminate')+
+    ' { background-color: '+highlight+'; color: '+highlightText+'; border-color: '+highlight+'; }'+
     // the radio node is square; the fill stays inside the ring, and an empty
     // ring shows only its border
-    'radio { background-color: transparent; border-radius: 100%; }'+
+    s('radio')+' { background-color: transparent; border-radius: 100%; }'+
     // menus
-    'menubar { background-color: '+hex(pal[COLOR_MENUBAR])+'; color: '+fore+'; background-image: none; box-shadow: none; }'+
-    'menu, .menu, .context-menu, popover.menu '+
-    '{ background-color: '+menuBack+'; color: '+menuText+'; border-color: '+shadow+'; background-image: none; }'+
-    'menuitem { background-color: transparent; color: '+menuText+'; }'+
-    'menuitem:hover, menubar > menuitem:hover { background-color: '+hex(pal[COLOR_MENUHILIGHT])+'; color: '+menuText+'; box-shadow: none; }'+
-    'menu separator, .menu separator { background-color: '+shadow+'; }'+
+    s('menubar')+' { background-color: '+hex(pal[COLOR_MENUBAR])+'; color: '+fore+'; background-image: none; box-shadow: none; }'+
+    s('menu, .menu, .context-menu, popover.menu')+
+    ' { background-color: '+menuBack+'; color: '+menuText+'; border-color: '+shadow+'; background-image: none; }'+
+    s('menuitem')+' { background-color: transparent; color: '+menuText+'; }'+
+    s('menuitem:hover, menubar > menuitem:hover')+' { background-color: '+hex(pal[COLOR_MENUHILIGHT])+'; color: '+menuText+'; box-shadow: none; }'+
+    s('menu separator, .menu separator')+' { background-color: '+shadow+'; }'+
     // scroll bars, sliders and progress
-    'scrollbar, scrollbar trough, scrollbar contents { background-color: '+hex(pal[COLOR_SCROLLBAR])+'; background-image: none; border-color: '+hex(pal[COLOR_SCROLLBAR])+'; }'+
-    'scrollbar slider { background-color: '+shadow+'; border-color: '+hex(pal[COLOR_SCROLLBAR])+'; }'+
-    'scrollbar slider:hover, scrollbar slider:active { background-color: '+gray+'; }'+
+    s('scrollbar, scrollbar trough, scrollbar contents')+' { background-color: '+hex(pal[COLOR_SCROLLBAR])+'; background-image: none; border-color: '+hex(pal[COLOR_SCROLLBAR])+'; }'+
+    s('scrollbar slider')+' { background-color: '+shadow+'; border-color: '+hex(pal[COLOR_SCROLLBAR])+'; }'+
+    s('scrollbar slider:hover, scrollbar slider:active')+' { background-color: '+gray+'; }'+
     // the corner where the two bars meet
-    'scrolledwindow junction { background-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-image: none; }'+
-    'scale trough, progressbar trough { background-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-color: '+shadow+'; background-image: none; }'+
-    'scale highlight, progressbar progress { background-color: '+highlight+'; border-color: '+highlight+'; background-image: none; }'+
+    s('scrolledwindow junction')+' { background-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-image: none; }'+
+    s('scale trough, progressbar trough')+' { background-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-color: '+shadow+'; background-image: none; }'+
+    s('scale highlight, progressbar progress')+' { background-color: '+highlight+'; border-color: '+highlight+'; background-image: none; }'+
     // separators and tooltips
-    'separator, paned > separator { background-color: '+shadow+'; background-image: none; }'+
-    'tooltip, tooltip.background, tooltip * { background-color: '+hex(pal[COLOR_INFOBK])+'; color: '+hex(pal[COLOR_INFOTEXT])+'; '+
+    s('separator, paned > separator')+' { background-color: '+shadow+'; background-image: none; }'+
+    s('tooltip, tooltip.background, tooltip *')+' { background-color: '+hex(pal[COLOR_INFOBK])+'; color: '+hex(pal[COLOR_INFOTEXT])+'; '+
     '  border-color: '+shadow+'; background-image: none; }'+
     // selection and disabled state
-    '*:selected, treeview:selected, treeview.view:selected, row:selected, row:selected label, '+
+    s('*:selected, treeview:selected, treeview.view:selected, row:selected, row:selected label, '+
     'entry selection, textview selection, textview > text selection, label selection, '+
-    'iconview:selected, calendar:selected '+
-    '{ background-color: '+highlight+'; color: '+highlightText+'; }'+
-    '*:disabled { color: '+gray+'; -gtk-icon-effect: dim; }';
+    'iconview:selected, calendar:selected')+
+    ' { background-color: '+highlight+'; color: '+highlightText+'; }'+
+    s('*:disabled')+' { color: '+gray+'; -gtk-icon-effect: dim; }';
+end;
+
+// the stock system colors as a palette, for the designed forms
+function stockPalette: TPalette;
+begin
+  for var i := 0 to MAX_SYS_COLORS do result[i] := TColor(stockColors[i]);
+  result[COLOR_MARK] := result[COLOR_HIGHLIGHT];
+  result[COLOR_HOVER] := result[COLOR_3DLIGHT];
 end;
 
 // the LCL keeps its system colors in a table filled once from the theme; the
@@ -158,6 +197,20 @@ begin
     // into, which is gone by now; the color setter would draw into it
     TGtk3Brush(brush).Context := nil;
     TGtk3Brush(brush).Color := colors[i];
+  end;
+end;
+
+// serves the stock system colors while a designed control paints or takes
+// its color, so the designed form looks like the running program. Designed
+// controls paint inside each other, so only the outermost one switches
+procedure designColorHook(active: boolean);
+begin
+  if active then begin
+    if designDepth = 0 then pushSysColors(stockColors);
+    inc(designDepth);
+  end else begin
+    dec(designDepth);
+    if designDepth = 0 then pushSysColors(palColors);
   end;
 end;
 
@@ -203,15 +256,16 @@ begin
   // the dark variant of the gtk theme brings the matching icons and shadows
   setPreferDark((r*299+g*587+b*114) div 1000 < 128);
   // the sheet loads while the provider is off the screen, so no widget keeps
-  // style values from the old sheet during the reload
-  var css := styleSheet(newPal);
+  // style values from the old sheet during the reload. The designed forms
+  // get the stock colors, like the running program shows them
+  var css := namedColors(newPal) + styleSheet(newPal, '') + styleSheet(stockPalette, '.designer ');
   gtk_css_provider_load_from_data(provider, PChar(css), length(css), nil);
   gtk_style_context_add_provider_for_screen(gdk_screen_get_default, PGtkStyleProvider(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-  var colors: array[0..MAX_SYS_COLORS] of DWORD;
-  for var i := 0 to MAX_SYS_COLORS do colors[i] := newPal[i];
-  pushSysColors(colors);
+  for var i := 0 to MAX_SYS_COLORS do palColors[i] := newPal[i];
+  pushSysColors(palColors);
   // the palette paints flat, like the win32 engine: no 3D rings on tool bars
   Gtk3WidgetSet.FlatEdges := true;
+  Gtk3WidgetSet.DesignColorHook := @designColorHook;
   refreshLCL;
 end;
 
@@ -222,6 +276,7 @@ begin
   g_object_unref(PGObject(provider));
   provider := nil;
   setPreferDark(stockDark);
+  Gtk3WidgetSet.DesignColorHook := nil;
   pushSysColors(stockColors);
   Gtk3WidgetSet.FlatEdges := false;
   refreshLCL;
