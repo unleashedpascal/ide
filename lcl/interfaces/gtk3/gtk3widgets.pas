@@ -98,10 +98,14 @@ type
     FPaintData: TPaintData;
     FDrawSignal: GULong; // needed by designer
     FFont: PPangoFontDescription;
+    FDesignCursor: HCURSOR; // the cursor the designer picked last
     class function MoveTabFocus(aWidget: PGtkWidget;
       aDirection: TGtkDirectionType; aData: gPointer): gBoolean; cdecl; static;
     class function WidgetEvent(widget: PGtkWidget; event: PGdkEvent; data: GPointer): gboolean; cdecl; static; {main event filter of widget}
     class procedure DestroyWidgetEvent({%H-}w: PGtkWidget;{%H-}data:gpointer); cdecl; static;
+    class procedure DesignRealize({%H-}AWidget: PGtkWidget; AData: gpointer); cdecl; static;
+    class procedure DesignStateChanged({%H-}AWidget: PGtkWidget; {%H-}APrevious: TGtkStateFlags; AData: gpointer); cdecl; static;
+    procedure ApplyDesignCursor;
   strict private
     FCentralWidgetRGBA: array [0{GTK_STATE_NORMAL}..4{GTK_STATE_INSENSITIVE}] of TDefaultRGBA;
     FEnterLeaveTime: Cardinal;
@@ -1381,6 +1385,25 @@ begin
   if Assigned(Gtk3WidgetSet.DesignColorHook) and Assigned(AWidget.LCLObject) and
     (csDesigning in AWidget.LCLObject.ComponentState) then
     Gtk3WidgetSet.DesignColorHook(AActive);
+end;
+
+class procedure TGtk3Widget.DesignRealize(AWidget: PGtkWidget; AData: gpointer); cdecl;
+begin
+  TGtk3Widget(AData).ApplyDesignCursor;
+end;
+
+class procedure TGtk3Widget.DesignStateChanged(AWidget: PGtkWidget; APrevious: TGtkStateFlags; AData: gpointer); cdecl;
+begin
+  TGtk3Widget(AData).ApplyDesignCursor;
+end;
+
+// the cursor the designer picked last, the default one before the first pick
+procedure TGtk3Widget.ApplyDesignCursor;
+begin
+  if FDesignCursor <> 0 then
+    SetCursor(FDesignCursor)
+  else
+    SetCursor(Screen.Cursors[crDefault]);
 end;
 
 class function TGtk3Widget.WidgetEvent(widget: PGtkWidget; event: PGdkEvent; data: GPointer): gboolean; cdecl;
@@ -3956,6 +3979,11 @@ begin
     {$ENDIF}
     gtk_widget_set_can_focus(Widget, False);
     gtk_widget_set_can_focus(GetContainerWidget, False);
+    // an entry or a text view puts its text cursor back on realize and on
+    // every state flags change (hover, focus, backdrop); the designer's
+    // cursor goes on again right after
+    g_signal_connect_data(GetContainerWidget, 'realize', TGCallback(@DesignRealize), Self, nil, [G_CONNECT_AFTER]);
+    g_signal_connect_data(GetContainerWidget, 'state-flags-changed', TGCallback(@DesignStateChanged), Self, nil, [G_CONNECT_AFTER]);
   end else
   if Assigned(LCLObject) and (csNoFocus in LCLObject.ControlStyle) then
   begin
@@ -4777,6 +4805,7 @@ procedure TGtk3Widget.SetCursor(ACursor: HCURSOR);
 var
   LCursor: HCURSOR;
   LCursorIsDefault: Boolean;
+  LDesigning: Boolean;
 begin
   if IsWidgetOk then
   begin
@@ -4785,22 +4814,31 @@ begin
     else
       LCursor := HCURSOR(TGtk3Cursor(ACursor).Handle);
     LCursorIsDefault := ACursor = Screen.Cursors[crDefault];
+    // a designed control shows only the cursor the designer picks, on every
+    // gdk window gtk made for it; the text cursor of an entry or a text view
+    // must not show in the form editor, and nothing is saved to restore later
+    LDesigning := Assigned(LCLObject) and (csDesigning in LCLObject.ComponentState);
+    if LDesigning then
+    begin
+      LCursorIsDefault := True;
+      FDesignCursor := ACursor;
+    end;
     if (wtLayout in WidgetType) and Gtk3IsLayout(GetContainerWidget)
       and Gtk3IsGdkWindow(PGtkLayout(GetContainerWidget)^.get_bin_window) then
     begin
-      SetWindowCursor(PGtkLayout(GetContainerWidget)^.get_bin_window, LCursor, False, LCursorIsDefault);
+      SetWindowCursor(PGtkLayout(GetContainerWidget)^.get_bin_window, LCursor, LDesigning, LCursorIsDefault);
       if GetContainerWidget^.get_has_window and
          Gtk3IsGdkWindow(GetContainerWidget^.window) then
-        SetWindowCursor(GetContainerWidget^.window, LCursor, False, LCursorIsDefault);
+        SetWindowCursor(GetContainerWidget^.window, LCursor, LDesigning, LCursorIsDefault);
       if (Widget <> GetContainerWidget) and Widget^.get_has_window and
          Gtk3IsGdkWindow(Widget^.window) then
-        SetWindowCursor(Widget^.window, LCursor, False, LCursorIsDefault);
+        SetWindowCursor(Widget^.window, LCursor, LDesigning, LCursorIsDefault);
     end else
     if GetContainerWidget^.get_has_window and Gtk3IsGdkWindow(GetContainerWidget^.window) then
-      SetWindowCursor(GetContainerWidget^.window, LCursor, False, LCursorIsDefault)
+      SetWindowCursor(GetContainerWidget^.window, LCursor, LDesigning, LCursorIsDefault)
     else
     if Widget^.get_has_window and Gtk3IsGdkWindow(Widget^.window) then
-      SetWindowCursor(Widget^.window, LCursor, False, LCursorIsDefault)
+      SetWindowCursor(Widget^.window, LCursor, LDesigning, LCursorIsDefault)
     else // fallback for window-less widgets
     if Assigned(self.getParent) then
       Self.getParent.SetCursor(ACursor);
