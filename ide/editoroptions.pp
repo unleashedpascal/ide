@@ -2203,6 +2203,19 @@ var
   EdOptsChangedHandlers: TMethodList;
   RegisteredAttribGroupNames: array of PString;
 
+// the editor font before the user picks one: Consolas on Windows, DejaVu Sans
+// Mono on Linux, the SynEdit default elsewhere
+function DefaultEditorFontName: String;
+begin
+  {$if defined(WINDOWS)}
+  Result := 'Consolas';
+  {$elseif defined(LINUX)}
+  Result := 'DejaVu Sans Mono';
+  {$else}
+  Result := SynDefaultFontName;
+  {$endif}
+end;
+
 function FontHeightToSize(Height: Integer): Integer;
 var
   AFont: TFont;
@@ -5919,7 +5932,7 @@ begin
   fElasticTabsMinWidth := 1;
   fBracketHighlightStyle := sbhsBoth;
   // Display options
-  fEditorFont := SynDefaultFontName;
+  fEditorFont := DefaultEditorFontName;
   fEditorFontSize := SynDefaultFontSize;
   fDisableAntialiasing := DefaultEditorDisableAntiAliasing;
   // Key Mappings
@@ -6116,7 +6129,7 @@ begin
     fRightMargin :=
       XMLConfig.GetValue('EditorOptions/Display/RightMargin', 160);
     fEditorFont  :=
-      XMLConfig.GetValue('EditorOptions/Display/EditorFont', SynDefaultFontName);
+      XMLConfig.GetValue('EditorOptions/Display/EditorFont', DefaultEditorFontName);
     if FileVersion < 8 then begin
       fEditorFontSize :=
         XMLConfig.GetValue('EditorOptions/Display/EditorFontHeight', SynDefaultFontHeight);
@@ -6339,7 +6352,7 @@ begin
     XMLConfig.SetDeleteValue('EditorOptions/Display/RightMargin',
       fRightMargin, 160);
     XMLConfig.SetDeleteValue('EditorOptions/Display/EditorFont',
-      fEditorFont, SynDefaultFontName);
+      fEditorFont, DefaultEditorFontName);
     XMLConfig.DeleteValue('EditorOptions/Display/EditorFontHeight'); // unused old value
     XMLConfig.SetDeleteValue('EditorOptions/Display/EditorFontSize'
       ,fEditorFontSize, SynDefaultFontSize);
