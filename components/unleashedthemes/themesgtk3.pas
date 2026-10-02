@@ -177,6 +177,16 @@ begin
     s('*:disabled')+' { color: '+gray+'; -gtk-icon-effect: dim; }';
 end;
 
+// the rule under the menu bar of the IDE windows, like the win32 engine
+// paints it: a two pixel line and a gap before the client area. A designed
+// form keeps its menu bar as the running program shows it
+function menuBand(const pal: TPalette): string;
+begin
+  result :=
+    'menubar { border-bottom: 2px solid '+hex(pal[COLOR_BTNHIGHLIGHT])+'; margin-bottom: 3px; }'+
+    '.designer menubar { border-bottom: none; margin-bottom: 0; }';
+end;
+
 // the stock system colors as a palette, for the designed forms
 function stockPalette: TPalette;
 begin
@@ -258,7 +268,7 @@ begin
   // the sheet loads while the provider is off the screen, so no widget keeps
   // style values from the old sheet during the reload. The designed forms
   // get the stock colors, like the running program shows them
-  var css := namedColors(newPal) + styleSheet(newPal, '') + styleSheet(stockPalette, '.designer ');
+  var css := namedColors(newPal) + styleSheet(newPal, '') + menuBand(newPal) + styleSheet(stockPalette, '.designer ');
   gtk_css_provider_load_from_data(provider, PChar(css), length(css), nil);
   gtk_style_context_add_provider_for_screen(gdk_screen_get_default, PGtkStyleProvider(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
   for var i := 0 to MAX_SYS_COLORS do palColors[i] := newPal[i];
