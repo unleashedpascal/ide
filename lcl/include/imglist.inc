@@ -284,12 +284,13 @@ begin
     System.Move(AVAlue.FData[0], FData[FCount], AValue.FCount * DataSize);
     OldCount := FCount;
     Inc(FCount, AValue.FCount);
+    DropTwin;
     if HandleAllocated
     then begin
       p := @FData[OldCount];
       for n := OldCount to FCount - 1 do
       begin
-        TWSCustomImageListResolutionClass(WidgetSetClass).Insert(Self, n, p);
+        TWSCustomImageListResolutionClass(WidgetSetClass).Insert(Self, n, Filtered(p, FWidth * FHeight));
         Inc(PByte(p), DataSize);
       end;
     end;
@@ -353,6 +354,7 @@ end;
 procedure TCustomImageListResolution.Clear;
 begin
   if FCount = 0 then Exit;
+  DropTwin;
   if HandleAllocated
   then TWSCustomImageListResolutionClass(WidgetSetClass).Clear(Self);
   SetLength(FData, 0);
@@ -367,6 +369,7 @@ begin
     Exit;
   end;
   CheckIndex(AIndex);
+  DropTwin;
   if AIndex < FCount-1 then
     InternalMove(AIndex, FCount-1, True);
   Dec(FCount);
@@ -375,9 +378,73 @@ begin
   // TODO: adjust allocated data
 end;
 
+var
+  // every live list, so a filter change can reach all of them
+  ImageListRegistry: TFPList = nil;
+
 destructor TCustomImageListResolution.Destroy;
 begin
+  DropTwin;
   inherited Destroy;
+end;
+
+function TCustomImageListResolution.FilterActive: Boolean;
+begin
+  // a twin already holds filtered pixels
+  Result := Assigned(ImageListPixelFilter) and (FTwinOf = nil);
+end;
+
+// ACount pixels of AData passed through the filter; the result lives until the
+// next call
+function TCustomImageListResolution.Filtered(AData: PRGBAQuad; ACount: Integer): PRGBAQuad;
+begin
+  if (not FilterActive) or (ACount = 0) then Exit(AData);
+  if Length(FFilterBuf) < ACount then
+    SetLength(FFilterBuf, ACount);
+  Move(AData^, FFilterBuf[0], ACount * SizeOf(TRGBAQuad));
+  ImageListPixelFilter(@FFilterBuf[0], ACount, gdeNormal);
+  Result := @FFilterBuf[0];
+end;
+
+// the same images with the disabled filter applied, built on first use
+function TCustomImageListResolution.DisabledTwin: TCustomImageListResolution;
+var
+  n: Integer;
+begin
+  if FDisabledTwin = nil then
+  begin
+    FDisabledTwin := TCustomImageListResolutionClass(ClassType).Create(nil);
+    FDisabledTwin.FTwinOf := Self;
+    FDisabledTwin.FImageList := FImageList;
+    FDisabledTwin.FWidth := FWidth;
+    FDisabledTwin.FHeight := FHeight;
+    FDisabledTwin.FCount := FCount;
+    FDisabledTwin.FAllocCount := FCount;
+    n := FCount * FWidth * FHeight;
+    SetLength(FDisabledTwin.FData, n);
+    if n > 0 then
+    begin
+      Move(FData[0], FDisabledTwin.FData[0], n * SizeOf(TRGBAQuad));
+      ImageListPixelFilter(@FDisabledTwin.FData[0], n, gdeDisabled);
+    end;
+  end;
+  Result := FDisabledTwin;
+end;
+
+procedure TCustomImageListResolution.DropTwin;
+begin
+  FreeAndNil(FDisabledTwin);
+end;
+
+function TCustomImageListResolution.ResolutionForEffect(
+  var AEffect: TGraphicsDrawEffect): TCustomImageListResolution;
+begin
+  Result := Self;
+  if (AEffect = gdeDisabled) and FilterActive then
+  begin
+    Result := DisabledTwin;
+    AEffect := gdeNormal;
+  end;
 end;
 
 procedure TCustomImageListResolution.Draw(ACanvas: TCanvas; AX, AY,
@@ -396,9 +463,17 @@ end;
 procedure TCustomImageListResolution.Draw(ACanvas: TCanvas; AX, AY,
   AIndex: Integer; ADrawingStyle: TDrawingStyle; AImageType: TImageType;
   ADrawEffect: TGraphicsDrawEffect);
+var
+  Res: TCustomImageListResolution;
 begin
   if (AIndex < 0) or (AIndex >= FCount) then Exit;
 
+  Res := ResolutionForEffect(ADrawEffect);
+  if Res <> Self then
+  begin
+    Res.Draw(ACanvas, AX, AY, AIndex, ADrawingStyle, AImageType, ADrawEffect);
+    Exit;
+  end;
   ReferenceNeeded;
   TWSCustomImageListResolutionClass(WidgetSetClass).Draw(Self, AIndex, ACanvas, Rect(AX, AY, FWidth, FHeight),
                           FImageList.BkColor, FImageList.BlendColor, ADrawEffect, ADrawingStyle, AImageType);
@@ -421,9 +496,16 @@ procedure TCustomImageListResolution.DrawOverlay(ACanvas: TCanvas; AX, AY,
   AImageType: TImageType; ADrawEffect: TGraphicsDrawEffect);
 var
   OverlayI: Integer;
+  Res: TCustomImageListResolution;
 begin
   if (AIndex < 0) or (AIndex >= FCount) then Exit;
 
+  Res := ResolutionForEffect(ADrawEffect);
+  if Res <> Self then
+  begin
+    Res.DrawOverlay(ACanvas, AX, AY, AIndex, AOverlay, ADrawingStyle, AImageType, ADrawEffect);
+    Exit;
+  end;
   ReferenceNeeded;
   TWSCustomImageListResolutionClass(WidgetSetClass).Draw(Self, AIndex, ACanvas, Rect(AX, AY, FWidth, FHeight),
                           FImageList.BkColor, FImageList.BlendColor, ADrawEffect, ADrawingStyle, AImageType);
@@ -478,10 +560,18 @@ var
   RawImg: TRawImage;
   ListImg, DeviceImg: TLazIntfImage;
   ImgHandle, MskHandle: HBitmap;
+  Res: TCustomImageListResolution;
 begin
   if (Index < 0) or (Index >= FCount) or (Image = nil) then Exit;
 
+  Res := ResolutionForEffect(AEffect);
+  if Res <> Self then
+  begin
+    Res.GetBitmap(Index, Image, AEffect);
+    Exit;
+  end;
   GetRawImage(Index, RawImg);
+  RawImg.Data := PByte(Filtered(PRGBAQuad(RawImg.Data), FWidth * FHeight));
 
   RawImg.PerformEffect(AEffect, True);
 
@@ -561,10 +651,18 @@ var
   RawImg: TRawImage;
   ListImg, DeviceImg: TLazIntfImage;
   IconInfo: TIconInfo;
+  Res: TCustomImageListResolution;
 begin
   if (Count = 0) or (Image = nil) then Exit;
 
+  Res := ResolutionForEffect(AEffect);
+  if Res <> Self then
+  begin
+    Res.GetIcon(Index, Image, AEffect);
+    Exit;
+  end;
   GetRawImage(Index, RawImg);
+  RawImg.Data := PByte(Filtered(PRGBAQuad(RawImg.Data), FWidth * FHeight));
   RawImg.PerformEffect(AEffect, True);
 
   FillChar(IconInfo, sizeof(TIconInfo), 0);
@@ -634,7 +732,7 @@ begin
 
   ImgData := InternalSetData(AIndex, AData);
   if HandleAllocated
-  then TWSCustomImageListResolutionClass(WidgetSetClass).Insert(Self, AIndex, ImgData);
+  then TWSCustomImageListResolutionClass(WidgetSetClass).Insert(Self, AIndex, Filtered(ImgData, FWidth * FHeight));
 end;
 
 {------------------------------------------------------------------------------
@@ -652,6 +750,7 @@ var
   ImgSize, DataSize: Cardinal;
   p: Pointer;
 begin
+  DropTwin;
   ImgSize := FWidth * FHeight;
   DataSize := ImgSize * SizeOf(FData[0]);
 
@@ -690,12 +789,13 @@ begin
 
   ImgData := InternalSetData(AIndex, AData);
   if HandleAllocated
-  then TWSCustomImageListResolutionClass(WidgetSetClass).Replace(Self, AIndex, ImgData);
+  then TWSCustomImageListResolutionClass(WidgetSetClass).Replace(Self, AIndex, Filtered(ImgData, FWidth * FHeight));
 end;
 
 function TCustomImageListResolution.InternalSetData(AIndex: Integer;
   AData: PRGBAQuad): PRGBAQuad;
 begin
+  DropTwin;
   Result := @FData[AIndex * FWidth * FHeight];
   Move(AData^, Result^, FWidth * FHeight * SizeOf(FData[0]));
 end;
@@ -1091,8 +1191,10 @@ begin
   if FCount = 0 then
     dt := nil
   else
-    dt := @FData[0];
+    dt := Filtered(@FData[0], FCount * FWidth * FHeight);
   FReference := ilc.CreateReference(Self, FCount, FImageList.FAllocBy, FWidth, FHeight, dt);
+  // the widgetset copied the pixels, no point keeping a second set
+  FFilterBuf := nil;
   Result := @FReference;
 end;
 
@@ -1512,6 +1614,7 @@ begin
         ToR.FWidth := FromR.FWidth;
         ToR.FHeight := FromR.FHeight;
         ToR.FCount := FromR.FCount;
+        ToR.DropTwin;
         ToR.AllocData(ToR.FCount);
         if ToR.FCount>0 then
         begin
@@ -1709,6 +1812,8 @@ end;
  ------------------------------------------------------------------------------}
 destructor TCustomImageList.Destroy;
 begin
+  if ImageListRegistry <> nil then
+    ImageListRegistry.Remove(Self);
   FData.Free;
   inherited Destroy;
   while FChangeLinkList.Count>0 do
@@ -1986,6 +2091,25 @@ begin
   Result := GetResolution(FWidth).GetHotSpot;
 end;
 
+procedure ImageListFilterChanged;
+var
+  i, r: Integer;
+  List: TCustomImageList;
+begin
+  if ImageListRegistry = nil then Exit;
+  for i := 0 to ImageListRegistry.Count - 1 do
+  begin
+    List := TCustomImageList(ImageListRegistry[i]);
+    for r := 0 to List.ResolutionCount - 1 do
+    begin
+      List.ResolutionByIndex[r].DropTwin;
+      List.ResolutionByIndex[r].UpdateReference;
+    end;
+    List.FChanged := True;
+    List.Change;
+  end;
+end;
+
 {------------------------------------------------------------------------------
   Method:  TCustomImageList.Initialize
   Params:  None
@@ -1996,6 +2120,9 @@ end;
  ------------------------------------------------------------------------------}
 procedure TCustomImageList.Initialize;
 begin
+  if ImageListRegistry = nil then
+    ImageListRegistry := TFPList.Create;
+  ImageListRegistry.Add(Self);
   FData := TCustomImageListResolutions.Create(Self, GetResolutionClass);
   FChangeLinkList := TList.Create;
   FAllocBy := 4;
