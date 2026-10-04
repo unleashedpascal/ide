@@ -19,7 +19,7 @@ procedure Register;
 implementation
 
 uses
-  Classes, Forms, MenuIntf, LazIDEIntf, ThemesStrings, ThemesConfig, ThemesManager;
+  Classes, Forms, MenuIntf, LazIDEIntf, ThemesStrings, ThemesConfig, ThemesManager, ThemesIcons;
 
 type
 
@@ -113,12 +113,22 @@ begin
   syncChecks;
 end;
 
+procedure storeIconFit(const fit: TIconFit);
+begin
+  saveIconFit(fit);
+  applyIconFit(fit);
+end;
+
 // runs before the main window exists, so the first paint already has the theme
 procedure applySavedTheme;
 begin
+  useIconFit(loadIconFit);
   applyThemeKind(loadThemeKind);
 end;
 
 initialization
+  OnIconFitCurrent := @currentIconFit;
+  OnIconFitPreview := @applyIconFit;
+  OnIconFitStore := @storeIconFit;
   AddBootHandler(libhEnvironmentOptionsLoaded, @applySavedTheme);
 end.

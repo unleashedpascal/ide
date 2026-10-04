@@ -15,7 +15,7 @@ unit ThemesConfig;
 interface
 
 uses
-  LazConfigStorage, BaseIDEIntf;
+  LazConfigStorage, BaseIDEIntf, LazIDEIntf;
 
 const
   CONFIG_FILE = 'unleashedthemes.xml';
@@ -30,12 +30,15 @@ procedure saveThemeKind(kind: TThemeKind);
 // a theme picked from the menu rolls a new syntax highlight profile
 function loadAutoScheme: boolean;
 procedure saveAutoScheme(enabled: boolean);
+function loadIconFit: TIconFit;
+procedure saveIconFit(const fit: TIconFit);
 
 implementation
 
 const
   KEY_THEME = 'Theme';
   KEY_AUTO_SCHEME = 'AutoScheme';
+  KEY_ICON_FIT = 'IconFit/';
   KIND_NAMES: array[TThemeKind] of string = ('default', 'system', 'light', 'dark', 'ocean', 'frost', 'paper', 'ember', 'midnight', 'dusk');
 
 function loadThemeKind: TThemeKind;
@@ -68,6 +71,34 @@ begin
   if not Assigned(GetIDEConfigStorage) then exit;
   var cfg := autofree GetIDEConfigStorage(CONFIG_FILE, True);
   cfg.SetDeleteValue(KEY_AUTO_SCHEME, enabled, true);
+  cfg.WriteToDisk;
+end;
+
+function loadIconFit: TIconFit;
+begin
+  result := DefaultIconFit;
+  if not Assigned(GetIDEConfigStorage) then exit;
+  var cfg := autofree GetIDEConfigStorage(CONFIG_FILE, True);
+  with result do begin
+    Enabled := cfg.GetValue(KEY_ICON_FIT+'Enabled', DefaultIconFit.Enabled);
+    Strength := cfg.GetValue(KEY_ICON_FIT+'Strength', DefaultIconFit.Strength);
+    MinContrast := cfg.GetValue(KEY_ICON_FIT+'MinContrast', DefaultIconFit.MinContrast);
+    MaxLightness := cfg.GetValue(KEY_ICON_FIT+'MaxLightness', DefaultIconFit.MaxLightness);
+    DisabledContrast := cfg.GetValue(KEY_ICON_FIT+'DisabledContrast', DefaultIconFit.DisabledContrast);
+    DisabledSaturation := cfg.GetValue(KEY_ICON_FIT+'DisabledSaturation', DefaultIconFit.DisabledSaturation);
+  end;
+end;
+
+procedure saveIconFit(const fit: TIconFit);
+begin
+  if not Assigned(GetIDEConfigStorage) then exit;
+  var cfg := autofree GetIDEConfigStorage(CONFIG_FILE, True);
+  cfg.SetDeleteValue(KEY_ICON_FIT+'Enabled', fit.Enabled, DefaultIconFit.Enabled);
+  cfg.SetDeleteValue(KEY_ICON_FIT+'Strength', fit.Strength, DefaultIconFit.Strength);
+  cfg.SetDeleteValue(KEY_ICON_FIT+'MinContrast', fit.MinContrast, DefaultIconFit.MinContrast);
+  cfg.SetDeleteValue(KEY_ICON_FIT+'MaxLightness', fit.MaxLightness, DefaultIconFit.MaxLightness);
+  cfg.SetDeleteValue(KEY_ICON_FIT+'DisabledContrast', fit.DisabledContrast, DefaultIconFit.DisabledContrast);
+  cfg.SetDeleteValue(KEY_ICON_FIT+'DisabledSaturation', fit.DisabledSaturation, DefaultIconFit.DisabledSaturation);
   cfg.WriteToDisk;
 end;
 

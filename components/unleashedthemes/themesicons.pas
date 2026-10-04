@@ -15,14 +15,19 @@ unit ThemesIcons;
 interface
 
 uses
-  Graphics;
+  Graphics, LazIDEIntf;
 
 // fits every icon of the process to `surface`, the color under tool bars and
-// menus, and keeps fitting icons loaded later. The stock icons are drawn for a
-// light surface: on a dark one their lightness is remapped into a band that
-// stays readable without glare, and a disabled icon is a faded copy with the
-// same math on every widgetset
+// menus, with the fit in use, and keeps fitting icons loaded later. The stock
+// icons are drawn for a light surface: on a dark one their lightness is
+// remapped into a band that stays readable without glare, and a disabled icon
+// is a faded copy with the same math on every widgetset
 procedure themeIcons(surface: TColor);
+// the fit the next themeIcons uses
+procedure useIconFit(const value: TIconFit);
+// the fit, onto the screen at once
+procedure applyIconFit(const value: TIconFit);
+function currentIconFit: TIconFit;
 
 implementation
 
@@ -32,17 +37,14 @@ uses
 const
   // a surface below this lightness gets the dark remap
   DARK_SURFACE = 0.5;
-  // lightness gap kept between the surface and the darkest icon pixel
-  MIN_CONTRAST = 0.30;
-  // lightness of the brightest icon pixel on a dark surface
-  MAX_LIGHTNESS = 0.88;
-  // a disabled icon keeps this share of its contrast to the surface
-  DISABLED_CONTRAST = 0.45;
-  DISABLED_SATURATION = 0.40;
 
 var
+  fit: TIconFit;
+  lastSurface: TColor = clBtnFace;
   surfaceL: single = 1;
   darkSurface: boolean = false;
+  // the fit as 0..1 factors
+  strength, minContrast, maxLightness, disabledContrast, disabledSaturation: single;
 
 // h in sixths of the hue circle, s and l in 0..1
 procedure rgbToHsl(r, g, b: byte; out h, s, l: single);
@@ -104,16 +106,17 @@ begin
         // the whole 0..1 range lands between the readable floor and the glare
         // cap, so shading keeps its order; a lifted color loses some saturation
         // so it does not turn neon
-        var base := surfaceL+MIN_CONTRAST;
-        var lifted := base+l*(MAX_LIGHTNESS-base);
-        s := s*(1-0.5*max(lifted-l, 0.0));
-        l := lifted;
+        var base := surfaceL+minContrast;
+        var lifted := base+l*(maxLightness-base);
+        var lift := strength*(lifted-l);
+        s := s*(1-0.5*max(lift, 0.0));
+        l := l+lift;
       end;
       if effect = gdeDisabled then begin
-        l := surfaceL+(l-surfaceL)*DISABLED_CONTRAST;
-        s := s*DISABLED_SATURATION;
+        l := surfaceL+(l-surfaceL)*disabledContrast;
+        s := s*disabledSaturation;
       end;
-      hslToRgb(h, s, l, data^.Red, data^.Green, data^.Blue);
+      hslToRgb(h, s, EnsureRange(l, 0, 1), data^.Red, data^.Green, data^.Blue);
     end;
     inc(data);
   end;
@@ -121,13 +124,37 @@ end;
 
 procedure themeIcons(surface: TColor);
 begin
+  lastSurface := surface;
   var r, g, b: byte;
   RedGreenBlue(ColorToRGB(surface), r, g, b);
   var h, s: single;
   rgbToHsl(r, g, b, h, s, surfaceL);
   darkSurface := surfaceL < DARK_SURFACE;
-  ImageListPixelFilter := @fitPixels;
+  ImageListPixelFilter := if fit.Enabled then @fitPixels else nil;
   ImageListFilterChanged;
 end;
 
+procedure useIconFit(const value: TIconFit);
+begin
+  fit := value;
+  strength := EnsureRange(value.Strength, 0, 100)/100;
+  minContrast := EnsureRange(value.MinContrast, 0, 100)/100;
+  maxLightness := EnsureRange(value.MaxLightness, 0, 100)/100;
+  disabledContrast := EnsureRange(value.DisabledContrast, 0, 100)/100;
+  disabledSaturation := EnsureRange(value.DisabledSaturation, 0, 100)/100;
+end;
+
+procedure applyIconFit(const value: TIconFit);
+begin
+  useIconFit(value);
+  themeIcons(lastSurface);
+end;
+
+function currentIconFit: TIconFit;
+begin
+  result := fit;
+end;
+
+initialization
+  useIconFit(DefaultIconFit);
 end.
