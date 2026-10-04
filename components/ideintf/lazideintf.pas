@@ -614,6 +614,19 @@ type
   // editor of a window that holds the form of the unit already
   TPickDesignerEditor = function(editor: TSourceEditorInterface): TSourceEditorInterface of object;
 
+  // how every icon is fitted to the surface it sits on, percentages 0..100: on a dark surface
+  // the lightness of an icon is remapped into the band from the surface plus MinContrast up to
+  // MaxLightness, Strength being the share of that move; a disabled icon keeps DisabledContrast
+  // of its contrast to the surface and DisabledSaturation of its color
+  TIconFit = record
+    Enabled: boolean;
+    Strength: integer;
+    MinContrast: integer;
+    MaxLightness: integer;
+    DisabledContrast: integer;
+    DisabledSaturation: integer;
+  end;
+
 var
   LazarusIDE: TLazIDEInterface = nil; // will be set by the IDE
   IDETabMaster: TIDETabMaster = nil;
@@ -625,6 +638,15 @@ var
   // set by the IDE: rolls the IDE colors outside the theme and the scheme (the messages window)
   // for the current IDE colors when they are set to follow the theme; keepExisting as above
   OnRollThemeColors: procedure(keepExisting: boolean) = nil;
+  // set by the themes package: the icon fit in use, one shown on screen without being saved,
+  // and one saved and shown
+  OnIconFitCurrent: function: TIconFit = nil;
+  OnIconFitPreview: procedure(const fit: TIconFit) = nil;
+  OnIconFitStore: procedure(const fit: TIconFit) = nil;
+
+const
+  DefaultIconFit: TIconFit = (Enabled: true; Strength: 100; MinContrast: 30; MaxLightness: 88;
+    DisabledContrast: 45; DisabledSaturation: 40);
 
 type
   TLazarusIDEBootHandlerType = (

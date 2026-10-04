@@ -1,13 +1,13 @@
 object MiscLookForm: TMiscLookForm
   Left = 400
-  Height = 520
+  Height = 523
   Top = 200
-  Width = 420
+  Width = 690
   BorderIcons = [biSystemMenu]
   BorderStyle = bsSingle
   Caption = 'MiscLookForm'
-  ClientHeight = 520
-  ClientWidth = 420
+  ClientHeight = 523
+  ClientWidth = 690
   FormStyle = fsStayOnTop
   OnClose = FormClose
   OnCreate = FormCreate
@@ -381,17 +381,201 @@ object MiscLookForm: TMiscLookForm
     OnChange = TextStyleChanged
     TabOrder = 11
   end
+  object LineSplit: TPaintBox
+    Left = 418
+    Height = 434
+    Top = 12
+    Width = 2
+    OnPaint = LinePaint
+  end
+  object LineIcons: TPaintBox
+    Left = 430
+    Height = 17
+    Top = 12
+    Width = 248
+    OnPaint = LinePaint
+  end
+  object CheckBoxIconFit: TCheckBox
+    Left = 430
+    Height = 19
+    Top = 39
+    Width = 150
+    Caption = 'CheckBoxIconFit'
+    Checked = True
+    State = cbChecked
+    OnChange = IconFitChanged
+    TabOrder = 14
+  end
+  object ButtonIconDefaults: TButton
+    Left = 592
+    Height = 26
+    Top = 35
+    Width = 86
+    Caption = 'ButtonIconDefaults'
+    OnClick = ButtonIconDefaultsClick
+    TabOrder = 15
+  end
+  object LabelStrength: TLabel
+    Left = 430
+    Height = 15
+    Top = 72
+    Width = 140
+    Caption = 'LabelStrength'
+    ParentColor = False
+  end
+  object ValueStrength: TLabel
+    Left = 578
+    Height = 15
+    Top = 72
+    Width = 100
+    Alignment = taRightJustify
+    AutoSize = False
+    Caption = 'ValueStrength'
+    ParentColor = False
+  end
+  object TrackStrength: TTrackBar
+    Left = 430
+    Height = 30
+    Top = 89
+    Width = 248
+    Max = 100
+    Position = 100
+    ShowSelRange = False
+    TickStyle = tsNone
+    OnChange = IconFitChanged
+    TabOrder = 16
+  end
+  object LabelMinContrast: TLabel
+    Left = 430
+    Height = 15
+    Top = 124
+    Width = 140
+    Caption = 'LabelMinContrast'
+    ParentColor = False
+  end
+  object ValueMinContrast: TLabel
+    Left = 578
+    Height = 15
+    Top = 124
+    Width = 100
+    Alignment = taRightJustify
+    AutoSize = False
+    Caption = 'ValueMinContrast'
+    ParentColor = False
+  end
+  object TrackMinContrast: TTrackBar
+    Left = 430
+    Height = 30
+    Top = 141
+    Width = 248
+    Max = 100
+    Position = 30
+    ShowSelRange = False
+    TickStyle = tsNone
+    OnChange = IconFitChanged
+    TabOrder = 17
+  end
+  object LabelMaxLightness: TLabel
+    Left = 430
+    Height = 15
+    Top = 176
+    Width = 140
+    Caption = 'LabelMaxLightness'
+    ParentColor = False
+  end
+  object ValueMaxLightness: TLabel
+    Left = 578
+    Height = 15
+    Top = 176
+    Width = 100
+    Alignment = taRightJustify
+    AutoSize = False
+    Caption = 'ValueMaxLightness'
+    ParentColor = False
+  end
+  object TrackMaxLightness: TTrackBar
+    Left = 430
+    Height = 30
+    Top = 193
+    Width = 248
+    Max = 100
+    Position = 88
+    ShowSelRange = False
+    TickStyle = tsNone
+    OnChange = IconFitChanged
+    TabOrder = 18
+  end
+  object LabelDisabledContrast: TLabel
+    Left = 430
+    Height = 15
+    Top = 228
+    Width = 140
+    Caption = 'LabelDisabledContrast'
+    ParentColor = False
+  end
+  object ValueDisabledContrast: TLabel
+    Left = 578
+    Height = 15
+    Top = 228
+    Width = 100
+    Alignment = taRightJustify
+    AutoSize = False
+    Caption = 'ValueDisabledContrast'
+    ParentColor = False
+  end
+  object TrackDisabledContrast: TTrackBar
+    Left = 430
+    Height = 30
+    Top = 245
+    Width = 248
+    Max = 100
+    Position = 45
+    ShowSelRange = False
+    TickStyle = tsNone
+    OnChange = IconFitChanged
+    TabOrder = 19
+  end
+  object LabelDisabledSaturation: TLabel
+    Left = 430
+    Height = 15
+    Top = 280
+    Width = 140
+    Caption = 'LabelDisabledSaturation'
+    ParentColor = False
+  end
+  object ValueDisabledSaturation: TLabel
+    Left = 578
+    Height = 15
+    Top = 280
+    Width = 100
+    Alignment = taRightJustify
+    AutoSize = False
+    Caption = 'ValueDisabledSaturation'
+    ParentColor = False
+  end
+  object TrackDisabledSaturation: TTrackBar
+    Left = 430
+    Height = 30
+    Top = 297
+    Width = 248
+    Max = 100
+    Position = 40
+    ShowSelRange = False
+    TickStyle = tsNone
+    OnChange = IconFitChanged
+    TabOrder = 20
+  end
   object LineButtons: TPaintBox
     Left = 12
     Height = 17
-    Top = 455
-    Width = 396
+    Top = 458
+    Width = 666
     OnPaint = LinePaint
   end
   object ButtonSave: TButton
-    Left = 232
+    Left = 502
     Height = 28
-    Top = 480
+    Top = 483
     Width = 86
     Caption = 'ButtonSave'
     Default = True
@@ -399,9 +583,9 @@ object MiscLookForm: TMiscLookForm
     TabOrder = 12
   end
   object ButtonClose: TButton
-    Left = 322
+    Left = 592
     Height = 28
-    Top = 480
+    Top = 483
     Width = 86
     Cancel = True
     Caption = 'ButtonClose'

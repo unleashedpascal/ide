@@ -468,6 +468,14 @@ resourcestring
   lisMiscLookPaddingBottom = 'Padding bottom';
   lisMiscLookPaddingLeft = 'Padding left';
   lisMiscLookPaddingRight = 'Padding right';
+  lisMiscLookIcons = 'Icons';
+  lisMiscLookIconFit = 'Fit icons to the theme';
+  lisMiscLookIconStrength = 'Strength';
+  lisMiscLookIconMinContrast = 'Minimum contrast';
+  lisMiscLookIconMaxLightness = 'Maximum lightness';
+  lisMiscLookIconDisabledContrast = 'Disabled contrast';
+  lisMiscLookIconDisabledSaturation = 'Disabled saturation';
+  lisMiscLookIconDefaults = 'Defaults';
   lisSchemeManagerCreate = 'Create new scheme';
   lisSchemeManagerDeleteAsk = 'Delete the scheme "%s"?';
   lisSchemeManagerNameTaken = 'The name "%s" is already taken.';

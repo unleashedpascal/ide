@@ -16,7 +16,7 @@ unit MiscLook;
 interface
 
 uses
-  Classes, Graphics, Forms, Controls, StdCtrls, ExtCtrls, Spin, Dialogs, EnvGuiOptions;
+  Classes, Graphics, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Spin, Dialogs, EnvGuiOptions, LazIDEIntf;
 
 type
   // the IDE colors outside the theme and the syntax scheme: the messages window, the headers of
@@ -75,6 +75,25 @@ type
     SpinPaddingLeft: TSpinEdit;
     LabelPaddingRight: TLabel;
     SpinPaddingRight: TSpinEdit;
+    LineSplit: TPaintBox;
+    LineIcons: TPaintBox;
+    CheckBoxIconFit: TCheckBox;
+    LabelStrength: TLabel;
+    ValueStrength: TLabel;
+    TrackStrength: TTrackBar;
+    LabelMinContrast: TLabel;
+    ValueMinContrast: TLabel;
+    TrackMinContrast: TTrackBar;
+    LabelMaxLightness: TLabel;
+    ValueMaxLightness: TLabel;
+    TrackMaxLightness: TTrackBar;
+    LabelDisabledContrast: TLabel;
+    ValueDisabledContrast: TLabel;
+    TrackDisabledContrast: TTrackBar;
+    LabelDisabledSaturation: TLabel;
+    ValueDisabledSaturation: TLabel;
+    TrackDisabledSaturation: TTrackBar;
+    ButtonIconDefaults: TButton;
     LineButtons: TPaintBox;
     ButtonSave: TButton;
     ButtonClose: TButton;
@@ -89,9 +108,12 @@ type
     procedure ButtonNextClick({%H-}Sender: TObject);
     procedure ButtonSaveClick({%H-}Sender: TObject);
     procedure ButtonCloseClick({%H-}Sender: TObject);
+    procedure IconFitChanged({%H-}Sender: TObject);
+    procedure ButtonIconDefaultsClick({%H-}Sender: TObject);
   private
     fLoading: boolean;
     fPreviewed: boolean;
+    fIconsPreviewed: boolean;
     fHistory: array of TMiscSeed;
     fHistPos: integer; // entry on screen, -1 before the first roll
     function seed: TMiscSeed;
@@ -104,6 +126,10 @@ type
     procedure walkHistory(step: integer);
     procedure updateHistoryButtons;
     procedure updateRollButtons;
+    function iconFit: TIconFit;
+    procedure showIconFit(const value: TIconFit);
+    procedure previewIcons;
+    procedure updateIconLabels;
   end;
 
 // shows the single misc look window
@@ -322,6 +348,14 @@ begin
   LabelPaddingBottom.Caption := lisMiscLookPaddingBottom;
   LabelPaddingLeft.Caption := lisMiscLookPaddingLeft;
   LabelPaddingRight.Caption := lisMiscLookPaddingRight;
+  LineIcons.Caption := lisMiscLookIcons;
+  CheckBoxIconFit.Caption := lisMiscLookIconFit;
+  LabelStrength.Caption := lisMiscLookIconStrength;
+  LabelMinContrast.Caption := lisMiscLookIconMinContrast;
+  LabelMaxLightness.Caption := lisMiscLookIconMaxLightness;
+  LabelDisabledContrast.Caption := lisMiscLookIconDisabledContrast;
+  LabelDisabledSaturation.Caption := lisMiscLookIconDisabledSaturation;
+  ButtonIconDefaults.Caption := lisMiscLookIconDefaults;
   ButtonSave.Caption := lisSave;
   ButtonClose.Caption := lisClose;
   Randomize;
@@ -332,11 +366,22 @@ begin
   ComboFont.Items.Assign(Screen.Fonts);
   showSeed(currentSeed);
   showTextStyle(EnvironmentGuiOpts.MsgViewTextStyle);
+  // the icon fit lives in the themes package; without it the section only shows the defaults
+  var fitting := Assigned(OnIconFitCurrent) and Assigned(OnIconFitPreview) and Assigned(OnIconFitStore);
+  CheckBoxIconFit.Enabled := fitting;
+  TrackStrength.Enabled := fitting;
+  TrackMinContrast.Enabled := fitting;
+  TrackMaxLightness.Enabled := fitting;
+  TrackDisabledContrast.Enabled := fitting;
+  TrackDisabledSaturation.Enabled := fitting;
+  ButtonIconDefaults.Enabled := fitting;
+  showIconFit(if fitting then OnIconFitCurrent() else DefaultIconFit);
 end;
 
 procedure TMiscLookForm.FormClose(Sender: TObject; var CloseAction: TCloseAction);
 begin
   if fPreviewed then restorePreview;
+  if fIconsPreviewed then OnIconFitPreview(OnIconFitCurrent());
   window := nil;
   CloseAction := caFree;
 end;
@@ -411,7 +456,12 @@ end;
 
 procedure TMiscLookForm.LinePaint(Sender: TObject);
 begin
-  paintGroupLine(Sender as TPaintBox);
+  var box := Sender as TPaintBox;
+  // the split between the columns is the only line taller than wide
+  if box.Width < box.Height then begin
+    box.Canvas.Brush.Color := mix(box.Color, clWindowText, 35);
+    box.Canvas.FillRect(0, 0, box.Width, box.Height);
+  end else paintGroupLine(box);
 end;
 
 procedure TMiscLookForm.preview;
@@ -490,12 +540,66 @@ begin
   saveAutoMatch(CheckBoxAutoMatch.Checked);
   saveRolled;
   fPreviewed := false;
+  if Assigned(OnIconFitStore) then OnIconFitStore(iconFit);
+  fIconsPreviewed := false;
   Close;
 end;
 
 procedure TMiscLookForm.ButtonCloseClick(Sender: TObject);
 begin
   Close;
+end;
+
+function TMiscLookForm.iconFit: TIconFit;
+begin
+  result.Enabled := CheckBoxIconFit.Checked;
+  result.Strength := TrackStrength.Position;
+  result.MinContrast := TrackMinContrast.Position;
+  result.MaxLightness := TrackMaxLightness.Position;
+  result.DisabledContrast := TrackDisabledContrast.Position;
+  result.DisabledSaturation := TrackDisabledSaturation.Position;
+end;
+
+procedure TMiscLookForm.showIconFit(const value: TIconFit);
+begin
+  fLoading := true;
+  defer fLoading := false;
+  CheckBoxIconFit.Checked := value.Enabled;
+  TrackStrength.Position := value.Strength;
+  TrackMinContrast.Position := value.MinContrast;
+  TrackMaxLightness.Position := value.MaxLightness;
+  TrackDisabledContrast.Position := value.DisabledContrast;
+  TrackDisabledSaturation.Position := value.DisabledSaturation;
+  updateIconLabels;
+end;
+
+procedure TMiscLookForm.updateIconLabels;
+begin
+  ValueStrength.Caption := Format('%d%%', [TrackStrength.Position]);
+  ValueMinContrast.Caption := Format('%d%%', [TrackMinContrast.Position]);
+  ValueMaxLightness.Caption := Format('%d%%', [TrackMaxLightness.Position]);
+  ValueDisabledContrast.Caption := Format('%d%%', [TrackDisabledContrast.Position]);
+  ValueDisabledSaturation.Caption := Format('%d%%', [TrackDisabledSaturation.Position]);
+end;
+
+// onto every icon on screen, the stored fit left as it is
+procedure TMiscLookForm.previewIcons;
+begin
+  if not Assigned(OnIconFitPreview) then exit;
+  OnIconFitPreview(iconFit);
+  fIconsPreviewed := true;
+end;
+
+procedure TMiscLookForm.IconFitChanged(Sender: TObject);
+begin
+  updateIconLabels;
+  if not fLoading then previewIcons;
+end;
+
+procedure TMiscLookForm.ButtonIconDefaultsClick(Sender: TObject);
+begin
+  showIconFit(DefaultIconFit);
+  previewIcons;
 end;
 
 end.
