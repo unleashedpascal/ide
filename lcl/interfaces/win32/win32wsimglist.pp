@@ -298,6 +298,8 @@ var
   ImgDC: HDC;
   HasComCtl6: Boolean;
 begin
+  // bit buttons and menus come here directly, so the disabled twin is picked here too
+  AList := AList.ResolutionForEffect(ADrawEffect);
   HasComCtl6 := Win32WidgetSet.CommonControlsVersion >= ComCtlVersionIE6;
   // If we are using comctl > 6 then COLOR_32 is supported and alpha bitmaps will
   // be drawn correctly. If version is lower than our alpha bitmaps will be drawn

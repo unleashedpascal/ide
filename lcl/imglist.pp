@@ -112,6 +112,11 @@ type
   TOverlay = 0..14; // windows limitation
   TOverlayArray = array[TOverlay] of Integer;
 
+  // rewrites ACount straight alpha pixels in place for the given effect
+  // (gdeNormal or gdeDisabled) before they reach the widgetset
+  TImageListPixelFilter = procedure(AData: PRGBAQuad; ACount: Integer;
+    AEffect: TGraphicsDrawEffect);
+
   TCustomImageListResolution = class(TLCLReferenceComponent)
   private
     FWidth: Integer;
@@ -121,9 +126,16 @@ type
     FImageList: TCustomImageList;
     FCount: Integer;
     FAutoCreatedInDesignTime: Boolean;
+    FFilterBuf: TRGBAQuadArray;
+    FDisabledTwin: TCustomImageListResolution;
+    FTwinOf: TCustomImageListResolution;
 
     procedure AllocData(ACount: Integer);
     function  GetReference: TWSCustomImageListReference;
+    function  FilterActive: Boolean;
+    function  Filtered(AData: PRGBAQuad; ACount: Integer): PRGBAQuad;
+    function  DisabledTwin: TCustomImageListResolution;
+    procedure DropTwin;
 
     function Add(Image, Mask: TCustomBitmap): Integer;
     procedure InternalInsert(AIndex: Integer; AData: PRGBAQuad); overload;
@@ -172,6 +184,11 @@ type
     procedure DrawOverlay(ACanvas: TCanvas; AX, AY, AIndex: Integer; AOverlay: TOverlay; ADrawEffect: TGraphicsDrawEffect); overload;
     procedure DrawOverlay(ACanvas: TCanvas; AX, AY, AIndex: Integer; AOverlay: TOverlay; ADrawingStyle:
       TDrawingStyle; AImageType: TImageType; ADrawEffect: TGraphicsDrawEffect); overload;
+
+    // the resolution holding the pixels for AEffect: with a pixel filter the
+    // disabled look is a separate resolution drawn as gdeNormal, so AEffect
+    // comes back adjusted
+    function ResolutionForEffect(var AEffect: TGraphicsDrawEffect): TCustomImageListResolution;
 
     property ImageList: TCustomImageList read FImageList;
     property Width: Integer read FWidth;
@@ -477,12 +494,22 @@ function LCLGlyphs: TLCLGlyphs;
 function GetDefaultGlyph(ResourceName: string; ScalePercent: Integer = 100;
   IgnoreMissingResource: Boolean = False): TCustomBitmap;
 
+var
+  // applied to every image list of the process; nil draws the pixels as stored
+  ImageListPixelFilter: TImageListPixelFilter = nil;
+
+// rebuilds every image list after the filter or what it depends on changed
+procedure ImageListFilterChanged;
+
 implementation
 
 uses
   WSImglist;
 
 {$I imglist.inc}
+
+finalization
+  FreeAndNil(ImageListRegistry);
 
 end.
 
