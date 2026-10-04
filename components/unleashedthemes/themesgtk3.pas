@@ -190,6 +190,23 @@ begin
     '.designer menubar { border-bottom: none; margin-bottom: 0; }';
 end;
 
+// the natural sizes of the gtk widgets, cut down to what the win32 controls
+// measure at 96 dpi: the IDE windows are laid out for those. Not scoped, a
+// designed form takes them as well
+function metrics: string;
+begin
+  result :=
+    // an edit is 23 pixels, a spin edit the same, a button 25
+    'entry, spinbutton:not(.vertical) { min-height: 21px; padding-top: 0; padding-bottom: 0; padding-left: 4px; padding-right: 4px; }'+
+    'button { min-height: 23px; padding-top: 0; padding-bottom: 0; }'+
+    'combobox button.combo { min-height: 21px; }'+
+    'checkbutton, radiobutton, checkbutton.text-button, radiobutton.text-button { padding-top: 1px; padding-bottom: 1px; }'+
+    'notebook > header { padding: 0; }'+
+    'notebook > header tab { min-height: 0; padding: 2px 8px; }'+
+    'menubar > menuitem { padding-top: 2px; padding-bottom: 2px; }'+
+    'menu menuitem { padding-top: 3px; padding-bottom: 3px; }';
+end;
+
 // the stock system colors as a palette, for the designed forms
 function stockPalette: TPalette;
 begin
@@ -271,7 +288,7 @@ begin
   // the sheet loads while the provider is off the screen, so no widget keeps
   // style values from the old sheet during the reload. The designed forms
   // get the stock colors, like the running program shows them
-  var css := namedColors(newPal) + styleSheet(newPal, '') + menuBand(newPal) + styleSheet(stockPalette, '.designer ');
+  var css := namedColors(newPal) + styleSheet(newPal, '') + menuBand(newPal) + styleSheet(stockPalette, '.designer ') + metrics;
   gtk_css_provider_load_from_data(provider, PChar(css), length(css), nil);
   gtk_style_context_add_provider_for_screen(gdk_screen_get_default, PGtkStyleProvider(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
   for var i := 0 to MAX_SYS_COLORS do palColors[i] := newPal[i];
