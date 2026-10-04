@@ -1717,7 +1717,9 @@ begin
     end else
     if CompareText(WName, LazGtkStyleNames[lgsWindow]) = 0 then
     begin
-      StyleObject^.Widget := TGtkWindow.new(GTK_WINDOW_TOPLEVEL);
+      // only the style context is read; an off screen window keeps the show
+      // below from mapping a frame on the screen
+      StyleObject^.Widget := PGtkWidget(gtk_offscreen_window_new);
       lgs := lgsWindow;
     end else
     if CompareText(WName, LazGtkStyleNames[lgsTreeView]) = 0 then
