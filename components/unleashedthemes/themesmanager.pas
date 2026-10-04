@@ -24,7 +24,7 @@ function currentThemeKind: TThemeKind;
 implementation
 
 uses
-  Classes, Forms, Themes{$ifdef LCLWin32}, ThemesPalette, ThemesWin32{$endif}{$ifdef LCLGtk3}, ThemesPalette, ThemesGtk3{$endif};
+  Classes, Forms, Graphics, Themes, ThemesIcons{$ifdef LCLWin32}, ThemesPalette, ThemesWin32{$endif}{$ifdef LCLGtk3}, ThemesPalette, ThemesGtk3{$endif};
 
 type
 
@@ -50,21 +50,24 @@ procedure applyThemeKind(kind: TThemeKind);
 begin
   current := kind;
   var want := paletteKind(kind);
-  if want = shown then exit;
-  shown := want;
-  {$if defined(LCLWin32) or defined(LCLGtk3)}
-  match want of
-    tkLight: applyPalette(lightPalette);
-    tkDark: applyPalette(darkPalette);
-    tkOcean: applyPalette(oceanPalette);
-    tkFrost: applyPalette(frostPalette);
-    tkPaper: applyPalette(paperPalette);
-    tkEmber: applyPalette(emberPalette);
-    tkMidnight: applyPalette(midnightPalette);
-    tkDusk: applyPalette(duskPalette);
-    _: dropPalette;
+  if want <> shown then begin
+    shown := want;
+    {$if defined(LCLWin32) or defined(LCLGtk3)}
+    match want of
+      tkLight: applyPalette(lightPalette);
+      tkDark: applyPalette(darkPalette);
+      tkOcean: applyPalette(oceanPalette);
+      tkFrost: applyPalette(frostPalette);
+      tkPaper: applyPalette(paperPalette);
+      tkEmber: applyPalette(emberPalette);
+      tkMidnight: applyPalette(midnightPalette);
+      tkDusk: applyPalette(duskPalette);
+      _: dropPalette;
+    end;
+    {$endif}
   end;
-  {$endif}
+  // the stock look needs the icon pass as well, so it runs on the first call too
+  themeIcons(clBtnFace);
 end;
 
 function currentThemeKind: TThemeKind;
