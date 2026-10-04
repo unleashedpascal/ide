@@ -1301,14 +1301,30 @@ function TGTK3ThemeServices.IsDarkTheme: boolean;
 var
  sett: PGSettings;
  bs: string;
+ name: Pgchar;
 begin
   sett := g_settings_new('org.gnome.desktop.interface');
   bs := sett^.get_string('color-scheme');
   sett^.unref;
-  if bs <> '' then
-    Result := Pos('prefer-dark', bs) > 0
+  if Pos('prefer-dark', bs) > 0 then
+    Result := True
+  else if Pos('prefer-light', bs) > 0 then
+    Result := False
   else
-    Result := inherited IsDarkTheme;
+  begin
+    // 'default': the desktop left the choice to the gtk theme (cinnamon, xfce,
+    // a bare session); a dark theme carries it in its name. The system colors
+    // are no guide, an application may have put its own palette there
+    bs := GetEnvironmentVariable('GTK_THEME');
+    if bs = '' then
+    begin
+      name := nil;
+      g_object_get(PGObject(gtk_settings_get_default), 'gtk-theme-name', [@name, nil]);
+      bs := name;
+      g_free(name);
+    end;
+    Result := Pos('dark', LowerCase(bs)) > 0;
+  end;
 end;
 
 end.
