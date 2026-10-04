@@ -115,6 +115,9 @@ begin
     'notebook, notebook > header, notebook > header > tabs, notebook > stack, expander, '+
     'statusbar, actionbar, searchbar, revealer, overlay, infobar, infobar > revealer > box')+
     ' { background-color: '+face+'; color: '+fore+'; background-image: none; }'+
+    // the frame a bordered control gets (a scrolled window, a notebook) takes
+    // its border color from the stock theme otherwise
+    s('.frame, frame > border, scrolledwindow, notebook, notebook > header')+' { border-color: '+shadow+'; }'+
     // inside a widget whose background follows its state (a hovered button, the
     // current tab) the containers around the text show through instead of
     // keeping the plain face color
