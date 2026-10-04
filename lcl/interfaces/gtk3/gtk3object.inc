@@ -618,7 +618,9 @@ var
   box: PGtkBox;
   header: PGtkHeaderBar;
 begin
-  window := gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  // an off screen window: a mapped one shows up as an empty frame under a
+  // window manager that ignores the decoration hint
+  window := PGtkWindow(gtk_offscreen_window_new);
   gtk_window_set_decorated(window, False);
   gtk_widget_set_app_paintable(window, gtk_true);
   gtk_widget_set_size_request(window, 1, 1);
