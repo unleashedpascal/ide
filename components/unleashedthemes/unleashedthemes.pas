@@ -8,7 +8,7 @@ unit unleashedthemes;
 interface
 
 uses
-  RegUnleashedThemes, ThemesConfig, ThemesManager, ThemesPalette, ThemesStrings, ThemesWin32, ThemesGtk3, LazarusPackageIntf;
+  RegUnleashedThemes, ThemesConfig, ThemesManager, ThemesPalette, ThemesStrings, ThemesWin32, ThemesGtk3, ThemesIcons, LazarusPackageIntf;
 
 implementation
 
