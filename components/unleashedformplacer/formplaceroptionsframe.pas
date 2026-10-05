@@ -8,7 +8,7 @@
   These notices must be kept in copies and modified versions (MPL-2.0 sec. 3.1);
   add yours below.
 
-  Unleashed Form Placer: IDE options page (Environment / Form Placer). }
+  Unleashed Form Placer: IDE options page (Editor / Form Placer). }
 
 unit FormPlacerOptionsFrame;
 
@@ -152,7 +152,7 @@ end;
 
 class function TFormPlacerOptionsFrame.SupportedOptionsClass: TAbstractIDEOptionsClass;
 begin
-  Result := IDEEditorGroups.GetByIndex(GroupEnvironment)^.GroupClass;
+  Result := IDEEditorGroups.GetByIndex(GroupEditor)^.GroupClass;
 end;
 
 end.
