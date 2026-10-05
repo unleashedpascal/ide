@@ -147,7 +147,7 @@ begin
   FormPlacerOptions.LoadSafe;
   PlacerManager := TPlacerManager.Create;
 
-  PlacerOptionsFrameID := RegisterIDEOptionsEditor(GroupEnvironment,
+  PlacerOptionsFrameID := RegisterIDEOptionsEditor(GroupEditor,
     TFormPlacerOptionsFrame, PlacerOptionsFrameID)^.Index;
 end;
 
