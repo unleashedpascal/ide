@@ -9219,6 +9219,8 @@ begin
       OldMarkUnhandledMacros := GlobalMacroList.MarkUnhandledMacros;
       GlobalMacroList.MarkUnhandledMacros := false;
       GlobalMacroList.SubstituteStr(CustomCaption, 0, 0, True);
+      // macros that expand to nothing leave their separating spaces behind
+      CustomCaption := Trim(DelSpace1(CustomCaption));
       if CustomCaption <> '' then begin
         NewCaption := AddToCaption(NewCaption, CustomCaption);
       end;

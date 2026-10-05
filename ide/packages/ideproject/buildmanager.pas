@@ -227,7 +227,7 @@ end;
 function TBuildManager.MacroFuncBuildModeCaption(const Param: string; const Data: PtrInt;
   var Abort: boolean): string;
 begin
-  if (Project1 <> nil) and (Project1.BuildModes.Count > 1) then
+  if Project1 <> nil then
     Result := Project1.ActiveBuildMode.GetCaption
   else
     Result:='';
