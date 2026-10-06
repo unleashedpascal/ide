@@ -1,6 +1,10 @@
 msgid ""
 msgstr "Content-Type: text/plain; charset=UTF-8"
 
+#: themesstrings.menu_active
+msgid "Active effects (focus ring)"
+msgstr ""
+
 #: themesstrings.menu_auto_scheme
 msgid "Auto-generate new syntax highlight profile"
 msgstr ""
@@ -23,6 +27,10 @@ msgstr ""
 
 #: themesstrings.menu_frost
 msgid "Frost"
+msgstr ""
+
+#: themesstrings.menu_hover
+msgid "Hover effects"
 msgstr ""
 
 #: themesstrings.menu_light

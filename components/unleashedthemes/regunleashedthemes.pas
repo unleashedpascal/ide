@@ -19,7 +19,7 @@ procedure Register;
 implementation
 
 uses
-  Classes, Forms, MenuIntf, LazIDEIntf, ThemesStrings, ThemesConfig, ThemesManager, ThemesIcons;
+  Classes, Forms, MenuIntf, LazIDEIntf, ThemesStrings, ThemesConfig, ThemesManager, ThemesIcons, ThemesPalette;
 
 type
 
@@ -28,6 +28,7 @@ type
   TMenuGlue = class(TComponent)
     procedure clicked(Sender: TObject);
     procedure autoSchemeClicked({%H-}Sender: TObject);
+    procedure effectClicked(Sender: TObject);
     procedure windowsRestored({%H-}Sender: TObject);
   end;
 
@@ -35,6 +36,8 @@ var
   glue: TMenuGlue = nil;
   items: array[TThemeKind] of TIDEMenuCommand;
   autoSchemeItem: TIDEMenuCommand = nil;
+  hoverItem: TIDEMenuCommand = nil;
+  activeItem: TIDEMenuCommand = nil;
 
 procedure syncChecks;
 begin
@@ -61,6 +64,16 @@ begin
   autoSchemeItem.Checked := not autoSchemeItem.Checked;
   saveAutoScheme(autoSchemeItem.Checked);
   if autoSchemeItem.Checked and Assigned(OnRollThemeScheme) then OnRollThemeScheme(false);
+end;
+
+procedure TMenuGlue.effectClicked(Sender: TObject);
+begin
+  TIDEMenuCommand(Sender).Checked := not TIDEMenuCommand(Sender).Checked;
+  var effects: TThemeEffects;
+  effects.Hover := hoverItem.Checked;
+  effects.Active := activeItem.Checked;
+  saveEffects(effects);
+  applyThemeEffects(effects);
 end;
 
 // the first start has no scheme and no colors for the theme yet, so it rolls them the way a theme
@@ -106,9 +119,17 @@ begin
   addItem(dark, tkEmber, 'itmViewThemeEmber', MENU_EMBER);
   addItem(dark, tkMidnight, 'itmViewThemeMidnight', MENU_MIDNIGHT);
   addItem(dark, tkDusk, 'itmViewThemeDusk', MENU_DUSK);
-  autoSchemeItem := RegisterIDEMenuCommand(RegisterIDEMenuSection(menu, 'itmViewThemeOptions'), 'itmViewThemeAutoScheme', MENU_AUTO_SCHEME, @glue.autoSchemeClicked);
+  var options := RegisterIDEMenuSection(menu, 'itmViewThemeOptions');
+  autoSchemeItem := RegisterIDEMenuCommand(options, 'itmViewThemeAutoScheme', MENU_AUTO_SCHEME, @glue.autoSchemeClicked);
   autoSchemeItem.ShowAlwaysCheckable := True;
   autoSchemeItem.Checked := loadAutoScheme;
+  var effects := loadEffects;
+  hoverItem := RegisterIDEMenuCommand(options, 'itmViewThemeHover', MENU_HOVER, @glue.effectClicked);
+  hoverItem.ShowAlwaysCheckable := True;
+  hoverItem.Checked := effects.Hover;
+  activeItem := RegisterIDEMenuCommand(options, 'itmViewThemeActive', MENU_ACTIVE, @glue.effectClicked);
+  activeItem.ShowAlwaysCheckable := True;
+  activeItem.Checked := effects.Active;
   LazarusIDE.AddHandlerOnIDERestoreWindows(@glue.windowsRestored);
   syncChecks;
 end;
@@ -123,6 +144,7 @@ end;
 procedure applySavedTheme;
 begin
   useIconFit(loadIconFit);
+  applyThemeEffects(loadEffects);
   applyThemeKind(loadThemeKind);
 end;
 

@@ -15,16 +15,18 @@ unit ThemesManager;
 interface
 
 uses
-  ThemesConfig;
+  ThemesConfig, ThemesPalette;
 
 // switches the IDE look at once; tkSystem follows the desktop setting
 procedure applyThemeKind(kind: TThemeKind);
 function currentThemeKind: TThemeKind;
+// the hover and active feedback; a change shows at once
+procedure applyThemeEffects(const value: TThemeEffects);
 
 implementation
 
 uses
-  Classes, Forms, Graphics, Themes, ThemesIcons{$ifdef LCLWin32}, ThemesPalette, ThemesWin32{$endif}{$ifdef LCLGtk3}, ThemesPalette, ThemesGtk3{$endif};
+  Classes, Forms, Graphics, Themes, ThemesIcons{$ifdef LCLWin32}, ThemesWin32{$endif}{$ifdef LCLGtk3}, ThemesGtk3{$endif};
 
 type
 
@@ -73,6 +75,15 @@ end;
 function currentThemeKind: TThemeKind;
 begin
   result := current;
+end;
+
+procedure applyThemeEffects(const value: TThemeEffects);
+begin
+  {$if defined(LCLWin32) or defined(LCLGtk3)}
+  if (effects.Hover = value.Hover) and (effects.Active = value.Active) then exit;
+  effects := value;
+  redrawAll;
+  {$endif}
 end;
 
 procedure TThemeGlue.systemChanged(data: PtrInt);

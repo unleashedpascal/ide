@@ -15,7 +15,7 @@ unit ThemesConfig;
 interface
 
 uses
-  LazConfigStorage, BaseIDEIntf, LazIDEIntf;
+  LazConfigStorage, BaseIDEIntf, LazIDEIntf, ThemesPalette;
 
 const
   CONFIG_FILE = 'unleashedthemes.xml';
@@ -32,6 +32,10 @@ function loadAutoScheme: boolean;
 procedure saveAutoScheme(enabled: boolean);
 function loadIconFit: TIconFit;
 procedure saveIconFit(const fit: TIconFit);
+// the hover and active feedback of the controls; the IDE keeps the hover it
+// always had and leaves the rings off
+function loadEffects: TThemeEffects;
+procedure saveEffects(const effects: TThemeEffects);
 
 implementation
 
@@ -39,6 +43,8 @@ const
   KEY_THEME = 'Theme';
   KEY_AUTO_SCHEME = 'AutoScheme';
   KEY_ICON_FIT = 'IconFit/';
+  KEY_HOVER = 'Effects/Hover';
+  KEY_ACTIVE = 'Effects/Active';
   KIND_NAMES: array[TThemeKind] of string = ('default', 'system', 'light', 'dark', 'ocean', 'frost', 'paper', 'ember', 'midnight', 'dusk');
 
 function loadThemeKind: TThemeKind;
@@ -71,6 +77,25 @@ begin
   if not Assigned(GetIDEConfigStorage) then exit;
   var cfg := autofree GetIDEConfigStorage(CONFIG_FILE, True);
   cfg.SetDeleteValue(KEY_AUTO_SCHEME, enabled, true);
+  cfg.WriteToDisk;
+end;
+
+function loadEffects: TThemeEffects;
+begin
+  result.Hover := true;
+  result.Active := false;
+  if not Assigned(GetIDEConfigStorage) then exit;
+  var cfg := autofree GetIDEConfigStorage(CONFIG_FILE, True);
+  result.Hover := cfg.GetValue(KEY_HOVER, true);
+  result.Active := cfg.GetValue(KEY_ACTIVE, false);
+end;
+
+procedure saveEffects(const effects: TThemeEffects);
+begin
+  if not Assigned(GetIDEConfigStorage) then exit;
+  var cfg := autofree GetIDEConfigStorage(CONFIG_FILE, True);
+  cfg.SetDeleteValue(KEY_HOVER, effects.Hover, true);
+  cfg.SetDeleteValue(KEY_ACTIVE, effects.Active, false);
   cfg.WriteToDisk;
 end;
 

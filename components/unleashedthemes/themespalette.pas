@@ -27,6 +27,19 @@ type
   // system color table indexed by the COLOR_xxx constants
   TPalette = array[0..COLOR_HOVER] of TColor;
 
+  // the feedback the engine paints on top of the palette. Hover: every
+  // control answers the mouse over it (fills, frames, glyphs); off, nothing
+  // but menus reacts to the mouse. Active: the focused control carries a ring
+  // and the pressed states show; off, a control looks the same with and
+  // without the focus
+  TThemeEffects = record
+    Hover: boolean;
+    Active: boolean;
+  end;
+
+const
+  DefaultEffects: TThemeEffects = (Hover: true; Active: true);
+
 // neutral gray with a blue accent
 function lightPalette: TPalette;
 // neutral graphite
@@ -44,6 +57,10 @@ function midnightPalette: TPalette;
 // violet-navy with a lavender accent
 function duskPalette: TPalette;
 
+// the ring of the focused control: the accent toned down halfway to the
+// strongest neutral shade, so a focused editor does not shout
+function focusColor(const pal: TPalette): TColor;
+
 implementation
 
 // RRGGBB literal to TColor
@@ -56,6 +73,11 @@ end;
 function mix(a, b: TColor; percent: integer): TColor;
 begin
   result := RGBToColor(Red(a)+(Red(b)-Red(a))*percent div 100, Green(a)+(Green(b)-Green(a))*percent div 100, Blue(a)+(Blue(b)-Blue(a))*percent div 100);
+end;
+
+function focusColor(const pal: TPalette): TColor;
+begin
+  result := mix(pal[COLOR_BTNSHADOW], pal[COLOR_HOTLIGHT], 50);
 end;
 
 function lightPalette: TPalette;

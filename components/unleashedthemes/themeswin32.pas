@@ -23,8 +23,12 @@ uses
 procedure applyPalette(const newPal: TPalette);
 // hands every window back to the stock look
 procedure dropPalette;
+// repaints every window with the effects in force
+procedure redrawAll;
 
 var
+  // the hover and active feedback; the IDE chooses in its menu
+  effects: TThemeEffects = (Hover: true; Active: true);
   // fired on the UI thread when the desktop switches between light and dark apps
   onSystemThemeChange: procedure = nil;
 
@@ -84,7 +88,8 @@ const
   PAM_FORCE_DARK = 2;
   BUTTON_ID_BASE = $1000; // keeps task dialog button ids apart from the LCL modal results
   PENDING_NAME: PWideChar = 'UnleashedThemesPending'; // set until the window got its subclasses
-  EDGE_NAME: PWideChar = 'UnleashedThemesEdge'; // inner edge color last painted, plus one
+  EDGE_NAME: PWideChar = 'UnleashedThemesEdge'; // state of the client edge last painted, see edgeState
+  HOT_NAME: PWideChar = 'UnleashedThemesHot'; // the mouse is over the window
 
 var
   active: boolean = false;
@@ -309,7 +314,7 @@ var
     unitsPerPixel: double;
   end;
 
-procedure drawScrollBar(dc: HDC; const info: TScrollBarInfo; const origin: TPoint; vertical: boolean; hot: integer);
+procedure drawScrollBar(dc: HDC; const info: TScrollBarInfo; const origin: TPoint; vertical: boolean; hot: integer; pressed: boolean);
 begin
   if (info.rgstate[0] and (STATE_SYSTEM_INVISIBLE or STATE_SYSTEM_OFFSCREEN)) <> 0 then exit;
   var r := info.rcScrollBar;
@@ -331,6 +336,9 @@ begin
     firstDir := adLeft;
     secondDir := adRight;
   end;
+  // a held arrow button sinks, a hovered one only brightens its glyph
+  if pressed and (hot = 1) then fillRect(dc, first, pal[COLOR_BTNSHADOW]);
+  if pressed and (hot = 5) then fillRect(dc, second, pal[COLOR_BTNSHADOW]);
   var arrow := pal[COLOR_GRAYTEXT];
   if (info.rgstate[1] and STATE_SYSTEM_UNAVAILABLE) <> 0 then arrow := pal[COLOR_3DLIGHT] else if hot = 1 then arrow := pal[COLOR_BTNTEXT];
   drawArrow(dc, first, firstDir, arrow);
@@ -349,8 +357,10 @@ begin
     thumb.Right := r.Left+info.xyThumbBottom;
     InflateRect(thumb, 0, -THUMB_INSET);
   end;
+  // the thumb brightens under the mouse and takes the accent while dragged
   var color := pal[COLOR_BTNHIGHLIGHT];
-  if ((info.rgstate[3] and STATE_SYSTEM_PRESSED) <> 0) or (hot = 3) then color := pal[COLOR_GRAYTEXT];
+  if ((info.rgstate[3] and STATE_SYSTEM_PRESSED) <> 0) or (pressed and (hot = 3)) then color := pal[COLOR_HOTLIGHT]
+  else if hot = 3 then color := pal[COLOR_GRAYTEXT];
   SelectObject(dc, GetStockObject(DC_PEN));
   SelectObject(dc, GetStockObject(DC_BRUSH));
   SetDCPenColor(dc, color);
@@ -366,6 +376,19 @@ begin
   if (hover.wnd = wnd) and (hover.bar = bar) then result := hover.part;
 end;
 
+// the mouse button is down on a part of this bar
+function pressedBar(wnd: HWND; bar: integer): boolean;
+begin
+  result := (drag.wnd = wnd) and (drag.bar = bar);
+end;
+
+// the part to highlight: the pressed one always, the hovered one with the hover on
+function shownPartOf(wnd: HWND; bar: integer): integer;
+begin
+  result := hotPartOf(wnd, bar);
+  if not effects.Hover and not pressedBar(wnd, bar) then result := 0;
+end;
+
 // repaints the scroll bars of a window: the non-client ones of a control, or
 // the whole client of a stand-alone scroll bar control
 procedure paintScrollBars(wnd: HWND);
@@ -377,7 +400,7 @@ begin
     var origin: TPoint := Point(0, 0);
     ClientToScreen(wnd, origin);
     var dc := GetDC(wnd);
-    drawScrollBar(dc, info, origin, (GetWindowLongPtrW(wnd, GWL_STYLE) and SBS_VERT) <> 0, hotPartOf(wnd, SB_CTL));
+    drawScrollBar(dc, info, origin, (GetWindowLongPtrW(wnd, GWL_STYLE) and SBS_VERT) <> 0, shownPartOf(wnd, SB_CTL), pressedBar(wnd, SB_CTL));
     ReleaseDC(wnd, dc);
     exit;
   end;
@@ -392,8 +415,8 @@ begin
   horz.cbSize := sizeof(horz);
   var hasVert := ((style and WS_VSCROLL) <> 0) and GetScrollBarInfo(wnd, OBJID_VSCROLL, vert);
   var hasHorz := ((style and WS_HSCROLL) <> 0) and GetScrollBarInfo(wnd, OBJID_HSCROLL, horz);
-  if hasVert then drawScrollBar(dc, vert, win.TopLeft, true, hotPartOf(wnd, SB_VERT));
-  if hasHorz then drawScrollBar(dc, horz, win.TopLeft, false, hotPartOf(wnd, SB_HORZ));
+  if hasVert then drawScrollBar(dc, vert, win.TopLeft, true, shownPartOf(wnd, SB_VERT), pressedBar(wnd, SB_VERT));
+  if hasHorz then drawScrollBar(dc, horz, win.TopLeft, false, shownPartOf(wnd, SB_HORZ), pressedBar(wnd, SB_HORZ));
   // the corner where both bars meet
   if hasVert and hasHorz and (((vert.rgstate[0] or horz.rgstate[0]) and STATE_SYSTEM_INVISIBLE) = 0) then begin
     var corner := Rect(vert.rcScrollBar.Left-win.Left, horz.rcScrollBar.Top-win.Top, vert.rcScrollBar.Right-win.Left, horz.rcScrollBar.Bottom-win.Top);
@@ -455,6 +478,39 @@ begin
   result := WindowFromDC(dc);
   if (result = 0) and (paintDepth > 0) then result := paintStack[Min(paintDepth, length(paintStack))-1];
   if not IsWindow(result) then result := 0;
+end;
+
+// the window or a child of it holds the keyboard focus
+function focusInside(wnd: HWND): boolean;
+begin
+  var focus := GetFocus;
+  result := (focus = wnd) or ((focus <> 0) and IsChild(wnd, focus));
+end;
+
+// the control painting on `dc` holds the focus. The theme states say hot or
+// pressed while the mouse is on a focused control, so the focus ring would
+// vanish under the mouse without this
+function paintedFocused(dc: HDC): boolean;
+begin
+  var wnd := paintedWindow(dc);
+  result := (wnd <> 0) and focusInside(wnd);
+end;
+
+// the button painting on `dc` is the default one of its window
+function paintedDefault(dc: HDC): boolean;
+begin
+  var wnd := paintedWindow(dc);
+  result := (wnd <> 0) and ((GetWindowLongPtrW(wnd, GWL_STYLE) and $F) = BS_DEFPUSHBUTTON);
+end;
+
+// the button painting on `dc` is marked Default in its form, as opposed to
+// being the default only while it holds the focus
+function paintedStaticDefault(dc: HDC): boolean;
+begin
+  var wnd := paintedWindow(dc);
+  if wnd = 0 then exit(false);
+  var control := GetWin32WindowInfo(wnd)^.WinControl;
+  result := (control is TCustomButton) and TCustomButton(control).Default;
 end;
 
 function classNameOf(wnd: HWND): string;
@@ -642,7 +698,7 @@ begin
     TABP_TABITEM..TABP_TOPTABITEMBOTHEDGE: begin
       var selected := state in [TIS_SELECTED, TIS_FOCUSED];
       var fill := pal[COLOR_WINDOW];
-      if selected then fill := pal[COLOR_BTNFACE] else if state = TIS_HOT then fill := pal[COLOR_HOVER];
+      if selected then fill := pal[COLOR_BTNFACE] else if effects.Hover and (state = TIS_HOT) then fill := pal[COLOR_HOVER];
       fillRect(dc, r, fill);
       var border := pal[COLOR_3DLIGHT];
       drawLine(dc, r.Left, r.Top, r.Right, r.Top, border);
@@ -663,23 +719,34 @@ begin
   end;
 end;
 
-procedure drawCheckBoxPart(dc: HDC; state: integer; const r: TRect);
+// the box or ring of a check mark: the border steps up under the mouse and
+// once more while pressed, the pressed box also sinks into the surface
+procedure markBoxColors(slot: integer; out fill, border, glyph: TColor);
 begin
-  var slot := (state-1) mod 4; // 0 normal, 1 hot, 2 pressed, 3 disabled
-  var group := (state-1) div 4; // 0 unchecked, 1 checked, 2 mixed
-  var box := glyphBox(r);
-  var fill := pal[COLOR_WINDOW];
-  var border := pal[COLOR_BTNHIGHLIGHT];
-  var glyph := pal[COLOR_BTNTEXT];
+  fill := pal[COLOR_WINDOW];
+  border := pal[COLOR_BTNHIGHLIGHT];
+  glyph := pal[COLOR_BTNTEXT];
   match slot of
-    1, 2: border := pal[COLOR_HOTLIGHT];
+    1: if effects.Hover then border := pal[COLOR_BTNSHADOW];
+    2: begin
+      fill := pal[COLOR_3DLIGHT];
+      border := pal[COLOR_WINDOWFRAME];
+    end;
     3: begin
       fill := pal[COLOR_BTNFACE];
       border := pal[COLOR_3DLIGHT];
       glyph := pal[COLOR_GRAYTEXT];
     end;
   end;
-  if slot = 2 then fill := pal[COLOR_3DLIGHT];
+end;
+
+procedure drawCheckBoxPart(dc: HDC; state: integer; const r: TRect);
+begin
+  var slot := (state-1) mod 4; // 0 normal, 1 hot, 2 pressed, 3 disabled
+  var group := (state-1) div 4; // 0 unchecked, 1 checked, 2 mixed
+  var box := glyphBox(r);
+  var fill, border, glyph: TColor;
+  markBoxColors(slot, fill, border, glyph);
   fillRect(dc, box, fill);
   frameRect(dc, box, border);
   if group = 1 then drawCheckMark(dc, box, glyph)
@@ -695,36 +762,41 @@ begin
   var slot := (state-1) mod 4;
   var checked := state >= RBS_CHECKEDNORMAL;
   var box := glyphBox(r);
-  var fill := pal[COLOR_WINDOW];
-  var border := pal[COLOR_BTNHIGHLIGHT];
-  var glyph := pal[COLOR_BTNTEXT];
-  match slot of
-    1, 2: border := pal[COLOR_HOTLIGHT];
-    3: begin
-      fill := pal[COLOR_BTNFACE];
-      border := pal[COLOR_3DLIGHT];
-      glyph := pal[COLOR_GRAYTEXT];
-    end;
-  end;
-  if slot = 2 then fill := pal[COLOR_3DLIGHT];
+  var fill, border, glyph: TColor;
+  markBoxColors(slot, fill, border, glyph);
   drawEllipse(dc, box, fill, border);
   if not checked then exit;
   InflateRect(box, -box.Width*3 div 10, -box.Height*3 div 10);
   drawEllipse(dc, box, glyph, glyph);
 end;
 
+// the fill and the border step up together under the mouse and once more
+// while pressed, so the border never matches the fill. The focused and the
+// default button carry the accent ring in every state but disabled: the theme
+// reports only hot or pressed for them while the mouse is on the button
 procedure drawPushButtonPart(dc: HDC; state: integer; const r: TRect);
 begin
   var fill := pal[COLOR_3DLIGHT];
   var border := pal[COLOR_BTNHIGHLIGHT];
   match state of
-    PBS_HOT: fill := pal[COLOR_BTNHIGHLIGHT];
-    PBS_PRESSED: fill := pal[COLOR_BTNSHADOW];
+    PBS_HOT: if effects.Hover then begin
+      fill := pal[COLOR_BTNHIGHLIGHT];
+      border := pal[COLOR_BTNSHADOW];
+    end;
+    PBS_PRESSED: begin
+      fill := pal[COLOR_BTNSHADOW];
+      border := pal[COLOR_WINDOWFRAME];
+    end;
     PBS_DISABLED: begin
       fill := pal[COLOR_BTNFACE];
       border := pal[COLOR_3DLIGHT];
     end;
-    PBS_DEFAULTED, PBS_DEFAULTED_ANIMATING: border := pal[COLOR_HOTLIGHT];
+  end;
+  // with the rings off the button marked Default in the form keeps its ring,
+  // the one the focus made default does not
+  if state <> PBS_DISABLED then begin
+    if effects.Active and ((state in [PBS_DEFAULTED, PBS_DEFAULTED_ANIMATING]) or paintedFocused(dc) or paintedDefault(dc)) then border := focusColor(pal)
+    else if not effects.Active and paintedStaticDefault(dc) then border := focusColor(pal);
   end;
   fillRect(dc, r, pal[COLOR_BTNFACE]);
   SelectObject(dc, GetStockObject(DC_PEN));
@@ -742,19 +814,39 @@ begin
       var fill := pal[COLOR_WINDOW];
       var frame := pal[COLOR_3DLIGHT];
       match state of
-        CBB_HOT: frame := pal[COLOR_BTNHIGHLIGHT];
-        CBB_FOCUSED: frame := pal[COLOR_HOTLIGHT];
+        CBB_HOT: if effects.Hover then frame := pal[COLOR_BTNSHADOW];
+        CBB_FOCUSED: if effects.Active then frame := focusColor(pal);
         CBB_DISABLED: fill := pal[COLOR_BTNFACE];
       end;
+      // the focus sits in the edit of the box, so the theme says hot under the mouse
+      if effects.Active and (state <> CBB_DISABLED) and paintedFocused(dc) then frame := focusColor(pal);
       fillRect(dc, r, fill);
       frameRect(dc, r, frame);
     end;
     CP_READONLY, CP_BACKGROUND, CP_TRANSPARENTBACKGROUND: fillRect(dc, r, if state = CBRO_DISABLED then pal[COLOR_BTNFACE] else pal[COLOR_WINDOW]);
+    // the drop down button: a hover fill and a stronger glyph under the mouse,
+    // a sunken fill while pressed, a faded glyph when disabled
     CP_DROPDOWNBUTTON, CP_DROPDOWNBUTTONRIGHT, CP_DROPDOWNBUTTONLEFT: begin
       var inner := r;
       InflateRect(inner, -1, -1);
-      fillRect(dc, inner, if state = CBXS_DISABLED then pal[COLOR_BTNFACE] else pal[COLOR_WINDOW]);
-      drawArrow(dc, r, adDown, if state = CBXS_DISABLED then pal[COLOR_3DLIGHT] else pal[COLOR_GRAYTEXT]);
+      var fill := pal[COLOR_WINDOW];
+      var glyph := pal[COLOR_GRAYTEXT];
+      match state of
+        CBXS_HOT: if effects.Hover then begin
+          fill := pal[COLOR_HOVER];
+          glyph := pal[COLOR_BTNTEXT];
+        end;
+        CBXS_PRESSED: begin
+          fill := pal[COLOR_BTNSHADOW];
+          glyph := pal[COLOR_BTNTEXT];
+        end;
+        CBXS_DISABLED: begin
+          fill := pal[COLOR_BTNFACE];
+          glyph := pal[COLOR_3DLIGHT];
+        end;
+      end;
+      fillRect(dc, inner, fill);
+      drawArrow(dc, r, adDown, glyph);
     end;
     _: result := false;
   end;
@@ -787,7 +879,7 @@ begin
     end;
     HP_HEADERITEM, HP_HEADERITEMLEFT, HP_HEADERITEMRIGHT: begin
       var fill := pal[COLOR_BTNFACE];
-      if state in [HIS_HOT, HIS_SORTEDHOT, HIS_ICONHOT, HIS_ICONSORTEDHOT] then fill := pal[COLOR_HOVER]
+      if effects.Hover and (state in [HIS_HOT, HIS_SORTEDHOT, HIS_ICONHOT, HIS_ICONSORTEDHOT]) then fill := pal[COLOR_HOVER]
       else if state in [HIS_PRESSED, HIS_SORTEDPRESSED, HIS_ICONPRESSED, HIS_ICONSORTEDPRESSED] then fill := pal[COLOR_BTNSHADOW];
       fillRect(dc, r, fill);
       drawLine(dc, r.Right-1, r.Top, r.Right-1, r.Bottom, pal[COLOR_BTNHIGHLIGHT]);
@@ -804,12 +896,15 @@ begin
   result := true;
   match part of
     TP_BUTTON, TP_DROPDOWNBUTTON, TP_SPLITBUTTON, TP_SPLITBUTTONDROPDOWN: begin
-      if state in [TS_HOT, TS_NEARHOT, TS_OTHERSIDEHOT] then begin
+      if effects.Hover and (state in [TS_HOT, TS_NEARHOT, TS_OTHERSIDEHOT]) then begin
         fillRect(dc, r, pal[COLOR_HOVER]);
         frameRect(dc, r, pal[COLOR_BTNHIGHLIGHT]);
-      end else if state in [TS_PRESSED, TS_CHECKED, TS_HOTCHECKED] then begin
+      end else if state = TS_PRESSED then begin
         fillRect(dc, r, pal[COLOR_BTNSHADOW]);
-        frameRect(dc, r, if state = TS_HOTCHECKED then pal[COLOR_HOTLIGHT] else pal[COLOR_BTNHIGHLIGHT]);
+        frameRect(dc, r, pal[COLOR_WINDOWFRAME]);
+      end else if state in [TS_CHECKED, TS_HOTCHECKED] then begin
+        fillRect(dc, r, if effects.Hover and (state = TS_HOTCHECKED) then pal[COLOR_HOVER] else pal[COLOR_BTNSHADOW]);
+        frameRect(dc, r, pal[COLOR_HOTLIGHT]);
       end;
       if part = TP_SPLITBUTTONDROPDOWN then drawArrow(dc, r, adDown, if state = TS_DISABLED then pal[COLOR_GRAYTEXT] else pal[COLOR_BTNTEXT]);
     end;
@@ -831,7 +926,8 @@ begin
   result := part in [EP_EDITBORDER_NOSCROLL, EP_EDITBORDER_HSCROLL, EP_EDITBORDER_VSCROLL, EP_EDITBORDER_HVSCROLL];
   if not result then exit;
   var frame := pal[COLOR_3DLIGHT];
-  if state = EPSN_FOCUSED then frame := pal[COLOR_HOTLIGHT] else if state = EPSN_HOT then frame := pal[COLOR_BTNHIGHLIGHT];
+  if effects.Active and ((state = EPSN_FOCUSED) or ((state <> EPSN_DISABLED) and paintedFocused(dc))) then frame := focusColor(pal)
+  else if effects.Hover and (state = EPSN_HOT) then frame := pal[COLOR_BTNSHADOW];
   frameRect(dc, r, frame);
   var inner := r;
   InflateRect(inner, -1, -1);
@@ -861,7 +957,7 @@ begin
   match state of
     TREIS_SELECTED, TREIS_HOTSELECTED: fillRect(dc, r, pal[COLOR_HIGHLIGHT]);
     TREIS_SELECTEDNOTFOCUS: fillRect(dc, r, pal[COLOR_BTNHIGHLIGHT]);
-    TREIS_HOT: fillRect(dc, r, pal[COLOR_3DLIGHT]);
+    TREIS_HOT: if effects.Hover then fillRect(dc, r, pal[COLOR_HOVER]);
     _: result := false;
   end;
 end;
@@ -876,10 +972,26 @@ begin
     end;
     TKP_THUMB, TKP_THUMBBOTTOM, TKP_THUMBTOP, TKP_THUMBVERT, TKP_THUMBLEFT, TKP_THUMBRIGHT: begin
       var color := pal[COLOR_BTNHIGHLIGHT];
-      if state in [TUS_HOT, TUS_PRESSED] then color := pal[COLOR_GRAYTEXT] else if state = TUS_DISABLED then color := pal[COLOR_3DLIGHT];
+      var ring := color;
+      match state of
+        TUS_HOT: if effects.Hover then begin
+          color := pal[COLOR_GRAYTEXT];
+          ring := color;
+        end;
+        TUS_PRESSED: begin
+          color := pal[COLOR_HOTLIGHT];
+          ring := color;
+        end;
+        TUS_FOCUSED: if effects.Active then ring := focusColor(pal);
+        TUS_DISABLED: begin
+          color := pal[COLOR_3DLIGHT];
+          ring := color;
+        end;
+      end;
+      if effects.Active and (state <> TUS_DISABLED) and paintedFocused(dc) then ring := focusColor(pal);
       SelectObject(dc, GetStockObject(DC_PEN));
       SelectObject(dc, GetStockObject(DC_BRUSH));
-      SetDCPenColor(dc, color);
+      SetDCPenColor(dc, ring);
       SetDCBrushColor(dc, color);
       Windows.RoundRect(dc, r.Left, r.Top, r.Right, r.Bottom, 4, 4);
     end;
@@ -1358,27 +1470,86 @@ begin
   result := ColorToRGB(color);
 end;
 
-// repaints the sunken client edge of bordered controls
-procedure paintClientEdge(wnd: HWND);
+function hasClientEdge(wnd: HWND): boolean;
 begin
-  if (GetWindowLongPtrW(wnd, GWL_EXSTYLE) and WS_EX_CLIENTEDGE) = 0 then exit;
+  result := (GetWindowLongPtrW(wnd, GWL_EXSTYLE) and WS_EX_CLIENTEDGE) <> 0;
+end;
+
+type
+  // the focus as the message that triggers the repaint knows it: the focus
+  // is still inside while the window handles its kill focus message
+  TFocusWord = (fwAsk, fwGained, fwLost);
+
+// the inner color plus one, with the hover and focus flags above the color bits
+function edgeState(wnd: HWND; focus: TFocusWord): HANDLE;
+begin
+  result := HANDLE(innerEdgeColor(wnd)+1);
+  if not IsWindowEnabled(wnd) then exit;
+  if effects.Hover and (GetPropW(wnd, HOT_NAME) <> 0) then result := result or (1 shl 25);
+  if not effects.Active then exit;
+  var focused := focus = fwGained;
+  if focus = fwAsk then focused := focusInside(wnd);
+  if focused then result := result or (1 shl 26);
+end;
+
+// repaints the sunken client edge of bordered controls: the outer ring shows
+// the mouse over the control and the focus inside it, a disabled control
+// shows neither
+procedure paintClientEdge(wnd: HWND; focus: TFocusWord = fwAsk);
+begin
+  if not hasClientEdge(wnd) then exit;
   var win: TRect;
   GetWindowRect(wnd, @win);
   OffsetRect(win, -win.Left, -win.Top);
-  var inner := innerEdgeColor(wnd);
+  var state := edgeState(wnd, focus);
+  var outer := pal[COLOR_3DLIGHT];
+  if (state and (1 shl 26)) <> 0 then outer := focusColor(pal)
+  else if (state and (1 shl 25)) <> 0 then outer := pal[COLOR_BTNSHADOW];
   var dc := GetWindowDC(wnd);
-  frameRect(dc, win, pal[COLOR_3DLIGHT]);
+  frameRect(dc, win, outer);
   InflateRect(win, -1, -1);
-  frameRect(dc, win, inner);
+  frameRect(dc, win, innerEdgeColor(wnd));
   ReleaseDC(wnd, dc);
-  SetPropW(wnd, EDGE_NAME, HANDLE(inner+1));
+  SetPropW(wnd, EDGE_NAME, state);
 end;
 
-// a new control color repaints the client area only, the edge keeps the old one
-procedure refreshClientEdge(wnd: HWND);
+// a new control color, a focus change or the mouse repaint the client area
+// only, the edge keeps the old look
+procedure refreshClientEdge(wnd: HWND; focus: TFocusWord = fwAsk);
 begin
-  if (GetWindowLongPtrW(wnd, GWL_EXSTYLE) and WS_EX_CLIENTEDGE) = 0 then exit;
-  if GetPropW(wnd, EDGE_NAME) <> HANDLE(innerEdgeColor(wnd)+1) then paintClientEdge(wnd);
+  if not hasClientEdge(wnd) then exit;
+  if GetPropW(wnd, EDGE_NAME) <> edgeState(wnd, focus) then paintClientEdge(wnd, focus);
+end;
+
+// the mouse is over the window or one of its children, frame included; a
+// window of another kind on top of it does not count
+function mouseOver(wnd: HWND): boolean;
+begin
+  var pt: TPoint;
+  if not GetCursorPos(pt) then exit(false);
+  var under := WindowFromPoint(pt);
+  result := (under = wnd) or ((under <> 0) and IsChild(wnd, under));
+end;
+
+// follows the mouse over a bordered control. Every move renews the request
+// for the leave message of its area, since one request serves one leave;
+// a leave message only asks where the mouse is now, because asking for a
+// leave while the mouse is already outside posts the next leave at once
+procedure trackEdgeHover(wnd: HWND; msg: UINT);
+begin
+  if not hasClientEdge(wnd) or not IsWindowEnabled(wnd) then exit;
+  var hot := mouseOver(wnd);
+  if hot and ((msg = WM_MOUSEMOVE) or (msg = WM_NCMOUSEMOVE)) then begin
+    var track := Default(TTrackMouseEvent);
+    track.cbSize := SizeOf(track);
+    track.dwFlags := TME_LEAVE;
+    if msg = WM_NCMOUSEMOVE then track.dwFlags := track.dwFlags or TME_NONCLIENT;
+    track.hwndTrack := wnd;
+    startMouseTracking(track);
+  end;
+  if hot = (GetPropW(wnd, HOT_NAME) <> 0) then exit;
+  if hot then SetPropW(wnd, HOT_NAME, 1) else RemovePropW(wnd, HOT_NAME);
+  paintClientEdge(wnd);
 end;
 
 const
@@ -1557,6 +1728,7 @@ begin
   defer popPaint(painting);
   if active then begin
     var scrollControl := classNameOf(wnd) = 'ScrollBar';
+    if (msg = WM_MOUSEMOVE) or (msg = WM_MOUSELEAVE) or (msg = WM_NCMOUSEMOVE) or (msg = WM_NCMOUSELEAVE) then trackEdgeHover(wnd, msg);
     match msg of
       WM_NCLBUTTONDOWN: if ((wParam = HTVSCROLL) or (wParam = HTHSCROLL)) and beginScroll(wnd, if wParam = HTVSCROLL then SB_VERT else SB_HORZ, screenPoint(wnd, lParam, false)) then exit(0);
       WM_LBUTTONDOWN: if scrollControl and beginScroll(wnd, SB_CTL, screenPoint(wnd, lParam, true)) then exit(0);
@@ -1616,6 +1788,10 @@ begin
       refreshClientEdge(wnd);
       if classNameOf(wnd) = 'ScrollBar' then paintScrollBars(wnd);
     end;
+    WM_SETFOCUS: refreshClientEdge(wnd, fwGained);
+    WM_KILLFOCUS: refreshClientEdge(wnd, fwLost);
+    // a control going gray or coming back drops or regains its rings
+    WM_ENABLE: paintClientEdge(wnd);
     // stand-alone scroll bar controls paint in their client area
     WM_MOUSEMOVE, WM_MOUSELEAVE, WM_LBUTTONDOWN, WM_LBUTTONUP, SBM_SETSCROLLINFO, SBM_SETPOS, SBM_SETRANGE, SBM_ENABLE_ARROWS: if classNameOf(wnd) = 'ScrollBar' then paintScrollBars(wnd);
   end;
@@ -1806,7 +1982,7 @@ begin
     first.Bottom := (client.Top+client.Bottom) div 2;
     second.Top := first.Bottom;
   end;
-  if upDownHot.wnd = wnd then fillRect(dc, if upDownHot.half = 1 then first else second, if upDownHot.pressed then pal[COLOR_BTNSHADOW] else pal[COLOR_HOVER]);
+  if (upDownHot.wnd = wnd) and (upDownHot.pressed or effects.Hover) then fillRect(dc, if upDownHot.half = 1 then first else second, if upDownHot.pressed then pal[COLOR_BTNSHADOW] else pal[COLOR_HOVER]);
   frameRect(dc, first, pal[COLOR_BTNHIGHLIGHT]);
   frameRect(dc, second, pal[COLOR_BTNHIGHLIGHT]);
   drawArrow(dc, first, firstDir, color);
@@ -2027,6 +2203,11 @@ begin
     end;
   end;
   for var i := 0 to control.ControlCount-1 do if control.Controls[i] is TWinControl then refreshControl(TWinControl(control.Controls[i]));
+end;
+
+procedure redrawAll;
+begin
+  if active then EnumThreadWindows(GetCurrentThreadId, @redrawTopLevel, 0);
 end;
 
 procedure refreshLCL;
