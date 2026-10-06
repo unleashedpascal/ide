@@ -24,8 +24,12 @@ uses
 procedure applyPalette(const newPal: TPalette);
 // hands every window back to the stock gtk theme
 procedure dropPalette;
+// reloads the style sheet with the effects in force
+procedure redrawAll;
 
 var
+  // the hover and active feedback; the IDE chooses in its menu
+  effects: TThemeEffects = (Hover: true; Active: true);
   // fired on the UI thread after the desktop switched its gtk theme and the
   // palette went back on top of the reloaded styles
   onSystemThemeChange: procedure = nil;
@@ -46,6 +50,7 @@ var
   // designed controls painting right now, nested
   designDepth: integer = 0;
   watching: boolean = false; // the theme name notification is connected
+  lastPal: TPalette; // the palette on screen, for a reload of the sheet
 
 function hex(color: TColor): string;
 begin
@@ -110,6 +115,11 @@ begin
   var shadow := hex(pal[COLOR_BTNSHADOW]);
   var highlight := hex(pal[COLOR_HIGHLIGHT]);
   var highlightText := hex(pal[COLOR_HIGHLIGHTTEXT]);
+  var focus := hex(focusColor(pal));
+  // the hover and focus rules fall away with their switches: an empty
+  // selector list would match nothing anyway, a blank rule keeps the sheet valid
+  var hoverRule := if effects.Hover then '' else '/* hover off */';
+  var focusRule := if effects.Active then '' else '/* active off */';
   var hover := hex(pal[COLOR_HOVER]);
   var gray := hex(pal[COLOR_GRAYTEXT]);
   var menuBack := hex(pal[COLOR_MENU]);
@@ -141,7 +151,8 @@ begin
     'treeview, treeview.view, list, listbox, row, iconview, .view, calendar, combobox entry')+
     ' { background-color: '+base+'; color: '+baseText+'; background-image: none; caret-color: '+baseText+'; }'+
     s('entry, spinbutton')+' { border-color: '+shadow+'; box-shadow: none; }'+
-    s('entry:focus, spinbutton:focus')+' { border-color: '+highlight+'; }'+
+    (if effects.Hover then s('entry:hover, spinbutton:hover')+' { border-color: '+hex(pal[COLOR_WINDOWFRAME])+'; }' else hoverRule)+
+    (if effects.Active then s('entry:focus, spinbutton:focus')+' { border-color: '+focus+'; }' else focusRule)+
     s('treeview header button, treeview.view header button')+
     ' { background-color: '+face+'; color: '+fore+'; border-color: '+shadow+'; background-image: none; }'+
     // buttons and tabs
@@ -149,11 +160,15 @@ begin
     'notebook > header tab, toolbar button, scale slider')+
     ' { background-color: '+face+'; color: '+fore+'; border-color: '+shadow+'; '+
     '  background-image: none; box-shadow: none; text-shadow: none; -gtk-icon-shadow: none; }'+
-    s('button:hover, notebook > header tab:hover, toolbar button:hover')+' { background-color: '+hover+'; }'+
-    s('button:active, button:checked')+' { background-color: '+hex(pal[COLOR_BTNHIGHLIGHT])+'; }'+
+    (if effects.Hover then s('button:hover, notebook > header tab:hover, toolbar button:hover')+' { background-color: '+hover+'; border-color: '+hex(pal[COLOR_WINDOWFRAME])+'; }' else hoverRule)+
+    s('button:active, button:checked')+' { background-color: '+hex(pal[COLOR_BTNHIGHLIGHT])+'; border-color: '+hex(pal[COLOR_WINDOWFRAME])+'; }'+
+    // the focus ring and the checked state carry the accent
+    (if effects.Active then s('button:focus, button.default')+' { border-color: '+focus+'; outline-color: '+focus+'; outline-offset: -3px; }' else focusRule)+
+    s('button:checked, toolbar button:checked')+' { border-color: '+highlight+'; }'+
     s('notebook > header tab:checked')+' { background-color: '+base+'; color: '+baseText+'; }'+
     s('check, radio')+' { background-color: '+base+'; color: '+baseText+'; border-color: '+shadow+'; '+
     '  background-image: none; box-shadow: none; -gtk-icon-shadow: none; }'+
+    (if effects.Hover then s('check:hover, radio:hover')+' { border-color: '+hex(pal[COLOR_WINDOWFRAME])+'; }' else hoverRule)+
     s('check:checked, radio:checked, check:indeterminate')+
     ' { background-color: '+highlight+'; color: '+highlightText+'; border-color: '+highlight+'; }'+
     // the radio node is square; the fill stays inside the ring, and an empty
@@ -169,7 +184,8 @@ begin
     // scroll bars, sliders and progress
     s('scrollbar, scrollbar trough, scrollbar contents')+' { background-color: '+hex(pal[COLOR_SCROLLBAR])+'; background-image: none; border-color: '+hex(pal[COLOR_SCROLLBAR])+'; }'+
     s('scrollbar slider')+' { background-color: '+shadow+'; border-color: '+hex(pal[COLOR_SCROLLBAR])+'; }'+
-    s('scrollbar slider:hover, scrollbar slider:active')+' { background-color: '+gray+'; }'+
+    (if effects.Hover then s('scrollbar slider:hover')+' { background-color: '+gray+'; }' else hoverRule)+
+    s('scrollbar slider:active')+' { background-color: '+gray+'; }'+
     // the corner where the two bars meet
     s('scrolledwindow junction')+' { background-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-image: none; }'+
     s('scale trough, progressbar trough')+' { background-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-color: '+shadow+'; background-image: none; }'+
@@ -317,6 +333,7 @@ begin
   // the sheet loads while the provider is off the screen, so no widget keeps
   // style values from the old sheet during the reload. The designed forms
   // get the stock colors, like the running program shows them
+  lastPal := newPal;
   var css := namedColors(newPal) + styleSheet(newPal, '') + menuBand(newPal) + styleSheet(stockPalette, '.designer ') + metrics;
   gtk_css_provider_load_from_data(provider, PChar(css), length(css), nil);
   gtk_style_context_add_provider_for_screen(gdk_screen_get_default, PGtkStyleProvider(provider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
@@ -326,6 +343,11 @@ begin
   Gtk3WidgetSet.FlatEdges := true;
   Gtk3WidgetSet.DesignColorHook := @designColorHook;
   refreshLCL;
+end;
+
+procedure redrawAll;
+begin
+  if provider <> nil then applyPalette(lastPal);
 end;
 
 procedure dropPalette;

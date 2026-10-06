@@ -27,6 +27,8 @@ resourcestring
   MENU_MIDNIGHT = 'Midnight';
   MENU_DUSK   = 'Dusk';
   MENU_AUTO_SCHEME = 'Auto-generate new syntax highlight profile';
+  MENU_HOVER = 'Hover effects';
+  MENU_ACTIVE = 'Active effects (focus ring)';
 
 implementation
 
