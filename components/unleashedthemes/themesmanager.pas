@@ -89,7 +89,7 @@ begin
 end;
 
 initialization
-  {$ifdef LCLWin32}
+  {$if defined(LCLWin32) or defined(LCLGtk3)}
   onSystemThemeChange := @queueSystemChange;
   {$endif}
 end.
