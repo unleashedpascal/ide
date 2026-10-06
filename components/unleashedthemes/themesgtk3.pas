@@ -24,6 +24,11 @@ uses
 procedure applyPalette(const newPal: TPalette);
 // hands every window back to the stock gtk theme
 procedure dropPalette;
+
+var
+  // fired on the UI thread after the desktop switched its gtk theme and the
+  // palette went back on top of the reloaded styles
+  onSystemThemeChange: procedure = nil;
 {$endif}
 
 implementation
@@ -40,6 +45,7 @@ var
   stockDark: gboolean = False;
   // designed controls painting right now, nested
   designDepth: integer = 0;
+  watching: boolean = false; // the theme name notification is connected
 
 function hex(color: TColor): string;
 begin
@@ -273,12 +279,35 @@ begin
   g_object_set(PGObject(gtk_settings_get_default), 'gtk-application-prefer-dark-theme', [ord(dark), nil]);
 end;
 
+// the LCL reloads its styles and refills the system color table from the new
+// theme in an idle callback; this one runs after it, keeps the refilled table
+// as the stock colors and puts the palette back
+function themeChangedIdle(data: gpointer): gboolean; cdecl;
+begin
+  if provider <> nil then begin
+    Move(SysColorMap, stockColors, SizeOf(stockColors));
+    pushSysColors(palColors);
+    refreshLCL;
+  end;
+  if Assigned(onSystemThemeChange) then onSystemThemeChange;
+  result := gtk_false;
+end;
+
+procedure themeNameNotify(obj: PGObject; spec: gpointer; data: gpointer); cdecl;
+begin
+  g_idle_add_full(G_PRIORITY_DEFAULT_IDLE+10, @themeChangedIdle, nil, nil);
+end;
+
 procedure applyPalette(const newPal: TPalette);
 begin
   if provider = nil then begin
     Move(SysColorMap, stockColors, SizeOf(stockColors));
     g_object_get(PGObject(gtk_settings_get_default), 'gtk-application-prefer-dark-theme', [@stockDark, nil]);
     provider := gtk_css_provider_new;
+    if not watching then begin
+      watching := true;
+      g_signal_connect_data(PGObject(gtk_settings_get_default), 'notify::gtk-theme-name', TGCallback(@themeNameNotify), nil, nil, G_CONNECT_DEFAULT);
+    end;
   end else
     gtk_style_context_remove_provider_for_screen(gdk_screen_get_default, PGtkStyleProvider(provider));
   var r, g, b: byte;
