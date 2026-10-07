@@ -8,7 +8,7 @@ unit unleashedthemeengine;
 interface
 
 uses
-  ThemesEngine, ThemesPalette, ThemesWin32, ThemesGtk3, ThemesIcons, LazarusPackageIntf;
+  ThemesEngine, ThemesPalette, ThemesWin32, ThemesGtk3, ThemesIcons, ThemesSeed, LazarusPackageIntf;
 
 implementation
 

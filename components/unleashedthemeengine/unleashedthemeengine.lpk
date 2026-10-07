@@ -40,6 +40,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="themesicons.pas"/>
         <UnitName Value="ThemesIcons"/>
       </Item>
+      <Item>
+        <Filename Value="themesseed.pas"/>
+        <UnitName Value="ThemesSeed"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

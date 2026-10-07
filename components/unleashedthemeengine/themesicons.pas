@@ -47,6 +47,10 @@ procedure useIconFit(const value: TIconFit);
 procedure applyIconFit(const value: TIconFit);
 function currentIconFit: TIconFit;
 
+// h in sixths of the hue circle, s and l in 0..1
+procedure rgbToHsl(r, g, b: byte; out h, s, l: single);
+procedure hslToRgb(h, s, l: single; out r, g, b: byte);
+
 implementation
 
 uses
@@ -64,7 +68,6 @@ var
   // the fit as 0..1 factors
   strength, minContrast, maxLightness, disabledContrast, disabledSaturation: single;
 
-// h in sixths of the hue circle, s and l in 0..1
 procedure rgbToHsl(r, g, b: byte; out h, s, l: single);
 begin
   var rf := r/255;

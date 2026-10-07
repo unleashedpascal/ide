@@ -57,6 +57,8 @@ function midnightPalette: TPalette;
 // violet-navy with a lavender accent
 function duskPalette: TPalette;
 
+// `a` moved `percent` of the way toward `b`
+function mix(a, b: TColor; percent: integer): TColor;
 // the ring of the focused control: the accent toned down halfway to the
 // strongest neutral shade, so a focused editor does not shout
 function focusColor(const pal: TPalette): TColor;
@@ -75,7 +77,6 @@ begin
   result := RGBToColor((hex shr 16) and $FF, (hex shr 8) and $FF, hex and $FF);
 end;
 
-// `a` moved `percent` of the way toward `b`
 function mix(a, b: TColor; percent: integer): TColor;
 begin
   result := RGBToColor(Red(a)+(Red(b)-Red(a))*percent div 100, Green(a)+(Green(b)-Green(a))*percent div 100, Blue(a)+(Blue(b)-Blue(a))*percent div 100);
