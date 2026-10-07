@@ -1,3 +1,6 @@
 TAPPTHEME RCDATA "images/tapptheme.png"
 TAPPTHEME_150 RCDATA "images/tapptheme_150.png"
 TAPPTHEME_200 RCDATA "images/tapptheme_200.png"
+TRANGESLIDER RCDATA "images/trangeslider.png"
+TRANGESLIDER_150 RCDATA "images/trangeslider_150.png"
+TRANGESLIDER_200 RCDATA "images/trangeslider_200.png"
