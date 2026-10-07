@@ -6199,6 +6199,8 @@ function TGtk3Entry.CreateWidget(const Params: TCreateParams): PGtkWidget;
 begin
   Result := LCLGtkEntryNew;
   FWidgetType := FWidgetType + [wtEntry];
+  if LCLObject is TCustomEdit then
+    PGtkEntry(Result)^.set_has_frame(TCustomEdit(LCLObject).BorderStyle <> bsNone);
   fText:=Params.Caption;
   PrivateCursorPos := -1;
   PrivateSelection := -1;

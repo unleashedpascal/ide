@@ -485,6 +485,8 @@ begin
   {$IFDEF GTK3DEBUGCORE}
   DebugLn('TGtk3WSWinControl.SetBorderStyle');
   {$ENDIF}
+  if TGtk3Widget(AWinControl.Handle) is TGtk3Entry then
+    TGtk3Entry(AWinControl.Handle).SetFrame(ABorderStyle <> bsNone);
 end;
 
 class procedure TGtk3WSWinControl.SetChildZPosition(
