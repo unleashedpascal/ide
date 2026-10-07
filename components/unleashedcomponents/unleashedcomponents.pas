@@ -10,7 +10,7 @@ interface
 uses
   AppTheme, RangeSlider, ControlPaint, ToggleSwitch, SearchEdit, SplitButton, 
   LinkLabel, SegmentedControl, ColorPicker, BusyIndicator, ProgressRing, 
-  SuggestEdit, LazarusPackageIntf;
+  SuggestEdit, Badge, LazarusPackageIntf;
 
 implementation
 

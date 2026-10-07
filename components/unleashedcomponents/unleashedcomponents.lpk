@@ -69,6 +69,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="suggestedit.pas"/>
         <UnitName Value="SuggestEdit"/>
       </Item>
+      <Item>
+        <Filename Value="badge.pas"/>
+        <UnitName Value="Badge"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
