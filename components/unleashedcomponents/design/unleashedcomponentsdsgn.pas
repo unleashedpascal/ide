@@ -2,21 +2,23 @@
   This source is only used to compile and install the package.
  }
 
-unit unleashedcomponentsdsgn;
+unit UnleashedComponentsDsgn;
 
 {$warn 5023 off : no warning about unused units}
 interface
 
 uses
-  RegisterUnleashedComponents, AppThemeEditor, LazarusPackageIntf;
+  RegisterUnleashedComponents, AppThemeEditor, SegmentEditor, 
+  LazarusPackageIntf;
 
 implementation
 
-procedure register;
+procedure Register;
 begin
-  registerunit('RegisterUnleashedComponents', @registerunleashedcomponents.register);
+  RegisterUnit('RegisterUnleashedComponents', 
+    @RegisterUnleashedComponents.Register);
 end;
 
 initialization
-  registerpackage('UnleashedComponentsDsgn', @register);
+  RegisterPackage('UnleashedComponentsDsgn', @Register);
 end.

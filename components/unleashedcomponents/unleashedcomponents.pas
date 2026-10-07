@@ -9,7 +9,7 @@ interface
 
 uses
   AppTheme, RangeSlider, ControlPaint, ToggleSwitch, SearchEdit, SplitButton, 
-  LinkLabel, LazarusPackageIntf;
+  LinkLabel, SegmentedControl, LazarusPackageIntf;
 
 implementation
 
