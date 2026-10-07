@@ -125,6 +125,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="qrcode.pas"/>
         <UnitName Value="QRCode"/>
       </Item>
+      <Item>
+        <Filename Value="jsontreeview.pas"/>
+        <UnitName Value="JsonTreeView"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
