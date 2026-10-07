@@ -61,6 +61,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="busyindicator.pas"/>
         <UnitName Value="BusyIndicator"/>
       </Item>
+      <Item>
+        <Filename Value="progressring.pas"/>
+        <UnitName Value="ProgressRing"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
