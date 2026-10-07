@@ -16,7 +16,7 @@ unit AppTheme;
 interface
 
 uses
-  Classes, SysUtils, Graphics, ThemesPalette, ThemesSeed, ThemesIcons;
+  Classes, SysUtils, Graphics, Forms, ThemesPalette, ThemesSeed, ThemesIcons, ControlPaint;
 
 type
   // tpNone keeps the stock look of the widgetset; tpSystem picks the light or
@@ -102,7 +102,7 @@ type
   published
     // the controls answer the mouse over them; off, only menus do
     property Hover: boolean read FEffects.Hover write setHover default true;
-    // the focused control carries a ring; off, a control looks the same
+    // the focused control shows the focus on its border; off, a control looks the same
     // with and without the focus
     property Active: boolean read FEffects.Active write setActive default true;
   end;
@@ -152,6 +152,32 @@ type
     property GlideTime: integer read FGlideTime write setGlideTime default 150;
   end;
 
+  { TThemeRendering }
+
+  // how the controls of this package draw: the smoothing of their shapes and
+  // the quality of their text. The text quality can go onto every form of
+  // the application, so the native controls draw their text the same way
+  TThemeRendering = class(TPersistent)
+  private
+    FOwner: TAppTheme;
+    FShapes: TShapeAntialiasing;
+    FTextQuality: TFontQuality;
+    FEverywhere: boolean;
+    procedure setShapes(value: TShapeAntialiasing);
+    procedure setTextQuality(value: TFontQuality);
+    procedure setEverywhere(value: boolean);
+  public
+    constructor Create(owner: TAppTheme);
+    procedure Assign(Source: TPersistent); override;
+  published
+    // the shapes painted at a multiple of their size and shrunk: off, 2x, 3x, 4x
+    property ShapeAntialiasing: TShapeAntialiasing read FShapes write setShapes default aaHigh;
+    // the text of the controls; fqDefault keeps the system setting
+    property TextQuality: TFontQuality read FTextQuality write setTextQuality default fqDefault;
+    // the text quality goes onto the font of every form, the native controls included
+    property TextQualityEverywhere: boolean read FEverywhere write setEverywhere default false;
+  end;
+
   { TAppTheme }
 
   // puts a color theme on every window of the application, native controls
@@ -168,6 +194,7 @@ type
     FEffects: TThemeEffectSettings;
     FShift: TThemeShift;
     FScrolling: TThemeScrolling;
+    FRendering: TThemeRendering;
     FOnChange: TNotifyEvent;
     procedure setActive(value: boolean);
     procedure setPreset(value: TThemePreset);
@@ -176,7 +203,10 @@ type
     procedure setEffects(value: TThemeEffectSettings);
     procedure setShift(value: TThemeShift);
     procedure setScrolling(value: TThemeScrolling);
+    procedure setRendering(value: TThemeRendering);
     procedure applyScrolling;
+    procedure applyRendering;
+    procedure formCreated(Sender: TObject; Form: TCustomForm);
     function customStored: boolean;
     procedure customChanged;
     procedure iconFitChanged;
@@ -210,6 +240,7 @@ type
     property Shift: TThemeShift read FShift write setShift;
     // the wheel settings hold whatever the preset, Active included
     property Scrolling: TThemeScrolling read FScrolling write setScrolling;
+    property Rendering: TThemeRendering read FRendering write setRendering;
     // after the look on screen changed
     property OnChange: TNotifyEvent read FOnChange write FOnChange;
   end;
@@ -220,7 +251,7 @@ function presetPalette(preset: TThemePreset): TPalette;
 implementation
 
 uses
-  LCLType, LCLIntf, Forms, Themes, ThemesEngine;
+  LCLType, LCLIntf, Themes, ThemesEngine;
 
 var
   theInstance: TAppTheme = nil;
@@ -460,6 +491,47 @@ begin
   FOwner.applyScrolling;
 end;
 
+{ TThemeRendering }
+
+constructor TThemeRendering.Create(owner: TAppTheme);
+begin
+  inherited Create;
+  FOwner := owner;
+  FShapes := aaHigh;
+  FTextQuality := fqDefault;
+end;
+
+procedure TThemeRendering.Assign(Source: TPersistent);
+begin
+  if Source is TThemeRendering then begin
+    FShapes := TThemeRendering(Source).FShapes;
+    FTextQuality := TThemeRendering(Source).FTextQuality;
+    FEverywhere := TThemeRendering(Source).FEverywhere;
+    FOwner.applyRendering;
+  end else inherited Assign(Source);
+end;
+
+procedure TThemeRendering.setShapes(value: TShapeAntialiasing);
+begin
+  if FShapes = value then exit;
+  FShapes := value;
+  FOwner.applyRendering;
+end;
+
+procedure TThemeRendering.setTextQuality(value: TFontQuality);
+begin
+  if FTextQuality = value then exit;
+  FTextQuality := value;
+  FOwner.applyRendering;
+end;
+
+procedure TThemeRendering.setEverywhere(value: boolean);
+begin
+  if FEverywhere = value then exit;
+  FEverywhere := value;
+  FOwner.applyRendering;
+end;
+
 { TAppTheme }
 
 // the engine calls a plain procedure
@@ -481,6 +553,7 @@ begin
   FEffects := TThemeEffectSettings.Create(self);
   FShift := TThemeShift.Create(self);
   FScrolling := TThemeScrolling.Create(self);
+  FRendering := TThemeRendering.Create(self);
 end;
 
 destructor TAppTheme.Destroy;
@@ -493,6 +566,8 @@ begin
   FEffects.Free;
   FShift.Free;
   FScrolling.Free;
+  FRendering.Free;
+  if not (csDesigning in ComponentState) then Screen.RemoveHandlerNewFormCreated(@formCreated);
   inherited Destroy;
 end;
 
@@ -538,6 +613,7 @@ begin
   if csLoading in ComponentState then exit;
   if theInstance <> self then raise EComponentError.Create('Only one TAppTheme per application');
   applyScrolling;
+  applyRendering;
   setThemeEffects(FEffects.FEffects);
   if FActive and (FPreset <> tpNone) then applyTheme(Palette) else dropTheme;
   useIconFit(FIconFit.FFit);
@@ -568,6 +644,31 @@ begin
   WheelScrolling.Speed := FScrolling.FSpeed;
   WheelScrolling.Smooth := FScrolling.FSmooth;
   WheelScrolling.GlideTime := FScrolling.FGlideTime;
+end;
+
+// the rendering goes to the controls of this package; a live application only
+procedure TAppTheme.applyRendering;
+begin
+  if csDesigning in ComponentState then exit;
+  if csLoading in ComponentState then exit;
+  shapeAntialiasing := FRendering.FShapes;
+  textQuality := FRendering.FTextQuality;
+  // the quality on the font of a form reaches every control with ParentFont
+  if FRendering.FEverywhere then begin
+    for var i := 0 to Screen.CustomFormCount-1 do Screen.CustomForms[i].Font.Quality := FRendering.FTextQuality;
+    Screen.AddHandlerNewFormCreated(@formCreated);
+  end else Screen.RemoveHandlerNewFormCreated(@formCreated);
+  for var i := 0 to Screen.CustomFormCount-1 do Screen.CustomForms[i].Invalidate;
+end;
+
+procedure TAppTheme.formCreated(Sender: TObject; Form: TCustomForm);
+begin
+  if FRendering.FEverywhere then Form.Font.Quality := FRendering.FTextQuality;
+end;
+
+procedure TAppTheme.setRendering(value: TThemeRendering);
+begin
+  FRendering.Assign(value);
 end;
 
 procedure TAppTheme.setEffects(value: TThemeEffectSettings);
