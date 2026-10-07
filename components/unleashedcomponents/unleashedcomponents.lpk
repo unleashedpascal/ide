@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <Name Value="UnleashedComponents"/>
+    <Type Value="RunAndDesignTime"/>
+    <AddToProjectUsesSection Value="True"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/$(LCLWidgetType)"/>
+      </SearchPaths>
+      <Other>
+        <CustomOptions Value="$(IDEBuildOptions)"/>
+      </Other>
+    </CompilerOptions>
+    <Description Value="Unleashed Components: controls and tools for LCL applications, with TAppTheme putting a color theme on the whole application.
+"/>
+    <License Value="Copyright (c) 2026 Unleashed Pascal Contributors &lt;https://unleashedpascal.org>
+
+Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text is available at https://mozilla.org/MPL/2.0/.
+"/>
+    <Version Major="1"/>
+    <Files>
+      <Item>
+        <Filename Value="apptheme.pas"/>
+        <UnitName Value="AppTheme"/>
+      </Item>
+    </Files>
+    <RequiredPkgs>
+      <Item>
+        <PackageName Value="LCL"/>
+      </Item>
+      <Item>
+        <PackageName Value="UnleashedThemeEngine"/>
+      </Item>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

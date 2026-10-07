@@ -37,7 +37,7 @@
     <RunParams>
       <FormatVersion Value="2"/>
     </RunParams>
-    <RequiredPackages Count="21">
+    <RequiredPackages Count="22">
       <Item1>
         <PackageName Value="IdePackager"/>
       </Item1>
@@ -103,6 +103,9 @@
       <Item21>
         <PackageName Value="UnleashedThemeEngine"/>
       </Item21>
+      <Item22>
+        <PackageName Value="UnleashedComponentsDsgn"/>
+      </Item22>
     </RequiredPackages>
     <Units Count="217">
       <Unit0>

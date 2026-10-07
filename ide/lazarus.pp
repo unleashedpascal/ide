@@ -74,6 +74,7 @@ uses
   unleashedthemes, // preinstalled
   unleashedminimap, // preinstalled
   unleashedpanes, // preinstalled
+  unleashedcomponentsdsgn, // preinstalled
   // use the custom IDE static packages AFTER 'main'
   {$IFDEF AddStaticPkgs}
   // In case you get duplicate identifier errors in the uses clause,
