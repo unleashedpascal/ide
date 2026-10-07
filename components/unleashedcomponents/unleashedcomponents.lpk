@@ -109,6 +109,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="passwordedit.pas"/>
         <UnitName Value="PasswordEdit"/>
       </Item>
+      <Item>
+        <Filename Value="hotkeyedit.pas"/>
+        <UnitName Value="HotKeyEdit"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
