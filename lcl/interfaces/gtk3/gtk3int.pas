@@ -254,6 +254,9 @@ uses
   LazPangoCairo1, gtk3boxes, gtk3caret, gtk3themes,
   {%H-}Gtk3WSFactory{%H-};
 
+// gtk reads its settings from the libc environment, not from the copy the RTL keeps
+function setenv(name, value: PChar; overwrite: Integer): Integer; cdecl; external 'c';
+
 {------------------------------------------------------------------------------
   Function: FillStandardDescription
   Params:

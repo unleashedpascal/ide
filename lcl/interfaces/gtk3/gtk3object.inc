@@ -82,6 +82,11 @@ var
   AGtkThread: PGThread;
   AId: String;
 begin
+  // the scroll bars stay in view as on the other widgetsets; gtk takes the
+  // variable from the libc environment as it initializes, an explicit
+  // setting there wins
+  if GetEnvironmentVariable('GTK_OVERLAY_SCROLLING') = '' then
+    setenv('GTK_OVERLAY_SCROLLING', '0', 0);
   g_type_init;
   gtk_init(@argc, @argv);
   AGtkThread := g_thread_self();
@@ -409,11 +414,7 @@ begin
   g_object_set_property(gtk_settings_get_default,'gtk-button-images',@AValue);
   AValue.unset;
 
-  FOverlayScrolling := True;
-  if GetEnvironmentVariable('GTK_OVERLAY_SCROLLING') = '0' then
-    FOverlayScrolling := False;
-  if FOverlayScrolling then
-    g_object_get(gtk_settings_get_default,'gtk-overlay-scrolling', [@FOverlayScrolling, nil]);
+  g_object_get(gtk_settings_get_default,'gtk-overlay-scrolling', [@FOverlayScrolling, nil]);
 
   FGlobalCursor := 0;
   FAppIcon := nil;
