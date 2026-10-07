@@ -73,6 +73,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="badge.pas"/>
         <UnitName Value="Badge"/>
       </Item>
+      <Item>
+        <Filename Value="rating.pas"/>
+        <UnitName Value="Rating"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
