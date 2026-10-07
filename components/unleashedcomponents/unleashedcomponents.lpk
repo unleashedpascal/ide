@@ -137,6 +137,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="logview.pas"/>
         <UnitName Value="LogView"/>
       </Item>
+      <Item>
+        <Filename Value="dropzone.pas"/>
+        <UnitName Value="DropZone"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

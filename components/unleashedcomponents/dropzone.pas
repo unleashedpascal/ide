@@ -1,0 +1,421 @@
+{ Part of the Unleashed Pascal IDE
+  Copyright (c) 2026 Unleashed Pascal Contributors <https://unleashedpascal.org>
+  License: MPL-2.0
+
+  This Source Code Form is subject to the terms of the Mozilla Public License,
+  v. 2.0. If a copy of the MPL was not distributed with this file, You can
+  obtain one at https://mozilla.org/MPL/2.0/.
+
+  These notices must be kept in copies and modified versions (MPL-2.0 sec. 3.1);
+  add yours below. }
+
+unit DropZone;
+
+{$mode unleashed}
+
+interface
+
+uses
+  Classes, SysUtils, Types, Controls, Graphics, Forms, Dialogs, LCLType, LMessages, ControlPaint;
+
+type
+  TFilesEvent = procedure(Sender: TObject; files: TStrings) of object;
+
+  { TDropZone }
+
+  // a target for files dragged from the desktop: a dashed frame with a hint,
+  // lit while a drop is possible. A click opens a file dialog instead.
+  // The files arrive in OnFilesDropped, filtered by Extensions
+  TDropZone = class(TCustomControl)
+  private
+    FExtensions: string;
+    FMultiple, FClickToBrowse, FShowIcon: boolean;
+    FDialogTitle, FDialogFilter: string;
+    FCornerRadius, FDashLength, FIconSize: integer;
+    FFrameColor, FHoverFrameColor, FFillColor, FTextColor: TColor;
+    FHot, FDropping: boolean;
+    FAntialiasing: TAntialiasSetting;
+    FOnFilesDropped: TFilesEvent;
+    FOnFileRejected: TFilesEvent;
+    procedure setExtensions(const value: string);
+    procedure setFlag(index: integer; value: boolean);
+    function getFlag(index: integer): boolean;
+    procedure setMetric(index: integer; value: integer);
+    function getMetric(index: integer): integer;
+    procedure setPartColor(index: integer; value: TColor);
+    function getPartColor(index: integer): TColor;
+    procedure setAntialiasing(value: TAntialiasSetting);
+    function accepts(const fileName: string): boolean;
+    procedure takeFiles(const names: array of string);
+    procedure formFilesDropped(Sender: TObject; const names: array of string);
+    procedure hookForm;
+  protected
+    procedure Paint; override;
+    procedure Click; override;
+    procedure MouseEnter; override;
+    procedure MouseLeave; override;
+    procedure CreateWnd; override;
+    procedure DestroyWnd; override;
+    {$ifdef WINDOWS}
+    procedure WndProc(var Message: TLMessage); override;
+    {$endif}
+    class function GetControlClassDefaultSize: TSize; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    // opens the file dialog, as a click does
+    procedure Browse;
+  published
+    // the hint in the zone
+    property Caption;
+    // extensions taken, like '.png;.jpg'; empty takes everything
+    property Extensions: string read FExtensions write setExtensions;
+    property Multiple: boolean index 0 read getFlag write setFlag default true;
+    property ClickToBrowse: boolean index 1 read getFlag write setFlag default true;
+    property ShowIcon: boolean index 2 read getFlag write setFlag default true;
+    property DialogTitle: string read FDialogTitle write FDialogTitle;
+    // the filter of the dialog; empty derives one from Extensions
+    property DialogFilter: string read FDialogFilter write FDialogFilter;
+    property CornerRadius: integer index 0 read getMetric write setMetric default 8;
+    property DashLength: integer index 1 read getMetric write setMetric default 6;
+    property IconSize: integer index 2 read getMetric write setMetric default 32;
+    // clDefault takes the colors of the theme
+    property FrameColor: TColor index 0 read getPartColor write setPartColor default clDefault;
+    property HoverFrameColor: TColor index 1 read getPartColor write setPartColor default clDefault;
+    property FillColor: TColor index 2 read getPartColor write setPartColor default clDefault;
+    property TextColor: TColor index 3 read getPartColor write setPartColor default clDefault;
+    property Antialiasing: TAntialiasSetting read FAntialiasing write setAntialiasing default asTheme;
+    property OnFilesDropped: TFilesEvent read FOnFilesDropped write FOnFilesDropped;
+    // files whose extension was not in Extensions
+    property OnFileRejected: TFilesEvent read FOnFileRejected write FOnFileRejected;
+    property Align;
+    property Anchors;
+    property BorderSpacing;
+    property Color;
+    property Constraints;
+    property Enabled;
+    property Font;
+    property Hint;
+    property ParentColor;
+    property ParentFont;
+    property ParentShowHint;
+    property PopupMenu;
+    property ShowHint;
+    property TabOrder;
+    property TabStop;
+    property Visible;
+    property OnClick;
+    property OnContextPopup;
+    property OnDblClick;
+    property OnMouseDown;
+    property OnMouseEnter;
+    property OnMouseLeave;
+    property OnMouseMove;
+    property OnMouseUp;
+    property OnResize;
+  end;
+
+implementation
+
+uses
+  Math{$ifdef WINDOWS}, Windows, ShellAPI{$endif};
+
+constructor TDropZone.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  ControlStyle := ControlStyle+[csOpaque, csSetCaption];
+  FMultiple := true;
+  FClickToBrowse := true;
+  FShowIcon := true;
+  FCornerRadius := 8;
+  FDashLength := 6;
+  FIconSize := 32;
+  FFrameColor := clDefault;
+  FHoverFrameColor := clDefault;
+  FFillColor := clDefault;
+  FTextColor := clDefault;
+  ParentColor := true;
+  Cursor := crHandPoint;
+  with GetControlClassDefaultSize do SetInitialBounds(0, 0, cx, cy);
+end;
+
+destructor TDropZone.Destroy;
+begin
+  Application.RemoveOnDropFilesHandler(@formFilesDropped);
+  inherited Destroy;
+end;
+
+class function TDropZone.GetControlClassDefaultSize: TSize;
+begin
+  result.cx := 240;
+  result.cy := 120;
+end;
+
+// -- files ----------------------
+
+function TDropZone.accepts(const fileName: string): boolean;
+begin
+  result := true;
+  if FExtensions = '' then exit;
+  var ext := LowerCase(ExtractFileExt(fileName));
+  for var e in FExtensions.Split([';', ',', ' '], TStringSplitOptions.ExcludeEmpty) do begin
+    var want := LowerCase(Trim(e));
+    if (want <> '') and (want[1] <> '.') then want := '.'+want;
+    if want = ext then exit;
+  end;
+  result := false;
+end;
+
+procedure TDropZone.takeFiles(const names: array of string);
+begin
+  var taken := TStringList.Create;
+  var rejected := TStringList.Create;
+  try
+    for var n in names do if accepts(n) then taken.Add(n) else rejected.Add(n);
+    if not FMultiple and (taken.Count > 1) then begin
+      for var i := 1 to taken.Count-1 do rejected.Add(taken[i]);
+      while taken.Count > 1 do taken.Delete(1);
+    end;
+    if (rejected.Count > 0) and Assigned(FOnFileRejected) then FOnFileRejected(self, rejected);
+    if (taken.Count > 0) and Assigned(FOnFilesDropped) then FOnFilesDropped(self, taken);
+  finally
+    taken.Free;
+    rejected.Free;
+  end;
+end;
+
+{$ifdef WINDOWS}
+// the window takes drops itself; WM_DROPFILES brings the names
+procedure TDropZone.WndProc(var Message: TLMessage);
+begin
+  if Message.Msg = WM_DROPFILES then begin
+    var drop := HDROP(Message.WParam);
+    try
+      var count := DragQueryFileW(drop, $FFFFFFFF, nil, 0);
+      var names: array of string;
+      SetLength(names, count);
+      for var i := 0 to count-1 do begin
+        var len := DragQueryFileW(drop, i, nil, 0);
+        var buf: UnicodeString;
+        SetLength(buf, len);
+        DragQueryFileW(drop, i, PWideChar(buf), len+1);
+        names[i] := UTF8Encode(buf);
+      end;
+      takeFiles(names);
+    finally
+      DragFinish(drop);
+    end;
+    FDropping := false;
+    Invalidate;
+    Message.Result := 0;
+    exit;
+  end;
+  inherited WndProc(Message);
+end;
+{$endif}
+
+procedure TDropZone.CreateWnd;
+begin
+  inherited CreateWnd;
+  {$ifdef WINDOWS}
+  if not (csDesigning in ComponentState) then DragAcceptFiles(Handle, true);
+  {$else}
+  hookForm;
+  {$endif}
+end;
+
+procedure TDropZone.DestroyWnd;
+begin
+  {$ifdef WINDOWS}
+  if HandleAllocated and not (csDesigning in ComponentState) then DragAcceptFiles(Handle, false);
+  {$endif}
+  inherited DestroyWnd;
+end;
+
+// elsewhere the form takes the drops and hands over those over the zone
+procedure TDropZone.hookForm;
+begin
+  var form := GetParentForm(self);
+  if (form = nil) or (csDesigning in ComponentState) then exit;
+  form.AllowDropFiles := true;
+  Application.AddOnDropFilesHandler(@formFilesDropped);
+end;
+
+procedure TDropZone.formFilesDropped(Sender: TObject; const names: array of string);
+begin
+  var p := ScreenToClient(Mouse.CursorPos);
+  if not ClientRect.Contains(p) then exit;
+  takeFiles(names);
+end;
+
+procedure TDropZone.Browse;
+begin
+  var dlg := TOpenDialog.Create(nil);
+  try
+    dlg.Title := if FDialogTitle = '' then 'Choose files' else FDialogTitle;
+    if FDialogFilter <> '' then dlg.Filter := FDialogFilter
+    else if FExtensions <> '' then begin
+      var masks := '';
+      for var e in FExtensions.Split([';', ',', ' '], TStringSplitOptions.ExcludeEmpty) do begin
+        var want := Trim(e);
+        if (want <> '') and (want[1] <> '.') then want := '.'+want;
+        if masks <> '' then masks += ';';
+        masks += '*'+want;
+      end;
+      dlg.Filter := 'Accepted files ('+masks+')|'+masks+'|All files|*';
+    end;
+    if FMultiple then dlg.Options := dlg.Options+[ofAllowMultiSelect];
+    if dlg.Execute then begin
+      var names: array of string;
+      SetLength(names, dlg.Files.Count);
+      for var i := 0 to dlg.Files.Count-1 do names[i] := dlg.Files[i];
+      takeFiles(names);
+    end;
+  finally
+    dlg.Free;
+  end;
+end;
+
+procedure TDropZone.Click;
+begin
+  inherited Click;
+  if FClickToBrowse and Enabled and not (csDesigning in ComponentState) then Browse;
+end;
+
+// -- painting ----------------------
+
+procedure TDropZone.Paint;
+begin
+  var frame := pick(FFrameColor, clBtnShadow);
+  var hotFrame := pick(FHoverFrameColor, clHighlight);
+  var fill := pick(FFillColor, blend(GetRGBColorResolvingParent, clWindow, 40));
+  var textColor := pick(FTextColor, clGrayText);
+  var lit := Enabled and hoverEnabled and (FHot or FDropping);
+  if lit then begin
+    frame := hotFrame;
+    fill := blend(fill, hotFrame, 10);
+    textColor := ColorToRGB(clWindowText);
+  end;
+  var sp := autofree beginShapes(Canvas, ClientRect, GetRGBColorResolvingParent, FAntialiasing);
+  var r := ClientRect;
+  r.Inflate(-1, -1);
+  var radius := scaled(self, FCornerRadius);
+  paintRoundRect(sp, r, radius, fill, clNone);
+  sp.DashRoundRect(r.Left, r.Top, r.Right, r.Bottom, radius, (if lit then 2 else 1), scaled(self, 6), scaled(self, 4), frame);
+  var icon := scaled(self, FIconSize);
+  var th := Canvas.TextHeight('Hg');
+  var hasText := Caption <> '';
+  var total := (if FShowIcon then icon else 0)+(if FShowIcon and hasText then scaled(self, 8) else 0)+(if hasText then th else 0);
+  var top := (ClientHeight-total) div 2;
+  if FShowIcon then begin
+    // an arrow into a tray
+    var cx := ClientWidth div 2;
+    var arrowColor := if lit then hotFrame else frame;
+    paintLine(sp, cx, top, cx, top+icon*5 div 8, arrowColor, Max(icon div 10, 2));
+    var head := icon div 4;
+    // the head through the middles of the pixels, as the lines go
+    sp.StrokePolyline([PointF(cx-head+0.5, top+icon*5 div 8-head+0.5), PointF(cx+0.5, top+icon*5 div 8+0.5), PointF(cx+head+0.5, top+icon*5 div 8-head+0.5)], Max(icon div 10, 2), arrowColor);
+    paintLine(sp, cx-icon div 2, top+icon-icon div 6, cx-icon div 2, top+icon, arrowColor, 2);
+    paintLine(sp, cx-icon div 2, top+icon, cx+icon div 2, top+icon, arrowColor, 2);
+    paintLine(sp, cx+icon div 2, top+icon-icon div 6, cx+icon div 2, top+icon, arrowColor, 2);
+  end;
+  sp.Flush;
+  if hasText then begin
+    var y := top+(if FShowIcon then icon+scaled(self, 8) else 0);
+    paintCenteredText(Canvas, Types.Rect(scaled(self, 8), y, ClientWidth-scaled(self, 8), y+th), Caption, textColor);
+  end;
+end;
+
+procedure TDropZone.MouseEnter;
+begin
+  inherited MouseEnter;
+  FHot := true;
+  Invalidate;
+end;
+
+procedure TDropZone.MouseLeave;
+begin
+  inherited MouseLeave;
+  FHot := false;
+  Invalidate;
+end;
+
+// -- properties ----------------------
+
+procedure TDropZone.setExtensions(const value: string);
+begin
+  FExtensions := value;
+end;
+
+function TDropZone.getFlag(index: integer): boolean;
+begin
+  match index of
+    0: result := FMultiple;
+    1: result := FClickToBrowse;
+    _: result := FShowIcon;
+  end;
+end;
+
+procedure TDropZone.setFlag(index: integer; value: boolean);
+begin
+  if getFlag(index) = value then exit;
+  match index of
+    0: FMultiple := value;
+    1: FClickToBrowse := value;
+    _: FShowIcon := value;
+  end;
+  Cursor := if FClickToBrowse then crHandPoint else crDefault;
+  Invalidate;
+end;
+
+function TDropZone.getMetric(index: integer): integer;
+begin
+  match index of
+    0: result := FCornerRadius;
+    1: result := FDashLength;
+    _: result := FIconSize;
+  end;
+end;
+
+procedure TDropZone.setMetric(index: integer; value: integer);
+begin
+  if value < 0 then value := 0;
+  if getMetric(index) = value then exit;
+  match index of
+    0: FCornerRadius := value;
+    1: FDashLength := value;
+    _: FIconSize := value;
+  end;
+  Invalidate;
+end;
+
+function TDropZone.getPartColor(index: integer): TColor;
+begin
+  match index of
+    0: result := FFrameColor;
+    1: result := FHoverFrameColor;
+    2: result := FFillColor;
+    _: result := FTextColor;
+  end;
+end;
+
+procedure TDropZone.setPartColor(index: integer; value: TColor);
+begin
+  if getPartColor(index) = value then exit;
+  match index of
+    0: FFrameColor := value;
+    1: FHoverFrameColor := value;
+    2: FFillColor := value;
+    _: FTextColor := value;
+  end;
+  Invalidate;
+end;
+
+procedure TDropZone.setAntialiasing(value: TAntialiasSetting);
+begin
+  if FAntialiasing = value then exit;
+  FAntialiasing := value;
+  Invalidate;
+end;
+
+end.

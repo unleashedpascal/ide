@@ -32,7 +32,7 @@ implementation
 {$R ../unleashedcomponents.res}
 
 uses
-  Classes, ComponentReg, ComponentEditors, AppTheme, AppThemeEditor, RangeSlider, ToggleSwitch, SearchEdit, SplitButton, LinkLabel, SegmentedControl, SegmentEditor, ColorPicker, BusyIndicator, ProgressRing, SuggestEdit, Badge, Rating, Led, Sparkline, Marquee, Knob, Gauge, Clock, RichLabel, PasswordEdit, HotKeyEdit, DurationEdit, ImageViewer, QRCode, JsonTreeView, TagEditor, LogView;
+  Classes, ComponentReg, ComponentEditors, AppTheme, AppThemeEditor, RangeSlider, ToggleSwitch, SearchEdit, SplitButton, LinkLabel, SegmentedControl, SegmentEditor, ColorPicker, BusyIndicator, ProgressRing, SuggestEdit, Badge, Rating, Led, Sparkline, Marquee, Knob, Gauge, Clock, RichLabel, PasswordEdit, HotKeyEdit, DurationEdit, ImageViewer, QRCode, JsonTreeView, TagEditor, LogView, DropZone;
 
 const
   PAGES: array[0..6] of string = (PAGE_INPUT, PAGE_DISPLAY, PAGE_VIEWS, PAGE_LAYOUT, PAGE_NAVIGATION, PAGE_FEEDBACK, PAGE_SYSTEM);
@@ -40,7 +40,7 @@ const
 procedure Register;
 begin
   // the theme of the whole application leads the first page
-  RegisterComponents(PAGE_INPUT, [TAppTheme, TSearchEdit, TSuggestEdit, TPasswordEdit, THotKeyEdit, TDurationEdit, TTagEditor, TColorPicker, TRangeSlider, TToggleSwitch, TSegmentedControl, TKnob, TRating, TSplitButton]);
+  RegisterComponents(PAGE_INPUT, [TAppTheme, TSearchEdit, TSuggestEdit, TPasswordEdit, THotKeyEdit, TDurationEdit, TTagEditor, TColorPicker, TRangeSlider, TToggleSwitch, TSegmentedControl, TKnob, TRating, TSplitButton, TDropZone]);
   RegisterComponents(PAGE_DISPLAY, [TBadge, TLed, TProgressRing, TBusyIndicator, TGauge, TSparkline, TClock, TRichLabel, TLinkLabel, TMarquee, TQRCode]);
   RegisterComponents(PAGE_VIEWS, [TImageViewer, TLogView, TJsonTreeView]);
   RegisterComponentEditor(TAppTheme, TAppThemeComponentEditor);
