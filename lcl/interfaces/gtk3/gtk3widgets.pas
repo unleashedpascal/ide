@@ -10779,6 +10779,9 @@ begin
   ABuffer := TGtkTextBuffer.new(TGtkTextTagTable.new);
   {%H-}ABuffer^.set_text(PgChar(AMemo.Text), -1);
   PGtkTextView(FCentralWidget)^.set_buffer(ABuffer);
+  // the text starts away from the edge, as in an edit
+  PGtkTextView(FCentralWidget)^.set_left_margin(2);
+  PGtkTextView(FCentralWidget)^.set_right_margin(2);
 
   PGtkScrolledWindow(Result)^.add(FCentralWidget);
 
