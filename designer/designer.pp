@@ -191,6 +191,7 @@ type
     function MoveControl(Sender: TControl; TheMessage: TLMMove): Boolean;
     procedure MouseDownOnControl(Sender: TControl; var TheMessage: TLMMouse);
     procedure MouseMoveOnControl(Sender: TControl; var TheMessage: TLMMouse);
+    function WheelOnControl(Sender: TControl; var TheMessage: TLMessage): Boolean;
     procedure MouseUpOnControl(Sender: TControl; var TheMessage: TLMMouse);
     procedure KeyDown(Sender: TControl; var TheMessage: TLMKEY);
     procedure KeyUp(Sender: TControl; var TheMessage: TLMKEY);
@@ -458,6 +459,7 @@ type
   TCustomFormAccess = class(TCustomForm);
   TControlAccess = class(TControl);
   TWinControlAccess = class(TWinControl);
+  TScrollingWinControlAccess = class(TScrollingWinControl);
   TComponentAccess = class(TComponent);
 
   { TComponentSearch }
@@ -2637,6 +2639,27 @@ begin
   {$ENDIF}
 end;
 
+// the wheel scrolls the nearest scrolling container under the mouse: the form
+// or a scroll box on it, as at runtime
+function TDesigner.WheelOnControl(Sender: TControl; var TheMessage: TLMessage): Boolean;
+var
+  AControl: TControl;
+  AEvent: ^TLMMouseEvent;
+begin
+  Result := False;
+  AEvent := @TheMessage;
+  AControl := Sender;
+  while AControl <> nil do
+  begin
+    if (AControl is TScrollingWinControl)
+    and TScrollingWinControlAccess(AControl).DoMouseWheel(
+          AEvent^.State - [ssCaps, ssNum, ssScroll], AEvent^.WheelDelta,
+          Point(AEvent^.X, AEvent^.Y)) then
+      Exit(True);
+    AControl := AControl.Parent;
+  end;
+end;
+
 procedure TDesigner.MouseMoveOnControl(Sender: TControl;
   var TheMessage: TLMMouse);
 var
@@ -3104,6 +3127,7 @@ begin
         LM_LBUTTONUP,
         LM_RBUTTONUP:   MouseUpOnControl(Sender, TLMMouse(TheMessage));
         LM_MOUSEMOVE:   MouseMoveOnControl(Sender, TLMMouse(TheMessage));
+        LM_MOUSEWHEEL:  Result:=WheelOnControl(Sender, TheMessage);
         LM_SIZE:        Result:=SizeControl(Sender, TLMSize(TheMessage));
         LM_MOVE:        Result:=MoveControl(Sender, TLMMove(TheMessage));
         LM_ACTIVATE: begin

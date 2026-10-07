@@ -283,9 +283,6 @@ procedure TControlScrollBar.ScrollHandler(var Message: TLMScroll);
 var
   NewPos: Longint;
 begin
-  if (csDesigning in FControl.ComponentState) then
-    exit; //prevent wierdness in IDE.
-
   NewPos := FPosition;
   case Message.ScrollCode of
     SB_LINEUP:

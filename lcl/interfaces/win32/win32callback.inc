@@ -248,6 +248,28 @@ begin
   end;
 end;
 
+// the window that would take the mouse at a screen point if the designer
+// overlay of a form were not there
+function WindowBelowOverlay(Overlay: HWND; const ScreenPos: TPoint): HWND;
+var
+  Child: HWND;
+  P: TPoint;
+  R: TRect;
+begin
+  Result := Windows.GetParent(Overlay);
+  repeat
+    P := ScreenPos;
+    Windows.ScreenToClient(Result, P);
+    Windows.GetClientRect(Result, R);
+    // outside the client area the point is on a border or a scroll bar of Result
+    if not PtInRect(R, P) then Exit;
+    Child := Windows.ChildWindowFromPointEx(Result, Windows.POINT(P),
+      CWP_SKIPINVISIBLE or CWP_SKIPDISABLED or CWP_SKIPTRANSPARENT);
+    if (Child = 0) or (Child = Result) then Exit;
+    Result := Child;
+  until False;
+end;
+
 // Used by WindowProc :
 
 function GetMenuParent(ASearch, AParent: HMENU): HMENU;
@@ -1683,6 +1705,10 @@ begin
     P.X := X;
     P.Y := Y;
     TargetWindow := Win32WidgetSet.WindowFromPoint(P);
+    // the designer overlay of a form passes the wheel to the window below it
+    if (TargetWindow <> 0)
+    and (GetWin32WindowInfo(Windows.GetParent(TargetWindow))^.Overlay = TargetWindow) then
+      TargetWindow := WindowBelowOverlay(TargetWindow, P);
     //fallback to LCL function to get the actual window
     if TargetWindow = 0 then
       TargetWindow := GetLCLWindowFromPoint(lWinControl, P);
@@ -2893,6 +2919,7 @@ var
   Owner: TWinControl;
   Control: TControl;
   P: TPoint;
+  HitTest: LResult;
   LRect: Windows.RECT = (Left: 0; Top: 0; Right: 0; Bottom: 0);
 begin
   case Msg of
@@ -2926,6 +2953,15 @@ begin
         MapWindowPoints(Parent, TWinControl(Control).Handle, P, 1);
         if TWSWinControlClass(TWinControl(Control).WidgetSetClass).GetDesignInteractive(TWinControl(Control), P) then
           Result := HTTRANSPARENT
+      end;
+      // a scroll bar below the overlay takes the mouse, so it scrolls at design time
+      if Result = HTCLIENT then
+      begin
+        P.x := GET_X_LPARAM(lParam);
+        P.y := GET_Y_LPARAM(lParam);
+        HitTest := Windows.SendMessage(WindowBelowOverlay(Window, P), WM_NCHITTEST, 0, lParam);
+        if (HitTest = HTHSCROLL) or (HitTest = HTVSCROLL) then
+          Result := HTTRANSPARENT;
       end;
     end;
     WM_KEYFIRST..WM_KEYLAST, WM_MOUSEFIRST..WM_MOUSELAST:
