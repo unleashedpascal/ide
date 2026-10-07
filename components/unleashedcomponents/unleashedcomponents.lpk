@@ -41,6 +41,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="searchedit.pas"/>
         <UnitName Value="SearchEdit"/>
       </Item>
+      <Item>
+        <Filename Value="splitbutton.pas"/>
+        <UnitName Value="SplitButton"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

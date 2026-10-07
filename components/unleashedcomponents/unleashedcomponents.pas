@@ -8,7 +8,7 @@ unit UnleashedComponents;
 interface
 
 uses
-  AppTheme, RangeSlider, ControlPaint, ToggleSwitch, SearchEdit, LazarusPackageIntf;
+  AppTheme, RangeSlider, ControlPaint, ToggleSwitch, SearchEdit, SplitButton, LazarusPackageIntf;
 
 implementation
 
