@@ -57,6 +57,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="colorpicker.pas"/>
         <UnitName Value="ColorPicker"/>
       </Item>
+      <Item>
+        <Filename Value="busyindicator.pas"/>
+        <UnitName Value="BusyIndicator"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

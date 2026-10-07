@@ -32,7 +32,7 @@ implementation
 {$R ../unleashedcomponents.res}
 
 uses
-  Classes, ComponentReg, ComponentEditors, AppTheme, AppThemeEditor, RangeSlider, ToggleSwitch, SearchEdit, SplitButton, LinkLabel, SegmentedControl, SegmentEditor, ColorPicker;
+  Classes, ComponentReg, ComponentEditors, AppTheme, AppThemeEditor, RangeSlider, ToggleSwitch, SearchEdit, SplitButton, LinkLabel, SegmentedControl, SegmentEditor, ColorPicker, BusyIndicator;
 
 const
   PAGES: array[0..6] of string = (PAGE_INPUT, PAGE_DISPLAY, PAGE_VIEWS, PAGE_LAYOUT, PAGE_NAVIGATION, PAGE_FEEDBACK, PAGE_SYSTEM);
@@ -41,7 +41,7 @@ procedure Register;
 begin
   // the theme of the whole application leads the first page
   RegisterComponents(PAGE_INPUT, [TAppTheme, TSearchEdit, TColorPicker, TRangeSlider, TToggleSwitch, TSegmentedControl, TSplitButton]);
-  RegisterComponents(PAGE_DISPLAY, [TLinkLabel]);
+  RegisterComponents(PAGE_DISPLAY, [TBusyIndicator, TLinkLabel]);
   RegisterComponentEditor(TAppTheme, TAppThemeComponentEditor);
   RegisterComponentEditor(TSegmentedControl, TSegmentedControlEditor);
   for var page in PAGES do IDEComponentPalette.AnchorPage(page, 'Common Controls');
