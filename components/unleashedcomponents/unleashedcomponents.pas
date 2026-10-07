@@ -12,7 +12,7 @@ uses
   LinkLabel, SegmentedControl, ColorPicker, BusyIndicator, ProgressRing, 
   SuggestEdit, Badge, Rating, Led, Sparkline, Marquee, Knob, Gauge, Clock, 
   RichLabel, PasswordEdit, HotKeyEdit, DurationEdit, ImageViewer, QRCode, 
-  JsonTreeView, LazarusPackageIntf;
+  JsonTreeView, TagEditor, LazarusPackageIntf;
 
 implementation
 

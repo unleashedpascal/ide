@@ -129,6 +129,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="jsontreeview.pas"/>
         <UnitName Value="JsonTreeView"/>
       </Item>
+      <Item>
+        <Filename Value="tageditor.pas"/>
+        <UnitName Value="TagEditor"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
