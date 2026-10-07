@@ -101,6 +101,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="clock.pas"/>
         <UnitName Value="Clock"/>
       </Item>
+      <Item>
+        <Filename Value="richlabel.pas"/>
+        <UnitName Value="RichLabel"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
