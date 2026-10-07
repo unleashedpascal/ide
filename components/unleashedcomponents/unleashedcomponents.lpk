@@ -37,6 +37,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="toggleswitch.pas"/>
         <UnitName Value="ToggleSwitch"/>
       </Item>
+      <Item>
+        <Filename Value="searchedit.pas"/>
+        <UnitName Value="SearchEdit"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
