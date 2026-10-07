@@ -93,6 +93,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="knob.pas"/>
         <UnitName Value="Knob"/>
       </Item>
+      <Item>
+        <Filename Value="gauge.pas"/>
+        <UnitName Value="Gauge"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
