@@ -8,7 +8,7 @@ unit unleashedcomponentsdsgn;
 interface
 
 uses
-  RegisterUnleashedComponents, LazarusPackageIntf;
+  RegisterUnleashedComponents, AppThemeEditor, LazarusPackageIntf;
 
 implementation
 

@@ -25,6 +25,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <HasRegisterProc Value="True"/>
         <UnitName Value="RegisterUnleashedComponents"/>
       </Item>
+      <Item>
+        <Filename Value="appthemeeditor.pas"/>
+        <UnitName Value="AppThemeEditor"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

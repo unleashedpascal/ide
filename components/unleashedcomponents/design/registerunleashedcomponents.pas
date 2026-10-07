@@ -28,11 +28,12 @@ implementation
 {$R ../unleashedcomponents.res}
 
 uses
-  Classes, ComponentReg, AppTheme;
+  Classes, ComponentReg, ComponentEditors, AppTheme, AppThemeEditor;
 
 procedure Register;
 begin
   RegisterComponents(PAGE_CONTROLS, [TAppTheme]);
+  RegisterComponentEditor(TAppTheme, TAppThemeComponentEditor);
   IDEComponentPalette.AnchorPage(PAGE_CONTROLS, 'Additional');
   IDEComponentPalette.AnchorPage(PAGE_LAYOUT, 'Additional');
   IDEComponentPalette.AnchorPage(PAGE_TOOLS, 'Additional');
