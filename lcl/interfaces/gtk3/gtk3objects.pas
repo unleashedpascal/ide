@@ -1154,6 +1154,10 @@ begin
   end else
   begin
     FHandle := TPangoFontDescription.new;
+    // a face the system lacks falls back to a fixed pitch family when the
+    // font asks for one, as the GDI font mapper does; pango takes a list
+    if (ALogFont.lfPitchAndFamily and $3) = FIXED_PITCH then
+      Family := Family + ',monospace';
     FHandle^.set_family(PgChar(Family));
   end;
   FFontName := FHandle^.get_family;
