@@ -97,6 +97,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="gauge.pas"/>
         <UnitName Value="Gauge"/>
       </Item>
+      <Item>
+        <Filename Value="clock.pas"/>
+        <UnitName Value="Clock"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
