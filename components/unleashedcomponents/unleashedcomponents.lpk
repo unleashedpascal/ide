@@ -45,6 +45,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="splitbutton.pas"/>
         <UnitName Value="SplitButton"/>
       </Item>
+      <Item>
+        <Filename Value="linklabel.pas"/>
+        <UnitName Value="LinkLabel"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
