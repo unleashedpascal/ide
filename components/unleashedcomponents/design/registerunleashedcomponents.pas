@@ -16,10 +16,14 @@ unit RegisterUnleashedComponents;
 interface
 
 const
-  // the palette pages, placed right after Additional in this order
-  PAGE_CONTROLS = 'Unleashed';
-  PAGE_LAYOUT = 'Unleashed Layout';
-  PAGE_TOOLS = 'Unleashed Tools';
+  // the palette pages, in this order right after Common Controls
+  PAGE_INPUT = 'Unleashed: Input';
+  PAGE_DISPLAY = 'Unleashed: Display';
+  PAGE_VIEWS = 'Unleashed: Views';
+  PAGE_LAYOUT = 'Unleashed: Layout';
+  PAGE_NAVIGATION = 'Unleashed: Navigation';
+  PAGE_FEEDBACK = 'Unleashed: Feedback';
+  PAGE_SYSTEM = 'Unleashed: System';
 
 procedure Register;
 
@@ -30,13 +34,15 @@ implementation
 uses
   Classes, ComponentReg, ComponentEditors, AppTheme, AppThemeEditor;
 
+const
+  PAGES: array[0..6] of string = (PAGE_INPUT, PAGE_DISPLAY, PAGE_VIEWS, PAGE_LAYOUT, PAGE_NAVIGATION, PAGE_FEEDBACK, PAGE_SYSTEM);
+
 procedure Register;
 begin
-  RegisterComponents(PAGE_CONTROLS, [TAppTheme]);
+  // the theme of the whole application leads the first page
+  RegisterComponents(PAGE_INPUT, [TAppTheme]);
   RegisterComponentEditor(TAppTheme, TAppThemeComponentEditor);
-  IDEComponentPalette.AnchorPage(PAGE_CONTROLS, 'Additional');
-  IDEComponentPalette.AnchorPage(PAGE_LAYOUT, 'Additional');
-  IDEComponentPalette.AnchorPage(PAGE_TOOLS, 'Additional');
+  for var page in PAGES do IDEComponentPalette.AnchorPage(page, 'Common Controls');
 end;
 
 end.

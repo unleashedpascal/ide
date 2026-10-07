@@ -2,7 +2,7 @@
   This source is only used to compile and install the package.
  }
 
-unit unleashedcomponents;
+unit UnleashedComponents;
 
 {$warn 5023 off : no warning about unused units}
 interface
@@ -12,10 +12,10 @@ uses
 
 implementation
 
-procedure register;
+procedure Register;
 begin
 end;
 
 initialization
-  registerpackage('UnleashedComponents', @register);
+  RegisterPackage('UnleashedComponents', @Register);
 end.
