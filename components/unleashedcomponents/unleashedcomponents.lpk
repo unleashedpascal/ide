@@ -117,6 +117,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="durationedit.pas"/>
         <UnitName Value="DurationEdit"/>
       </Item>
+      <Item>
+        <Filename Value="imageviewer.pas"/>
+        <UnitName Value="ImageViewer"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

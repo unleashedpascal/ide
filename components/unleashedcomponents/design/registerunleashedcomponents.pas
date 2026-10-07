@@ -32,7 +32,7 @@ implementation
 {$R ../unleashedcomponents.res}
 
 uses
-  Classes, ComponentReg, ComponentEditors, AppTheme, AppThemeEditor, RangeSlider, ToggleSwitch, SearchEdit, SplitButton, LinkLabel, SegmentedControl, SegmentEditor, ColorPicker, BusyIndicator, ProgressRing, SuggestEdit, Badge, Rating, Led, Sparkline, Marquee, Knob, Gauge, Clock, RichLabel, PasswordEdit, HotKeyEdit, DurationEdit;
+  Classes, ComponentReg, ComponentEditors, AppTheme, AppThemeEditor, RangeSlider, ToggleSwitch, SearchEdit, SplitButton, LinkLabel, SegmentedControl, SegmentEditor, ColorPicker, BusyIndicator, ProgressRing, SuggestEdit, Badge, Rating, Led, Sparkline, Marquee, Knob, Gauge, Clock, RichLabel, PasswordEdit, HotKeyEdit, DurationEdit, ImageViewer;
 
 const
   PAGES: array[0..6] of string = (PAGE_INPUT, PAGE_DISPLAY, PAGE_VIEWS, PAGE_LAYOUT, PAGE_NAVIGATION, PAGE_FEEDBACK, PAGE_SYSTEM);
@@ -42,6 +42,7 @@ begin
   // the theme of the whole application leads the first page
   RegisterComponents(PAGE_INPUT, [TAppTheme, TSearchEdit, TSuggestEdit, TPasswordEdit, THotKeyEdit, TDurationEdit, TColorPicker, TRangeSlider, TToggleSwitch, TSegmentedControl, TKnob, TRating, TSplitButton]);
   RegisterComponents(PAGE_DISPLAY, [TBadge, TLed, TProgressRing, TBusyIndicator, TGauge, TSparkline, TClock, TRichLabel, TLinkLabel, TMarquee]);
+  RegisterComponents(PAGE_VIEWS, [TImageViewer]);
   RegisterComponentEditor(TAppTheme, TAppThemeComponentEditor);
   RegisterComponentEditor(TSegmentedControl, TSegmentedControlEditor);
   for var page in PAGES do IDEComponentPalette.AnchorPage(page, 'Common Controls');
