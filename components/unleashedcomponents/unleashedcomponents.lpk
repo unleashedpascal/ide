@@ -33,6 +33,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="controlpaint.pas"/>
         <UnitName Value="ControlPaint"/>
       </Item>
+      <Item>
+        <Filename Value="toggleswitch.pas"/>
+        <UnitName Value="ToggleSwitch"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
