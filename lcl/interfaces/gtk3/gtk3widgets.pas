@@ -4602,15 +4602,11 @@ end;
 procedure TGtk3Widget.Move(ALeft, ATop: Integer);
 var
   AParent: TGtk3Widget;
-  XOffset, YOffset: Integer;
-  aWindow: PGdkWindow;
   GtkLeft, GtkTop: integer;
 begin
   AParent := getParent;
   if (AParent <> nil) then
   begin
-    XOffset := 0;
-    YOffset := 0;
     if (wtContainer in AParent.WidgetType) then
     begin
       //GtkFixed: GTK coords = LCL coords - no bin-window offset.
@@ -4638,15 +4634,12 @@ begin
         PGtkLayout(AParent.GetContainerWidget)^.move(FWidget, GtkLeft, GtkTop);
       end else
       begin
-        aWindow := PGtkLayout(AParent.GetContainerWidget)^.get_bin_window;
+        //The LCL keeps the coordinates of the children of a scrolled container
+        //unscrolled and scrolls the adjustment instead; the bin window of the
+        //layout carries that offset, so the children go in at LCL coordinates.
+        GtkLeft := ALeft;
+        GtkTop := ATop;
 
-        if Gtk3IsGdkWindow(aWindow) then
-          aWindow^.get_position(@XOffset, @YOffset);
-
-        GtkLeft := ALeft - XOffset;
-        GtkTop := ATop - YOffset;
-
-        //Compare actual GTK coordinates so scroll-offset changes are not missed.
         if (GtkLeft = LCLLeft) and (GtkTop = LCLTop) then
           exit;
 
