@@ -407,7 +407,7 @@ type
     procedure SetLMCharData(aMsg: Cardinal; UpdateKeyData: Boolean = False);
     procedure SetLMKeyData(aMsg: Cardinal; UpdateKeyData: Boolean = False);
     procedure SetLMessageAndParams(aMsg: Cardinal; ResetWinProcess: Boolean = False);
-    procedure SendPaintMessage(ControlDC: HDC);
+    procedure SendPaintMessage(ControlDC: HDC; APrint: Boolean = False);
     procedure HandleScrollMessage(LMsg: integer);
     procedure HandleSetCursor;
     procedure HandleSysCommand;
@@ -621,7 +621,7 @@ begin
     Windows.SelectClipRgn(CurDoubleBuffer.DC, PaintRegion);
 end;
 
-procedure TWindowProcHelper.SendPaintMessage(ControlDC: HDC);
+procedure TWindowProcHelper.SendPaintMessage(ControlDC: HDC; APrint: Boolean);
 var
   DC: HDC;
   PaintRegion: HRGN;
@@ -765,7 +765,10 @@ begin
       DrawParentBackground(Window, PaintMsg.DC);
       Windows.RestoreDC(PaintMsg.DC, DCIndex);
     end;
-    if (ControlDC = 0) or not needParentPaint then
+    // a control painted on the parent background is left to the parent when
+    // a child asks for its background, but a print of the control (WM_PRINT,
+    // PaintTo) has to paint the control itself as well
+    if (ControlDC = 0) or not needParentPaint or APrint then
     begin
       DCIndex := Windows.SaveDC(PaintMsg.DC);
       MoveWindowOrgEx(PaintMsg.DC, ORect.Left, ORect.Top);
@@ -2428,7 +2431,7 @@ begin
     WM_PAINT: SendPaintMessage(HDC(WParam)); // SendPaintMessage sets winprocess to false
     WM_PRINTCLIENT:
       if ((LParam and PRF_CLIENT) = PRF_CLIENT) and (lWinControl <> nil) then
-        SendPaintMessage(HDC(WParam));
+        SendPaintMessage(HDC(WParam), (LParam and PRF_CHILDREN) = PRF_CHILDREN);
     WM_PASTE:
     begin
       LMessage.Msg := LM_PASTE;
