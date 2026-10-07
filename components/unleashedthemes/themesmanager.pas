@@ -15,31 +15,20 @@ unit ThemesManager;
 interface
 
 uses
-  ThemesConfig, ThemesPalette;
+  ThemesConfig;
 
 // switches the IDE look at once; tkSystem follows the desktop setting
 procedure applyThemeKind(kind: TThemeKind);
 function currentThemeKind: TThemeKind;
-// the hover and active feedback; a change shows at once
-procedure applyThemeEffects(const value: TThemeEffects);
 
 implementation
 
 uses
-  Classes, Forms, Graphics, Themes, ThemesIcons{$ifdef LCLWin32}, ThemesWin32{$endif}{$ifdef LCLGtk3}, ThemesGtk3{$endif};
-
-type
-
-  { TThemeGlue }
-
-  TThemeGlue = class(TComponent)
-    procedure systemChanged(data: PtrInt);
-  end;
+  Graphics, Themes, ThemesPalette, ThemesEngine, ThemesIcons{$ifdef LCLWin32}, ThemesWin32{$endif};
 
 var
   current: TThemeKind = tkSystem;
   shown: TThemeKind = tkDefault; // palette on screen; the system choice resolves to one of the others
-  glue: TThemeGlue = nil;
 
 // the palette a choice puts on screen; tkDefault means the stock look
 function paletteKind(kind: TThemeKind): TThemeKind;
@@ -54,19 +43,17 @@ begin
   var want := paletteKind(kind);
   if want <> shown then begin
     shown := want;
-    {$if defined(LCLWin32) or defined(LCLGtk3)}
     match want of
-      tkLight: applyPalette(lightPalette);
-      tkDark: applyPalette(darkPalette);
-      tkOcean: applyPalette(oceanPalette);
-      tkFrost: applyPalette(frostPalette);
-      tkPaper: applyPalette(paperPalette);
-      tkEmber: applyPalette(emberPalette);
-      tkMidnight: applyPalette(midnightPalette);
-      tkDusk: applyPalette(duskPalette);
-      _: dropPalette;
+      tkLight: applyTheme(lightPalette);
+      tkDark: applyTheme(darkPalette);
+      tkOcean: applyTheme(oceanPalette);
+      tkFrost: applyTheme(frostPalette);
+      tkPaper: applyTheme(paperPalette);
+      tkEmber: applyTheme(emberPalette);
+      tkMidnight: applyTheme(midnightPalette);
+      tkDusk: applyTheme(duskPalette);
+      _: dropTheme;
     end;
-    {$endif}
   end;
   // the stock look needs the icon pass as well, so it runs on the first call too
   themeIcons(clBtnFace);
@@ -77,30 +64,14 @@ begin
   result := current;
 end;
 
-procedure applyThemeEffects(const value: TThemeEffects);
-begin
-  {$if defined(LCLWin32) or defined(LCLGtk3)}
-  if (effects.Hover = value.Hover) and (effects.Active = value.Active) then exit;
-  effects := value;
-  redrawAll;
-  {$endif}
-end;
-
-procedure TThemeGlue.systemChanged(data: PtrInt);
+procedure systemChanged;
 begin
   if current = tkSystem then applyThemeKind(tkSystem);
 end;
 
-// the desktop notification arrives inside a window message, so the repaint of
-// every window waits until the message loop is idle
-procedure queueSystemChange;
-begin
-  if glue = nil then glue := TThemeGlue.Create(Application);
-  Application.QueueAsyncCall(@glue.systemChanged, 0);
-end;
-
 initialization
-  {$if defined(LCLWin32) or defined(LCLGtk3)}
-  onSystemThemeChange := @queueSystemChange;
+  onSystemThemeChange := @systemChanged;
+  {$ifdef LCLWin32}
+  tabMarks := true;
   {$endif}
 end.

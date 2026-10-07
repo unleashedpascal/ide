@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <Name Value="UnleashedThemeEngine"/>
+    <Type Value="RunAndDesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/$(LCLWidgetType)"/>
+      </SearchPaths>
+      <Other>
+        <CustomOptions Value="$(IDEBuildOptions)"/>
+      </Other>
+    </CompilerOptions>
+    <Description Value="Unleashed Theme Engine: puts a color palette on every window of an LCL process, native controls included, and fits the icons to it. Used by the IDE themes and by TAppTheme in applications.
+"/>
+    <License Value="Copyright (c) 2026 Unleashed Pascal Contributors &lt;https://unleashedpascal.org>
+
+Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text is available at https://mozilla.org/MPL/2.0/.
+"/>
+    <Version Major="1"/>
+    <Files>
+      <Item>
+        <Filename Value="themesengine.pas"/>
+        <UnitName Value="ThemesEngine"/>
+      </Item>
+      <Item>
+        <Filename Value="themespalette.pas"/>
+        <UnitName Value="ThemesPalette"/>
+      </Item>
+      <Item>
+        <Filename Value="themeswin32.pas"/>
+        <UnitName Value="ThemesWin32"/>
+      </Item>
+      <Item>
+        <Filename Value="themesgtk3.pas"/>
+        <UnitName Value="ThemesGtk3"/>
+      </Item>
+      <Item>
+        <Filename Value="themesicons.pas"/>
+        <UnitName Value="ThemesIcons"/>
+      </Item>
+    </Files>
+    <RequiredPkgs>
+      <Item>
+        <PackageName Value="LCL"/>
+      </Item>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

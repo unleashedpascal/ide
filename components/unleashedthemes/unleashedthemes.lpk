@@ -12,7 +12,7 @@
         <CustomOptions Value="$(IDEBuildOptions)"/>
       </Other>
     </CompilerOptions>
-    <Description Value="Unleashed Themes: switches the IDE between the stock, system, light, dark and ocean look from the View menu without a restart.
+    <Description Value="Unleashed Themes: switches the IDE between the stock, system and the named looks from the View menu without a restart.
 "/>
     <License Value="Copyright (c) 2026 Unleashed Pascal Team &lt;https://unleashedpascal.org>
 
@@ -34,24 +34,8 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <UnitName Value="ThemesManager"/>
       </Item>
       <Item>
-        <Filename Value="themespalette.pas"/>
-        <UnitName Value="ThemesPalette"/>
-      </Item>
-      <Item>
         <Filename Value="themesstrings.pas"/>
         <UnitName Value="ThemesStrings"/>
-      </Item>
-      <Item>
-        <Filename Value="themeswin32.pas"/>
-        <UnitName Value="ThemesWin32"/>
-      </Item>
-      <Item>
-        <Filename Value="themesgtk3.pas"/>
-        <UnitName Value="ThemesGtk3"/>
-      </Item>
-      <Item>
-        <Filename Value="themesicons.pas"/>
-        <UnitName Value="ThemesIcons"/>
       </Item>
     </Files>
     <i18n>
@@ -64,6 +48,9 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
       </Item>
       <Item>
         <PackageName Value="IDEIntf"/>
+      </Item>
+      <Item>
+        <PackageName Value="UnleashedThemeEngine"/>
       </Item>
     </RequiredPkgs>
     <UsageOptions>

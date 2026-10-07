@@ -36,6 +36,7 @@ type
     libpIdeDebugger,
     libpDockedFormEditor,
     libpUnleashedFormplacer,
+    libpUnleashedThemeEngine,
     libpUnleashedThemes,
     libpUnleashedMinimap,
     libpUnleashedPanes
@@ -71,6 +72,7 @@ const
     'IdeDebugger',
     'DockedFormEditor',
     'UnleashedFormplacer',
+    'UnleashedThemeEngine',
     'UnleashedThemes',
     'UnleashedMinimap',
     'UnleashedPanes'

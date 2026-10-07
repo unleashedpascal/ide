@@ -15,7 +15,25 @@ unit ThemesIcons;
 interface
 
 uses
-  Graphics, LazIDEIntf;
+  Graphics;
+
+type
+  // how every icon is fitted to the surface it sits on, percentages 0..100: on a dark surface
+  // the lightness of an icon is remapped into the band from the surface plus MinContrast up to
+  // MaxLightness, Strength being the share of that move; a disabled icon keeps DisabledContrast
+  // of its contrast to the surface and DisabledSaturation of its color
+  TIconFit = record
+    Enabled: boolean;
+    Strength: integer;
+    MinContrast: integer;
+    MaxLightness: integer;
+    DisabledContrast: integer;
+    DisabledSaturation: integer;
+  end;
+
+const
+  DefaultIconFit: TIconFit = (Enabled: true; Strength: 100; MinContrast: 30; MaxLightness: 88;
+    DisabledContrast: 45; DisabledSaturation: 40);
 
 // fits every icon of the process to `surface`, the color under tool bars and
 // menus, with the fit in use, and keeps fitting icons loaded later. The stock
