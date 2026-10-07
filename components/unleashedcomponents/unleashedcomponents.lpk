@@ -146,6 +146,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <UnitName Value="DateRangePicker"/>
       </Item>
       <Item>
+        <Filename Value="timelineview.pas"/>
+        <UnitName Value="TimelineView"/>
+      </Item>
+      <Item>
         <Filename Value="popupwindow.pas"/>
         <UnitName Value="PopupWindow"/>
       </Item>
