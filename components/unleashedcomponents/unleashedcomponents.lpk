@@ -105,6 +105,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="richlabel.pas"/>
         <UnitName Value="RichLabel"/>
       </Item>
+      <Item>
+        <Filename Value="passwordedit.pas"/>
+        <UnitName Value="PasswordEdit"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
