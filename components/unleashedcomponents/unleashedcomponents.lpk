@@ -65,6 +65,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="progressring.pas"/>
         <UnitName Value="ProgressRing"/>
       </Item>
+      <Item>
+        <Filename Value="suggestedit.pas"/>
+        <UnitName Value="SuggestEdit"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
