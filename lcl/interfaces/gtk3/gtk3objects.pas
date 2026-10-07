@@ -4307,12 +4307,21 @@ begin
 end;
 
 function TGtk3DeviceContext.SetClipRegion(ARgn: TGtk3Region): Integer;
+var
+  M: Tcairo_matrix_t;
 begin
   Result := NullRegion;
   if Assigned(pcr) then
   begin
     cairo_reset_clip(pcr);
+    // a region is in device coordinates, as LPtoDP makes them: the path is
+    // built under the identity matrix so a translated context, for example
+    // the scrolled canvas of a TScrollingWinControl, clips where it was asked
+    cairo_get_matrix(pcr, @M);
+    cairo_identity_matrix(pcr);
+    cairo_translate(pcr, fncOrigin.X, fncOrigin.Y);
     gdk_cairo_region(pcr, ARgn.FHandle);
+    cairo_set_matrix(pcr, @M);
     cairo_clip(pcr);
     if FClipRegion <> nil then
       cairo_region_destroy(FClipRegion);
