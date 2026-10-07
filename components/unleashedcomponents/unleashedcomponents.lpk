@@ -81,6 +81,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="led.pas"/>
         <UnitName Value="Led"/>
       </Item>
+      <Item>
+        <Filename Value="sparkline.pas"/>
+        <UnitName Value="Sparkline"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
