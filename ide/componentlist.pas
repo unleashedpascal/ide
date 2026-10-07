@@ -562,7 +562,6 @@ begin
     InheritanceTree.AlphaSort;
     {$IFnDEF NoComponentListTreeExpand}
     InheritanceTree.FullExpand;    // Some users may not want the trees expanded.
-    PalletteTree.FullExpand;
     {$ENDIF}
     PrevChangeStamp := IDEComponentPalette.ChangeStamp;
   finally
@@ -578,6 +577,12 @@ procedure TComponentListForm.TreeFilterEdAfterFilter(Sender: TObject);
 begin
   if TreeFilterEd.Filter = '' then
     IDEComponentPalette.SetSelectedComp(nil, False);
+  // the palette tree starts collapsed, a filter must still reveal its matches
+  if TreeFilterEd.FilteredTreeview = PalletteTree then
+    if TreeFilterEd.Filter = '' then
+      PalletteTree.FullCollapse
+    else
+      PalletteTree.FullExpand;
   UpdateButtonState;
 end;
 
@@ -634,9 +639,12 @@ begin
 end;
 
 procedure TComponentListForm.PageControlChange(Sender: TObject);
+var
+  Filter: String;
 begin
   //DebugLn(['TComponentListForm.PageControlChange: Start']);
   FPageControlChange := True;
+  Filter := TreeFilterEd.Filter;  // switching the tree clears the filter
   case PageControl.PageIndex of
     0: begin
          TreeFilterEd.FilteredTreeview := ListTree;
@@ -651,6 +659,7 @@ begin
          FActiveTree := InheritanceTree;
         end;
   end;
+  TreeFilterEd.Filter := Filter;
   EnvironmentGuiOpts.ComponentListPageIndex := PageControl.PageIndex;
   FActiveTree.BeginUpdate;
   tmDeselect.Enabled := True;
