@@ -47,6 +47,8 @@ type
     FScrollBarVert: TScrollBar;
     FScrollPos: TPoint;
     procedure FormResized(Sender: TObject);
+    procedure FormMouseWheel(Sender: TObject; Shift: TShiftState;
+      WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     function GetFormContainer: TWinControl;
     procedure ScrollBarHorzMouseWheel(Sender: TObject; {%H-}Shift: TShiftState;
       WheelDelta: Integer; {%H-}MousePos: TPoint; var {%H-}Handled: Boolean);
@@ -84,6 +86,17 @@ begin
   Result := ResizeControl.FormContainer;
 end;
 
+// the designer hands the wheel over the form and its controls to the form;
+// the form has no scroll bars of its own here, the resizer scrolls instead
+procedure TResizer.FormMouseWheel(Sender: TObject; Shift: TShiftState;
+  WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+begin
+  if ssShift in Shift then
+    ScrollBarHorzMouseWheel(Sender, Shift, WheelDelta, MousePos, Handled)
+  else
+    ScrollBarVertMouseWheel(Sender, Shift, WheelDelta, MousePos, Handled);
+end;
+
 procedure TResizer.ScrollBarHorzMouseWheel(Sender: TObject; Shift: TShiftState;
   WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
 var
@@ -113,13 +126,18 @@ begin
                       else DebugLn('TResizer.SetDesignForm: New Designform: nil');
   {$ENDIF}
   if FDesignForm <> nil then
+  begin
     FDesignForm.OnChangeHackedBounds := nil;
+    if Assigned(FDesignForm.Form) then
+      FDesignForm.Form.RemoveHandlerOnMouseWheel(@FormMouseWheel);
+  end;
   FDesignForm := AValue;
   if Assigned(FDesignForm) then
   begin
     FDesignForm.BeginUpdate;
     FDesignForm.Form.Parent := ResizeControl.FormContainer;
     FDesignForm.EndUpdate;
+    FDesignForm.Form.AddHandlerOnMouseWheel(@FormMouseWheel);
     FDesignForm.OnChangeHackedBounds := @AdjustResizer;
     if Assigned(FDesignForm.AnchorDesigner) then
       FDesignForm.AnchorDesigner.Parent := ResizeControl.AnchorContainer;
