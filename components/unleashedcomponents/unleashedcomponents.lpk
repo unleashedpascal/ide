@@ -133,6 +133,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="tageditor.pas"/>
         <UnitName Value="TagEditor"/>
       </Item>
+      <Item>
+        <Filename Value="logview.pas"/>
+        <UnitName Value="LogView"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
