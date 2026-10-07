@@ -11,7 +11,7 @@ uses
   AppTheme, RangeSlider, ControlPaint, ToggleSwitch, SearchEdit, SplitButton, 
   LinkLabel, SegmentedControl, ColorPicker, BusyIndicator, ProgressRing, 
   SuggestEdit, Badge, Rating, Led, Sparkline, Marquee, Knob, Gauge, Clock, 
-  RichLabel, PasswordEdit, HotKeyEdit, DurationEdit, ImageViewer, LazarusPackageIntf;
+  RichLabel, PasswordEdit, HotKeyEdit, DurationEdit, ImageViewer, QRCode, LazarusPackageIntf;
 
 implementation
 
