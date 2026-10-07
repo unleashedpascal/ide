@@ -141,6 +141,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="dropzone.pas"/>
         <UnitName Value="DropZone"/>
       </Item>
+      <Item>
+        <Filename Value="popupwindow.pas"/>
+        <UnitName Value="PopupWindow"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
