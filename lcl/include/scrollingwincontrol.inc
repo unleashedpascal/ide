@@ -355,9 +355,96 @@ end;
 
 destructor TScrollingWinControl.Destroy;
 begin
+  FreeThenNil(FWheelTimer);
   FreeThenNil(FHorzScrollBar);
   FreeThenNil(FVertScrollBar);
   inherited Destroy;
+end;
+
+function TScrollingWinControl.DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean;
+begin
+  Result := inherited DoMouseWheel(Shift, WheelDelta, MousePos);
+  if Result then Exit;
+  if ssShift in Shift then
+    Result := WheelScroll(sbHorizontal, WheelDelta)
+  else
+    Result := WheelScroll(sbVertical, WheelDelta);
+end;
+
+function TScrollingWinControl.DoMouseWheelHorz(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean;
+begin
+  Result := inherited DoMouseWheelHorz(Shift, WheelDelta, MousePos);
+  if Result then Exit;
+  Result := WheelScroll(sbHorizontal, WheelDelta);
+end;
+
+// moves the bar by WheelDelta notches: ten Increments each at a Speed of 100,
+// the pace of three lines; with Smooth the position glides there over
+// GlideTime, and notches arriving during the glide extend its target
+function TScrollingWinControl.WheelScroll(AKind: TScrollBarKind; WheelDelta: Integer): Boolean;
+var
+  Bar: TControlScrollBar;
+  Step, Target, MaxPos: Integer;
+begin
+  Result := False;
+  if AKind = sbVertical then Bar := FVertScrollBar else Bar := FHorzScrollBar;
+  if not Bar.IsScrollBarVisible then Exit;
+  MaxPos := Bar.Range - Bar.Page;
+  if MaxPos <= 0 then Exit;
+  Step := (Bar.Increment * 51 * WheelScrolling.Speed) div 500;
+  if Step < 1 then Step := 1;
+  if FWheelGliding[AKind] then Target := FWheelTo[AKind] else Target := Bar.Position;
+  Target := Target - (WheelDelta * Step) div 120;
+  if Target < 0 then Target := 0;
+  if Target > MaxPos then Target := MaxPos;
+  if Target = Bar.Position then Exit(True);
+  if (not WheelScrolling.Smooth) or (WheelScrolling.GlideTime <= 0) then
+  begin
+    FWheelGliding[AKind] := False;
+    Bar.Position := Target;
+    Exit(True);
+  end;
+  FWheelFrom[AKind] := Bar.Position;
+  FWheelTo[AKind] := Target;
+  FWheelStart[AKind] := GetTickCount64;
+  FWheelGliding[AKind] := True;
+  if FWheelTimer = nil then
+  begin
+    FWheelTimer := TCustomTimer.Create(nil);
+    FWheelTimer.Interval := 15;
+    FWheelTimer.OnTimer := @WheelTick;
+  end;
+  FWheelTimer.Enabled := True;
+  Result := True;
+end;
+
+procedure TScrollingWinControl.WheelTick(Sender: TObject);
+var
+  Kind: TScrollBarKind;
+  Bar: TControlScrollBar;
+  Elapsed: QWord;
+  T: Double;
+  Busy: Boolean;
+begin
+  Busy := False;
+  for Kind := Low(TScrollBarKind) to High(TScrollBarKind) do
+  begin
+    if not FWheelGliding[Kind] then Continue;
+    if Kind = sbVertical then Bar := FVertScrollBar else Bar := FHorzScrollBar;
+    Elapsed := GetTickCount64 - FWheelStart[Kind];
+    if Elapsed >= QWord(WheelScrolling.GlideTime) then
+    begin
+      FWheelGliding[Kind] := False;
+      Bar.Position := FWheelTo[Kind];
+      Continue;
+    end;
+    // eased out: fast off the start, soft into the target
+    T := Elapsed / WheelScrolling.GlideTime;
+    T := 1 - (1 - T) * (1 - T);
+    Bar.Position := FWheelFrom[Kind] + Round((FWheelTo[Kind] - FWheelFrom[Kind]) * T);
+    Busy := True;
+  end;
+  if not Busy then FWheelTimer.Enabled := False;
 end;
 
 function TScrollingWinControl.ScreenToClient(const APoint: TPoint): TPoint;

@@ -168,6 +168,14 @@ type
     property Visible: Boolean read FVisible write SetVisible default True;
   end;
 
+  // how the mouse wheel moves a TScrollingWinControl; the application sets
+  // it once, every scrolling control follows
+  TWheelScrolling = record
+    Speed: Integer;     // percent of the pace: at 100 a notch moves ten Increments of the scroll bar
+    Smooth: Boolean;    // the content glides to the new position
+    GlideTime: Integer; // milliseconds of the glide
+  end;
+
   { TScrollingWinControl }
 
   TScrollingWinControl = class(TCustomControl)
@@ -176,12 +184,20 @@ type
     FVertScrollBar: TControlScrollBar;
     FAutoScroll: Boolean;
     FIsUpdating: Boolean;
+    FWheelTimer: TCustomTimer;
+    FWheelFrom, FWheelTo: array[TScrollBarKind] of Integer;
+    FWheelStart: array[TScrollBarKind] of QWord;
+    FWheelGliding: array[TScrollBarKind] of Boolean;
     procedure SetHorzScrollBar(Value: TControlScrollBar);
     procedure SetVertScrollBar(Value: TControlScrollBar);
     procedure HideScrollbars;
+    function WheelScroll(AKind: TScrollBarKind; WheelDelta: Integer): Boolean;
+    procedure WheelTick(Sender: TObject);
   protected
     class procedure WSRegisterClass; override;
     procedure AlignControls(AControl: TControl; var ARect: TRect); override;
+    function DoMouseWheel(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean; override;
+    function DoMouseWheelHorz(Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint): Boolean; override;
     function AutoScrollEnabled: Boolean; virtual;
     procedure CalculateAutoRanges; virtual;
     procedure CreateWnd; override;
@@ -2016,6 +2032,8 @@ function GetLongHint(const Hint: string): string;
 
 
 var
+  // six Increments per notch, the three lines of the desktop, no glide
+  WheelScrolling: TWheelScrolling = (Speed: 100; Smooth: False; GlideTime: 150);
   Application: TApplication = nil;
   Screen: TScreen = nil;
   ExceptionObject: TExceptObject;
