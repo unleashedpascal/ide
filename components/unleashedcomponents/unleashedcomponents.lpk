@@ -194,6 +194,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <UnitName Value="Accordion"/>
       </Item>
       <Item>
+        <Filename Value="breadcrumbbar.pas"/>
+        <UnitName Value="BreadcrumbBar"/>
+      </Item>
+      <Item>
         <Filename Value="popupwindow.pas"/>
         <UnitName Value="PopupWindow"/>
       </Item>
