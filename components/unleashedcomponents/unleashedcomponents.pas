@@ -14,7 +14,7 @@ uses
   RichLabel, PasswordEdit, HotKeyEdit, DurationEdit, ImageViewer, QRCode, 
   JsonTreeView, TagEditor, LogView, DropZone, DateRangePicker, TimelineView, 
   Toast, Divider, CardPanel, ExpanderPanel, SideNav, SplitView, Debouncer, 
-  BackgroundTask, StackPanel, GridPanel, PopupWindow, LazarusPackageIntf;
+  BackgroundTask, StackPanel, GridPanel, Accordion, PopupWindow, LazarusPackageIntf;
 
 implementation
 
