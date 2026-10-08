@@ -245,6 +245,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="numberbox.pas"/>
         <UnitName Value="NumberBox"/>
       </Item>
+      <Item>
+        <Filename Value="fontcombobox.pas"/>
+        <UnitName Value="FontComboBox"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
