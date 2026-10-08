@@ -206,6 +206,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <UnitName Value="OverlayPanel"/>
       </Item>
       <Item>
+        <Filename Value="carousel.pas"/>
+        <UnitName Value="Carousel"/>
+      </Item>
+      <Item>
         <Filename Value="popupwindow.pas"/>
         <UnitName Value="PopupWindow"/>
       </Item>
