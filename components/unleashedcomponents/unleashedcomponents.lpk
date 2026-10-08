@@ -269,6 +269,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="terminalview.pas"/>
         <UnitName Value="TerminalView"/>
       </Item>
+      <Item>
+        <Filename Value="emptystate.pas"/>
+        <UnitName Value="EmptyState"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
