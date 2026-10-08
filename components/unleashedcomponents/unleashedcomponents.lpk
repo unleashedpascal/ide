@@ -162,6 +162,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <UnitName Value="CardPanel"/>
       </Item>
       <Item>
+        <Filename Value="expanderpanel.pas"/>
+        <UnitName Value="ExpanderPanel"/>
+      </Item>
+      <Item>
         <Filename Value="popupwindow.pas"/>
         <UnitName Value="PopupWindow"/>
       </Item>
