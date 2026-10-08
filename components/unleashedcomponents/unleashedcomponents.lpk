@@ -309,6 +309,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="animator.pas"/>
         <UnitName Value="Animator"/>
       </Item>
+      <Item>
+        <Filename Value="validator.pas"/>
+        <UnitName Value="Validator"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
