@@ -261,6 +261,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="avatar.pas"/>
         <UnitName Value="Avatar"/>
       </Item>
+      <Item>
+        <Filename Value="barcode.pas"/>
+        <UnitName Value="Barcode"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
