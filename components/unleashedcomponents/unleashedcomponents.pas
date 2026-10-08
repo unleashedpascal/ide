@@ -19,7 +19,8 @@ uses
   CommandPalette, UndoStack, RecentFiles, PopupWindow, CalendarView, 
   DatePicker, NumberBox, FontComboBox, SevenSegment, StatCard, Avatar, Barcode, 
   TerminalView, EmptyState, CheckGroupBox, FormLayout, TabStrip, CommandBar, 
-  InfoBar, Popover, SplashScreen, ProgressDialog, Animator, Validator, LazarusPackageIntf;
+  InfoBar, Popover, SplashScreen, ProgressDialog, Animator, Validator, 
+  SerialPort, LazarusPackageIntf;
 
 implementation
 

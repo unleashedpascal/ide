@@ -313,6 +313,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="validator.pas"/>
         <UnitName Value="Validator"/>
       </Item>
+      <Item>
+        <Filename Value="serialport.pas"/>
+        <UnitName Value="SerialPort"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
