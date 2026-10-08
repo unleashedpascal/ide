@@ -277,6 +277,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="checkgroupbox.pas"/>
         <UnitName Value="CheckGroupBox"/>
       </Item>
+      <Item>
+        <Filename Value="formlayout.pas"/>
+        <UnitName Value="FormLayout"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

@@ -18,7 +18,7 @@ uses
   WizardControl, OverlayPanel, Carousel, PageIndicator, AppInstance, 
   CommandPalette, UndoStack, RecentFiles, PopupWindow, CalendarView, 
   DatePicker, NumberBox, FontComboBox, SevenSegment, StatCard, Avatar, Barcode, 
-  TerminalView, EmptyState, CheckGroupBox, LazarusPackageIntf;
+  TerminalView, EmptyState, CheckGroupBox, FormLayout, LazarusPackageIntf;
 
 implementation
 
