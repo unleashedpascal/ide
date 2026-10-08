@@ -297,6 +297,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="popover.pas"/>
         <UnitName Value="Popover"/>
       </Item>
+      <Item>
+        <Filename Value="splashscreen.pas"/>
+        <UnitName Value="SplashScreen"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
