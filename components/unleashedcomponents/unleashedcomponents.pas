@@ -17,7 +17,7 @@ uses
   BackgroundTask, StackPanel, GridPanel, Accordion, BreadcrumbBar, 
   WizardControl, OverlayPanel, Carousel, PageIndicator, AppInstance, 
   CommandPalette, UndoStack, RecentFiles, PopupWindow, CalendarView, 
-  DatePicker, NumberBox, FontComboBox, SevenSegment, StatCard, LazarusPackageIntf;
+  DatePicker, NumberBox, FontComboBox, SevenSegment, StatCard, Avatar, LazarusPackageIntf;
 
 implementation
 

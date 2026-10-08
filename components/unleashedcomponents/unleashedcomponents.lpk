@@ -257,6 +257,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="statcard.pas"/>
         <UnitName Value="StatCard"/>
       </Item>
+      <Item>
+        <Filename Value="avatar.pas"/>
+        <UnitName Value="Avatar"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
