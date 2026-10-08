@@ -222,6 +222,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <UnitName Value="CommandPalette"/>
       </Item>
       <Item>
+        <Filename Value="undostack.pas"/>
+        <UnitName Value="UndoStack"/>
+      </Item>
+      <Item>
         <Filename Value="popupwindow.pas"/>
         <UnitName Value="PopupWindow"/>
       </Item>
