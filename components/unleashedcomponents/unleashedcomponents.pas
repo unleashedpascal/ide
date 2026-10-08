@@ -16,7 +16,7 @@ uses
   Toast, Divider, CardPanel, ExpanderPanel, SideNav, SplitView, Debouncer, 
   BackgroundTask, StackPanel, GridPanel, Accordion, BreadcrumbBar, 
   WizardControl, OverlayPanel, Carousel, PageIndicator, AppInstance, 
-  CommandPalette, UndoStack, PopupWindow, LazarusPackageIntf;
+  CommandPalette, UndoStack, RecentFiles, PopupWindow, LazarusPackageIntf;
 
 implementation
 
