@@ -241,6 +241,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="datepicker.pas"/>
         <UnitName Value="DatePicker"/>
       </Item>
+      <Item>
+        <Filename Value="numberbox.pas"/>
+        <UnitName Value="NumberBox"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
