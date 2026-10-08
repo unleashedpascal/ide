@@ -285,6 +285,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="tabstrip.pas"/>
         <UnitName Value="TabStrip"/>
       </Item>
+      <Item>
+        <Filename Value="commandbar.pas"/>
+        <UnitName Value="CommandBar"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
