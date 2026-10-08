@@ -15,7 +15,7 @@ uses
   JsonTreeView, TagEditor, LogView, DropZone, DateRangePicker, TimelineView, 
   Toast, Divider, CardPanel, ExpanderPanel, SideNav, SplitView, Debouncer, 
   BackgroundTask, StackPanel, GridPanel, Accordion, BreadcrumbBar, 
-  WizardControl, PopupWindow, LazarusPackageIntf;
+  WizardControl, OverlayPanel, PopupWindow, LazarusPackageIntf;
 
 implementation
 
