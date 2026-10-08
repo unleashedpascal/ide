@@ -154,6 +154,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <UnitName Value="Toast"/>
       </Item>
       <Item>
+        <Filename Value="divider.pas"/>
+        <UnitName Value="Divider"/>
+      </Item>
+      <Item>
         <Filename Value="popupwindow.pas"/>
         <UnitName Value="PopupWindow"/>
       </Item>
