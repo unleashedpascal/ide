@@ -182,6 +182,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <UnitName Value="BackgroundTask"/>
       </Item>
       <Item>
+        <Filename Value="stackpanel.pas"/>
+        <UnitName Value="StackPanel"/>
+      </Item>
+      <Item>
         <Filename Value="popupwindow.pas"/>
         <UnitName Value="PopupWindow"/>
       </Item>
