@@ -293,6 +293,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="infobar.pas"/>
         <UnitName Value="InfoBar"/>
       </Item>
+      <Item>
+        <Filename Value="popover.pas"/>
+        <UnitName Value="Popover"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
