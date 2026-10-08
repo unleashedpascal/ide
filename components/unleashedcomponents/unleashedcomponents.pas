@@ -19,7 +19,7 @@ uses
   CommandPalette, UndoStack, RecentFiles, PopupWindow, CalendarView, 
   DatePicker, NumberBox, FontComboBox, SevenSegment, StatCard, Avatar, Barcode, 
   TerminalView, EmptyState, CheckGroupBox, FormLayout, TabStrip, CommandBar, 
-  InfoBar, Popover, SplashScreen, ProgressDialog, LazarusPackageIntf;
+  InfoBar, Popover, SplashScreen, ProgressDialog, Animator, LazarusPackageIntf;
 
 implementation
 
