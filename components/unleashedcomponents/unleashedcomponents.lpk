@@ -249,6 +249,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="fontcombobox.pas"/>
         <UnitName Value="FontComboBox"/>
       </Item>
+      <Item>
+        <Filename Value="sevensegment.pas"/>
+        <UnitName Value="SevenSegment"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
