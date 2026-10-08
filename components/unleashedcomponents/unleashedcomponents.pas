@@ -13,7 +13,7 @@ uses
   SuggestEdit, Badge, Rating, Led, Sparkline, Marquee, Knob, Gauge, Clock, 
   RichLabel, PasswordEdit, HotKeyEdit, DurationEdit, ImageViewer, QRCode, 
   JsonTreeView, TagEditor, LogView, DropZone, DateRangePicker, TimelineView, 
-  Toast, Divider, CardPanel, ExpanderPanel, SideNav, PopupWindow, LazarusPackageIntf;
+  Toast, Divider, CardPanel, ExpanderPanel, SideNav, SplitView, PopupWindow, LazarusPackageIntf;
 
 implementation
 
