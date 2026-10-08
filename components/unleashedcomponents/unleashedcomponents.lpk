@@ -301,6 +301,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="splashscreen.pas"/>
         <UnitName Value="SplashScreen"/>
       </Item>
+      <Item>
+        <Filename Value="progressdialog.pas"/>
+        <UnitName Value="ProgressDialog"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

@@ -32,7 +32,7 @@ implementation
 {$R ../unleashedcomponents.res}
 
 uses
-  Classes, ComponentReg, ComponentEditors, AppTheme, AppThemeEditor, RangeSlider, ToggleSwitch, SearchEdit, SplitButton, LinkLabel, SegmentedControl, SegmentEditor, ColorPicker, BusyIndicator, ProgressRing, SuggestEdit, Badge, Rating, Led, Sparkline, Marquee, Knob, Gauge, Clock, RichLabel, PasswordEdit, HotKeyEdit, DurationEdit, ImageViewer, QRCode, JsonTreeView, TagEditor, LogView, DropZone, DateRangePicker, TimelineView, Toast, Divider, CardPanel, ExpanderPanel, SideNav, SplitView, Debouncer, BackgroundTask, StackPanel, GridPanel, Accordion, BreadcrumbBar, WizardControl, OverlayPanel, Carousel, PageIndicator, AppInstance, CommandPalette, UndoStack, RecentFiles, CalendarView, DatePicker, NumberBox, FontComboBox, SevenSegment, StatCard, Avatar, Barcode, TerminalView, EmptyState, CheckGroupBox, FormLayout, TabStrip, CommandBar, InfoBar, Popover, SplashScreen;
+  Classes, ComponentReg, ComponentEditors, AppTheme, AppThemeEditor, RangeSlider, ToggleSwitch, SearchEdit, SplitButton, LinkLabel, SegmentedControl, SegmentEditor, ColorPicker, BusyIndicator, ProgressRing, SuggestEdit, Badge, Rating, Led, Sparkline, Marquee, Knob, Gauge, Clock, RichLabel, PasswordEdit, HotKeyEdit, DurationEdit, ImageViewer, QRCode, JsonTreeView, TagEditor, LogView, DropZone, DateRangePicker, TimelineView, Toast, Divider, CardPanel, ExpanderPanel, SideNav, SplitView, Debouncer, BackgroundTask, StackPanel, GridPanel, Accordion, BreadcrumbBar, WizardControl, OverlayPanel, Carousel, PageIndicator, AppInstance, CommandPalette, UndoStack, RecentFiles, CalendarView, DatePicker, NumberBox, FontComboBox, SevenSegment, StatCard, Avatar, Barcode, TerminalView, EmptyState, CheckGroupBox, FormLayout, TabStrip, CommandBar, InfoBar, Popover, SplashScreen, ProgressDialog;
 
 const
   PAGES: array[0..6] of string = (PAGE_INPUT, PAGE_DISPLAY, PAGE_VIEWS, PAGE_LAYOUT, PAGE_NAVIGATION, PAGE_FEEDBACK, PAGE_SYSTEM);
@@ -45,7 +45,7 @@ begin
   RegisterComponents(PAGE_VIEWS, [TCalendarView, TImageViewer, TLogView, TTerminalView, TJsonTreeView, TTimelineView, TEmptyState]);
   RegisterComponents(PAGE_LAYOUT, [TCardPanel, TExpanderPanel, TAccordion, TCheckGroupBox, TStackPanel, TGridPanel, TFormLayout, TSplitView, TDivider, TCarousel]);
   RegisterComponents(PAGE_NAVIGATION, [TSideNav, TTabStrip, TCommandBar, TBreadcrumbBar, TWizardControl, TPageIndicator, TCommandPalette]);
-  RegisterComponents(PAGE_FEEDBACK, [TToast, TInfoBar, TPopover, TOverlayPanel, TSplashScreen]);
+  RegisterComponents(PAGE_FEEDBACK, [TToast, TInfoBar, TPopover, TOverlayPanel, TSplashScreen, TProgressDialog]);
   RegisterComponents(PAGE_SYSTEM, [TDebouncer, TBackgroundTask, TUndoStack, TRecentFiles, TSingleInstance]);
   RegisterComponentEditor(TAppTheme, TAppThemeComponentEditor);
   RegisterComponentEditor(TSegmentedControl, TSegmentedControlEditor);
