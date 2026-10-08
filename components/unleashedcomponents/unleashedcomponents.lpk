@@ -289,6 +289,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="commandbar.pas"/>
         <UnitName Value="CommandBar"/>
       </Item>
+      <Item>
+        <Filename Value="infobar.pas"/>
+        <UnitName Value="InfoBar"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
