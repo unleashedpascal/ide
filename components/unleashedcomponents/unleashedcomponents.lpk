@@ -253,6 +253,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="sevensegment.pas"/>
         <UnitName Value="SevenSegment"/>
       </Item>
+      <Item>
+        <Filename Value="statcard.pas"/>
+        <UnitName Value="StatCard"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
