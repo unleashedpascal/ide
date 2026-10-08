@@ -210,6 +210,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <UnitName Value="Carousel"/>
       </Item>
       <Item>
+        <Filename Value="pageindicator.pas"/>
+        <UnitName Value="PageIndicator"/>
+      </Item>
+      <Item>
         <Filename Value="popupwindow.pas"/>
         <UnitName Value="PopupWindow"/>
       </Item>
