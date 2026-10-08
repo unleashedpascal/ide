@@ -265,6 +265,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="barcode.pas"/>
         <UnitName Value="Barcode"/>
       </Item>
+      <Item>
+        <Filename Value="terminalview.pas"/>
+        <UnitName Value="TerminalView"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
