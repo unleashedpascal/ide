@@ -325,6 +325,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="propertygrid.pas"/>
         <UnitName Value="PropertyGrid"/>
       </Item>
+      <Item>
+        <Filename Value="countdown.pas"/>
+        <UnitName Value="Countdown"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
