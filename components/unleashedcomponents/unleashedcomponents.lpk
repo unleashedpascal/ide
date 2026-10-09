@@ -397,6 +397,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="paintcanvas.pas"/>
         <UnitName Value="PaintCanvas"/>
       </Item>
+      <Item>
+        <Filename Value="ganttchart.pas"/>
+        <UnitName Value="GanttChart"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
