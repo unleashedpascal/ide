@@ -321,6 +321,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="datatable.pas"/>
         <UnitName Value="DataTable"/>
       </Item>
+      <Item>
+        <Filename Value="propertygrid.pas"/>
+        <UnitName Value="PropertyGrid"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
