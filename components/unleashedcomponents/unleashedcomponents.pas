@@ -21,7 +21,7 @@ uses
   TerminalView, EmptyState, CheckGroupBox, FormLayout, TabStrip, CommandBar, 
   InfoBar, Popover, SplashScreen, ProgressDialog, Animator, Validator, 
   SerialPort, DataTable, PropertyGrid, Countdown, ChartLite, ColorSwatchButton, 
-  SettingsStore, KanbanBoard, ShortcutMap, TourGuide, LazarusPackageIntf;
+  SettingsStore, KanbanBoard, ShortcutMap, TourGuide, NotificationCenter, LazarusPackageIntf;
 
 implementation
 

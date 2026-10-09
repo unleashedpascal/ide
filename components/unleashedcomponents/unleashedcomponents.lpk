@@ -353,6 +353,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="tourguide.pas"/>
         <UnitName Value="TourGuide"/>
       </Item>
+      <Item>
+        <Filename Value="notificationcenter.pas"/>
+        <UnitName Value="NotificationCenter"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
