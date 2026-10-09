@@ -349,6 +349,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="shortcutmap.pas"/>
         <UnitName Value="ShortcutMap"/>
       </Item>
+      <Item>
+        <Filename Value="tourguide.pas"/>
+        <UnitName Value="TourGuide"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
