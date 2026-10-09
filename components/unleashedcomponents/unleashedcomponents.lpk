@@ -413,6 +413,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="treegrid.pas"/>
         <UnitName Value="TreeGrid"/>
       </Item>
+      <Item>
+        <Filename Value="dockpanel.pas"/>
+        <UnitName Value="DockPanel"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
