@@ -341,6 +341,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="settingsstore.pas"/>
         <UnitName Value="SettingsStore"/>
       </Item>
+      <Item>
+        <Filename Value="kanbanboard.pas"/>
+        <UnitName Value="KanbanBoard"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
