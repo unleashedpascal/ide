@@ -337,6 +337,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="colorswatchbutton.pas"/>
         <UnitName Value="ColorSwatchButton"/>
       </Item>
+      <Item>
+        <Filename Value="settingsstore.pas"/>
+        <UnitName Value="SettingsStore"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
