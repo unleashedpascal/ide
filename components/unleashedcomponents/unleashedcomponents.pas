@@ -24,7 +24,7 @@ uses
   SettingsStore, KanbanBoard, ShortcutMap, TourGuide, NotificationCenter, 
   MarkdownLabel, PlotCanvas, CheckComboBox, HeatmapCalendar, HexEditor, 
   DiffView, ImageCropper, FolderTree, FileList, PaintCanvas, GanttChart, 
-  NodeEditor, SchedulerView, LazarusPackageIntf;
+  NodeEditor, SchedulerView, TreeGrid, LazarusPackageIntf;
 
 implementation
 
