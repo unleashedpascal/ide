@@ -22,7 +22,7 @@ uses
   InfoBar, Popover, SplashScreen, ProgressDialog, Animator, Validator, 
   SerialPort, DataTable, PropertyGrid, Countdown, ChartLite, ColorSwatchButton, 
   SettingsStore, KanbanBoard, ShortcutMap, TourGuide, NotificationCenter, 
-  MarkdownLabel, PlotCanvas, CheckComboBox, LazarusPackageIntf;
+  MarkdownLabel, PlotCanvas, CheckComboBox, HeatmapCalendar, LazarusPackageIntf;
 
 implementation
 

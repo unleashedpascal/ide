@@ -369,6 +369,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="checkcombobox.pas"/>
         <UnitName Value="CheckComboBox"/>
       </Item>
+      <Item>
+        <Filename Value="heatmapcalendar.pas"/>
+        <UnitName Value="HeatmapCalendar"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
