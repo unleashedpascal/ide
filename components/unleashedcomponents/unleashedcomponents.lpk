@@ -381,6 +381,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="diffview.pas"/>
         <UnitName Value="DiffView"/>
       </Item>
+      <Item>
+        <Filename Value="imagecropper.pas"/>
+        <UnitName Value="ImageCropper"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
