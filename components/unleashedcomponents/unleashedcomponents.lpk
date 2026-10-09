@@ -377,6 +377,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="hexeditor.pas"/>
         <UnitName Value="HexEditor"/>
       </Item>
+      <Item>
+        <Filename Value="diffview.pas"/>
+        <UnitName Value="DiffView"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
