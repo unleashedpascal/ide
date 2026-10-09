@@ -357,6 +357,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="notificationcenter.pas"/>
         <UnitName Value="NotificationCenter"/>
       </Item>
+      <Item>
+        <Filename Value="markdownlabel.pas"/>
+        <UnitName Value="MarkdownLabel"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
