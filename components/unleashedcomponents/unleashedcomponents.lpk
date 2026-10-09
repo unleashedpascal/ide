@@ -333,6 +333,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="chartlite.pas"/>
         <UnitName Value="ChartLite"/>
       </Item>
+      <Item>
+        <Filename Value="colorswatchbutton.pas"/>
+        <UnitName Value="ColorSwatchButton"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
