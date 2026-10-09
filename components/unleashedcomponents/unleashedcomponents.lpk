@@ -329,6 +329,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="countdown.pas"/>
         <UnitName Value="Countdown"/>
       </Item>
+      <Item>
+        <Filename Value="chartlite.pas"/>
+        <UnitName Value="ChartLite"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

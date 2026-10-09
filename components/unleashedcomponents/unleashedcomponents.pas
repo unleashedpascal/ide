@@ -20,7 +20,7 @@ uses
   DatePicker, NumberBox, FontComboBox, SevenSegment, StatCard, Avatar, Barcode, 
   TerminalView, EmptyState, CheckGroupBox, FormLayout, TabStrip, CommandBar, 
   InfoBar, Popover, SplashScreen, ProgressDialog, Animator, Validator, 
-  SerialPort, DataTable, PropertyGrid, Countdown, LazarusPackageIntf;
+  SerialPort, DataTable, PropertyGrid, Countdown, ChartLite, LazarusPackageIntf;
 
 implementation
 
