@@ -361,6 +361,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="markdownlabel.pas"/>
         <UnitName Value="MarkdownLabel"/>
       </Item>
+      <Item>
+        <Filename Value="plotcanvas.pas"/>
+        <UnitName Value="PlotCanvas"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
