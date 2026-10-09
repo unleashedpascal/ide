@@ -373,6 +373,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="heatmapcalendar.pas"/>
         <UnitName Value="HeatmapCalendar"/>
       </Item>
+      <Item>
+        <Filename Value="hexeditor.pas"/>
+        <UnitName Value="HexEditor"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
