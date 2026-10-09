@@ -389,6 +389,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="foldertree.pas"/>
         <UnitName Value="FolderTree"/>
       </Item>
+      <Item>
+        <Filename Value="filelist.pas"/>
+        <UnitName Value="FileList"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
