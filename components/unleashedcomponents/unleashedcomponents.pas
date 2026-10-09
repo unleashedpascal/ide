@@ -23,7 +23,7 @@ uses
   SerialPort, DataTable, PropertyGrid, Countdown, ChartLite, ColorSwatchButton, 
   SettingsStore, KanbanBoard, ShortcutMap, TourGuide, NotificationCenter, 
   MarkdownLabel, PlotCanvas, CheckComboBox, HeatmapCalendar, HexEditor, 
-  DiffView, ImageCropper, LazarusPackageIntf;
+  DiffView, ImageCropper, FolderTree, LazarusPackageIntf;
 
 implementation
 

@@ -385,6 +385,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="imagecropper.pas"/>
         <UnitName Value="ImageCropper"/>
       </Item>
+      <Item>
+        <Filename Value="foldertree.pas"/>
+        <UnitName Value="FolderTree"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
