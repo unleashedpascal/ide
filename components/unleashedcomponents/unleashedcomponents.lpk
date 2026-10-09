@@ -401,6 +401,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="ganttchart.pas"/>
         <UnitName Value="GanttChart"/>
       </Item>
+      <Item>
+        <Filename Value="nodeeditor.pas"/>
+        <UnitName Value="NodeEditor"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
