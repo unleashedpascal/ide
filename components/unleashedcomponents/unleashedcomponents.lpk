@@ -317,6 +317,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="serialport.pas"/>
         <UnitName Value="SerialPort"/>
       </Item>
+      <Item>
+        <Filename Value="datatable.pas"/>
+        <UnitName Value="DataTable"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
