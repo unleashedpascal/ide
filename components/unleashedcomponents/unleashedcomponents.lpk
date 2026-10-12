@@ -282,6 +282,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <UnitName Value="FormLayout"/>
       </Item>
       <Item>
+        <Filename Value="fieldrow.pas"/>
+        <UnitName Value="FieldRow"/>
+      </Item>
+      <Item>
         <Filename Value="tabstrip.pas"/>
         <UnitName Value="TabStrip"/>
       </Item>

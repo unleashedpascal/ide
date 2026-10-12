@@ -18,13 +18,13 @@ uses
   WizardControl, OverlayPanel, Carousel, PageIndicator, AppInstance, 
   CommandPalette, UndoStack, RecentFiles, PopupWindow, CalendarView, 
   DatePicker, NumberBox, FontComboBox, SevenSegment, StatCard, Avatar, Barcode, 
-  TerminalView, EmptyState, CheckGroupBox, FormLayout, TabStrip, CommandBar, 
-  InfoBar, Popover, SplashScreen, ProgressDialog, Animator, Validator, 
-  SerialPort, DataTable, PropertyGrid, Countdown, ChartLite, ColorSwatchButton, 
-  SettingsStore, KanbanBoard, ShortcutMap, TourGuide, NotificationCenter, 
-  MarkdownLabel, PlotCanvas, CheckComboBox, HeatmapCalendar, HexEditor, 
-  DiffView, ImageCropper, FolderTree, FileList, PaintCanvas, GanttChart, 
-  NodeEditor, SchedulerView, TreeGrid, DockPanel, LazarusPackageIntf;
+  TerminalView, EmptyState, CheckGroupBox, FormLayout, FieldRow, TabStrip, 
+  CommandBar, InfoBar, Popover, SplashScreen, ProgressDialog, Animator, 
+  Validator, SerialPort, DataTable, PropertyGrid, Countdown, ChartLite, 
+  ColorSwatchButton, SettingsStore, KanbanBoard, ShortcutMap, TourGuide, 
+  NotificationCenter, MarkdownLabel, PlotCanvas, CheckComboBox, 
+  HeatmapCalendar, HexEditor, DiffView, ImageCropper, FolderTree, FileList, 
+  PaintCanvas, GanttChart, NodeEditor, SchedulerView, TreeGrid, DockPanel, LazarusPackageIntf;
 
 implementation
 
