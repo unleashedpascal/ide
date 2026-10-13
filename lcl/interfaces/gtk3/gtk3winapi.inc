@@ -2859,7 +2859,6 @@ var
   display: PGdkDisplay;
   seat: PGdkSeat;
   device: PGdkDevice;
-  x: gdouble;
   window: PGdkWindow;
   windowWidget: PGtkWindow;
 begin
@@ -2895,7 +2894,8 @@ begin
     end;
     if window = nil then
       Exit;
-    device^.get_state(window, @x, @AModifiers);
+    // no axes buffer: gdk fills one double per device axis
+    device^.get_state(window, nil, @AModifiers);
   end else
   begin
     AKeyMap := gdk_keymap_get_for_display(display);
