@@ -29,6 +29,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="appthemeeditor.pas"/>
         <UnitName Value="AppThemeEditor"/>
       </Item>
+      <Item>
+        <Filename Value="segmenteditor.pas"/>
+        <UnitName Value="SegmentEditor"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

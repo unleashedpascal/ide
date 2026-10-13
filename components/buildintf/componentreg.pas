@@ -237,6 +237,8 @@ type
     // Pages placed right after another page instead of by priority, as
     // page=after pairs in the order they were anchored.
     fPageAnchors: TStringList;
+    // Class names of components shown first on their page, in naming order.
+    fPageLeaders: TStringList;
     fHandlers: array[TComponentPaletteHandlerType] of TMethodList;
     fComponentPageClass: TBaseComponentPageClass;
     fSelected: TRegisteredComponent;
@@ -304,6 +306,9 @@ type
     // Puts APageName right after AAfterPage in the original page order, behind
     // the pages anchored to it earlier. Either page missing leaves the order alone.
     procedure AnchorPage(const APageName, AAfterPage: string);
+    // Shows the component class first on its page, ahead of the order the
+    // priorities give. Classes named later go behind the ones named before.
+    procedure PlaceFirstOnPage(const AClassName: string);
   public
     property Pages: TBaseComponentPageList read fPages;
     property Comps: TRegisteredCompList read fComps;
@@ -889,6 +894,7 @@ begin
   fOrigPageHelper:=TStringListUTF8Fast.Create; // Note: CaseSensitive = False
   fOrigPageHelper.Sorted:=True;
   fPageAnchors:=TStringList.Create;
+  fPageLeaders:=TStringList.Create;
   fLastFoundCompClassName:='';
   fLastFoundRegComp:=Nil;
 end;
@@ -898,6 +904,7 @@ var
   HandlerType: TComponentPaletteHandlerType;
 begin
   Clear;
+  FreeAndNil(fPageLeaders);
   FreeAndNil(fPageAnchors);
   FreeAndNil(fOrigPageHelper);
   FreeAndNil(fUserComponentPageCache);
@@ -931,6 +938,12 @@ begin
   fPageAnchors.Values[APageName]:=AAfterPage;
 end;
 
+procedure TBaseComponentPalette.PlaceFirstOnPage(const AClassName: string);
+begin
+  if fPageLeaders.IndexOf(AClassName)<0 then
+    fPageLeaders.Add(AClassName);
+end;
+
 // Moves the anchored pages into place; idempotent.
 procedure TBaseComponentPalette.ApplyPageAnchors;
 var
@@ -959,7 +972,7 @@ end;
 
 procedure TBaseComponentPalette.CacheOrigComponentPages;
 var
-  PageI, CompI: Integer;
+  PageI, CompI, LeadI: Integer;
   PgName: string;
   RegComp: TRegisteredComponent;
   RegComps: TRegisteredCompList;
@@ -980,6 +993,13 @@ begin
       if RegComp.OrigPageName = PgName then // case sensitive!
         RegComps.Add(RegComp);
     end;
+    // The leaders go first, the one named first at the front.
+    for LeadI := fPageLeaders.Count-1 downto 0 do
+      for CompI := 0 to RegComps.Count-1 do
+        if SameText(RegComps[CompI].ComponentClass.ClassName, fPageLeaders[LeadI]) then begin
+          RegComps.Move(CompI, 0);
+          break;
+        end;
   end;
 end;
 

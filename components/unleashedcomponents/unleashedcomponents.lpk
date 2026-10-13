@@ -25,6 +25,402 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="apptheme.pas"/>
         <UnitName Value="AppTheme"/>
       </Item>
+      <Item>
+        <Filename Value="rangeslider.pas"/>
+        <UnitName Value="RangeSlider"/>
+      </Item>
+      <Item>
+        <Filename Value="controlpaint.pas"/>
+        <UnitName Value="ControlPaint"/>
+      </Item>
+      <Item>
+        <Filename Value="toggleswitch.pas"/>
+        <UnitName Value="ToggleSwitch"/>
+      </Item>
+      <Item>
+        <Filename Value="searchedit.pas"/>
+        <UnitName Value="SearchEdit"/>
+      </Item>
+      <Item>
+        <Filename Value="splitbutton.pas"/>
+        <UnitName Value="SplitButton"/>
+      </Item>
+      <Item>
+        <Filename Value="linklabel.pas"/>
+        <UnitName Value="LinkLabel"/>
+      </Item>
+      <Item>
+        <Filename Value="segmentedcontrol.pas"/>
+        <UnitName Value="SegmentedControl"/>
+      </Item>
+      <Item>
+        <Filename Value="colorpicker.pas"/>
+        <UnitName Value="ColorPicker"/>
+      </Item>
+      <Item>
+        <Filename Value="busyindicator.pas"/>
+        <UnitName Value="BusyIndicator"/>
+      </Item>
+      <Item>
+        <Filename Value="progressring.pas"/>
+        <UnitName Value="ProgressRing"/>
+      </Item>
+      <Item>
+        <Filename Value="suggestedit.pas"/>
+        <UnitName Value="SuggestEdit"/>
+      </Item>
+      <Item>
+        <Filename Value="badge.pas"/>
+        <UnitName Value="Badge"/>
+      </Item>
+      <Item>
+        <Filename Value="rating.pas"/>
+        <UnitName Value="Rating"/>
+      </Item>
+      <Item>
+        <Filename Value="led.pas"/>
+        <UnitName Value="Led"/>
+      </Item>
+      <Item>
+        <Filename Value="sparkline.pas"/>
+        <UnitName Value="Sparkline"/>
+      </Item>
+      <Item>
+        <Filename Value="marquee.pas"/>
+        <UnitName Value="Marquee"/>
+      </Item>
+      <Item>
+        <Filename Value="knob.pas"/>
+        <UnitName Value="Knob"/>
+      </Item>
+      <Item>
+        <Filename Value="gauge.pas"/>
+        <UnitName Value="Gauge"/>
+      </Item>
+      <Item>
+        <Filename Value="clock.pas"/>
+        <UnitName Value="Clock"/>
+      </Item>
+      <Item>
+        <Filename Value="richlabel.pas"/>
+        <UnitName Value="RichLabel"/>
+      </Item>
+      <Item>
+        <Filename Value="passwordedit.pas"/>
+        <UnitName Value="PasswordEdit"/>
+      </Item>
+      <Item>
+        <Filename Value="hotkeyedit.pas"/>
+        <UnitName Value="HotKeyEdit"/>
+      </Item>
+      <Item>
+        <Filename Value="durationedit.pas"/>
+        <UnitName Value="DurationEdit"/>
+      </Item>
+      <Item>
+        <Filename Value="imageviewer.pas"/>
+        <UnitName Value="ImageViewer"/>
+      </Item>
+      <Item>
+        <Filename Value="qrcode.pas"/>
+        <UnitName Value="QRCode"/>
+      </Item>
+      <Item>
+        <Filename Value="jsontreeview.pas"/>
+        <UnitName Value="JsonTreeView"/>
+      </Item>
+      <Item>
+        <Filename Value="tageditor.pas"/>
+        <UnitName Value="TagEditor"/>
+      </Item>
+      <Item>
+        <Filename Value="logview.pas"/>
+        <UnitName Value="LogView"/>
+      </Item>
+      <Item>
+        <Filename Value="dropzone.pas"/>
+        <UnitName Value="DropZone"/>
+      </Item>
+      <Item>
+        <Filename Value="daterangepicker.pas"/>
+        <UnitName Value="DateRangePicker"/>
+      </Item>
+      <Item>
+        <Filename Value="timelineview.pas"/>
+        <UnitName Value="TimelineView"/>
+      </Item>
+      <Item>
+        <Filename Value="toast.pas"/>
+        <UnitName Value="Toast"/>
+      </Item>
+      <Item>
+        <Filename Value="divider.pas"/>
+        <UnitName Value="Divider"/>
+      </Item>
+      <Item>
+        <Filename Value="cardpanel.pas"/>
+        <UnitName Value="CardPanel"/>
+      </Item>
+      <Item>
+        <Filename Value="expanderpanel.pas"/>
+        <UnitName Value="ExpanderPanel"/>
+      </Item>
+      <Item>
+        <Filename Value="sidenav.pas"/>
+        <UnitName Value="SideNav"/>
+      </Item>
+      <Item>
+        <Filename Value="splitview.pas"/>
+        <UnitName Value="SplitView"/>
+      </Item>
+      <Item>
+        <Filename Value="debouncer.pas"/>
+        <UnitName Value="Debouncer"/>
+      </Item>
+      <Item>
+        <Filename Value="backgroundtask.pas"/>
+        <UnitName Value="BackgroundTask"/>
+      </Item>
+      <Item>
+        <Filename Value="stackpanel.pas"/>
+        <UnitName Value="StackPanel"/>
+      </Item>
+      <Item>
+        <Filename Value="gridpanel.pas"/>
+        <UnitName Value="GridPanel"/>
+      </Item>
+      <Item>
+        <Filename Value="accordion.pas"/>
+        <UnitName Value="Accordion"/>
+      </Item>
+      <Item>
+        <Filename Value="breadcrumbbar.pas"/>
+        <UnitName Value="BreadcrumbBar"/>
+      </Item>
+      <Item>
+        <Filename Value="wizardcontrol.pas"/>
+        <UnitName Value="WizardControl"/>
+      </Item>
+      <Item>
+        <Filename Value="overlaypanel.pas"/>
+        <UnitName Value="OverlayPanel"/>
+      </Item>
+      <Item>
+        <Filename Value="carousel.pas"/>
+        <UnitName Value="Carousel"/>
+      </Item>
+      <Item>
+        <Filename Value="pageindicator.pas"/>
+        <UnitName Value="PageIndicator"/>
+      </Item>
+      <Item>
+        <Filename Value="appinstance.pas"/>
+        <UnitName Value="AppInstance"/>
+      </Item>
+      <Item>
+        <Filename Value="commandpalette.pas"/>
+        <UnitName Value="CommandPalette"/>
+      </Item>
+      <Item>
+        <Filename Value="undostack.pas"/>
+        <UnitName Value="UndoStack"/>
+      </Item>
+      <Item>
+        <Filename Value="recentfiles.pas"/>
+        <UnitName Value="RecentFiles"/>
+      </Item>
+      <Item>
+        <Filename Value="popupwindow.pas"/>
+        <UnitName Value="PopupWindow"/>
+      </Item>
+      <Item>
+        <Filename Value="calendarview.pas"/>
+        <UnitName Value="CalendarView"/>
+      </Item>
+      <Item>
+        <Filename Value="datepicker.pas"/>
+        <UnitName Value="DatePicker"/>
+      </Item>
+      <Item>
+        <Filename Value="numberbox.pas"/>
+        <UnitName Value="NumberBox"/>
+      </Item>
+      <Item>
+        <Filename Value="fontcombobox.pas"/>
+        <UnitName Value="FontComboBox"/>
+      </Item>
+      <Item>
+        <Filename Value="sevensegment.pas"/>
+        <UnitName Value="SevenSegment"/>
+      </Item>
+      <Item>
+        <Filename Value="statcard.pas"/>
+        <UnitName Value="StatCard"/>
+      </Item>
+      <Item>
+        <Filename Value="avatar.pas"/>
+        <UnitName Value="Avatar"/>
+      </Item>
+      <Item>
+        <Filename Value="barcode.pas"/>
+        <UnitName Value="Barcode"/>
+      </Item>
+      <Item>
+        <Filename Value="terminalview.pas"/>
+        <UnitName Value="TerminalView"/>
+      </Item>
+      <Item>
+        <Filename Value="emptystate.pas"/>
+        <UnitName Value="EmptyState"/>
+      </Item>
+      <Item>
+        <Filename Value="checkgroupbox.pas"/>
+        <UnitName Value="CheckGroupBox"/>
+      </Item>
+      <Item>
+        <Filename Value="formlayout.pas"/>
+        <UnitName Value="FormLayout"/>
+      </Item>
+      <Item>
+        <Filename Value="fieldrow.pas"/>
+        <UnitName Value="FieldRow"/>
+      </Item>
+      <Item>
+        <Filename Value="tabstrip.pas"/>
+        <UnitName Value="TabStrip"/>
+      </Item>
+      <Item>
+        <Filename Value="commandbar.pas"/>
+        <UnitName Value="CommandBar"/>
+      </Item>
+      <Item>
+        <Filename Value="infobar.pas"/>
+        <UnitName Value="InfoBar"/>
+      </Item>
+      <Item>
+        <Filename Value="popover.pas"/>
+        <UnitName Value="Popover"/>
+      </Item>
+      <Item>
+        <Filename Value="splashscreen.pas"/>
+        <UnitName Value="SplashScreen"/>
+      </Item>
+      <Item>
+        <Filename Value="progressdialog.pas"/>
+        <UnitName Value="ProgressDialog"/>
+      </Item>
+      <Item>
+        <Filename Value="animator.pas"/>
+        <UnitName Value="Animator"/>
+      </Item>
+      <Item>
+        <Filename Value="validator.pas"/>
+        <UnitName Value="Validator"/>
+      </Item>
+      <Item>
+        <Filename Value="serialport.pas"/>
+        <UnitName Value="SerialPort"/>
+      </Item>
+      <Item>
+        <Filename Value="datatable.pas"/>
+        <UnitName Value="DataTable"/>
+      </Item>
+      <Item>
+        <Filename Value="propertygrid.pas"/>
+        <UnitName Value="PropertyGrid"/>
+      </Item>
+      <Item>
+        <Filename Value="countdown.pas"/>
+        <UnitName Value="Countdown"/>
+      </Item>
+      <Item>
+        <Filename Value="chartlite.pas"/>
+        <UnitName Value="ChartLite"/>
+      </Item>
+      <Item>
+        <Filename Value="colorswatchbutton.pas"/>
+        <UnitName Value="ColorSwatchButton"/>
+      </Item>
+      <Item>
+        <Filename Value="settingsstore.pas"/>
+        <UnitName Value="SettingsStore"/>
+      </Item>
+      <Item>
+        <Filename Value="kanbanboard.pas"/>
+        <UnitName Value="KanbanBoard"/>
+      </Item>
+      <Item>
+        <Filename Value="shortcutmap.pas"/>
+        <UnitName Value="ShortcutMap"/>
+      </Item>
+      <Item>
+        <Filename Value="tourguide.pas"/>
+        <UnitName Value="TourGuide"/>
+      </Item>
+      <Item>
+        <Filename Value="notificationcenter.pas"/>
+        <UnitName Value="NotificationCenter"/>
+      </Item>
+      <Item>
+        <Filename Value="markdownlabel.pas"/>
+        <UnitName Value="MarkdownLabel"/>
+      </Item>
+      <Item>
+        <Filename Value="plotcanvas.pas"/>
+        <UnitName Value="PlotCanvas"/>
+      </Item>
+      <Item>
+        <Filename Value="checkcombobox.pas"/>
+        <UnitName Value="CheckComboBox"/>
+      </Item>
+      <Item>
+        <Filename Value="heatmapcalendar.pas"/>
+        <UnitName Value="HeatmapCalendar"/>
+      </Item>
+      <Item>
+        <Filename Value="hexeditor.pas"/>
+        <UnitName Value="HexEditor"/>
+      </Item>
+      <Item>
+        <Filename Value="diffview.pas"/>
+        <UnitName Value="DiffView"/>
+      </Item>
+      <Item>
+        <Filename Value="imagecropper.pas"/>
+        <UnitName Value="ImageCropper"/>
+      </Item>
+      <Item>
+        <Filename Value="foldertree.pas"/>
+        <UnitName Value="FolderTree"/>
+      </Item>
+      <Item>
+        <Filename Value="filelist.pas"/>
+        <UnitName Value="FileList"/>
+      </Item>
+      <Item>
+        <Filename Value="paintcanvas.pas"/>
+        <UnitName Value="PaintCanvas"/>
+      </Item>
+      <Item>
+        <Filename Value="ganttchart.pas"/>
+        <UnitName Value="GanttChart"/>
+      </Item>
+      <Item>
+        <Filename Value="nodeeditor.pas"/>
+        <UnitName Value="NodeEditor"/>
+      </Item>
+      <Item>
+        <Filename Value="schedulerview.pas"/>
+        <UnitName Value="SchedulerView"/>
+      </Item>
+      <Item>
+        <Filename Value="treegrid.pas"/>
+        <UnitName Value="TreeGrid"/>
+      </Item>
+      <Item>
+        <Filename Value="dockpanel.pas"/>
+        <UnitName Value="DockPanel"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

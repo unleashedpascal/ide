@@ -2,20 +2,36 @@
   This source is only used to compile and install the package.
  }
 
-unit unleashedcomponents;
+unit UnleashedComponents;
 
 {$warn 5023 off : no warning about unused units}
 interface
 
 uses
-  AppTheme, LazarusPackageIntf;
+  AppTheme, RangeSlider, ControlPaint, ToggleSwitch, SearchEdit, SplitButton, 
+  LinkLabel, SegmentedControl, ColorPicker, BusyIndicator, ProgressRing, 
+  SuggestEdit, Badge, Rating, Led, Sparkline, Marquee, Knob, Gauge, Clock, 
+  RichLabel, PasswordEdit, HotKeyEdit, DurationEdit, ImageViewer, QRCode, 
+  JsonTreeView, TagEditor, LogView, DropZone, DateRangePicker, TimelineView, 
+  Toast, Divider, CardPanel, ExpanderPanel, SideNav, SplitView, Debouncer, 
+  BackgroundTask, StackPanel, GridPanel, Accordion, BreadcrumbBar, 
+  WizardControl, OverlayPanel, Carousel, PageIndicator, AppInstance, 
+  CommandPalette, UndoStack, RecentFiles, PopupWindow, CalendarView, 
+  DatePicker, NumberBox, FontComboBox, SevenSegment, StatCard, Avatar, Barcode, 
+  TerminalView, EmptyState, CheckGroupBox, FormLayout, FieldRow, TabStrip, 
+  CommandBar, InfoBar, Popover, SplashScreen, ProgressDialog, Animator, 
+  Validator, SerialPort, DataTable, PropertyGrid, Countdown, ChartLite, 
+  ColorSwatchButton, SettingsStore, KanbanBoard, ShortcutMap, TourGuide, 
+  NotificationCenter, MarkdownLabel, PlotCanvas, CheckComboBox, 
+  HeatmapCalendar, HexEditor, DiffView, ImageCropper, FolderTree, FileList, 
+  PaintCanvas, GanttChart, NodeEditor, SchedulerView, TreeGrid, DockPanel, LazarusPackageIntf;
 
 implementation
 
-procedure register;
+procedure Register;
 begin
 end;
 
 initialization
-  registerpackage('UnleashedComponents', @register);
+  RegisterPackage('UnleashedComponents', @Register);
 end.
