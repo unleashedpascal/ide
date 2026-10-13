@@ -19,7 +19,7 @@ procedure Register;
 implementation
 
 uses
-  Classes, Forms, MenuIntf, LazIDEIntf, ThemesStrings, ThemesConfig, ThemesManager, ThemesIcons, ThemesPalette;
+  Classes, Forms, MenuIntf, LazIDEIntf, ThemesStrings, ThemesConfig, ThemesManager, ThemesIcons, ThemesPalette, ThemesEngine;
 
 type
 
@@ -73,7 +73,7 @@ begin
   effects.Hover := hoverItem.Checked;
   effects.Active := activeItem.Checked;
   saveEffects(effects);
-  applyThemeEffects(effects);
+  setThemeEffects(effects);
 end;
 
 // the first start has no scheme and no colors for the theme yet, so it rolls them the way a theme
@@ -134,23 +134,50 @@ begin
   syncChecks;
 end;
 
-procedure storeIconFit(const fit: TIconFit);
+// the record of the engine and the record the IDE options use, field by field
+function engineFit(const fit: LazIDEIntf.TIconFit): ThemesIcons.TIconFit;
+begin
+  result.Enabled := fit.Enabled;
+  result.Strength := fit.Strength;
+  result.MinContrast := fit.MinContrast;
+  result.MaxLightness := fit.MaxLightness;
+  result.DisabledContrast := fit.DisabledContrast;
+  result.DisabledSaturation := fit.DisabledSaturation;
+end;
+
+function ideFit: LazIDEIntf.TIconFit;
+begin
+  var fit := currentIconFit;
+  result.Enabled := fit.Enabled;
+  result.Strength := fit.Strength;
+  result.MinContrast := fit.MinContrast;
+  result.MaxLightness := fit.MaxLightness;
+  result.DisabledContrast := fit.DisabledContrast;
+  result.DisabledSaturation := fit.DisabledSaturation;
+end;
+
+procedure previewIconFit(const fit: LazIDEIntf.TIconFit);
+begin
+  applyIconFit(engineFit(fit));
+end;
+
+procedure storeIconFit(const fit: LazIDEIntf.TIconFit);
 begin
   saveIconFit(fit);
-  applyIconFit(fit);
+  applyIconFit(engineFit(fit));
 end;
 
 // runs before the main window exists, so the first paint already has the theme
 procedure applySavedTheme;
 begin
-  useIconFit(loadIconFit);
-  applyThemeEffects(loadEffects);
+  useIconFit(engineFit(loadIconFit));
+  setThemeEffects(loadEffects);
   applyThemeKind(loadThemeKind);
 end;
 
 initialization
-  OnIconFitCurrent := @currentIconFit;
-  OnIconFitPreview := @applyIconFit;
+  OnIconFitCurrent := @ideFit;
+  OnIconFitPreview := @previewIconFit;
   OnIconFitStore := @storeIconFit;
   AddBootHandler(libhEnvironmentOptionsLoaded, @applySavedTheme);
 end.

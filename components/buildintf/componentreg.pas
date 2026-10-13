@@ -234,6 +234,9 @@ type
     fUserComponentPageCache: TStringList;  // User ordered
     // Used to find names that differ in character case only.
     fOrigPageHelper: TStringListUTF8Fast;
+    // Pages placed right after another page instead of by priority, as
+    // page=after pairs in the order they were anchored.
+    fPageAnchors: TStringList;
     fHandlers: array[TComponentPaletteHandlerType] of TMethodList;
     fComponentPageClass: TBaseComponentPageClass;
     fSelected: TRegisteredComponent;
@@ -247,6 +250,7 @@ type
                          const AMethod: TMethod; AsLast: boolean = false);
     procedure RemoveHandler(HandlerType: TComponentPaletteHandlerType;
                             const AMethod: TMethod);
+    procedure ApplyPageAnchors;
     procedure CacheOrigComponentPages;
     function CreatePagesFromUserOrder: Boolean;
     procedure DoPageAddedComponent(Component: TRegisteredComponent);
@@ -297,6 +301,9 @@ type
     procedure RemoveHandlerSelectionChanged(OnSelectionChangedEvent: TPaletteHandlerEvent);
     procedure AddHandlerUpdated(OnUpdateEvent: TPaletteHandlerEvent);
     procedure RemoveHandlerUpdated(OnUpdateEvent: TPaletteHandlerEvent);
+    // Puts APageName right after AAfterPage in the original page order, behind
+    // the pages anchored to it earlier. Either page missing leaves the order alone.
+    procedure AnchorPage(const APageName, AAfterPage: string);
   public
     property Pages: TBaseComponentPageList read fPages;
     property Comps: TRegisteredCompList read fComps;
@@ -881,6 +888,7 @@ begin
   fUserComponentPageCache.Sorted:=True;
   fOrigPageHelper:=TStringListUTF8Fast.Create; // Note: CaseSensitive = False
   fOrigPageHelper.Sorted:=True;
+  fPageAnchors:=TStringList.Create;
   fLastFoundCompClassName:='';
   fLastFoundRegComp:=Nil;
 end;
@@ -890,6 +898,7 @@ var
   HandlerType: TComponentPaletteHandlerType;
 begin
   Clear;
+  FreeAndNil(fPageAnchors);
   FreeAndNil(fOrigPageHelper);
   FreeAndNil(fUserComponentPageCache);
   FreeAndNil(fOrigComponentPageCache);
@@ -917,6 +926,37 @@ begin
   fOrigPageHelper.Clear;
 end;
 
+procedure TBaseComponentPalette.AnchorPage(const APageName, AAfterPage: string);
+begin
+  fPageAnchors.Values[APageName]:=AAfterPage;
+end;
+
+// Moves the anchored pages into place; idempotent.
+procedure TBaseComponentPalette.ApplyPageAnchors;
+var
+  i, PageI, InsertIndex: Integer;
+  PgName, After: String;
+  Prio: TComponentPriority;
+begin
+  for i := 0 to fPageAnchors.Count-1 do
+  begin
+    PgName:=fPageAnchors.Names[i];
+    After:=fPageAnchors.ValueFromIndex[i];
+    PageI:=fOrigPagePriorities.IndexOf(PgName);
+    if (PageI < 0) or (fOrigPagePriorities.IndexOf(After) < 0) then Continue;
+    Prio:=fOrigPagePriorities.Data[PageI];
+    fOrigPagePriorities.Delete(PageI);
+    InsertIndex:=fOrigPagePriorities.IndexOf(After)+1;
+    // behind the pages anchored to the same page before this one
+    while (InsertIndex < fOrigPagePriorities.Count)
+    and (fPageAnchors.IndexOfName(fOrigPagePriorities.Keys[InsertIndex]) >= 0)
+    and (fPageAnchors.IndexOfName(fOrigPagePriorities.Keys[InsertIndex]) < i)
+    and (fPageAnchors.Values[fOrigPagePriorities.Keys[InsertIndex]] = After) do
+      inc(InsertIndex);
+    fOrigPagePriorities.InsertKeyData(InsertIndex, PgName, Prio);
+  end;
+end;
+
 procedure TBaseComponentPalette.CacheOrigComponentPages;
 var
   PageI, CompI: Integer;
@@ -925,6 +965,7 @@ var
   RegComps: TRegisteredCompList;
 begin
   if fOrigComponentPageCache.Count > 0 then Exit;  // Fill cache only once.
+  ApplyPageAnchors;
   for PageI := 0 to fOrigPagePriorities.Count-1 do
   begin
     PgName:=fOrigPagePriorities.Keys[PageI];

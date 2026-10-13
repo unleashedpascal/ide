@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="5">
+    <Name Value="UnleashedComponentsDsgn"/>
+    <Type Value="DesignTime"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/$(LCLWidgetType)"/>
+      </SearchPaths>
+      <Other>
+        <CustomOptions Value="$(IDEBuildOptions)"/>
+      </Other>
+    </CompilerOptions>
+    <Description Value="Puts the Unleashed Components on the palette and adds their editors to the IDE.
+"/>
+    <License Value="Copyright (c) 2026 Unleashed Pascal Contributors &lt;https://unleashedpascal.org>
+
+Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text is available at https://mozilla.org/MPL/2.0/.
+"/>
+    <Version Major="1"/>
+    <Files>
+      <Item>
+        <Filename Value="registerunleashedcomponents.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="RegisterUnleashedComponents"/>
+      </Item>
+      <Item>
+        <Filename Value="appthemeeditor.pas"/>
+        <UnitName Value="AppThemeEditor"/>
+      </Item>
+    </Files>
+    <RequiredPkgs>
+      <Item>
+        <PackageName Value="IDEIntf"/>
+      </Item>
+      <Item>
+        <PackageName Value="UnleashedComponents"/>
+      </Item>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

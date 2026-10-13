@@ -36,9 +36,12 @@ type
     libpIdeDebugger,
     libpDockedFormEditor,
     libpUnleashedFormplacer,
+    libpUnleashedThemeEngine,
     libpUnleashedThemes,
     libpUnleashedMinimap,
-    libpUnleashedPanes
+    libpUnleashedPanes,
+    libpUnleashedComponents,
+    libpUnleashedComponentsDsgn
     );
 const
   LazarusIDEBasePkgNames: array[TLazarusIDEBasePkg] of string = (
@@ -71,9 +74,12 @@ const
     'IdeDebugger',
     'DockedFormEditor',
     'UnleashedFormplacer',
+    'UnleashedThemeEngine',
     'UnleashedThemes',
     'UnleashedMinimap',
-    'UnleashedPanes'
+    'UnleashedPanes',
+    'UnleashedComponents',
+    'UnleashedComponentsDsgn'
     );
 
   // extra packages for the release, alias "bigide": the set the installer ships

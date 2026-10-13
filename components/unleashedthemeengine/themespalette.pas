@@ -57,9 +57,17 @@ function midnightPalette: TPalette;
 // violet-navy with a lavender accent
 function duskPalette: TPalette;
 
+// `a` moved `percent` of the way toward `b`
+function mix(a, b: TColor; percent: integer): TColor;
 // the ring of the focused control: the accent toned down halfway to the
 // strongest neutral shade, so a focused editor does not shout
 function focusColor(const pal: TPalette): TColor;
+// how far the hover slot sits from the surface, as a share of the default
+// seed strength: 100 at the default, 0 when hovering changes nothing
+function hoverStrength(const pal: TPalette): integer;
+// `normal` moved toward `strong` by the hover strength: for the borders and
+// glyphs that answer the mouse without a fill
+function hoverShade(const pal: TPalette; normal, strong: TColor): TColor;
 
 implementation
 
@@ -69,7 +77,6 @@ begin
   result := RGBToColor((hex shr 16) and $FF, (hex shr 8) and $FF, hex and $FF);
 end;
 
-// `a` moved `percent` of the way toward `b`
 function mix(a, b: TColor; percent: integer): TColor;
 begin
   result := RGBToColor(Red(a)+(Red(b)-Red(a))*percent div 100, Green(a)+(Green(b)-Green(a))*percent div 100, Blue(a)+(Blue(b)-Blue(a))*percent div 100);
@@ -78,6 +85,26 @@ end;
 function focusColor(const pal: TPalette): TColor;
 begin
   result := mix(pal[COLOR_BTNSHADOW], pal[COLOR_HOTLIGHT], 50);
+end;
+
+function hoverStrength(const pal: TPalette): integer;
+begin
+  // the hover slot is the surface mixed toward the text; the mix is linear,
+  // so the channel distances give the percentage back
+  var face := ColorToRGB(pal[COLOR_BTNFACE]);
+  var text := ColorToRGB(pal[COLOR_BTNTEXT]);
+  var hover := ColorToRGB(pal[COLOR_HOVER]);
+  var full := Abs(Red(text)-Red(face))+Abs(Green(text)-Green(face))+Abs(Blue(text)-Blue(face));
+  if full = 0 then exit(100);
+  var part := Abs(Red(hover)-Red(face))+Abs(Green(hover)-Green(face))+Abs(Blue(hover)-Blue(face));
+  result := part*100 div full; // the seed strength
+  result := result*100 div 20;
+  if result > 100 then result := 100;
+end;
+
+function hoverShade(const pal: TPalette; normal, strong: TColor): TColor;
+begin
+  result := mix(ColorToRGB(normal), ColorToRGB(strong), hoverStrength(pal));
 end;
 
 function lightPalette: TPalette;
@@ -97,7 +124,7 @@ begin
   result[COLOR_HIGHLIGHT] := rgb($3D7BD9);
   result[COLOR_HOTLIGHT] := rgb($3D7BD9);
   result[COLOR_MENUHILIGHT] := mix(result[COLOR_MENU], result[COLOR_HOTLIGHT], 16);
-  result[COLOR_HOVER] := mix(face, text, 12);
+  result[COLOR_HOVER] := mix(face, text, 20);
   result[COLOR_GRAYTEXT] := rgb($9AA0A8);
   result[COLOR_WINDOWTEXT] := text;
   result[COLOR_MENUTEXT] := text;
@@ -128,7 +155,7 @@ begin
   result[COLOR_HIGHLIGHT] := rgb($264F78);
   result[COLOR_HOTLIGHT] := rgb($569CD6);
   result[COLOR_MENUHILIGHT] := mix(result[COLOR_MENU], result[COLOR_HOTLIGHT], 25);
-  result[COLOR_HOVER] := mix(face, text, 14);
+  result[COLOR_HOVER] := mix(face, text, 20);
   result[COLOR_GRAYTEXT] := rgb($8C8C8C);
   result[COLOR_WINDOWTEXT] := text;
   result[COLOR_MENUTEXT] := text;
@@ -158,7 +185,7 @@ begin
   result[COLOR_HIGHLIGHT] := rgb($3E5F8A);
   result[COLOR_HOTLIGHT] := rgb($5FA8C7);
   result[COLOR_MENUHILIGHT] := mix(result[COLOR_MENU], result[COLOR_HOTLIGHT], 25);
-  result[COLOR_HOVER] := mix(face, text, 15);
+  result[COLOR_HOVER] := mix(face, text, 20);
   result[COLOR_GRAYTEXT] := rgb($697386);
   result[COLOR_WINDOWTEXT] := text;
   result[COLOR_MENUTEXT] := text;
@@ -188,7 +215,7 @@ begin
   result[COLOR_HIGHLIGHT] := rgb($5E81AC);
   result[COLOR_HOTLIGHT] := rgb($4A76A8);
   result[COLOR_MENUHILIGHT] := mix(result[COLOR_MENU], result[COLOR_HOTLIGHT], 16);
-  result[COLOR_HOVER] := mix(face, text, 14);
+  result[COLOR_HOVER] := mix(face, text, 20);
   result[COLOR_GRAYTEXT] := rgb($8A93A5);
   result[COLOR_WINDOWTEXT] := text;
   result[COLOR_MENUTEXT] := text;
@@ -220,7 +247,7 @@ begin
   result[COLOR_HIGHLIGHT] := rgb($CFAA5E);
   result[COLOR_HOTLIGHT] := rgb($2E7D83);
   result[COLOR_MENUHILIGHT] := mix(result[COLOR_MENU], result[COLOR_HOTLIGHT], 16);
-  result[COLOR_HOVER] := mix(face, text, 15);
+  result[COLOR_HOVER] := mix(face, text, 20);
   result[COLOR_GRAYTEXT] := rgb($9A9282);
   result[COLOR_WINDOWTEXT] := text;
   result[COLOR_MENUTEXT] := text;
@@ -250,7 +277,7 @@ begin
   result[COLOR_HIGHLIGHT] := rgb($7C5B2C);
   result[COLOR_HOTLIGHT] := rgb($D79921);
   result[COLOR_MENUHILIGHT] := mix(result[COLOR_MENU], result[COLOR_HOTLIGHT], 25);
-  result[COLOR_HOVER] := mix(face, text, 15);
+  result[COLOR_HOVER] := mix(face, text, 20);
   result[COLOR_GRAYTEXT] := rgb($928374);
   result[COLOR_WINDOWTEXT] := text;
   result[COLOR_MENUTEXT] := text;
@@ -280,7 +307,7 @@ begin
   result[COLOR_HIGHLIGHT] := rgb($224A7A);
   result[COLOR_HOTLIGHT] := rgb($4FA3FF);
   result[COLOR_MENUHILIGHT] := mix(result[COLOR_MENU], result[COLOR_HOTLIGHT], 20);
-  result[COLOR_HOVER] := mix(face, text, 13);
+  result[COLOR_HOVER] := mix(face, text, 20);
   result[COLOR_GRAYTEXT] := rgb($7A7A7A);
   result[COLOR_WINDOWTEXT] := text;
   result[COLOR_MENUTEXT] := text;
@@ -310,7 +337,7 @@ begin
   result[COLOR_HIGHLIGHT] := rgb($5B4B94);
   result[COLOR_HOTLIGHT] := rgb($C4A7E7);
   result[COLOR_MENUHILIGHT] := mix(result[COLOR_MENU], result[COLOR_HOTLIGHT], 20);
-  result[COLOR_HOVER] := mix(face, text, 14);
+  result[COLOR_HOVER] := mix(face, text, 20);
   result[COLOR_GRAYTEXT] := rgb($7F7A99);
   result[COLOR_WINDOWTEXT] := text;
   result[COLOR_MENUTEXT] := text;

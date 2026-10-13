@@ -67,6 +67,9 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
       <Item>
         <PackageName Value="UnleashedThemes"/>
       </Item>
+      <Item>
+        <PackageName Value="UnleashedThemeEngine"/>
+      </Item>
     </RequiredPkgs>
     <UsageOptions>
       <UnitPath Value="$(PkgOutDir)"/>

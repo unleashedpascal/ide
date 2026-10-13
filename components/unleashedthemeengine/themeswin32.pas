@@ -27,10 +27,14 @@ procedure dropPalette;
 procedure redrawAll;
 
 var
-  // the hover and active feedback; the IDE chooses in its menu
+  // the hover and active feedback; both on for an application, the IDE
+  // chooses in its menu
   effects: TThemeEffects = (Hover: true; Active: true);
   // fired on the UI thread when the desktop switches between light and dark apps
   onSystemThemeChange: procedure = nil;
+  // a tab whose caption starts with an asterisk shows a strip in COLOR_MARK
+  // instead of it; the IDE marks its unsaved editor pages this way
+  tabMarks: boolean = false;
 
 const
   TAB_BAND = 4; // pixels kept free on the tab side of a tab control
@@ -119,6 +123,7 @@ var
   origGetSysColor: function(index: longint): DWORD; stdcall = nil;
   origGetSysColorBrush: function(index: longint): HBRUSH; stdcall = nil;
   origDrawEdge: function(dc: HDC; var rect: TRect; edge, flags: UINT): BOOL; stdcall = nil;
+  origDrawFocusRect: function(dc: HDC; var rect: TRect): BOOL; stdcall = nil;
   origDeleteObject: function(obj: HGDIOBJ): BOOL; stdcall = nil;
   origCreateWindowExW: function(exStyle: DWORD; cls, title: LPCWSTR; style: DWORD; x, y, w, h: longint; parent: HWND; menu: HMENU; inst: HINST; param: LPVOID): HWND; stdcall = nil;
   origSetScrollInfo: function(wnd: HWND; bar: longint; const info: SCROLLINFO; redraw: BOOL): longint; stdcall = nil;
@@ -340,10 +345,10 @@ begin
   if pressed and (hot = 1) then fillRect(dc, first, pal[COLOR_BTNSHADOW]);
   if pressed and (hot = 5) then fillRect(dc, second, pal[COLOR_BTNSHADOW]);
   var arrow := pal[COLOR_GRAYTEXT];
-  if (info.rgstate[1] and STATE_SYSTEM_UNAVAILABLE) <> 0 then arrow := pal[COLOR_3DLIGHT] else if hot = 1 then arrow := pal[COLOR_BTNTEXT];
+  if (info.rgstate[1] and STATE_SYSTEM_UNAVAILABLE) <> 0 then arrow := pal[COLOR_3DLIGHT] else if hot = 1 then arrow := hoverShade(pal, pal[COLOR_GRAYTEXT], pal[COLOR_BTNTEXT]);
   drawArrow(dc, first, firstDir, arrow);
   arrow := pal[COLOR_GRAYTEXT];
-  if (info.rgstate[5] and STATE_SYSTEM_UNAVAILABLE) <> 0 then arrow := pal[COLOR_3DLIGHT] else if hot = 5 then arrow := pal[COLOR_BTNTEXT];
+  if (info.rgstate[5] and STATE_SYSTEM_UNAVAILABLE) <> 0 then arrow := pal[COLOR_3DLIGHT] else if hot = 5 then arrow := hoverShade(pal, pal[COLOR_GRAYTEXT], pal[COLOR_BTNTEXT]);
   drawArrow(dc, second, secondDir, arrow);
   // the thumb offsets count from the start of the bar
   if ((info.rgstate[3] and (STATE_SYSTEM_UNAVAILABLE or STATE_SYSTEM_INVISIBLE)) <> 0) or (info.xyThumbBottom <= info.xyThumbTop) then exit;
@@ -360,7 +365,7 @@ begin
   // the thumb brightens under the mouse and takes the accent while dragged
   var color := pal[COLOR_BTNHIGHLIGHT];
   if ((info.rgstate[3] and STATE_SYSTEM_PRESSED) <> 0) or (pressed and (hot = 3)) then color := pal[COLOR_HOTLIGHT]
-  else if hot = 3 then color := pal[COLOR_GRAYTEXT];
+  else if hot = 3 then color := hoverShade(pal, pal[COLOR_BTNHIGHLIGHT], pal[COLOR_GRAYTEXT]);
   SelectObject(dc, GetStockObject(DC_PEN));
   SelectObject(dc, GetStockObject(DC_BRUSH));
   SetDCPenColor(dc, color);
@@ -701,14 +706,24 @@ begin
       if selected then fill := pal[COLOR_BTNFACE] else if effects.Hover and (state = TIS_HOT) then fill := pal[COLOR_HOVER];
       fillRect(dc, r, fill);
       var border := pal[COLOR_3DLIGHT];
+      var wnd: HWND;
+      var item: TRect;
+      var index := tabItemAt(dc, r, wnd, item);
+      // the selected tab runs two pixels into the pane; its sides stop at the row,
+      // or the page painting over them later leaves specks behind
+      var sideTop := r.Top;
+      var sideBottom := r.Bottom;
+      if selected then if part >= TABP_TOPTABITEM then sideBottom -= 2 else sideTop += 2;
       drawLine(dc, r.Left, r.Top, r.Right, r.Top, border);
-      drawLine(dc, r.Left, r.Top, r.Left, r.Bottom, border);
-      drawLine(dc, r.Right-1, r.Top, r.Right-1, r.Bottom, border);
+      // the tabs share one line between them: each carries its right edge, the
+      // first one the left edge too, and the selected one covers its neighbor
+      if (index <= 0) or selected then drawLine(dc, r.Left, sideTop, r.Left, sideBottom, border);
+      drawLine(dc, r.Right-1, sideTop, r.Right-1, sideBottom, border);
       // the selected top tab stays open toward the pane below it
       if not selected or (part < TABP_TOPTABITEM) then drawLine(dc, r.Left, r.Bottom-1, r.Right, r.Bottom-1, border);
       // a strip along the outer edge: the accent on the selected page, the mark on an unsaved one
       var strip := clNone;
-      if tabMarked(dc, r) then strip := pal[COLOR_MARK] else if selected then strip := pal[COLOR_HOTLIGHT];
+      if tabMarks and tabMarked(dc, r) then strip := pal[COLOR_MARK] else if selected then strip := pal[COLOR_HOTLIGHT];
       if strip = clNone then exit;
       if part >= TABP_TOPTABITEM then fillRect(dc, Rect(r.Left, r.Top, r.Right, r.Top+2), strip)
       else fillRect(dc, Rect(r.Left, r.Bottom-2, r.Right, r.Bottom), strip);
@@ -727,7 +742,7 @@ begin
   border := pal[COLOR_BTNHIGHLIGHT];
   glyph := pal[COLOR_BTNTEXT];
   match slot of
-    1: if effects.Hover then border := pal[COLOR_BTNSHADOW];
+    1: if effects.Hover then border := hoverShade(pal, pal[COLOR_BTNHIGHLIGHT], pal[COLOR_BTNSHADOW]);
     2: begin
       fill := pal[COLOR_3DLIGHT];
       border := pal[COLOR_WINDOWFRAME];
@@ -780,8 +795,9 @@ begin
   var border := pal[COLOR_BTNHIGHLIGHT];
   match state of
     PBS_HOT: if effects.Hover then begin
-      fill := pal[COLOR_BTNHIGHLIGHT];
-      border := pal[COLOR_BTNSHADOW];
+      // the hover slot, so the strength of the seed shows on buttons too
+      fill := pal[COLOR_HOVER];
+      border := hoverShade(pal, pal[COLOR_BTNHIGHLIGHT], pal[COLOR_BTNSHADOW]);
     end;
     PBS_PRESSED: begin
       fill := pal[COLOR_BTNSHADOW];
@@ -814,7 +830,7 @@ begin
       var fill := pal[COLOR_WINDOW];
       var frame := pal[COLOR_3DLIGHT];
       match state of
-        CBB_HOT: if effects.Hover then frame := pal[COLOR_BTNSHADOW];
+        CBB_HOT: if effects.Hover then frame := hoverShade(pal, pal[COLOR_3DLIGHT], pal[COLOR_BTNSHADOW]);
         CBB_FOCUSED: if effects.Active then frame := focusColor(pal);
         CBB_DISABLED: fill := pal[COLOR_BTNFACE];
       end;
@@ -834,7 +850,7 @@ begin
       match state of
         CBXS_HOT: if effects.Hover then begin
           fill := pal[COLOR_HOVER];
-          glyph := pal[COLOR_BTNTEXT];
+          glyph := hoverShade(pal, pal[COLOR_GRAYTEXT], pal[COLOR_BTNTEXT]);
         end;
         CBXS_PRESSED: begin
           fill := pal[COLOR_BTNSHADOW];
@@ -927,7 +943,7 @@ begin
   if not result then exit;
   var frame := pal[COLOR_3DLIGHT];
   if effects.Active and ((state = EPSN_FOCUSED) or ((state <> EPSN_DISABLED) and paintedFocused(dc))) then frame := focusColor(pal)
-  else if effects.Hover and (state = EPSN_HOT) then frame := pal[COLOR_BTNSHADOW];
+  else if effects.Hover and (state = EPSN_HOT) then frame := hoverShade(pal, pal[COLOR_3DLIGHT], pal[COLOR_BTNSHADOW]);
   frameRect(dc, r, frame);
   var inner := r;
   InflateRect(inner, -1, -1);
@@ -975,7 +991,7 @@ begin
       var ring := color;
       match state of
         TUS_HOT: if effects.Hover then begin
-          color := pal[COLOR_GRAYTEXT];
+          color := hoverShade(pal, pal[COLOR_BTNHIGHLIGHT], pal[COLOR_GRAYTEXT]);
           ring := color;
         end;
         TUS_PRESSED: begin
@@ -1126,7 +1142,7 @@ end;
 // the asterisk of an unsaved page is a strip on the tab already
 procedure skipTabMark(kind: TThemeClass; var text: LPCWSTR; var count: integer);
 begin
-  if (kind <> tcTab) or (count = 0) or (text^ <> '*') then exit;
+  if not tabMarks or (kind <> tcTab) or (count = 0) or (text^ <> '*') then exit;
   inc(text);
   if count > 0 then dec(count);
 end;
@@ -1217,6 +1233,18 @@ begin
   var wnd := WindowFromDC(dc);
   if active and ((wnd = 0) or isTagged(wnd)) then exit(drawEdgeDark(dc, rect, edge, flags));
   result := origDrawEdge(dc, rect, edge, flags);
+end;
+
+// the dotted inversion of the stock focus rectangle reads as a stray frame
+// on a dark surface; the native controls get the ring of the focus instead,
+// or nothing while the active effects are off
+function hookDrawFocusRect(dc: HDC; var rect: TRect): BOOL; stdcall;
+begin
+  if not active then exit(origDrawFocusRect(dc, rect));
+  // the buttons and the other parts already show the focus on their own
+  // frame; only the track bar has nothing else to show it with
+  if effects.Active and (classNameOf(WindowFromDC(dc)) = 'msctls_trackbar32') then frameRect(dc, rect, focusColor(pal));
+  result := true;
 end;
 
 function hookDeleteObject(obj: HGDIOBJ): BOOL; stdcall;
@@ -2118,8 +2146,9 @@ begin
     // transparent and paints no background of its own
     if (control <> nil) and not (control.HandleAllocated and (control.Handle = wnd)) then control := nil;
     if (control <> nil) and control.BrushCreated then dropPaletteBrush(control.Brush);
-    // a panel fills its background from its canvas
-    if control is TCustomControl then dropPaletteBrush(TCustomControl(control).Canvas.Brush);
+    // a panel fills its background from its canvas; a control being destroyed
+    // has freed it before its window goes down
+    if (control is TCustomControl) and (TCustomControl(control).Canvas <> nil) then dropPaletteBrush(TCustomControl(control).Canvas.Brush);
     // the background is filled here in the stock colors, whatever brush the
     // LCL holds for the control; a tab page keeps the erase command the LCL
     // queued for it, so it stays with the LCL
@@ -2349,6 +2378,7 @@ begin
   pointer(origGetSysColor) := GetProcAddress(user32, 'GetSysColor');
   pointer(origGetSysColorBrush) := GetProcAddress(user32, 'GetSysColorBrush');
   pointer(origDrawEdge) := GetProcAddress(user32, 'DrawEdge');
+  pointer(origDrawFocusRect) := GetProcAddress(user32, 'DrawFocusRect');
   pointer(origCreateWindowExW) := GetProcAddress(user32, 'CreateWindowExW');
   pointer(origDeleteObject) := GetProcAddress(gdi32, 'DeleteObject');
   pointer(origSetScrollInfo) := GetProcAddress(user32, 'SetScrollInfo');
@@ -2367,6 +2397,7 @@ begin
   patchImport(exe, 'user32.dll', origCreateWindowExW, @hookCreateWindowExW);
   patchImport(exe, 'gdi32.dll', origDeleteObject, @hookDeleteObject);
   patchImport(comctl, 'user32.dll', origDrawEdge, @hookDrawEdge);
+  patchImport(comctl, 'user32.dll', origDrawFocusRect, @hookDrawFocusRect);
   patchImport(comctl, 'gdi32.dll', origDeleteObject, @hookDeleteObject);
 
   pointer(origOpenThemeData) := GetProcAddress(ux, 'OpenThemeData');

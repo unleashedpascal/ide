@@ -28,7 +28,8 @@ procedure dropPalette;
 procedure redrawAll;
 
 var
-  // the hover and active feedback; the IDE chooses in its menu
+  // the hover and active feedback; both on for an application, the IDE
+  // chooses in its menu
   effects: TThemeEffects = (Hover: true; Active: true);
   // fired on the UI thread after the desktop switched its gtk theme and the
   // palette went back on top of the reloaded styles
@@ -153,6 +154,8 @@ begin
     s('entry, spinbutton')+' { border-color: '+shadow+'; box-shadow: none; }'+
     (if effects.Hover then s('entry:hover, spinbutton:hover')+' { border-color: '+hex(pal[COLOR_WINDOWFRAME])+'; }' else hoverRule)+
     (if effects.Active then s('entry:focus, spinbutton:focus')+' { border-color: '+focus+'; }' else focusRule)+
+    // an edit without a frame of its own sits inside another control
+    s('entry.flat, entry.flat:hover, entry.flat:focus')+' { border-color: transparent; box-shadow: none; }'+
     s('treeview header button, treeview.view header button')+
     ' { background-color: '+face+'; color: '+fore+'; border-color: '+shadow+'; background-image: none; }'+
     // buttons and tabs
@@ -166,6 +169,11 @@ begin
     (if effects.Active then s('button:focus, button.default')+' { border-color: '+focus+'; outline-color: '+focus+'; outline-offset: -3px; }' else focusRule)+
     s('button:checked, toolbar button:checked')+' { border-color: '+highlight+'; }'+
     s('notebook > header tab:checked')+' { background-color: '+base+'; color: '+baseText+'; }'+
+    // the tabs are cards on a line, the current one taller with the accent
+    // along its top, as the page control looks on win32
+    s('notebook > header tab')+' { border-style: solid; border-width: 1px 1px 0 1px; border-color: '+shadow+'; border-radius: 0; margin: 3px 0 0 0; outline-width: 0; }'+
+    s('notebook > header.top > tabs > tab:checked, notebook > header tab:checked')+' { margin-top: 0; border-top: 2px solid '+highlight+'; box-shadow: inset 0 2px 0 0 '+highlight+'; }'+
+    s('notebook > header')+' { border-bottom: 1px solid '+shadow+'; }'+
     s('check, radio')+' { background-color: '+base+'; color: '+baseText+'; border-color: '+shadow+'; '+
     '  background-image: none; box-shadow: none; -gtk-icon-shadow: none; }'+
     (if effects.Hover then s('check:hover, radio:hover')+' { border-color: '+hex(pal[COLOR_WINDOWFRAME])+'; }' else hoverRule)+
