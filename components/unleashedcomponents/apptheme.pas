@@ -251,7 +251,7 @@ function presetPalette(preset: TThemePreset): TPalette;
 implementation
 
 uses
-  LCLType, LCLIntf, Themes, ThemesEngine;
+  LCLType, LCLIntf, ThemesEngine;
 
 var
   theInstance: TAppTheme = nil;
@@ -592,7 +592,7 @@ end;
 function TAppTheme.resolved: TThemePreset;
 begin
   result := FPreset;
-  if result = tpSystem then result := if ThemeServices.IsDarkTheme then tpDark else tpLight;
+  if result = tpSystem then result := if systemDark then tpDark else tpLight;
 end;
 
 function TAppTheme.Palette: TPalette;

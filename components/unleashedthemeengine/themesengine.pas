@@ -33,6 +33,8 @@ function themeSupported: boolean;
 // the hover and active feedback; a change shows at once
 procedure setThemeEffects(const value: TThemeEffects);
 function themeEffects: TThemeEffects;
+// the desktop asks applications for the dark look
+function systemDark: boolean;
 
 var
   // fired on the UI thread, outside any window message, when the desktop
@@ -42,7 +44,7 @@ var
 implementation
 
 uses
-  Classes, Forms{$ifdef LCLWin32}, ThemesWin32{$endif}{$ifdef LCLGtk3}, ThemesGtk3{$endif};
+  Classes, Forms, Themes{$ifdef LCLWin32}, Windows, Registry, ThemesWin32{$endif}{$ifdef LCLGtk3}, ThemesGtk3{$endif};
 
 type
 
@@ -101,6 +103,24 @@ end;
 function themeEffects: TThemeEffects;
 begin
   result := {$if defined(LCLWin32) or defined(LCLGtk3)}effects{$else}DefaultEffects{$endif};
+end;
+
+function systemDark: boolean;
+begin
+  {$ifdef LCLWin32}
+  // ThemeServices trusts the reported Windows version, which stays 6.2 when
+  // the manifest does not name Windows 10; the value exists from Windows 10 on
+  var reg := TRegistry.Create(KEY_READ);
+  try
+    reg.RootKey := HKEY_CURRENT_USER;
+    result := reg.OpenKeyReadOnly('Software\Microsoft\Windows\CurrentVersion\Themes\Personalize')
+      and reg.ValueExists('AppsUseLightTheme') and (reg.ReadInteger('AppsUseLightTheme') = 0);
+  finally
+    reg.Free;
+  end;
+  {$else}
+  result := ThemeServices.IsDarkTheme;
+  {$endif}
 end;
 
 procedure TSystemGlue.changed(data: PtrInt);

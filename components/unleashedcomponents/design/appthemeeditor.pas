@@ -86,7 +86,7 @@ procedure paintMockup(canvas: TCanvas; const r: TRect; const pal: TPalette);
 implementation
 
 uses
-  Math, LCLType, LCLIntf, Themes, ThemesIcons;
+  Math, LCLType, LCLIntf, ThemesEngine, ThemesIcons;
 
 resourcestring
   VERB_EDIT = 'Edit Theme...';
@@ -484,7 +484,7 @@ begin
       result[COLOR_MARK] := result[COLOR_HIGHLIGHT];
       result[COLOR_HOVER] := result[COLOR_3DLIGHT];
     end;
-    tpSystem: result := if ThemeServices.IsDarkTheme then darkPalette else lightPalette;
+    tpSystem: result := if systemDark then darkPalette else lightPalette;
     tpCustom: result := buildPalette(FSeed);
     _: result := presetPalette(FPreset);
   end;
