@@ -494,6 +494,10 @@ begin
   if (fMainBar = nil) or (Form = fMainBar) then exit;
   if [csDesigning, csDesignInstance] * Form.ComponentState <> [] then exit;
   if Form.PopupMode <> pmNone then exit;
+  // a form whose window exists already would be recreated here, in the middle
+  // of its constructor: the completion window of SynEdit gets its handle that
+  // early when the desktop dpi scales its font
+  if Form.HandleAllocated then exit;
   Form.PopupParent := fMainBar;
 end;
 
