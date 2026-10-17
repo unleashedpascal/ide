@@ -474,7 +474,8 @@ end;
 
 function paintMessage(msg: UINT): boolean;
 begin
-  result := msg in [WM_PAINT, WM_PRINTCLIENT, WM_ERASEBKGND, WM_NCPAINT];
+  // no set: WM_PRINTCLIENT is above 255, which a range checked build rejects
+  result := (msg = WM_PAINT) or (msg = WM_PRINTCLIENT) or (msg = WM_ERASEBKGND) or (msg = WM_NCPAINT);
 end;
 
 // a sent paint message is seen by the thread hook, a dispatched one only by
