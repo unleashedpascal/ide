@@ -1341,6 +1341,9 @@ begin
       Include(FStates,pgsBuildPropertyListNeeded);
     end;
   end;
+  // the handlers go down with the hook, nothing left to unregister
+  if (Operation=opRemove) and (AComponent=FPropertyEditorHook) then
+    FPropertyEditorHook:=nil;
   inherited Notification(AComponent, Operation);
 end;
 
@@ -1440,11 +1443,16 @@ procedure TOICustomPropertyGrid.SetPropertyEditorHook(
   NewPropertyEditorHook:TPropertyEditorHook);
 begin
   if FPropertyEditorHook=NewPropertyEditorHook then exit;
-  if FPropertyEditorHook<>nil then
+  if FPropertyEditorHook<>nil then begin
     FPropertyEditorHook.RemoveHandlerGetCheckboxForBoolean(@HookGetCheckboxForBoolean);
+    FPropertyEditorHook.RemoveFreeNotification(Self);
+  end;
   FPropertyEditorHook:=NewPropertyEditorHook;
-  if FPropertyEditorHook<>nil then
+  if FPropertyEditorHook<>nil then begin
     FPropertyEditorHook.AddHandlerGetCheckboxForBoolean(@HookGetCheckboxForBoolean);
+    // the owner of the hook may free it before the grid
+    FPropertyEditorHook.FreeNotification(Self);
+  end;
   IncreaseChangeStep;
   SetSelection(FSelection);
 end;
