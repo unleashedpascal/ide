@@ -1785,7 +1785,11 @@ var
   p: TEditorGeneralOptionsFrame;
   i: Integer;
 begin
-  p := GeneralPage;
+  // destroyed before Setup, when the dialog went down on an exception
+  if FDialog = nil then
+    p := nil
+  else
+    p := GeneralPage;
   if p <> nil then
     for i := Low(p.PreviewEdits) to High(p.PreviewEdits) do
       if p.PreviewEdits[i] <> nil then
