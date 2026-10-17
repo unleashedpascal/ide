@@ -319,9 +319,8 @@ var
     unitsPerPixel: double;
   end;
 
-procedure drawScrollBar(dc: HDC; const info: TScrollBarInfo; const origin: TPoint; vertical: boolean; hot: integer; pressed: boolean);
+procedure drawScrollBarInto(dc: HDC; const info: TScrollBarInfo; const origin: TPoint; vertical: boolean; hot: integer; pressed: boolean);
 begin
-  if (info.rgstate[0] and (STATE_SYSTEM_INVISIBLE or STATE_SYSTEM_OFFSCREEN)) <> 0 then exit;
   var r := info.rcScrollBar;
   OffsetRect(r, -origin.X, -origin.Y);
   fillRect(dc, r, pal[COLOR_SCROLLBAR]);
@@ -371,6 +370,22 @@ begin
   SetDCPenColor(dc, color);
   SetDCBrushColor(dc, color);
   Windows.RoundRect(dc, thumb.Left, thumb.Top, thumb.Right, thumb.Bottom, 4, 4);
+end;
+
+// the bar is painted off screen and put up in one blit: the compositor would
+// show the track alone between the fill and the thumb otherwise
+procedure drawScrollBar(dc: HDC; const info: TScrollBarInfo; const origin: TPoint; vertical: boolean; hot: integer; pressed: boolean);
+begin
+  if (info.rgstate[0] and (STATE_SYSTEM_INVISIBLE or STATE_SYSTEM_OFFSCREEN)) <> 0 then exit;
+  var r := info.rcScrollBar;
+  var mem := CreateCompatibleDC(dc);
+  var bmp := CreateCompatibleBitmap(dc, r.Width, r.Height);
+  var old := SelectObject(mem, bmp);
+  drawScrollBarInto(mem, info, r.TopLeft, vertical, hot, pressed);
+  BitBlt(dc, r.Left-origin.X, r.Top-origin.Y, r.Width, r.Height, mem, 0, 0, SRCCOPY);
+  SelectObject(mem, old);
+  DeleteObject(bmp);
+  DeleteDC(mem);
 end;
 
 function hotPartOf(wnd: HWND; bar: integer): integer;
@@ -1349,22 +1364,32 @@ begin
   if active and isTagged(wnd) then paintScrollBars(wnd);
 end;
 
+// a bar of the engine is painted here after the change, so the native redraw
+// inside the call stays off: it would show the stock bar for a moment
+function ownRedraw(wnd: HWND; redraw: BOOL): boolean;
+begin
+  result := redraw and active and isTagged(wnd);
+end;
+
 function hookSetScrollInfo(wnd: HWND; bar: longint; const info: SCROLLINFO; redraw: BOOL): longint; stdcall;
 begin
-  result := origSetScrollInfo(wnd, bar, info, redraw);
-  if redraw then afterScrollChange(wnd);
+  var own := ownRedraw(wnd, redraw);
+  result := origSetScrollInfo(wnd, bar, info, redraw and not own);
+  if own then paintScrollBars(wnd);
 end;
 
 function hookSetScrollPos(wnd: HWND; bar, pos: longint; redraw: BOOL): longint; stdcall;
 begin
-  result := origSetScrollPos(wnd, bar, pos, redraw);
-  if redraw then afterScrollChange(wnd);
+  var own := ownRedraw(wnd, redraw);
+  result := origSetScrollPos(wnd, bar, pos, redraw and not own);
+  if own then paintScrollBars(wnd);
 end;
 
 function hookSetScrollRange(wnd: HWND; bar, minPos, maxPos: longint; redraw: BOOL): BOOL; stdcall;
 begin
-  result := origSetScrollRange(wnd, bar, minPos, maxPos, redraw);
-  if redraw then afterScrollChange(wnd);
+  var own := ownRedraw(wnd, redraw);
+  result := origSetScrollRange(wnd, bar, minPos, maxPos, redraw and not own);
+  if own then paintScrollBars(wnd);
 end;
 
 function hookShowScrollBar(wnd: HWND; bar: longint; show: BOOL): BOOL; stdcall;
