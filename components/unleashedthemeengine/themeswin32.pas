@@ -2160,6 +2160,13 @@ begin
   result := origGetSysColor(index);
 end;
 
+// the test the LCL makes before it paints a window through a buffer
+function bufferedPaint(control: TWinControl): boolean;
+begin
+  result := ((csDesigning in control.ComponentState) and (GetSystemMetrics(SM_REMOTESESSION) = 0))
+    or TWSWinControlClass(control.WidgetSetClass).GetDoubleBuffered(control);
+end;
+
 function foreignProc(wnd: HWND; msg: UINT; wParam: WPARAM; lParam: LPARAM; id: UINT_PTR; data: DWORD_PTR): LRESULT; stdcall;
 begin
   var painting := paintMessage(msg);
@@ -2179,6 +2186,8 @@ begin
     // LCL holds for the control; a tab page keeps the erase command the LCL
     // queued for it, so it stays with the LCL
     if (msg = WM_ERASEBKGND) and (control <> nil) and not info^.isTabPage then begin
+      // a buffered paint asks again with the buffer; this one would blank the screen
+      if (WindowFromDC(HDC(wParam)) = wnd) and bufferedPaint(control) then exit(1);
       var r: TRect;
       GetClipBox(HDC(wParam), @r);
       fillRect(HDC(wParam), r, stockBackgroundOf(control));
