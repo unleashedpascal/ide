@@ -70,6 +70,9 @@ type
     destructor Destroy; override;
     procedure BeginUpdate; override;
     procedure EndUpdate(AModified: Boolean = False); override;
+    // like BeginUpdate, but the form keeps its design state
+    procedure BeginSizeUpdate;
+    procedure EndSizeUpdate;
     function  IsAnchorDesign: Boolean;
     function  MainMenuFaked: Boolean;
     function  MainMenuHeight: Integer;
@@ -212,6 +215,20 @@ begin
   inherited EndUpdate(AModified);
   if AModified and Assigned(CurrentObjectInspector) then
     CurrentObjectInspector.RefreshPropertyValues;
+end;
+
+procedure TDesignFormIDE.BeginSizeUpdate;
+begin
+  if Assigned(FAnchorDesigner) then
+    FAnchorDesigner.BeginUpdate;
+  inherited BeginUpdate;
+end;
+
+procedure TDesignFormIDE.EndSizeUpdate;
+begin
+  if Assigned(FAnchorDesigner) then
+    FAnchorDesigner.EndUpdate;
+  inherited EndUpdate(False);
 end;
 
 function TDesignFormIDE.IsAnchorDesign: Boolean;

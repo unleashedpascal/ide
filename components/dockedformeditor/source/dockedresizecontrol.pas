@@ -22,6 +22,8 @@ uses
   // LCL
   Forms, ExtCtrls, StdCtrls, Controls, ComCtrls, LCLType, Menus, Graphics, LCLIntf,
   LMessages, LCLProc, Buttons,
+  // IDEIntf
+  ComponentEditors,
   // DockedFormEditor
   DockedOptionsIDE, DockedDesignForm, DockedGrip;
 
@@ -138,7 +140,7 @@ end;
 
 procedure TResizeControl.BeginFormSizeUpdate(Sender: TObject);
 begin
-  FDesignForm.BeginUpdate;
+  FDesignForm.BeginSizeUpdate;
 end;
 
 procedure TResizeControl.CreateBarBitmaps;
@@ -177,7 +179,7 @@ end;
 
 procedure TResizeControl.EndFormSizeUpdate(Sender: TObject);
 begin
-  FDesignForm.EndUpdate;
+  FDesignForm.EndSizeUpdate;
 end;
 
 procedure TResizeControl.FakeExitEnter(Sender: TObject);
@@ -312,14 +314,30 @@ begin
   if not FResizing then Exit;
   if not (Sender is TPanel) then Exit;
   SizeOffset := CurrentSizingOffset(Sender);
-  FResizeContainer.SetBounds(FOldBounds.Left, FOldBounds.Top, FOldBounds.Width + SizeOffset.X, FOldBounds.Height + SizeOffset.Y);
+  // one layout pass for the grips, the bars and the form together
+  DisableAutoSizing{$IFDEF DebugDisableAutoSizing}('TResizeControl.SizerMouseMove'){$ENDIF};
+  try
+    FResizeContainer.SetBounds(FOldBounds.Left, FOldBounds.Top, FOldBounds.Width + SizeOffset.X, FOldBounds.Height + SizeOffset.Y);
 
-  if DockedOptions.ForceRefreshing then
-  begin
-    ClientChangeBounds(nil);
-    if Assigned(OnResized) and FormClient.Visible then
-      OnResized(Sender);
+    if DockedOptions.ForceRefreshing then
+    begin
+      ClientChangeBounds(nil);
+      if Assigned(OnResized) and FormClient.Visible then
+      begin
+        OnResized(Sender);
+        // the timer that would resize the container waits behind the mouse
+        AdjustFormContainer;
+      end;
+    end;
+  finally
+    EnableAutoSizing{$IFDEF DebugDisableAutoSizing}('TResizeControl.SizerMouseMove'){$ENDIF};
   end;
+  // a queued paint never gets its turn while the mouse keeps moving
+  if HandleAllocated then
+    RedrawWindow(Handle, nil, 0, RDW_UPDATENOW or RDW_ALLCHILDREN);
+  // the paint wiped the overlay with the grabbers and the icons
+  if FDesignForm.Designer is TComponentEditorDesigner then
+    TComponentEditorDesigner(FDesignForm.Designer).DrawDesignerItems(False);
 end;
 
 procedure TResizeControl.SizerMouseUp(Sender: TObject; Button: TMouseButton;

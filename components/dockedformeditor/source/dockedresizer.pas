@@ -76,8 +76,9 @@ implementation
 
 procedure TResizer.FormResized(Sender: TObject);
 begin
-  DesignForm.Form.Width  := ResizeControl.NewFormSize.X;
-  DesignForm.Form.Height := ResizeControl.NewFormSize.Y;
+  // a form in design state refuses a negative size
+  DesignForm.Form.Width  := Max(0, ResizeControl.NewFormSize.X);
+  DesignForm.Form.Height := Max(0, ResizeControl.NewFormSize.Y);
   SetTimer(DesignForm.Form.Handle, WM_BOUNDTODESIGNTABSHEET, 10, nil);
 end;
 
