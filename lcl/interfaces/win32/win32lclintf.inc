@@ -568,22 +568,65 @@ begin
 end;
 
 procedure TWin32WidgetSet.DrawGrid(DC: HDC; const R: TRect; DX, DY: Integer);
+const
+  ROP_DPA = $00A000C9; // D and P
+  ROP_DPO = $00FA0089; // D or P
 var
   x, y: integer;
   ALogPen: TLogPen;
+  Tile: TRect;
+  Org, OldOrg: TPoint;
+  MemDC: HDC;
+  MaskTile, DotTile, OldTile: HBITMAP;
+  MaskBrush, DotBrush: HBRUSH;
+  OldBrush: HGDIOBJ;
 begin
   GetObject(GetCurrentObject(DC, OBJ_PEN), SizeOf(ALogPen), @ALogPen);
-  x := R.Left;
-  while x <= R.Right do
+  if (DX <= 0) or (DY <= 0) or ((GetLayout(DC) and LAYOUT_RTL) <> 0) then
   begin
-    y := R.Top;
-    while y <= R.Bottom do
+    // a mirrored device tiles a pattern from the other side
+    x := R.Left;
+    while x <= R.Right do
     begin
-      DCSetPixel(DC, X, Y, ALogPen.lopnColor);
-      Inc(y, DY);
+      y := R.Top;
+      while y <= R.Bottom do
+      begin
+        DCSetPixel(DC, X, Y, ALogPen.lopnColor);
+        Inc(y, DY);
+      end;
+      Inc(x, DX);
     end;
-    Inc(x, DX);
+    exit;
   end;
+  // one pixel per tile: the first blit clears it, the second lights it
+  Tile := Rect(0, 0, DX, DY);
+  MemDC := Windows.CreateCompatibleDC(DC);
+  MaskTile := Windows.CreateCompatibleBitmap(DC, DX, DY);
+  DotTile := Windows.CreateCompatibleBitmap(DC, DX, DY);
+  OldTile := Windows.SelectObject(MemDC, MaskTile);
+  Windows.FillRect(MemDC, Tile, Windows.GetStockObject(WHITE_BRUSH));
+  Windows.SetPixel(MemDC, 0, 0, 0);
+  Windows.SelectObject(MemDC, DotTile);
+  Windows.FillRect(MemDC, Tile, Windows.GetStockObject(BLACK_BRUSH));
+  Windows.SetPixel(MemDC, 0, 0, ALogPen.lopnColor);
+  Windows.SelectObject(MemDC, OldTile);
+  Windows.DeleteDC(MemDC);
+  MaskBrush := Windows.CreatePatternBrush(MaskTile);
+  DotBrush := Windows.CreatePatternBrush(DotTile);
+  // align the tiles to the first dot
+  Org := R.TopLeft;
+  Windows.LPtoDP(DC, Org, 1);
+  Windows.SetBrushOrgEx(DC, ((Org.X mod DX) + DX) mod DX, ((Org.Y mod DY) + DY) mod DY, @OldOrg);
+  OldBrush := Windows.SelectObject(DC, MaskBrush);
+  Windows.PatBlt(DC, R.Left, R.Top, R.Right - R.Left + 1, R.Bottom - R.Top + 1, ROP_DPA);
+  Windows.SelectObject(DC, DotBrush);
+  Windows.PatBlt(DC, R.Left, R.Top, R.Right - R.Left + 1, R.Bottom - R.Top + 1, ROP_DPO);
+  Windows.SelectObject(DC, OldBrush);
+  Windows.SetBrushOrgEx(DC, OldOrg.X, OldOrg.Y, nil);
+  Windows.DeleteObject(MaskBrush);
+  Windows.DeleteObject(DotBrush);
+  Windows.DeleteObject(MaskTile);
+  Windows.DeleteObject(DotTile);
 end;
 
 {------------------------------------------------------------------------------

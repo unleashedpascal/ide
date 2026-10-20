@@ -195,6 +195,7 @@ var
   GetMenuBarInfo: function(hwnd: HWND; idObject: LONG; idItem: LONG; pmbi: PMENUBARINFO): BOOL; stdcall;
   GetWindowInfo: function(hwnd: HWND; pwi: PWINDOWINFO): BOOL; stdcall;
   SetLayout: function(dc: HDC; l: DWord): DWord; stdcall;
+  GetLayout: function(dc: HDC): DWord; stdcall;
   SetLayeredWindowAttributes: function (HWND: hwnd; crKey: COLORREF; bAlpha: byte; dwFlags: DWORD): BOOL; stdcall;
   UpdateLayeredWindow: function(hWnd: HWND; hdcDst: HDC; pptDst: PPoint; psize: PSize;
       hdcSrc: HDC; pptSrc: PPoint; crKey: COLORREF; pblend: PBlendFunction; dwFlags: DWORD): BOOL; stdcall;
@@ -684,6 +685,11 @@ begin
   Result := GDI_ERROR;
 end;
 
+function _GetLayout(dc: HDC): DWord; stdcall;
+begin
+  Result := GDI_ERROR;
+end;
+
 function _SetLayeredWindowAttributes(HWND: hwnd; crKey: COLORREF; bAlpha: byte; dwFlags: DWORD): BOOL; stdcall;
 begin
   Result := False;
@@ -832,13 +838,17 @@ begin
 
   // Defaults
   Pointer(SetLayout) := @_SetLayout;
-  
+  Pointer(GetLayout) := @_GetLayout;
+
   gdi32handle := LoadLibrary(gdi32lib);
   if gdi32handle <> 0 then
   begin
     p := GetProcAddress(gdi32handle, 'SetLayout');
-    if p <> nil 
+    if p <> nil
     then Pointer(SetLayout) := p;
+    p := GetProcAddress(gdi32handle, 'GetLayout');
+    if p <> nil
+    then Pointer(GetLayout) := p;
   end;
 
   // Defaults
