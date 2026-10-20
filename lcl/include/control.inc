@@ -695,6 +695,21 @@ var
         ' Real=',FLeft,',',FTop,',',FWidth,',',FHeight]);
   end;
 
+  // the parent repaints where the control was and is, not everywhere
+  procedure InvalidateDesignArea;
+  var
+    R: TRect;
+  begin
+    if not Parent.HandleAllocated then exit;
+    R := Bounds(OldLeft, OldTop, OldWidth, OldHeight);
+    UnionRect(R, R, BoundsRect);
+    dec(R.Left, BorderSpacing.GetSideSpace(akLeft) + 3);
+    dec(R.Top, BorderSpacing.GetSideSpace(akTop) + 3);
+    inc(R.Right, BorderSpacing.GetSideSpace(akRight) + 3);
+    inc(R.Bottom, BorderSpacing.GetSideSpace(akBottom) + 3);
+    InvalidateRect(Parent.Handle, @R, True);
+  end;
+
 begin
   {$IFDEF VerboseSizeMsg}
   DebugLn(['TControl.ChangeBounds A ',DbgSName(Self),
@@ -756,7 +771,7 @@ begin
 
   // invalidate
   if (csDesigning in ComponentState) and (Parent <> nil) then
-    Parent.Invalidate
+    InvalidateDesignArea
   else
   if (not (csLoading in ComponentState)) and (not (Self is TWinControl)) then
     Invalidate;

@@ -359,6 +359,7 @@ type
     procedure PaintGraphicControlsOnDC(AWinControl: TWinControl; DC: HDC);
     procedure DrawNonVisualComponents(aDDC: TDesignerDeviceContext);
     procedure DrawDesignerItems(OnlyIfNeeded: boolean); override;
+    procedure PaintFormNow;
     procedure CheckFormBounds;
     procedure DoPaintDesignerItems;
     function ComponentIsIcon(AComponent: TComponent): boolean;
@@ -2767,6 +2768,7 @@ begin
             CurSnappedMousePos.X - OldSnappedMousePos.X,
             CurSnappedMousePos.Y - OldSnappedMousePos.Y);
           DoModified;
+          PaintFormNow;
         end;
       end
       else
@@ -2791,6 +2793,7 @@ begin
             if Selection.MoveSelectionWithSnapping(LastMouseMovePos.X - MouseDownPos.X, LastMouseMovePos.Y - MouseDownPos.Y) then
               DoModified;
           end;
+          PaintFormNow;
         end
         else
         begin          // rubberband sizing (selection or creation)
@@ -2801,6 +2804,7 @@ begin
           else
             Selection.RubberbandType := rbtCreating;
           Selection.RubberBandActive := True;
+          PaintFormNow;
         end;
       end;
     end
@@ -3802,6 +3806,14 @@ begin
   DDC.EndPainting;
   DDC.Clear;
   ReleaseDesignerDC(Form.Handle, DesignerDC);
+end;
+
+// a queued paint and the idle pass for the items wait behind the mouse
+procedure TDesigner.PaintFormNow;
+begin
+  if (Form = nil) or (not Form.HandleAllocated) then exit;
+  RedrawWindow(Form.Handle, nil, 0, RDW_UPDATENOW or RDW_ALLCHILDREN);
+  DrawDesignerItems(False);
 end;
 
 procedure TDesigner.CheckFormBounds;
