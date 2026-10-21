@@ -1,6 +1,6 @@
 # TSerialPort
 
-A serial port, read in the background: OnData gets every chunk, OnLine every whole line. The same calls and events on every system; only the port names differ, COM3 on Windows and /dev/ttyUSB0 on Linux, and AvailablePorts lists the ones there are.
+A serial port, read in the background: OnData gets every chunk, OnLine every whole line. The same calls and events on every system; only the port names differ, COM3 on Windows and /dev/ttyUSB0 on Linux, and AvailablePorts lists the ones there are. Works on Windows, Linux, Android, NetBSD and OpenBSD, where FPC has its Serial unit; on macOS and FreeBSD Open fails with OnError saying not supported and AvailablePorts is empty.
 
 - Palette page: Unleashed: System
 - Unit: `serialport.pas`
@@ -32,6 +32,12 @@ begin
   Caption := message;
 end;
 ```
+
+## Platforms
+
+The port is driven by the `Serial` unit of FPC, which FPC builds for Windows, Linux, Android, NetBSD and OpenBSD only. There the component works as described.
+
+On every other system, macOS and FreeBSD among them, the component still compiles and sits on the palette, so a form with a `TSerialPort` opens everywhere, but it has no port behind it: `Open` returns false and fires `OnError` with "Serial ports are not supported on this system", `AvailablePorts` returns an empty list, `IsOpen` stays false. Compiling the package there prints a warning saying the same.
 
 ## Properties
 

@@ -13,12 +13,23 @@ unit SerialPort;
 
 {$mode unleashed}
 
+// FPC builds its Serial unit for these systems only; elsewhere the
+// component is there, but Open reports that it is not supported
+{$if defined(WINDOWS) or defined(LINUX) or defined(ANDROID) or defined(NETBSD) or defined(OPENBSD)}
+  {$define HAS_SERIAL}
+{$else}
+  {$warning TSerialPort has no serial backend on this system; Open reports "not supported"}
+{$endif}
+
 interface
 
 uses
-  Classes, SysUtils, ExtCtrls, SyncObjs, Serial;
+  Classes, SysUtils, ExtCtrls, SyncObjs{$ifdef HAS_SERIAL}, Serial{$endif};
 
 type
+  {$ifndef HAS_SERIAL}
+  TSerialHandle = PtrInt;
+  {$endif}
   TSerialParity = (spNone, spOdd, spEven);
   TSerialFlowControl = (sfNone, sfRtsCts);
   TSerialLineEnding = (sleLF, sleCR, sleCRLF);
@@ -49,7 +60,9 @@ type
   // a serial port, read in the background: OnData gets every chunk, OnLine
   // every whole line. The same calls and events on every system; only the
   // port names differ, COM3 on Windows and /dev/ttyUSB0 on Linux, and
-  // AvailablePorts lists the ones there are
+  // AvailablePorts lists the ones there are. Works on Windows, Linux, Android,
+  // NetBSD and OpenBSD, where FPC has its Serial unit; on macOS and FreeBSD
+  // Open fails with OnError saying not supported and AvailablePorts is empty
   TSerialPort = class(TComponent)
   private
     FPort: string;
@@ -146,9 +159,12 @@ begin
 end;
 
 procedure TSerialReader.Execute;
+{$ifdef HAS_SERIAL}
 var
   buffer: array[0..4095] of byte;
+{$endif}
 begin
+  {$ifdef HAS_SERIAL}
   // the short timeout lets Terminate end the loop soon
   while not Terminated do begin
     var n := SerReadTimeout(FHandle, buffer, sizeof(buffer), 50);
@@ -166,6 +182,9 @@ begin
       FLock.Leave;
     end;
   end;
+  {$else}
+  FFailed := true;
+  {$endif}
 end;
 
 function TSerialReader.Take: RawByteString;
@@ -215,7 +234,7 @@ begin
     reg.GetValueNames(names);
     for var name in names do list.Add(reg.ReadString(name));
   end;
-  {$else}
+  {$elseif defined(HAS_SERIAL)}
   // the tty devices with hardware behind them; a ttyS without a chip
   // reports the type 0
   var info: TSearchRec;
@@ -258,6 +277,10 @@ begin
   if FOpen then exit(true);
   result := false;
   if csDesigning in ComponentState then exit;
+  {$ifndef HAS_SERIAL}
+  fail('Serial ports are not supported on this system');
+  exit;
+  {$else}
   if FPort = '' then begin
     fail('No port set');
     exit;
@@ -286,6 +309,7 @@ begin
   FPoll.Enabled := true;
   result := true;
   if Assigned(FOnOpen) then FOnOpen(self);
+  {$endif}
 end;
 
 procedure TSerialPort.Close;
@@ -298,7 +322,9 @@ begin
   // what came in before the stop still goes out
   var rest := FReader.Take;
   FreeAndNil(FReader);
+  {$ifdef HAS_SERIAL}
   SerClose(FHandle);
+  {$endif}
   FHandle := 0;
   if not (csDestroying in ComponentState) then begin
     if rest <> '' then begin
@@ -356,7 +382,9 @@ function TSerialPort.Write(const data: RawByteString): integer;
 begin
   result := 0;
   if not FOpen or (data = '') then exit;
+  {$ifdef HAS_SERIAL}
   result := SerWrite(FHandle, data[1], length(data));
+  {$endif}
   if result > 0 then FSent += result;
   if result < length(data) then fail(Format('%s took %d of %d bytes', [FPort, Max(result, 0), length(data)]));
 end;
@@ -404,11 +432,16 @@ begin
   result := match index of
     0: FDTR;
     1: FRTS;
+    {$ifdef HAS_SERIAL}
     2: FOpen and SerGetCTS(FHandle);
     3: FOpen and SerGetDSR(FHandle);
     4: FOpen and SerGetCD(FHandle);
   else
     FOpen and SerGetRI(FHandle)
+    {$else}
+  else
+    false
+    {$endif}
   end;
 end;
 
@@ -416,10 +449,14 @@ procedure TSerialPort.setSignal(index: integer; value: boolean);
 begin
   if index = 0 then begin
     FDTR := value;
+    {$ifdef HAS_SERIAL}
     if FOpen then SerSetDTR(FHandle, value);
+    {$endif}
   end else begin
     FRTS := value;
+    {$ifdef HAS_SERIAL}
     if FOpen and (FFlowControl = sfNone) then SerSetRTS(FHandle, value);
+    {$endif}
   end;
 end;
 
