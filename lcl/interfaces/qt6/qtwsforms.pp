@@ -229,8 +229,9 @@ begin
           not IsFormDesign(AForm))
        {$endif} then
       QtMainWindow.setShowInTaskBar(False);
+    // a form embedded in a parent control is a child widget, not a window
     APopupParent := AForm.GetRealPopupParent;
-    if APopupParent<>nil then
+    if (APopupParent<>nil) and (AForm.Parent = nil) then
       QtMainWindow.setRealPopupParent(TQtWidget(APopupParent.Handle).Widget);
   end;
 
@@ -627,10 +628,11 @@ begin
       end;
       {$IFDEF HASX11}
       // issue #26018
+      // a form embedded in a parent control is a child widget, not a window
       if AWinControl.HandleObjectShouldBeVisible and
         not (TCustomForm(AWinControl).FormStyle in fsAllStayOnTop) and
         not (fsModal in TCustomForm(AWinControl).FormState) and
-        not Widget.IsMdiChild then
+        not Widget.IsMdiChild and (AWinControl.Parent = nil) then
       begin
         APopupParent := TCustomForm(AWinControl).GetRealPopupParent;
         if (APopupParent <> nil) then
