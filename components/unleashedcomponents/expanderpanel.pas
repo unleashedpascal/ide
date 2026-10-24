@@ -177,7 +177,18 @@ procedure TExpanderPanel.AdjustClientRect(var ARect: TRect);
 begin
   inherited AdjustClientRect(ARect);
   var inset := if FShowBorder then 1 else 0;
-  ARect := Rect(ARect.Left+inset, ARect.Top+headerPx, ARect.Right-inset, ARect.Bottom-inset);
+  var top := ARect.Top+headerPx;
+  var bottom := ARect.Bottom-inset;
+  // folding keeps the body at its open layout so the window clips it instead
+  // of the children piling up over the header; folded, the body sits below
+  // the window, out of sight even when the align keeps the panel tall
+  var body := Max(FExpandedHeight-headerPx-inset, 0);
+  if FTimer.Enabled then bottom := Max(bottom, top+body)
+  else if not FExpanded then begin
+    top := ARect.Bottom;
+    bottom := top+body;
+  end;
+  ARect := Rect(ARect.Left+inset, top, ARect.Right-inset, bottom);
 end;
 
 // -- folding ----------------------
@@ -210,7 +221,10 @@ begin
     FTo := target;
     FStarted := GetTickCount64;
     FTimer.Enabled := true;
-  end else Height := target;
+  end else begin
+    Height := target;
+    ReAlign;
+  end;
   Invalidate;
 end;
 
@@ -220,6 +234,8 @@ begin
   if elapsed >= QWord(FAnimationTime) then begin
     FTimer.Enabled := false;
     Height := FTo;
+    // the align may have held the height, so the body moves on its own
+    ReAlign;
     exit;
   end;
   // eased out: fast off the start, soft into the target
