@@ -47,8 +47,16 @@ end;
 | `MinColor` | `TColor` | `clDefault` |  |
 | `MaxColor` | `TColor` | `clDefault` |  |
 | `Antialiasing` | `TAntialiasSetting` | `asTheme` | asTheme follows the theme setting, asOn and asOff force it |
+| `HoverMarker` | `boolean` | `true` | a line and a dot on the value under the mouse |
+| `ValueFormat` | `string` |  | a Format pattern for the hint, like '%.1f ms'; empty shows the plain number |
 
 Also the standard properties of a control, re-published: `Align`, `Anchors`, `BorderSpacing`, `Color`, `Constraints`, `Enabled`, `Hint`, `ParentColor`, `ParentShowHint`, `PopupMenu`, `ShowHint`, `Visible`, `OnClick`, `OnContextPopup`, `OnDblClick`, `OnMouseDown`, `OnMouseEnter`, `OnMouseLeave`, `OnMouseMove`, `OnMouseUp`, `OnResize`.
+
+## Events
+
+| Event | Handler | Notes |
+|---|---|---|
+| `OnHover` | `procedure(Sender: TObject; index: integer; value: double)` | the value under the mouse, index -1 when the mouse left the values |
 
 ## Runtime
 
@@ -65,6 +73,9 @@ Available in code, not in the Object Inspector.
 | `Clear` | removes everything |
 | `Count: integer` | the number of entries |
 | `LastValue: double` |  |
+| `IndexAt(x: integer): integer` | the value nearest to a point of the control, -1 without values |
+| `ValueText(index: integer): string` | the value as the hint shows it |
+| `HotIndex: integer` | the value under the mouse, -1 for none |
 
 ## Types
 

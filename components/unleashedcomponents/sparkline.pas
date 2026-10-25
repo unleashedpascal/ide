@@ -16,13 +16,15 @@ unit Sparkline;
 interface
 
 uses
-  Classes, SysUtils, Types, Controls, Graphics, ControlPaint;
+  Classes, SysUtils, Types, Controls, Graphics, LMessages, ControlPaint;
 
 type
   // the drawing: a line, a filled area, bars from the baseline, dots alone, a
   // stepped line, fixed bars up or down from the baseline, stems with a dot
   TSparklineStyle = (ssLine, ssArea, ssBars, ssDots, ssStep, ssWinLoss, ssStem);
   TSparklineValues = array of double;
+  // the value under the mouse, index -1 when the mouse left the values
+  TSparklineHoverEvent = procedure(Sender: TObject; index: integer; value: double) of object;
 
   { TSparkline }
 
@@ -37,6 +39,12 @@ type
     FAutoRange, FShowDots, FShowLastDot, FShowBaseline, FShowMinMax: boolean;
     FLineColor, FFillColor, FDotColor, FBaselineColor, FMinColor, FMaxColor: TColor;
     FAntialiasing: TAntialiasSetting;
+    FHot: integer;
+    FHoverMarker: boolean;
+    FValueFormat: string;
+    FOnHover: TSparklineHoverEvent;
+    procedure setValueFormat(const value: string);
+    function plotRect: TRect;
     procedure setStyle(value: TSparklineStyle);
     procedure setMetric(index: integer; value: integer);
     function getMetric(index: integer): integer;
@@ -51,9 +59,18 @@ type
     function rangeStored(index: integer): boolean;
   protected
     procedure Paint; override;
+    procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
+    procedure MouseLeave; override;
+    procedure CMHintShow(var Message: TLMessage); message CM_HINTSHOW;
     class function GetControlClassDefaultSize: TSize; override;
   public
     constructor Create(AOwner: TComponent); override;
+    // the value nearest to a point of the control, -1 without values
+    function IndexAt(x: integer): integer;
+    // the value as the hint shows it
+    function ValueText(index: integer): string;
+    // the value under the mouse, -1 for none
+    property HotIndex: integer read FHot;
     // appends a value; past MaxPoints the oldest goes
     procedure AddValue(value: double);
     procedure SetValues(const values: array of double);
@@ -87,6 +104,11 @@ type
     property MinColor: TColor index 4 read getPartColor write setPartColor default clDefault;
     property MaxColor: TColor index 5 read getPartColor write setPartColor default clDefault;
     property Antialiasing: TAntialiasSetting read FAntialiasing write setAntialiasing default asTheme;
+    // a line and a dot on the value under the mouse
+    property HoverMarker: boolean index 5 read getFlag write setFlag default true;
+    // a Format pattern for the hint, like '%.1f ms'; empty shows the plain number
+    property ValueFormat: string read FValueFormat write setValueFormat;
+    property OnHover: TSparklineHoverEvent read FOnHover write FOnHover;
     property Align;
     property Anchors;
     property BorderSpacing;
@@ -133,8 +155,77 @@ begin
   FBaselineColor := clDefault;
   FMinColor := clDefault;
   FMaxColor := clDefault;
+  FHot := -1;
+  FHoverMarker := true;
   ParentColor := true;
+  ParentShowHint := false;
+  ShowHint := true;
+  Hint := 'value'; // replaced per value when the hint shows
   with GetControlClassDefaultSize do SetInitialBounds(0, 0, cx, cy);
+end;
+
+// the values spread over the control inside the padding and the room of
+// the dots and the line
+function TSparkline.plotRect: TRect;
+begin
+  var pad := scaled(self, FPadding)+Max(scaled(self, FDotSize) div 2, scaled(self, FLineWidth));
+  result := ClientRect;
+  result.Inflate(-pad, -pad);
+end;
+
+function TSparkline.IndexAt(x: integer): integer;
+begin
+  var n := length(FValues);
+  var r := plotRect;
+  if (n = 0) or (r.Width < 2) then exit(-1);
+  if n = 1 then exit(0);
+  // the bars sit in slots, the rest on a line from edge to edge
+  result := if FStyle in [ssBars, ssWinLoss] then Trunc((x-r.Left)*n/r.Width) else Round((x-r.Left)*(n-1)/(r.Width-1));
+  result := EnsureRange(result, 0, n-1);
+end;
+
+function TSparkline.ValueText(index: integer): string;
+begin
+  if (index < 0) or (index >= length(FValues)) then exit('');
+  var fs := DefaultFormatSettings;
+  fs.DecimalSeparator := '.';
+  result := if FValueFormat <> '' then Format(FValueFormat, [FValues[index]], fs) else FloatToStrF(FValues[index], ffGeneral, 6, 2, fs);
+end;
+
+procedure TSparkline.MouseMove(Shift: TShiftState; X, Y: Integer);
+begin
+  inherited MouseMove(Shift, X, Y);
+  var hot := IndexAt(X);
+  if hot = FHot then exit;
+  FHot := hot;
+  if FHoverMarker then Invalidate;
+  if Assigned(FOnHover) then FOnHover(self, hot, (if hot >= 0 then FValues[hot] else 0));
+end;
+
+procedure TSparkline.MouseLeave;
+begin
+  inherited MouseLeave;
+  if FHot < 0 then exit;
+  FHot := -1;
+  if FHoverMarker then Invalidate;
+  if Assigned(FOnHover) then FOnHover(self, -1, 0);
+end;
+
+procedure TSparkline.CMHintShow(var Message: TLMessage);
+begin
+  var info := PHintInfo(Message.LParam);
+  var i := IndexAt(info^.CursorPos.X);
+  if i < 0 then begin
+    Message.Result := 1; // nothing under the mouse
+    exit;
+  end;
+  info^.HintStr := ValueText(i);
+  // the hint goes when the mouse leaves the slot of the value, so the next
+  // one gets its own
+  var r := plotRect;
+  var n := length(FValues);
+  var slot := r.Width/n;
+  info^.CursorRect := Rect(r.Left+Round(i*slot), 0, r.Left+Round((i+1)*slot), ClientHeight);
 end;
 
 class function TSparkline.GetControlClassDefaultSize: TSize;
@@ -217,9 +308,7 @@ begin
   if not Enabled then line := blend(line, clBtnFace, 50);
   var sp := autofree beginShapes(Canvas, ClientRect, GetRGBColorResolvingParent, FAntialiasing);
   var n := length(FValues);
-  var pad := scaled(self, FPadding)+Max(scaled(self, FDotSize) div 2, scaled(self, FLineWidth));
-  var r := ClientRect;
-  r.Inflate(-pad, -pad);
+  var r := plotRect;
   if (n = 0) or (r.Width < 2) or (r.Height < 2) then exit;
   var lo, hi: double;
   bounds(lo, hi);
@@ -306,6 +395,12 @@ begin
     end;
   end;
   if FShowBaseline then paintLine(sp, r.Left, baseY, r.Right, baseY, base);
+  // the value under the mouse: a line down the control and a ring on the value
+  if FHoverMarker and hoverEnabled and (FHot >= 0) and (FHot < n) then begin
+    var x := if FStyle in [ssBars, ssWinLoss] then r.Left+Round((FHot+0.5)*r.Width/n) else xOf(FHot);
+    paintLine(sp, x, r.Top, x, r.Bottom, blend(GetRGBColorResolvingParent, line, 45));
+    paintCircle(sp, x, yOf(FValues[FHot]), dotRad+1, dot, GetRGBColorResolvingParent, 1);
+  end;
 end;
 
 // -- properties ----------------------
@@ -370,8 +465,15 @@ begin
     1: result := FShowDots;
     2: result := FShowLastDot;
     3: result := FShowBaseline;
-    _: result := FShowMinMax;
+    4: result := FShowMinMax;
+    _: result := FHoverMarker;
   end;
+end;
+
+procedure TSparkline.setValueFormat(const value: string);
+begin
+  if FValueFormat = value then exit;
+  FValueFormat := value;
 end;
 
 procedure TSparkline.setFlag(index: integer; value: boolean);
@@ -382,7 +484,8 @@ begin
     1: FShowDots := value;
     2: FShowLastDot := value;
     3: FShowBaseline := value;
-    _: FShowMinMax := value;
+    4: FShowMinMax := value;
+    _: FHoverMarker := value;
   end;
   Invalidate;
 end;
