@@ -53,6 +53,7 @@ end;
 | `BackColor` | `TColor` | `clDefault` | clDefault takes the color of the theme |
 | `TextColor` | `TColor` | `clDefault` | clDefault takes the color of the theme |
 | `Antialiasing` | `TAntialiasSetting` | `asTheme` | asTheme follows the theme setting, asOn and asOff force it |
+| `CropSmoothing` | `TShapeAntialiasing` | `aaHigh` | how the edge of an elliptic cut blends into transparency: not at all, or by the share of each pixel inside the ellipse in 4, 9 or 64 steps |
 
 Also the standard properties of a control, re-published: `Align`, `Anchors`, `BorderSpacing`, `Constraints`, `Enabled`, `Font`, `Hint`, `ParentFont`, `ParentShowHint`, `PopupMenu`, `ShowHint`, `TabOrder`, `TabStop`, `Visible`, `OnClick`, `OnContextPopup`, `OnDblClick`, `OnEnter`, `OnExit`, `OnKeyDown`, `OnKeyPress`, `OnKeyUp`, `OnMouseDown`, `OnMouseEnter`, `OnMouseLeave`, `OnMouseMove`, `OnMouseUp`, `OnResize`.
 

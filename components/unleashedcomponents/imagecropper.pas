@@ -42,6 +42,7 @@ type
     FShowGrid, FShowSize, FDimOutside, FDarkCheckers: boolean;
     FFrameColor, FDimColor, FHandleColor, FBackColor, FTextColor: TColor;
     FAntialiasing: TAntialiasSetting;
+    FCropSmoothing: TShapeAntialiasing;
     FDrag: TCropHandle;
     FDragStart: TPoint;
     FDragCrop: TRect;
@@ -59,6 +60,7 @@ type
     procedure setPartColor(index: integer; value: TColor);
     function getPartColor(index: integer): TColor;
     procedure setAntialiasing(value: TAntialiasSetting);
+    procedure setCropSmoothing(value: TShapeAntialiasing);
     procedure rebuild;
     procedure fit;
     function toControl(const r: TRect): TRect;
@@ -117,6 +119,9 @@ type
     property BackColor: TColor index 3 read getPartColor write setPartColor default clDefault;
     property TextColor: TColor index 4 read getPartColor write setPartColor default clDefault;
     property Antialiasing: TAntialiasSetting read FAntialiasing write setAntialiasing default asTheme;
+    // how the edge of an elliptic cut blends into transparency: not at all,
+    // or by the share of each pixel inside the ellipse in 4, 9 or 64 steps
+    property CropSmoothing: TShapeAntialiasing read FCropSmoothing write setCropSmoothing default aaHigh;
     property OnChange: TCropChangeEvent read FOnChange write FOnChange;
     property Align;
     property Anchors;
@@ -345,16 +350,45 @@ begin
   if (FBitmap.Width = 0) or (FBitmap.Height = 0) then exit;
   result.Canvas.CopyRect(Rect(0, 0, result.Width, result.Height), FBitmap.Canvas, FCrop);
   if FShape = csEllipse then begin
-    // the corners outside the ellipse turn transparent
+    // the corners outside the ellipse turn transparent; a pixel on the edge
+    // keeps the share of its area inside the ellipse as its alpha
     var img := TLazIntfImage.Create(0, 0);
     try
       img.LoadFromBitmap(result.Handle, result.MaskHandle);
       var cx := result.Width/2;
       var cy := result.Height/2;
+      var steps := match FCropSmoothing of
+        aaOff: 1;
+        aaLow: 2;
+        aaMedium: 3;
+      else
+        8
+      end;
       var clear := FPColor(0, 0, 0, 0);
       for var y := 0 to result.Height-1 do
-        for var x := 0 to result.Width-1 do
-          if Sqr((x+0.5-cx)/cx)+Sqr((y+0.5-cy)/cy) > 1 then img.Colors[x, y] := clear;
+        for var x := 0 to result.Width-1 do begin
+          // the pixel is wholly in or out when its nearest and farthest
+          // corners agree; only the rest is sampled
+          var dx := Max(Abs(x+0.5-cx)-0.5, 0)/cx;
+          var dy := Max(Abs(y+0.5-cy)-0.5, 0)/cy;
+          if dx*dx+dy*dy >= 1 then begin
+            img.Colors[x, y] := clear;
+            continue;
+          end;
+          dx := (Abs(x+0.5-cx)+0.5)/cx;
+          dy := (Abs(y+0.5-cy)+0.5)/cy;
+          if dx*dx+dy*dy <= 1 then continue;
+          var inside := 0;
+          for var sy := 0 to steps-1 do
+            for var sx := 0 to steps-1 do
+              if Sqr((x+(sx+0.5)/steps-cx)/cx)+Sqr((y+(sy+0.5)/steps-cy)/cy) <= 1 then inc(inside);
+          if inside = 0 then img.Colors[x, y] := clear
+          else if inside < steps*steps then begin
+            var c := img.Colors[x, y];
+            c.Alpha := Round(c.Alpha*inside/(steps*steps));
+            img.Colors[x, y] := c;
+          end;
+        end;
       result.LoadFromIntfImage(img);
     finally
       img.Free;
@@ -779,6 +813,11 @@ begin
     FTextColor := value;
   end;
   Invalidate;
+end;
+
+procedure TImageCropper.setCropSmoothing(value: TShapeAntialiasing);
+begin
+  FCropSmoothing := value;
 end;
 
 procedure TImageCropper.setAntialiasing(value: TAntialiasSetting);
