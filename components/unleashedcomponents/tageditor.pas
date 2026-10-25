@@ -16,7 +16,7 @@ unit TagEditor;
 interface
 
 uses
-  Classes, SysUtils, Types, Controls, Graphics, LCLType, SuggestEdit, ControlPaint;
+  Classes, SysUtils, Types, Controls, Graphics, LMessages, LCLType, SuggestEdit, ControlPaint;
 
 type
   // the outline of a chip: a pill, a box rounded by ChipRadius, a square box,
@@ -75,6 +75,7 @@ type
     procedure changed;
   protected
     procedure Paint; override;
+    procedure CMEnabledChanged(var Message: TLMessage); message CM_ENABLEDCHANGED;
     procedure DoOnResize; override;
     procedure CreateWnd; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
@@ -318,6 +319,14 @@ begin
 end;
 
 // -- painting ----------------------
+
+// the field goes gray with the rest of the control
+procedure TTagEditor.CMEnabledChanged(var Message: TLMessage);
+begin
+  inherited CMEnabledChanged(Message);
+  FEdit.Color := if Enabled then clWindow else clBtnFace;
+  Invalidate;
+end;
 
 procedure TTagEditor.Paint;
 begin

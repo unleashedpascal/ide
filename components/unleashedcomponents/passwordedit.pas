@@ -16,7 +16,7 @@ unit PasswordEdit;
 interface
 
 uses
-  Classes, SysUtils, Types, Controls, Graphics, StdCtrls, LCLType, ControlPaint;
+  Classes, SysUtils, Types, Controls, Graphics, StdCtrls, LCLType, LMessages, ControlPaint;
 
 type
   // psNone for an empty field, then four steps of a password getting harder to guess
@@ -70,6 +70,7 @@ type
     procedure pollCapsLock;
   protected
     procedure Paint; override;
+    procedure CMEnabledChanged(var Message: TLMessage); message CM_ENABLEDCHANGED;
     procedure DoOnResize; override;
     procedure CreateWnd; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
@@ -302,6 +303,14 @@ begin
 end;
 
 // -- painting ----------------------
+
+// the field goes gray with the rest of the control
+procedure TPasswordEdit.CMEnabledChanged(var Message: TLMessage);
+begin
+  inherited CMEnabledChanged(Message);
+  FEdit.Color := if Enabled then clWindow else clBtnFace;
+  Invalidate;
+end;
 
 procedure TPasswordEdit.Paint;
 begin

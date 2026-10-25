@@ -16,7 +16,7 @@ unit NumberBox;
 interface
 
 uses
-  Classes, SysUtils, Types, Controls, Graphics, StdCtrls, ExtCtrls, LCLType, ControlPaint;
+  Classes, SysUtils, Types, Controls, Graphics, LMessages, StdCtrls, ExtCtrls, LCLType, ControlPaint;
 
 type
   // the buttons: stacked arrows at the right end, minus and plus at the
@@ -90,6 +90,7 @@ type
     procedure editChange(Sender: TObject);
   protected
     procedure Paint; override;
+    procedure CMEnabledChanged(var Message: TLMessage); message CM_ENABLEDCHANGED;
     procedure DoOnResize; override;
     procedure CreateWnd; override;
     procedure Loaded; override;
@@ -542,6 +543,14 @@ begin
 end;
 
 // -- painting ----------------------
+
+// the field goes gray with the rest of the control
+procedure TNumberBox.CMEnabledChanged(var Message: TLMessage);
+begin
+  inherited CMEnabledChanged(Message);
+  FEdit.Color := if Enabled then clWindow else clBtnFace;
+  Invalidate;
+end;
 
 procedure TNumberBox.Paint;
 begin

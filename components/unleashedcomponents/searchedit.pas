@@ -16,7 +16,7 @@ unit SearchEdit;
 interface
 
 uses
-  Classes, SysUtils, Types, Controls, Graphics, StdCtrls, ExtCtrls, LCLType, ControlPaint;
+  Classes, SysUtils, Types, Controls, Graphics, StdCtrls, ExtCtrls, LCLType, LMessages, ControlPaint;
 
 type
   TClearButtonMode = (cbWhenText, cbAlways, cbNever);
@@ -75,6 +75,7 @@ type
     procedure setAntialiasing(value: TAntialiasSetting);
   protected
     procedure Paint; override;
+    procedure CMEnabledChanged(var Message: TLMessage); message CM_ENABLEDCHANGED;
     procedure DoOnResize; override;
     procedure CreateWnd; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
@@ -268,6 +269,14 @@ begin
 end;
 
 // -- painting ----------------------
+
+// the field goes gray with the rest of the control
+procedure TSearchEdit.CMEnabledChanged(var Message: TLMessage);
+begin
+  inherited CMEnabledChanged(Message);
+  FEdit.Color := if Enabled then clWindow else clBtnFace;
+  Invalidate;
+end;
 
 procedure TSearchEdit.Paint;
 begin
