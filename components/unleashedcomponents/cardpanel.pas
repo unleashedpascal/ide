@@ -78,7 +78,7 @@ type
     property ChildSizing;
     property ClientHeight;
     property ClientWidth;
-    property Color;
+    property Color stored false;
     property Constraints;
     property DockSite;
     property DragCursor;
@@ -158,7 +158,7 @@ end;
 
 procedure TCardPanel.Paint;
 begin
-  var back := GetRGBColorResolvingParent;
+  var back := if Parent <> nil then Parent.GetRGBColorResolvingParent else GetRGBColorResolvingParent;
   var card := pick(FCardColor, blend(clWindow, clBtnFace, 30));
   var border := pick(FBorderColor, blend(clBtnFace, clBtnShadow, 50));
   var header := pick(FHeaderColor, blend(card, clWindowText, 5));
@@ -169,6 +169,9 @@ begin
     card := blend(back, clWindowText, 7);
     border := clNone;
   end;
+  // the children take the color of their parent for their background, so
+  // the card wears its surface as Color
+  if ColorToRGB(Color) <> card then Color := card;
   var sp := autofree beginShapes(Canvas, ClientRect, back, FAntialiasing);
   var body := Rect(0, 0, ClientWidth-shadow, ClientHeight-shadow);
   // the shadow: rings of the card shape fading out behind it
