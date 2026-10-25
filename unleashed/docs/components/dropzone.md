@@ -35,6 +35,8 @@ end;
 | `Multiple` | `boolean` | `true` |  |
 | `ClickToBrowse` | `boolean` | `true` |  |
 | `ShowIcon` | `boolean` | `true` | the icon is shown |
+| `Folders` | `boolean` | `false` | folders dropped are taken too; without it they are rejected |
+| `ShowFiles` | `boolean` | `false` | the names of the files taken last, under the hint |
 | `DialogTitle` | `string` |  |  |
 | `DialogFilter` | `string` |  | the filter of the dialog; empty derives one from Extensions |
 | `CornerRadius` | `integer` | `8` | the rounding of the corners, in pixels |
@@ -62,3 +64,5 @@ Available in code, not in the Object Inspector.
 | Method | Notes |
 |---|---|
 | `Browse` | opens the file dialog, as a click does |
+| `Clear` | forgets the files taken last |
+| `Files: TStrings` | the files taken last, by a drop or the dialog |

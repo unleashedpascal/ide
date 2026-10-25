@@ -29,7 +29,8 @@ type
   TDropZone = class(TCustomControl)
   private
     FExtensions: string;
-    FMultiple, FClickToBrowse, FShowIcon: boolean;
+    FMultiple, FClickToBrowse, FShowIcon, FFolders, FShowFiles: boolean;
+    FFiles: TStringList;
     FDialogTitle, FDialogFilter: string;
     FCornerRadius, FDashLength, FIconSize: integer;
     FFrameColor, FHoverFrameColor, FFillColor, FTextColor: TColor;
@@ -45,6 +46,7 @@ type
     procedure setPartColor(index: integer; value: TColor);
     function getPartColor(index: integer): TColor;
     procedure setAntialiasing(value: TAntialiasSetting);
+    function getFiles: TStrings;
     function accepts(const fileName: string): boolean;
     procedure takeFiles(const names: array of string);
     procedure formFilesDropped(Sender: TObject; const names: array of string);
@@ -65,6 +67,10 @@ type
     destructor Destroy; override;
     // opens the file dialog, as a click does
     procedure Browse;
+    // forgets the files taken last
+    procedure Clear;
+    // the files taken last, by a drop or the dialog
+    property Files: TStrings read getFiles;
   published
     // the hint in the zone
     property Caption;
@@ -73,6 +79,10 @@ type
     property Multiple: boolean index 0 read getFlag write setFlag default true;
     property ClickToBrowse: boolean index 1 read getFlag write setFlag default true;
     property ShowIcon: boolean index 2 read getFlag write setFlag default true;
+    // folders dropped are taken too; without it they are rejected
+    property Folders: boolean index 3 read getFlag write setFlag default false;
+    // the names of the files taken last, under the hint
+    property ShowFiles: boolean index 4 read getFlag write setFlag default false;
     property DialogTitle: string read FDialogTitle write FDialogTitle;
     // the filter of the dialog; empty derives one from Extensions
     property DialogFilter: string read FDialogFilter write FDialogFilter;
@@ -124,6 +134,7 @@ constructor TDropZone.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   ControlStyle := ControlStyle+[csOpaque, csSetCaption];
+  FFiles := TStringList.Create;
   FMultiple := true;
   FClickToBrowse := true;
   FShowIcon := true;
@@ -142,7 +153,19 @@ end;
 destructor TDropZone.Destroy;
 begin
   Application.RemoveOnDropFilesHandler(@formFilesDropped);
+  FFiles.Free;
   inherited Destroy;
+end;
+
+function TDropZone.getFiles: TStrings;
+begin
+  result := FFiles;
+end;
+
+procedure TDropZone.Clear;
+begin
+  FFiles.Clear;
+  Invalidate;
 end;
 
 class function TDropZone.GetControlClassDefaultSize: TSize;
@@ -156,6 +179,7 @@ end;
 function TDropZone.accepts(const fileName: string): boolean;
 begin
   result := true;
+  if DirectoryExists(fileName) then exit(FFolders);
   if FExtensions = '' then exit;
   var ext := LowerCase(ExtractFileExt(fileName));
   for var e in FExtensions.Split([';', ',', ' '], TStringSplitOptions.ExcludeEmpty) do begin
@@ -175,6 +199,10 @@ begin
     if not FMultiple and (taken.Count > 1) then begin
       for var i := 1 to taken.Count-1 do rejected.Add(taken[i]);
       while taken.Count > 1 do taken.Delete(1);
+    end;
+    if taken.Count > 0 then begin
+      FFiles.Assign(taken);
+      Invalidate;
     end;
     if (rejected.Count > 0) and Assigned(FOnFileRejected) then FOnFileRejected(self, rejected);
     if (taken.Count > 0) and Assigned(FOnFilesDropped) then FOnFilesDropped(self, taken);
@@ -265,6 +293,7 @@ begin
       dlg.Filter := 'Accepted files ('+masks+')|'+masks+'|All files|*';
     end;
     if FMultiple then dlg.Options := dlg.Options+[ofAllowMultiSelect];
+    if FFolders then dlg.Options := dlg.Options+[ofPathMustExist];
     if dlg.Execute then begin
       var names: array of string;
       SetLength(names, dlg.Files.Count);
@@ -306,6 +335,9 @@ begin
   var th := Canvas.TextHeight('Hg');
   var hasText := Caption <> '';
   var total := (if FShowIcon then icon else 0)+(if FShowIcon and hasText then scaled(self, 8) else 0)+(if hasText then th else 0);
+  // the names of the files taken, as many as fit under the hint
+  var shown := if FShowFiles then Min(FFiles.Count, Max((ClientHeight-total-scaled(self, 20)) div th, 0)) else 0;
+  if shown > 0 then total += shown*th+scaled(self, 6);
   var top := (ClientHeight-total) div 2;
   if FShowIcon then begin
     // an arrow into a tray
@@ -320,9 +352,20 @@ begin
     paintLine(sp, cx+icon div 2, top+icon-icon div 6, cx+icon div 2, top+icon, arrowColor, 2);
   end;
   sp.Flush;
+  var y := top+(if FShowIcon then icon+scaled(self, 8) else 0);
   if hasText then begin
-    var y := top+(if FShowIcon then icon+scaled(self, 8) else 0);
     paintCenteredText(Canvas, Types.Rect(scaled(self, 8), y, ClientWidth-scaled(self, 8), y+th), Caption, textColor);
+    y += th;
+  end;
+  if shown > 0 then begin
+    y += scaled(self, 6);
+    var nameColor := ColorToRGB(clWindowText);
+    for var i := 0 to shown-1 do begin
+      // the last line stands for the rest when they do not all fit
+      var s := if (i = shown-1) and (FFiles.Count > shown) then Format('+%d more', [FFiles.Count-shown+1]) else ExtractFileName(FFiles[i]);
+      paintCenteredText(Canvas, Types.Rect(scaled(self, 8), y, ClientWidth-scaled(self, 8), y+th), s, nameColor);
+      y += th;
+    end;
   end;
 end;
 
@@ -352,7 +395,9 @@ begin
   match index of
     0: result := FMultiple;
     1: result := FClickToBrowse;
-    _: result := FShowIcon;
+    2: result := FShowIcon;
+    3: result := FFolders;
+    _: result := FShowFiles;
   end;
 end;
 
@@ -362,7 +407,9 @@ begin
   match index of
     0: FMultiple := value;
     1: FClickToBrowse := value;
-    _: FShowIcon := value;
+    2: FShowIcon := value;
+    3: FFolders := value;
+    _: FShowFiles := value;
   end;
   Cursor := if FClickToBrowse then crHandPoint else crDefault;
   Invalidate;
