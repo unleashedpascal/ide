@@ -34,7 +34,7 @@ type
     FDialogTitle, FDialogFilter: string;
     FCornerRadius, FDashLength, FIconSize: integer;
     FFrameColor, FHoverFrameColor, FFillColor, FTextColor: TColor;
-    FHot, FDropping: boolean;
+    FHot, FDropping, FHooked: boolean;
     FAntialiasing: TAntialiasSetting;
     FOnFilesDropped: TFilesEvent;
     FOnFileRejected: TFilesEvent;
@@ -58,9 +58,6 @@ type
     procedure MouseLeave; override;
     procedure CreateWnd; override;
     procedure DestroyWnd; override;
-    {$ifdef WINDOWS}
-    procedure WndProc(var Message: TLMessage); override;
-    {$endif}
     class function GetControlClassDefaultSize: TSize; override;
   public
     constructor Create(AOwner: TComponent); override;
@@ -128,7 +125,7 @@ type
 implementation
 
 uses
-  Math{$ifdef WINDOWS}, Windows, ShellAPI{$endif};
+  Math{$ifdef WINDOWS}, ShellAPI{$endif};
 
 constructor TDropZone.Create(AOwner: TComponent);
 begin
@@ -212,44 +209,19 @@ begin
   end;
 end;
 
-{$ifdef WINDOWS}
-// the window takes drops itself; WM_DROPFILES brings the names
-procedure TDropZone.WndProc(var Message: TLMessage);
-begin
-  if Message.Msg = WM_DROPFILES then begin
-    var drop := HDROP(Message.WParam);
-    try
-      var count := DragQueryFileW(drop, $FFFFFFFF, nil, 0);
-      var names: array of string;
-      SetLength(names, count);
-      for var i := 0 to count-1 do begin
-        var len := DragQueryFileW(drop, i, nil, 0);
-        var buf: UnicodeString;
-        SetLength(buf, len);
-        DragQueryFileW(drop, i, PWideChar(buf), len+1);
-        names[i] := UTF8Encode(buf);
-      end;
-      takeFiles(names);
-    finally
-      DragFinish(drop);
-    end;
-    FDropping := false;
-    Invalidate;
-    Message.Result := 0;
-    exit;
-  end;
-  inherited WndProc(Message);
-end;
-{$endif}
-
+// the drops come through the application: the LCL takes WM_DROPFILES on
+// Windows before the control sees it, and the form takes them elsewhere
 procedure TDropZone.CreateWnd;
 begin
   inherited CreateWnd;
+  if csDesigning in ComponentState then exit;
   {$ifdef WINDOWS}
-  if not (csDesigning in ComponentState) then DragAcceptFiles(Handle, true);
+  DragAcceptFiles(Handle, true);
   {$else}
-  hookForm;
+  var form := GetParentForm(self);
+  if form <> nil then form.AllowDropFiles := true;
   {$endif}
+  hookForm;
 end;
 
 procedure TDropZone.DestroyWnd;
@@ -260,20 +232,22 @@ begin
   inherited DestroyWnd;
 end;
 
-// elsewhere the form takes the drops and hands over those over the zone
 procedure TDropZone.hookForm;
 begin
-  var form := GetParentForm(self);
-  if (form = nil) or (csDesigning in ComponentState) then exit;
-  form.AllowDropFiles := true;
+  if FHooked then exit;
+  FHooked := true;
   Application.AddOnDropFilesHandler(@formFilesDropped);
 end;
 
+// every drop in the application comes here; the zone takes the ones over it
 procedure TDropZone.formFilesDropped(Sender: TObject; const names: array of string);
 begin
+  if not HandleAllocated or not IsVisible then exit;
   var p := ScreenToClient(Mouse.CursorPos);
   if not ClientRect.Contains(p) then exit;
   takeFiles(names);
+  FDropping := false;
+  Invalidate;
 end;
 
 procedure TDropZone.Browse;
