@@ -62,12 +62,19 @@ function mix(a, b: TColor; percent: integer): TColor;
 // the ring of the focused control: the accent toned down halfway to the
 // strongest neutral shade, so a focused editor does not shout
 function focusColor(const pal: TPalette): TColor;
-// how far the hover slot sits from the surface, as a share of the default
-// seed strength: 100 at the default, 0 when hovering changes nothing
+// how far the hover slot sits from the surface, in percent of the way to
+// the text: DEFAULT_HOVER for the presets, 0 when hovering changes nothing
 function hoverStrength(const pal: TPalette): integer;
-// `normal` moved toward `strong` by the hover strength: for the borders and
+// `normal` moved toward `strong` by the hover strength, the whole way at the
+// default strength and on toward the text past it: for the borders and
 // glyphs that answer the mouse without a fill
 function hoverShade(const pal: TPalette; normal, strong: TColor): TColor;
+// `normal` moved toward the text by the hover strength: the fill of a part
+// under the mouse
+function hoverFill(const pal: TPalette; normal: TColor): TColor;
+
+const
+  DEFAULT_HOVER = 20;
 
 implementation
 
@@ -95,16 +102,21 @@ begin
   var text := ColorToRGB(pal[COLOR_BTNTEXT]);
   var hover := ColorToRGB(pal[COLOR_HOVER]);
   var full := Abs(Red(text)-Red(face))+Abs(Green(text)-Green(face))+Abs(Blue(text)-Blue(face));
-  if full = 0 then exit(100);
+  if full = 0 then exit(DEFAULT_HOVER);
   var part := Abs(Red(hover)-Red(face))+Abs(Green(hover)-Green(face))+Abs(Blue(hover)-Blue(face));
-  result := part*100 div full; // the seed strength
-  result := result*100 div 20;
-  if result > 100 then result := 100;
+  result := part*100 div full;
 end;
 
 function hoverShade(const pal: TPalette; normal, strong: TColor): TColor;
 begin
-  result := mix(ColorToRGB(normal), ColorToRGB(strong), hoverStrength(pal));
+  var s := hoverStrength(pal);
+  if s <= DEFAULT_HOVER then exit(mix(ColorToRGB(normal), ColorToRGB(strong), s*100 div DEFAULT_HOVER));
+  result := mix(ColorToRGB(strong), ColorToRGB(pal[COLOR_BTNTEXT]), (s-DEFAULT_HOVER)*100 div (100-DEFAULT_HOVER));
+end;
+
+function hoverFill(const pal: TPalette; normal: TColor): TColor;
+begin
+  result := mix(ColorToRGB(normal), ColorToRGB(pal[COLOR_BTNTEXT]), hoverStrength(pal));
 end;
 
 function lightPalette: TPalette;

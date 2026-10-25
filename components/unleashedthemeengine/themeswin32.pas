@@ -719,7 +719,7 @@ begin
     TABP_TABITEM..TABP_TOPTABITEMBOTHEDGE: begin
       var selected := state in [TIS_SELECTED, TIS_FOCUSED];
       var fill := pal[COLOR_WINDOW];
-      if selected then fill := pal[COLOR_BTNFACE] else if effects.Hover and (state = TIS_HOT) then fill := pal[COLOR_HOVER];
+      if selected then fill := pal[COLOR_BTNFACE] else if effects.Hover and (state = TIS_HOT) then fill := hoverFill(pal, fill);
       fillRect(dc, r, fill);
       var border := pal[COLOR_3DLIGHT];
       var wnd: HWND;
@@ -811,8 +811,8 @@ begin
   var border := pal[COLOR_BTNHIGHLIGHT];
   match state of
     PBS_HOT: if effects.Hover then begin
-      // the hover slot, so the strength of the seed shows on buttons too
-      fill := pal[COLOR_HOVER];
+      // the fill and the border both move by the strength of the seed
+      fill := hoverFill(pal, fill);
       border := hoverShade(pal, pal[COLOR_BTNHIGHLIGHT], pal[COLOR_BTNSHADOW]);
     end;
     PBS_PRESSED: begin
@@ -865,7 +865,7 @@ begin
       var glyph := pal[COLOR_GRAYTEXT];
       match state of
         CBXS_HOT: if effects.Hover then begin
-          fill := pal[COLOR_HOVER];
+          fill := hoverFill(pal, fill);
           glyph := hoverShade(pal, pal[COLOR_GRAYTEXT], pal[COLOR_BTNTEXT]);
         end;
         CBXS_PRESSED: begin
@@ -911,7 +911,7 @@ begin
     end;
     HP_HEADERITEM, HP_HEADERITEMLEFT, HP_HEADERITEMRIGHT: begin
       var fill := pal[COLOR_BTNFACE];
-      if effects.Hover and (state in [HIS_HOT, HIS_SORTEDHOT, HIS_ICONHOT, HIS_ICONSORTEDHOT]) then fill := pal[COLOR_HOVER]
+      if effects.Hover and (state in [HIS_HOT, HIS_SORTEDHOT, HIS_ICONHOT, HIS_ICONSORTEDHOT]) then fill := hoverFill(pal, fill)
       else if state in [HIS_PRESSED, HIS_SORTEDPRESSED, HIS_ICONPRESSED, HIS_ICONSORTEDPRESSED] then fill := pal[COLOR_BTNSHADOW];
       fillRect(dc, r, fill);
       drawLine(dc, r.Right-1, r.Top, r.Right-1, r.Bottom, pal[COLOR_BTNHIGHLIGHT]);
@@ -929,13 +929,13 @@ begin
   match part of
     TP_BUTTON, TP_DROPDOWNBUTTON, TP_SPLITBUTTON, TP_SPLITBUTTONDROPDOWN: begin
       if effects.Hover and (state in [TS_HOT, TS_NEARHOT, TS_OTHERSIDEHOT]) then begin
-        fillRect(dc, r, pal[COLOR_HOVER]);
+        fillRect(dc, r, hoverFill(pal, pal[COLOR_BTNFACE]));
         frameRect(dc, r, pal[COLOR_BTNHIGHLIGHT]);
       end else if state = TS_PRESSED then begin
         fillRect(dc, r, pal[COLOR_BTNSHADOW]);
         frameRect(dc, r, pal[COLOR_WINDOWFRAME]);
       end else if state in [TS_CHECKED, TS_HOTCHECKED] then begin
-        fillRect(dc, r, if effects.Hover and (state = TS_HOTCHECKED) then pal[COLOR_HOVER] else pal[COLOR_BTNSHADOW]);
+        fillRect(dc, r, if effects.Hover and (state = TS_HOTCHECKED) then hoverFill(pal, pal[COLOR_BTNSHADOW]) else pal[COLOR_BTNSHADOW]);
         frameRect(dc, r, pal[COLOR_HOTLIGHT]);
       end;
       if part = TP_SPLITBUTTONDROPDOWN then drawArrow(dc, r, adDown, if state = TS_DISABLED then pal[COLOR_GRAYTEXT] else pal[COLOR_BTNTEXT]);

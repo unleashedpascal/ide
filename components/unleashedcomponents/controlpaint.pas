@@ -1028,7 +1028,7 @@ end;
 
 function hoverColor(surface: TColor): TColor;
 begin
-  result := if themeActive then currentPalette[COLOR_HOVER] else blend(surface, clWindowText, 20);
+  result := if themeActive then ThemesPalette.hoverFill(currentPalette, surface) else blend(surface, clWindowText, 20);
 end;
 
 function hoverShade(normal, strong: TColor): TColor;
