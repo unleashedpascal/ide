@@ -16,7 +16,7 @@ unit ChartLite;
 interface
 
 uses
-  Classes, SysUtils, Types, Controls, Graphics, ControlPaint;
+  Classes, SysUtils, Types, Controls, Graphics, LMessages, ControlPaint;
 
 type
   TChartLite = class;
@@ -146,10 +146,14 @@ type
     procedure MouseMove(Shift: TShiftState; X, Y: Integer); override;
     procedure MouseLeave; override;
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
+    procedure CMHintShow(var Message: TLMessage); message CM_HINTSHOW;
     class function GetControlClassDefaultSize: TSize; override;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+    // the text of the hint over a point: the series or the slice, the
+    // category and the value
+    function PointText(series, index: integer): string;
     // a series with a title and values in one call
     function AddSeries(const title: string; const values: array of double; color: TColor = clDefault): TChartSeries;
     procedure Clear;
@@ -368,6 +372,9 @@ begin
   FAntialiasing := asTheme;
   FHot := -1;
   ParentColor := true;
+  ParentShowHint := false;
+  ShowHint := true;
+  Hint := 'value'; // replaced per point when the hint shows
   with GetControlClassDefaultSize do SetInitialBounds(0, 0, cx, cy);
 end;
 
@@ -895,6 +902,36 @@ begin
   FHot := -1;
   Invalidate;
   if Assigned(FOnPointHover) then FOnPointHover(self, -1, -1);
+end;
+
+function TChartLite.PointText(series, index: integer): string;
+begin
+  result := '';
+  if (series < 0) or (series >= FSeries.Count) or (index < 0) then exit;
+  var s := FSeries[series];
+  var who := if FKind in [ckPie, ckDonut] then (if index < FCategories.Count then FCategories[index] else '') else s.Title;
+  var where := if (FKind in [ckPie, ckDonut]) or (index >= FCategories.Count) then '' else FCategories[index];
+  result := valueText(series, index, s[index]);
+  if (FKind in [ckPie, ckDonut]) and FShowPercent then begin
+    var total := 0.0;
+    for var i := 0 to s.Count-1 do total += s[i];
+    if total > 0 then result += Format(' (%d%%)', [Round(s[index]*100/total)]);
+  end;
+  if where <> '' then result := where+': '+result;
+  if who <> '' then result := who+', '+result;
+end;
+
+procedure TChartLite.CMHintShow(var Message: TLMessage);
+begin
+  var info := PHintInfo(Message.LParam);
+  var hit := hitAt(info^.CursorPos.X, info^.CursorPos.Y);
+  if hit < 0 then begin
+    Message.Result := 1; // nothing under the mouse
+    exit;
+  end;
+  info^.HintStr := PointText(FHits[hit].series, FHits[hit].index);
+  // the hint goes when the mouse leaves the point, so the next one gets its own
+  info^.CursorRect := FHits[hit].rect;
 end;
 
 procedure TChartLite.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);

@@ -81,6 +81,7 @@ Available in code, not in the Object Inspector.
 
 | Method | Notes |
 |---|---|
+| `PointText(series, index: integer): string` | the text of the hint over a point: the series or the slice, the category and the value |
 | `AddSeries(const title: string; const values: array of double; color: TColor = clDefault): TChartSeries` | a series with a title and values in one call |
 | `Clear` | removes everything |
 
