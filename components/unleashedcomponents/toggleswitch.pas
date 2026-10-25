@@ -228,10 +228,13 @@ end;
 
 procedure TToggleSwitch.Paint;
 begin
+  var back := GetRGBColorResolvingParent;
   var onColor := pick(FOnColor, clHighlight);
-  var offColor := pick(FOffColor, blend(clBtnFace, clBtnShadow, 60));
-  var thumb := pick(FThumbColor, clWindow);
-  var border := pick(FBorderColor, clBtnShadow);
+  // off: the track a step from the surface and the thumb a step further,
+  // so both show on a dark theme too
+  var offColor := pick(FOffColor, blend(back, clWindowText, 18));
+  var thumb := pick(FThumbColor, (if isDark(back) then blend(back, clWindowText, 60) else ColorToRGB(clWindow)));
+  var border := pick(FBorderColor, blend(back, clWindowText, 35));
   if not Enabled then begin
     onColor := blend(onColor, clBtnFace, 50);
     offColor := blend(offColor, clBtnFace, 50);
