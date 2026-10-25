@@ -1842,7 +1842,11 @@ begin
       refreshClientEdge(wnd);
       if classNameOf(wnd) = 'ScrollBar' then paintScrollBars(wnd);
     end;
-    WM_SETFOCUS: refreshClientEdge(wnd, fwGained);
+    WM_SETFOCUS: begin
+      refreshClientEdge(wnd, fwGained);
+      // an edit paints its cue banner again only on its next full paint
+      if classNameOf(wnd) = 'Edit' then InvalidateRect(wnd, nil, false);
+    end;
     WM_KILLFOCUS: refreshClientEdge(wnd, fwLost);
     // a control going gray or coming back drops or regains its rings
     WM_ENABLE: paintClientEdge(wnd);
