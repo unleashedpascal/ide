@@ -1567,6 +1567,22 @@ begin
   SetPropW(wnd, EDGE_NAME, state);
 end;
 
+const
+  EM_GETCUEBANNER = $1502;
+
+// a click into an empty edit moves its caret, and the edit draws the empty
+// line straight onto the screen over its cue banner; only a full paint puts
+// the banner back, so one is asked for
+procedure restoreCueBanner(wnd: HWND);
+begin
+  if classNameOf(wnd) <> 'Edit' then exit;
+  if GetWindowTextLengthW(wnd) <> 0 then exit;
+  var cue: array[0..1] of WideChar;
+  cue[0] := #0;
+  if (SendMessageW(wnd, EM_GETCUEBANNER, WPARAM(@cue[0]), 2) = 0) or (cue[0] = #0) then exit;
+  InvalidateRect(wnd, nil, false);
+end;
+
 // a new control color, a focus change or the mouse repaint the client area
 // only, the edge keeps the old look
 procedure refreshClientEdge(wnd: HWND; focus: TFocusWord = fwAsk);
@@ -1844,14 +1860,17 @@ begin
     end;
     WM_SETFOCUS: begin
       refreshClientEdge(wnd, fwGained);
-      // an edit paints its cue banner again only on its next full paint
-      if classNameOf(wnd) = 'Edit' then InvalidateRect(wnd, nil, false);
+      restoreCueBanner(wnd);
     end;
+    WM_LBUTTONDBLCLK: restoreCueBanner(wnd);
     WM_KILLFOCUS: refreshClientEdge(wnd, fwLost);
     // a control going gray or coming back drops or regains its rings
     WM_ENABLE: paintClientEdge(wnd);
     // stand-alone scroll bar controls paint in their client area
-    WM_MOUSEMOVE, WM_MOUSELEAVE, WM_LBUTTONDOWN, WM_LBUTTONUP, SBM_SETSCROLLINFO, SBM_SETPOS, SBM_SETRANGE, SBM_ENABLE_ARROWS: if classNameOf(wnd) = 'ScrollBar' then paintScrollBars(wnd);
+    WM_MOUSEMOVE, WM_MOUSELEAVE, WM_LBUTTONDOWN, WM_LBUTTONUP, SBM_SETSCROLLINFO, SBM_SETPOS, SBM_SETRANGE, SBM_ENABLE_ARROWS:
+      if classNameOf(wnd) = 'ScrollBar' then paintScrollBars(wnd)
+      // a press, a release and a drag with the button down move the caret of an edit
+      else if (msg <> WM_MOUSELEAVE) and ((msg <> WM_MOUSEMOVE) or ((wParam and MK_LBUTTON) <> 0)) then restoreCueBanner(wnd);
   end;
 end;
 
