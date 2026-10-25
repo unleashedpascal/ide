@@ -152,6 +152,9 @@ type
       AEvent: QKeyEventH = nil): PtrInt;
     function QtKeyToLCLKey(AKey: Integer; AText: WideString;
       AEvent: QKeyEventH): Word;
+    {$IFDEF HASX11}
+    function QtScanCodeToLCLKey(AScanCode: LongWord): Word;
+    {$ENDIF}
     procedure SetLastCaretPos(const AValue: TQtPoint);
     procedure SetProps(const AnIndex: String; const AValue: pointer);
     procedure SetStyleSheet(const AValue: WideString);
@@ -356,6 +359,10 @@ type
     FSliderReleasedHook: QAbstractSlider_hookH;
     FValueChangedHook: QAbstractSlider_hookH;
     FActionTriggeredHook: QAbstractSlider_hookH;
+    FInActionTriggered: Boolean;
+    FPosSetInAction: Boolean;
+    FEndScrollPending: Boolean;
+    procedure DoActionTriggered(action: Integer);
   protected
     function CreateWidget(const AParams: TCreateParams):QWidgetH; override;
   public
@@ -398,6 +405,8 @@ type
     procedure setValue(p1: Integer); virtual;
     property SliderPressed: Boolean read FSliderPressed;
     property SliderReleased: Boolean read FSliderReleased;
+    property InActionTriggered: Boolean read FInActionTriggered;
+    property PosSetInAction: Boolean read FPosSetInAction write FPosSetInAction;
   end;
 
   { TQtScrollBar }
@@ -3530,6 +3539,10 @@ begin
   begin
     {$IFDEF HASX11}
     //key is unicode char, nativeVirtualKey is XKey.
+    if (QKeyEvent_key(QKeyEventH(Event)) >= $100) and (QKeyEvent_key(QKeyEventH(Event)) < $01000000) and
+      (QtScanCodeToLCLKey(QKeyEvent_nativeScanCode(QKeyEventH(Event))) <> VK_UNKNOWN) then
+      ACharCode := QtScanCodeToLCLKey(QKeyEvent_nativeScanCode(QKeyEventH(Event)))
+    else
     if (QKeyEvent_key(QKeyEventH(Event)) >= $100) and (QKeyEvent_key(QKeyEventH(Event)) < $017f) then
       ACharCode := QtKeyToLCLKey((QKeyEvent_nativeVirtualKey(QKeyEventH(Event)) - $0100) or $0080, Text, QKeyEventH(Event))
     else
@@ -3751,10 +3764,22 @@ begin
       ' UnicodeLen ',UnicodeOutLen);
     writeln('   sending QEventKeyPress');
     {$ENDIF}
-    for i:=1 to Length(WStr) do
+    i:=1;
+    while i<=Length(WStr) do
     begin
-      UnicodeChar := PWord(@WStr[i])^;
-      temps:=WStr[i];
+      if (i<Length(WStr)) and
+        (Word(WStr[i]) >= $D800) and (Word(WStr[i]) <= $DBFF) and
+        (Word(WStr[i+1]) >= $DC00) and (Word(WStr[i+1]) <= $DFFF) then
+      begin
+        UnicodeChar := $10000 + ((Word(WStr[i]) - $D800) shl 10) + (Word(WStr[i+1]) - $DC00);
+        temps:=Copy(WStr, i, 2);
+        inc(i, 2);
+      end else
+      begin
+        UnicodeChar := PWord(@WStr[i])^;
+        temps:=WStr[i];
+        inc(i);
+      end;
       KeyEvent := QKeyEvent_create(QEventKeyPress, PtrInt(UnicodeChar), QGUIApplication_keyboardModifiers, @temps);
       try
         // do not send it to queue, just pass it to SlotKey
@@ -5631,6 +5656,56 @@ begin
     end;
   end;
 end;
+
+{$IFDEF HASX11}
+function TQtWidget.QtScanCodeToLCLKey(AScanCode: LongWord): Word;
+begin
+  case AScanCode of
+    10..18: Result := VK_1 + (AScanCode - 10);
+    19: Result := VK_0;
+    20: Result := VK_OEM_MINUS;
+    21: Result := VK_OEM_PLUS;
+    24: Result := VK_Q;
+    25: Result := VK_W;
+    26: Result := VK_E;
+    27: Result := VK_R;
+    28: Result := VK_T;
+    29: Result := VK_Y;
+    30: Result := VK_U;
+    31: Result := VK_I;
+    32: Result := VK_O;
+    33: Result := VK_P;
+    34: Result := VK_OEM_4;
+    35: Result := VK_OEM_6;
+    38: Result := VK_A;
+    39: Result := VK_S;
+    40: Result := VK_D;
+    41: Result := VK_F;
+    42: Result := VK_G;
+    43: Result := VK_H;
+    44: Result := VK_J;
+    45: Result := VK_K;
+    46: Result := VK_L;
+    47: Result := VK_OEM_1;
+    48: Result := VK_OEM_7;
+    49: Result := VK_OEM_3;
+    51: Result := VK_OEM_5;
+    52: Result := VK_Z;
+    53: Result := VK_X;
+    54: Result := VK_C;
+    55: Result := VK_V;
+    56: Result := VK_B;
+    57: Result := VK_N;
+    58: Result := VK_M;
+    59: Result := VK_OEM_COMMA;
+    60: Result := VK_OEM_PERIOD;
+    61: Result := VK_OEM_2;
+    94: Result := VK_OEM_102;
+  else
+    Result := VK_UNKNOWN;
+  end;
+end;
+{$ENDIF}
 
 procedure TQtWidget.SetLastCaretPos(const AValue: TQtPoint);
 begin
@@ -7948,6 +8023,7 @@ var
   AState: QtWindowStates;
   AOldState: QtWindowStates;
   CanSendEvent: Boolean;
+  AAppMinimize: Boolean;
   {$IFDEF MSWINDOWS}
   i: Integer;
   AForm: TCustomForm;
@@ -8085,6 +8161,7 @@ begin
         end;
 
         CanSendEvent := True;
+        AAppMinimize := False;
         {$IFDEF HASX11}
         // for X11 we must ask state of each modified window.
         AState := getWindowState;
@@ -8128,7 +8205,7 @@ begin
               end;
             end;
             {$ENDIF}
-            Application.IntfAppMinimize;
+            AAppMinimize := True;
           end
           else
           if (AOldState and QtWindowMinimized <> 0) or
@@ -8193,6 +8270,8 @@ begin
           {$ENDIF}
           SlotWindowStateChange;
         end;
+        if AAppMinimize then
+          Application.IntfAppMinimize;
       end;
       QEventDrop,
       QEventDragMove,
@@ -9551,6 +9630,22 @@ begin
 end;
 
 procedure TQtAbstractSlider.SlotActionTriggered(action: Integer); cdecl;
+var
+  AOldInAction, AOldPosSet: Boolean;
+begin
+  AOldInAction := FInActionTriggered;
+  AOldPosSet := FPosSetInAction;
+  FInActionTriggered := True;
+  FPosSetInAction := False;
+  try
+    DoActionTriggered(action);
+  finally
+    FInActionTriggered := AOldInAction;
+    FPosSetInAction := AOldPosSet;
+  end;
+end;
+
+procedure TQtAbstractSlider.DoActionTriggered(action: Integer);
 const
   SliderActions: Array[0..7] of QAbstractSliderSliderAction = (
     QAbstractSliderSliderNoAction, QAbstractSliderSliderSingleStepAdd,
@@ -9597,19 +9692,14 @@ begin
   case SliderAction of
     QAbstractSliderSliderNoAction:
     begin
-      exit; // issue #41566
-      // this is called from mouse release while qt still thinks that
-      // slider is pressed, we must update position.issue #14728, #21610
-      if getSliderDown then
-      begin
-        LMScroll.ScrollCode := SB_THUMBPOSITION;
-        DeliverMessage(LMScroll);
-      end;
-
+      if not FEndScrollPending then
+        exit; // issue #41566
+      FEndScrollPending := False;
       LMScroll.ScrollCode := SB_ENDSCROLL;
     end;
     QAbstractSliderSliderSingleStepAdd:
       begin
+        FEndScrollPending := True;
         if LMScroll.Msg = LM_HSCROLL then
           LMScroll.ScrollCode := SB_LINERIGHT
         else
@@ -9617,6 +9707,7 @@ begin
       end;
     QAbstractSliderSliderSingleStepSub:
       begin
+        FEndScrollPending := True;
         if LMScroll.Msg = LM_HSCROLL then
           LMScroll.ScrollCode := SB_LINELEFT
         else
@@ -9624,6 +9715,7 @@ begin
       end;
     QAbstractSliderSliderPageStepAdd:
       begin
+        FEndScrollPending := True;
         if LMScroll.Msg = LM_HSCROLL then
           LMScroll.ScrollCode := SB_PAGERIGHT
         else
@@ -9631,6 +9723,7 @@ begin
       end;
     QAbstractSliderSliderPageStepSub:
       begin
+        FEndScrollPending := True;
         if LMScroll.Msg = LM_HSCROLL then
           LMScroll.ScrollCode := SB_PAGELEFT
         else
@@ -9780,6 +9873,7 @@ begin
     LMScroll.Result := 0;
   end;
   FSliderReleased := False;
+  FEndScrollPending := False;
   LMScroll.ScrollCode := SB_ENDSCROLL;
   DeliverMessage(LMScroll);
 
@@ -14498,6 +14592,13 @@ begin
       end;
       inherited signalSelectionChanged();
     end;
+  end else
+  if (QEvent_type(Event) = QEventKeyPress) and
+    (QKeyEvent_key(QKeyEventH(Event)) = QtKey_Space) and
+    (QKeyEvent_modifiers(QKeyEventH(Event)) and QtControlModifier = 0) then
+  begin
+    inherited EventFilter(Sender, Event);
+    Result := True;
   end else
   if (QEvent_type(Event) = QEventMouseButtonDblClick) then
     // issue #25089

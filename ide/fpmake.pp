@@ -134,6 +134,8 @@ begin
     P.Dependencies.Add('synedit');
     P.Dependencies.Add('debuggerintf');
     P.Dependencies.Add('lazdebuggergdbmi');
+    P.Dependencies.Add('idesynedit');
+    P.Dependencies.Add('idehelputils');
     P.Dependencies.Add('ideutilspkg');
     P.Dependencies.Add('ideconfig');
     P.Dependencies.Add('idepackager');
@@ -224,7 +226,6 @@ begin
     P.Sources.AddSrc('codecontextform.pas');
     P.Sources.AddSrc('codeexplopts.pas');
     P.Sources.AddSrc('codeexplorer.pas');
-    P.Sources.AddSrc('codehelp.pas');
     P.Sources.AddSrc('codemacroprompt.pas');
     P.Sources.AddSrc('codemacroselect.pas');
     P.Sources.AddSrc('codetemplatesdlg.pas');
@@ -258,10 +259,6 @@ begin
     P.Sources.AddSrc('findunitdlg.pas');
     P.Sources.AddSrc('formeditor.pp');
     P.Sources.AddSrc('fpcsrcscan.pas');
-    P.Sources.AddSrc('fpdoceditwindow.pas');
-    P.Sources.AddSrc('fpdochints.pas');
-    P.Sources.AddSrc('fpdocselectinherited.pas');
-    P.Sources.AddSrc('fpdocselectlink.pas');
     P.Sources.AddSrc('frames/atom_checkboxes_options.pas');
     P.Sources.AddSrc('frames/backup_options.pas');
     P.Sources.AddSrc('frames/buildmodeseditor.pas');
@@ -317,13 +314,11 @@ begin
     P.Sources.AddSrc('gotofrm.pas');
     P.Sources.AddSrc('helpfpcmessages.pas');
     P.Sources.AddSrc('helpoptions.pas');
-    P.Sources.AddSrc('idecontexthelpedit.pas');
     P.Sources.AddSrc('idedefs.pas');
     P.Sources.AddSrc('idefpcinfo.pas');
     P.Sources.AddSrc('ideoptiondefs.pas');
     P.Sources.AddSrc('ideoptionsdlg.pas');
     P.Sources.AddSrc('ideprotocol.pas');
-    P.Sources.AddSrc('idewindowhelp.pas');
     P.Sources.AddSrc('imexportcompileropts.pas');
     P.Sources.AddSrc('infobuild.pp');
     P.Sources.AddSrc('initialsetupdlgs.pas');
@@ -374,7 +369,6 @@ begin
     P.Sources.AddSrc('sourcemarks.pas');
     P.Sources.AddSrc('sourcesyneditor.pas');
     P.Sources.AddSrc('splash.pp');
-    P.Sources.AddSrc('srcedithintfrm.pas');
     P.Sources.AddSrc('sysvaruseroverridedlg.pas');
     P.Sources.AddSrc('transfermacros.pp');
     P.Sources.AddSrc('unitdependencies.pas');

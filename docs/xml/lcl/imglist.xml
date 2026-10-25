@@ -280,6 +280,31 @@ needed.
 </seealso>
 </element>
 
+<element name="TOverlayArray">
+<short>
+Array type used to provide access to images used as overlays in 
+TCustomImageList / TImageList.
+</short>
+<descr>
+<p>
+TOverlayArray is the type used to implement the Overlays property in 
+TCustomImageList. The array elements store Integer values with the ordinal 
+positions for images used as an overlay in an image list. Elements in the 
+array are accessed by the TOverlay type which identifies up to 15 image 
+indexes in the image list where overlay images are used. An element has the 
+value -1 when an image in the list has not been designated for use in the 
+overlay image position.
+</p>
+</descr>
+<version>
+Added in LCL version 5.0.
+</version>
+<seealso>
+<link id="TOverlay"/>
+<link id="TCustomImageList.Overlays"/>
+</seealso>
+</element>
+
 <element name="TCustomImageListResolution">
 <short>
 Implements an image resolution (or size) used in TCustomImageList.
@@ -316,8 +341,6 @@ used for the Resolution and ResolutionByIndex properties in TCustomImageList.
 <element name="TCustomImageListResolution.FWidth" link="#lcl.imglist.TCustomImageListResolution.Width"/>
 
 <element name="TCustomImageListResolution.FHeight" link="#lcl.imglist.TCustomImageListResolution.Height"/>
-
-<element name="TCustomImageListResolution.FData" link="#lcl.imglist.TCustomImageListResolution.AllocData"/>
 
 <element name="TCustomImageListResolution.FReference" link="#lcl.imglist.TCustomImageListResolution.Reference"/>
 
@@ -624,54 +647,23 @@ TCustomImageList.GetFullRawImage method.
 <short>Raw image data for all images in the resolution.</short>
 </element>
 
-<element name="TCustomImageListResolution.WriteData">
+<element name="TCustomImageListResolution.AddImages"/>
+<element name="TCustomImageListResolution.AddImages.AValue"/>
+
+<element name="TCustomImageListResolution.FData">
 <short>
-Stores the raw image data for the resolution to a Stream.
+Member used to store the RGBA color values for pixels used in the images for 
+the resolution.
 </short>
-<descr>
-<p>
-<var>WriteData</var> is a procedure used to write the raw image data for all 
-images in the resolution to the specified stream.
-</p>
-<p>
-<var>AStream</var> contains the <var>TStream</var> class instance where raw 
-image data is stored in the method. The current position in AStream is used 
-when values are written in the method.
-</p>
-<p>
-<var>ACompress</var> indicates if compression is applied to raw image data 
-before it is written to the stream. When ACompress is <b>True</b>, a 
-temporary TCompressionStream class instance is used to get the compressed 
-values written to the stream. ACompress also determines the image list 
-signature written at the start of AStream. When ACompress is <b>False</b>, 
-the value in SIG_LAZ3 is written as the image list signature. When 
-ACompressed is <b>True</b>, the value in SIG_LAZ4 is used.
-</p>
-<p>
-WriteData writes a signature and header to the stream in AStream. First, the 
-image list signature is written as described in the preceding paragraph. 
-Second, a header is written that contains Integer values for the Count, 
-Width, and Height properties (in that order). Finally, the raw image data is 
-written to the stream (using optional compression when ACompress is 
-<b>True</b>). The uncompressed values represent the 32-bit RGBA raw image 
-data for the entire resolution. Raw image data is not written if the Count 
-property contains 0 (zero).
-</p>
-<p>
-WriteData is used in the implementation of the TCustomImageList.WriteData 
-method.
-</p>
-</descr>
+<descr></descr>
+<version>
+Visibility changed in LCL version 5.0.
+</version>
 <seealso>
-<link id="TCustomImageList.WriteData"/>
-<link id="TCustomImageList.ReadData"/>
+<link id="TCustomImageListResolution.GetRawImage"/>
+<link id="TCustomImageListResolution.ReadData"/>
+<link id="TCustomImageListResolution.WriteData"/>
 </seealso>
-</element>
-<element name="TCustomImageListResolution.WriteData.AStream">
-<short>Stream where raw image data for the resolution is stored.</short>
-</element>
-<element name="TCustomImageListResolution.WriteData.ACompress">
-<short>Indicates if compression is applied to raw image data.</short>
 </element>
 
 <element name="TCustomImageListResolution.ReadData">
@@ -743,12 +735,68 @@ ReadData is used in the implementation of the
 <var>TCustomImageList.ReadData</var> method.
 </p>
 </descr>
+<version>
+Visibility changed in LCL version 5.0.
+</version>
 <seealso>
 <link id="TCustomImageList.ReadData"/>
 </seealso>
 </element>
 <element name="TCustomImageListResolution.ReadData.AStream">
 <short>Stream which contains the raw image data read in the method.</short>
+</element>
+
+<element name="TCustomImageListResolution.WriteData">
+<short>
+Stores the raw image data for the resolution to a Stream.
+</short>
+<descr>
+<p>
+<var>WriteData</var> is a procedure used to write the raw image data for all 
+images in the resolution to the specified stream.
+</p>
+<p>
+<var>AStream</var> contains the <var>TStream</var> class instance where raw 
+image data is stored in the method. The current position in AStream is used 
+when values are written in the method.
+</p>
+<p>
+<var>ACompress</var> indicates if compression is applied to raw image data 
+before it is written to the stream. When ACompress is <b>True</b>, a 
+temporary TCompressionStream class instance is used to get the compressed 
+values written to the stream. ACompress also determines the image list 
+signature written at the start of AStream. When ACompress is <b>False</b>, 
+the value in SIG_LAZ3 is written as the image list signature. When 
+ACompressed is <b>True</b>, the value in SIG_LAZ4 is used.
+</p>
+<p>
+WriteData writes a signature and header to the stream in AStream. First, the 
+image list signature is written as described in the preceding paragraph. 
+Second, a header is written that contains Integer values for the Count, 
+Width, and Height properties (in that order). Finally, the raw image data is 
+written to the stream (using optional compression when ACompress is 
+<b>True</b>). The uncompressed values represent the 32-bit RGBA raw image 
+data for the entire resolution. Raw image data is not written if the Count 
+property contains 0 (zero).
+</p>
+<p>
+WriteData is used in the implementation of the TCustomImageList.WriteData 
+method.
+</p>
+</descr>
+<version>
+Visibility changed in LCL version 5.0.
+</version>
+<seealso>
+<link id="TCustomImageList.WriteData"/>
+<link id="TCustomImageList.ReadData"/>
+</seealso>
+</element>
+<element name="TCustomImageListResolution.WriteData.AStream">
+<short>Stream where raw image data for the resolution is stored.</short>
+</element>
+<element name="TCustomImageListResolution.WriteData.ACompress">
+<short>Indicates if compression is applied to raw image data.</short>
 </element>
 
 <element name="TCustomImageListResolution.GetReferenceHandle">
@@ -812,6 +860,30 @@ ReferenceDestroying calls the inherited method, and notifies the image list
 that the handle for the resolution is being freed.
 </p>
 </descr>
+</element>
+
+<element name="TCustomImageListResolution.UpdateReference">
+<short>
+Forces the reference counted image list for the resolution to be freed and 
+recreated.
+</short>
+<descr>
+<p>
+<var>UpdateReference</var>	causes the handle-based image list for the image 
+resolution to be freed and recreated when the handle or its contents has been 
+changed. UpdateReference is called from the ReadData method for the resolution 
+when images are loaded during LCL component streaming, and when reloaded in 
+program code.
+</p>
+</descr>
+<version>
+Added in LCL version 5.0.
+</version>
+<seealso>
+<link id="TCustomImageListResolution.ReadData"/>
+<link id="#lcl.lclclasses.TLCLReferenceComponent.DestroyReference">TLCLReferenceComponent.DestroyReference</link>
+<link id="#lcl.lclclasses.TLCLReferenceComponent.ReferenceNeeded">TLCLReferenceComponent.ReferenceNeeded</link>
+</seealso>
 </element>
 
 <element name="TCustomImageListResolution.Destroy">
@@ -1282,7 +1354,8 @@ the method.
 <p>
 <var>AOverlay</var> contains the position where the index for an overlay 
 image was stored using <var>Overlay</var>. The value in AOverlay must be in 
-the range 0..14 (the range defined in <var>TOverlay</var>).
+the range 0..14 (the range defined in <var>TOverlay</var>). It references the 
+position in the Overlays property for the image list used in the resolution.
 </p>
 <p>
 <var>ADrawingStyle</var> contains the <var>TDrawingStyle</var> enumeration 
@@ -1320,7 +1393,10 @@ overlay image is not drawn if AOverlay contains a value outside the range
 allowed in TOverlay, or does not map to a valid image index in the image list.
 </p>
 </descr>
-<seealso/>
+<seealso>
+<link id="TScaledImageListResolution.Resolution"/>
+<link id="TCustomImageList.Overlays"/>
+</seealso>
 </element>
 <element name="TCustomImageListResolution.DrawOverlay.ACanvas">
 <short>Canvas where the image and its overlay are rendered.</short>
@@ -2661,7 +2737,7 @@ Used to remember changes that occur while update notifications are locked
 <short>Counter for BeginUpdate/EndUpdate method calls.</short>
 </element>
 
-<element name="TCustomImageList.FOverlays" link="#lcl.imglist.TCustomImageList.Overlay"/>
+<element name="TCustomImageList.FOverlays" link="#lcl.imglist.TCustomImageList.Overlays"/>
 
 <element name="TCustomImageList.FHasOverlays" link="#lcl.imglist.TCustomImageList.HasOverlays"/>
 
@@ -3326,8 +3402,8 @@ Clears images indexes assigned as overlay images in the image list.
 <descr>
 <p>
 <var>ClearOverlays</var> is a procedure used to reset the image indexes 
-assigned in the internal array for use as an overlay images. ClearOverlays 
-sets each TOverlay index position to the value <b>-1</b> to indicate that it 
+assigned to Overlays for use as an overlay images. ClearOverlays sets each 
+TOverlay index position to the value <b>-1</b> to indicate that it
 does not point to an overlay image in the image list.
 </p>
 <p>
@@ -3336,6 +3412,7 @@ ClearOverlays is used in the implementation of the <var>Clear</var> and
 </p>
 </descr>
 <seealso>
+<link id="TCustomImageList.Overlays"/>
 <link id="TCustomImageList.Clear"/>
 <link id="TCustomImageList.Initialize"/>
 <link id="TOverlay"/>
@@ -5333,7 +5410,7 @@ the Change method to perform notifications for the change event.
 
 <element name="TCustomImageList.Overlay">
 <short>
-Assigns an overlay index for the specified image in the image list.
+Assigns the specified image to the given overlay position for the image list.
 </short>
 <descr>
 <p>
@@ -5348,9 +5425,7 @@ use as an overlay image.
 </p>
 <p>
 <var>Overlay</var> is a <var>TOverlay</var> value that indicates the position 
-in the internal array of overlay indexes where the value in AIndex is stored. 
-The overlay indexes are essentially one-based because an overlay index of 
-zero means that no overlay image is needed.
+in Overlays where the value in AIndex is stored.
 </p>
 <p>
 The Overlay method tells the image list that the image in AIndex is an 
@@ -5360,22 +5435,24 @@ the ordinal position in the image list.
 <p>
 Overlay sets the value in the <var>HasOverlays</var> property to <b>True</b> 
 when AIndex contains a valid index position in the image list. Otherwise, the 
-image indexes in each of the internal overlay positions are re-examined to 
-determine the value for HasOverlays.
+image indexes in each of the positions in Overlays are re-examined to 
+determine the value for HasOverlays. Any element in Overlays with a value 
+other than -1 has an assigned overlay image index.
 </p>
 <p>
 Use the <var>DrawOverlay</var> method to draw an image along with a specific 
 overlay image.
 </p>
 <p>
-Use <var>ClearOverlays</var> to reset the image indexes stored in the 
-internal member to the unused value (-1).
+Use <var>ClearOverlays</var> to reset the image indexes stored in Overlays to 
+the unused value (-1).
 </p>
 </descr>
 <seealso>
 <link id="TCustomImageList.HasOverlays"/>
 <link id="TCustomImageList.ClearOverlays"/>
 <link id="TCustomImageList.DrawOverlay"/>
+<link id="TCustomImageList.Overlays"/>
 <link id="TCustomImageListResolution.DrawOverlay"/>
 <link id="TOverlay"/>
 </seealso>
@@ -6629,6 +6706,48 @@ resolutions are accessed in descending image size order in the enumerator.
 <short>Descending Resolutions enumerator for the class instance.</short>
 </element>
 
+<element name="TCustomImageList.Overlays">
+<short>
+Provides access to images used as overlays in the image list.
+</short>
+<descr>
+<p>
+<var>Overlays</var> is a read-only <var>TOverlayArray</var> property which 
+provides access to images used as overlays in the image list. An overlay image 
+is a mask drawn transparently over another image to represent its state or 
+enhanced drawing style. Each element in the array is an Integer value with the 
+ordinal position for an image in the list used as an overlay. Up to 15 of the 
+images in the list can be used as an overlay image.
+</p>
+<p>
+Values in Overlays are stored when the Overlay method is called to designate 
+a specified image index for use in the overlay position. The ClearOverlays 
+method causes each of the elements in Overlays to be set to -1 to indicate 
+that an image index has not been assigned for the overlay position. Use 
+HasOverlays to determine whether any images in the list have been designated 
+as an overlay image.
+</p>
+<p>
+A value in Overlays is passed as an argument to the DrawOverlay method for the 
+image list resolution. Controls which utilize the Overlays feature include 
+TTreeView and TLvlGraphControl (but not TListView).
+</p>
+</descr>
+<version>
+Added in LCL version 5.0.
+</version>
+<seealso>
+<link id="TCustomImageList.Overlay"/>
+<link id="TCustomImageList.HasOverlays"/>
+<link id="TCustomImageList.ClearOverlays"/>
+<link id="TCustomImageListResolution.DrawOverlay"/>
+<link id="TScaledImageListResolution.DrawOverlay"/>
+<link id="TOverlayArray"/>
+<link id="TOverlay"/>
+<link id="#lcl.comctrls.TTreeView">TTreeView</link>
+<link id="#lcl.comctrls.TTreeNode.OverlayIndex">TTreeNode.OverlayIndex</link>
+</seealso>
+</element>
 
 <element name="TCustomImageList.Scaled">
 <short>
@@ -6732,6 +6851,40 @@ value for the property is <var>itImage</var>.
 <link id="TCustomImageList.Draw"/>
 <link id="TCustomImageList.DrawOverlay"/>
 <link id="TCustomImageList.StretchDraw"/>
+</seealso>
+</element>
+
+<element name="TCustomImageList.OnChange">
+<short>
+Event handler signalled when one or more of the images in the image list has 
+been changed.
+</short>
+<descr>
+<p>
+OnChange is a TNotifyEvent property with the event handler signalled when one 
+or more of the image(s) in the list have been changed. It is signalled (when 
+assigned) from the Change method, and occurs when methods which modify the 
+images in the list are called. This includes methods like: Add, Clear, Delete, 
+Move, ReadData, and ReadAdvData. It is called from the EndUpdate method when 
+the update count for the control reaches 1. It is also called when the value 
+in the BkColor property has been changed and the images in the list are 
+updated.
+</p>
+</descr>
+<version>
+Added in LCL version 5.0.
+</version>
+<seealso>
+<link id="TCustomImageList.Add"/>
+<link id="TCustomImageList.Assign"/>
+<link id="TCustomImageList.BkColor"/>
+<link id="TCustomImageList.Change"/>
+<link id="TCustomImageList.Clear"/>
+<link id="TCustomImageList.Delete"/>
+<link id="TCustomImageList.EndUpdate"/>
+<link id="TCustomImageList.Move"/>
+<link id="TCustomImageList.ReadAdvData"/>
+<link id="TCustomImageList.ReadData"/>
 </seealso>
 </element>
 

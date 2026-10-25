@@ -29,6 +29,26 @@ msgstr "- 添加新组 -"
 msgid "No group"
 msgstr "无组"
 
+#: idedebuggerstringconstants.brkhandleignorebreakpoints
+msgid "Handle/Ignore breakpoints"
+msgstr ""
+
+#: idedebuggerstringconstants.brkhandleignoreexceptions
+msgid "Handle/Ignore exceptions"
+msgstr ""
+
+#: idedebuggerstringconstants.brkshowbreakpointsandwatchpo
+msgid "Show breakpoints and watchpoints"
+msgstr ""
+
+#: idedebuggerstringconstants.brkshowbreakwatchpointsandex
+msgid "Show break/watchpoints and exception-filter"
+msgstr ""
+
+#: idedebuggerstringconstants.brkshowexceptionfilter
+msgid "Show exception-filter"
+msgstr ""
+
 #: idedebuggerstringconstants.dbgasmwindowlinktarget
 msgid "Link target line"
 msgstr "链接目标行"
@@ -320,6 +340,10 @@ msgctxt "idedebuggerstringconstants.dispformatcharord"
 msgid "Ordinal"
 msgstr "序号"
 
+#: idedebuggerstringconstants.dispformatdlgaddrprefix
+msgid "Address marker"
+msgstr ""
+
 #: idedebuggerstringconstants.dispformatdlgarraycombine
 msgid "Combine lengths"
 msgstr "合并长度"
@@ -364,6 +388,10 @@ msgstr "包含嵌入式"
 #: idedebuggerstringconstants.dispformatdlgbtnadrformat
 msgid "Address"
 msgstr "地址"
+
+#: idedebuggerstringconstants.dispformatdlgbtnadrformatdata
+msgid "Data-address"
+msgstr ""
 
 #: idedebuggerstringconstants.dispformatdlgbtnall
 msgid "All"
@@ -454,6 +482,10 @@ msgstr "(已输入)"
 msgctxt "idedebuggerstringconstants.dispformatdlgindent"
 msgid "Multiline"
 msgstr "多行"
+
+#: idedebuggerstringconstants.dispformatdlgnumprefix
+msgid "Number marker"
+msgstr ""
 
 #: idedebuggerstringconstants.dispformatenumname
 msgctxt "idedebuggerstringconstants.dispformatenumname"
@@ -803,6 +835,37 @@ msgstr "- 默认 -"
 #: idedebuggerstringconstants.dlgbackendconvoptdisabled
 msgid "- Disabled -"
 msgstr "- 禁用 -"
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowchangetakeseffect
+msgid "A change takes effect when the next debug session starts."
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindoweditdiv
+msgid "Edit IDE console provider"
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowediting
+#, object-pascal-format
+msgid "Currently editing %s"
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindownone
+msgid "No console window is available."
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowoptions
+msgid "Debug Console Window"
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowrunparamshint
+msgid ""
+"Selects the default Console for showing the target's StdIn/Out in the IDE.\n"
+"Project can override this in their \"Run Parameters\". The default there is \"use IDE default\"."
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowselectdiv
+msgid "Select provider for IDE console window"
+msgstr ""
 
 #: idedebuggerstringconstants.dlgdisplayformatdebugoptions
 msgid "Display Format"
@@ -1262,6 +1325,10 @@ msgstr "可视性"
 msgid "Condition"
 msgstr "状态"
 
+#: idedebuggerstringconstants.lisconsolelocalecho
+msgid "Echo typed input"
+msgstr ""
+
 #: idedebuggerstringconstants.liscopyall
 msgid "Copy All"
 msgstr "复制所有"
@@ -1398,6 +1465,10 @@ msgstr "开/关"
 msgctxt "idedebuggerstringconstants.lisdbgwinpowerhint"
 msgid "Disable/Enable updates for the entire window"
 msgstr "禁用/启用整个窗口的更新"
+
+#: idedebuggerstringconstants.lisdebugconsolebuiltinname
+msgid "IDE Debug Console"
+msgstr ""
 
 #: idedebuggerstringconstants.lisdebuggerfeedbackerror
 msgid "Debugger Error"
@@ -1882,7 +1953,7 @@ msgid "Assembler"
 msgstr "汇编(&A)"
 
 #: idedebuggerstringconstants.lismenuviewbreakpointsandexceptions
-msgid "BreakPoints/Exceptions"
+msgid "Breakpoints/Exceptions"
 msgstr ""
 
 #: idedebuggerstringconstants.lismenuviewcallstack
@@ -2190,6 +2261,10 @@ msgstr "Word (Big Endian)"
 #: idedebuggerstringconstants.memviewgroupwordlittleendian
 msgid "Word (Little Endian)"
 msgstr "Word (Little Endian)"
+
+#: idedebuggerstringconstants.mnuconsoleinoutputwindow
+msgid "Console In/Output (Lazarus)"
+msgstr ""
 
 #: idedebuggerstringconstants.optdispguttercustomdisplayformat
 msgid "Custom Display Format"

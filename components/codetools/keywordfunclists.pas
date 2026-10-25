@@ -1149,6 +1149,7 @@ begin
     Add('HIGH',{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('ORD',{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('AS',{$ifdef FPC}@{$endif}AllwaysTrue);
+    Add('IS',{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('IN',{$ifdef FPC}@{$endif}AllwaysTrue);
   end;
   
@@ -1404,9 +1405,11 @@ begin
     Add('INCLUDE'     ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('INITIALIZE'  ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('INSERT'      ,{$ifdef FPC}@{$endif}AllwaysTrue);
+    Add('ISCONSTVALUE',{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('LENGTH'      ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('LO'          ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('LOW'         ,{$ifdef FPC}@{$endif}AllwaysTrue);
+    Add('NAMEOF'      ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('NEW'         ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('OBJCSELECTOR',{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('OFFSETOF'    ,{$ifdef FPC}@{$endif}AllwaysTrue);
@@ -1917,11 +1920,13 @@ begin
     Add('HIGH'       ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('INT64'      ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('INTEGER'    ,{$ifdef FPC}@{$endif}AllwaysTrue);
+    Add('ISCONSTVALUE',{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('LENGTH'     ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('LONGBOOL'   ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('LONGINT'    ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('LONGWORD'   ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('LOW'        ,{$ifdef FPC}@{$endif}AllwaysTrue);
+    Add('NAMEOF'     ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('NATIVEINT'  ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('NATIVEUINT' ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('NIL'        ,{$ifdef FPC}@{$endif}AllwaysTrue);
@@ -1964,12 +1969,14 @@ begin
     Add('EXIT'       ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('FALSE'      ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('HIGH'       ,{$ifdef FPC}@{$endif}AllwaysTrue);
+    Add('ISCONSTVALUE',{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('JSVALUE'    ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('LENGTH'     ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('LONGBOOL'   ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('LONGINT'    ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('LONGWORD'   ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('LOW'        ,{$ifdef FPC}@{$endif}AllwaysTrue);
+    Add('NAMEOF'     ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('NATIVEINT'  ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('NATIVEUINT' ,{$ifdef FPC}@{$endif}AllwaysTrue);
     Add('NIL'        ,{$ifdef FPC}@{$endif}AllwaysTrue);

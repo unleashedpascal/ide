@@ -26,8 +26,10 @@ uses
   qt6,
   // Free Pascal
   Classes, SysUtils, Types,
+  // LazUtils
+  LazLoggerBase,
   // LCL
-  LCLType, LCLIntf, LCLProc, LazUTF8, Menus, Graphics, ClipBrd, ExtCtrls,
+  LCLType, LCLIntf, LazUTF8, Menus, Graphics, ClipBrd, ExtCtrls,
   Interfacebase, maps;
 
 type
@@ -849,6 +851,8 @@ function QtScreenContext: TQtDeviceContext;
 
 procedure AssignQtFont(FromFont: QFontH; ToFont: QFontH);
 function IsFontEqual(AFont1, AFont2: TQtFont): Boolean;
+
+function LazCpIsRegionalIndicator(cp: Integer): Boolean;
 
 var
   QtGDIObjects: TQtGDIObjects = nil;
@@ -2903,6 +2907,300 @@ end;
   
   To get a correct behavior we need to sum the text's height to the Y coordinate.
  ------------------------------------------------------------------------------}
+const
+  {$IFDEF MSWINDOWS}
+  cLazEmojiFamily: WideString = 'Segoe UI Emoji';
+  {$ELSE}
+  {$IFDEF DARWIN}
+  cLazEmojiFamily: WideString = 'Apple Color Emoji';
+  {$ELSE}
+  cLazEmojiFamily: WideString = 'emoji';
+  {$ENDIF}
+  {$ENDIF}
+
+procedure LazDecodeCodepoint(const ws: WideString; i: Integer; out cp, cuCount: Integer);
+var
+  w1, w2: Word;
+begin
+  w1 := Word(ws[i]);
+  if (w1 >= $D800) and (w1 <= $DBFF) and (i < Length(ws)) then
+  begin
+    w2 := Word(ws[i + 1]);
+    if (w2 >= $DC00) and (w2 <= $DFFF) then
+    begin
+      cp := $10000 + ((w1 - $D800) shl 10) + (w2 - $DC00);
+      cuCount := 2;
+      Exit;
+    end;
+  end;
+  cp := w1;
+  cuCount := 1;
+end;
+
+function LazCpIsRegionalIndicator(cp: Integer): Boolean;
+begin
+  Result := (cp >= $1F1E6) and (cp <= $1F1FF);
+end;
+
+function LazCpHasEmojiPresentation(cp: Integer): Boolean;
+begin
+  if (cp < $231A) or ((cp > $2B55) and (cp < $1F000)) then
+    Result := False
+  else if cp < $10000 then
+    Result :=
+      ((cp >= $231A) and (cp <= $231B)) or
+      ((cp >= $23E9) and (cp <= $23EC)) or (cp = $23F0) or (cp = $23F3) or
+      ((cp >= $25FD) and (cp <= $25FE)) or
+      ((cp >= $2614) and (cp <= $2615)) or
+      ((cp >= $2648) and (cp <= $2653)) or (cp = $267F) or (cp = $2693) or
+      (cp = $26A1) or ((cp >= $26AA) and (cp <= $26AB)) or
+      ((cp >= $26BD) and (cp <= $26BE)) or ((cp >= $26C4) and (cp <= $26C5)) or
+      (cp = $26CE) or (cp = $26D4) or (cp = $26EA) or
+      ((cp >= $26F2) and (cp <= $26F3)) or (cp = $26F5) or (cp = $26FA) or
+      (cp = $26FD) or (cp = $2705) or ((cp >= $270A) and (cp <= $270B)) or
+      (cp = $2728) or (cp = $274C) or (cp = $274E) or
+      ((cp >= $2753) and (cp <= $2755)) or (cp = $2757) or
+      ((cp >= $2795) and (cp <= $2797)) or (cp = $27B0) or (cp = $27BF) or
+      ((cp >= $2B1B) and (cp <= $2B1C)) or (cp = $2B50) or (cp = $2B55)
+  else
+    Result :=
+      (cp = $1F004) or (cp = $1F0CF) or (cp = $1F18E) or
+      ((cp >= $1F191) and (cp <= $1F19A)) or
+      (cp = $1F201) or (cp = $1F21A) or (cp = $1F22F) or
+      ((cp >= $1F232) and (cp <= $1F236)) or
+      ((cp >= $1F238) and (cp <= $1F23A)) or
+      ((cp >= $1F250) and (cp <= $1F251)) or
+      ((cp >= $1F300) and (cp <= $1F320)) or
+      ((cp >= $1F32D) and (cp <= $1F335)) or
+      ((cp >= $1F337) and (cp <= $1F37C)) or
+      ((cp >= $1F37E) and (cp <= $1F393)) or
+      ((cp >= $1F3A0) and (cp <= $1F3CA)) or
+      ((cp >= $1F3CF) and (cp <= $1F3D3)) or
+      ((cp >= $1F3E0) and (cp <= $1F3F0)) or (cp = $1F3F4) or
+      ((cp >= $1F3F8) and (cp <= $1F43E)) or (cp = $1F440) or
+      ((cp >= $1F442) and (cp <= $1F4FC)) or
+      ((cp >= $1F4FF) and (cp <= $1F53D)) or
+      ((cp >= $1F54B) and (cp <= $1F54E)) or
+      ((cp >= $1F550) and (cp <= $1F567)) or (cp = $1F57A) or
+      ((cp >= $1F595) and (cp <= $1F596)) or (cp = $1F5A4) or
+      ((cp >= $1F5FB) and (cp <= $1F64F)) or
+      ((cp >= $1F680) and (cp <= $1F6C5)) or (cp = $1F6CC) or
+      ((cp >= $1F6D0) and (cp <= $1F6D2)) or
+      ((cp >= $1F6D5) and (cp <= $1F6D7)) or
+      ((cp >= $1F6DC) and (cp <= $1F6DF)) or
+      ((cp >= $1F6EB) and (cp <= $1F6EC)) or
+      ((cp >= $1F6F4) and (cp <= $1F6FC)) or
+      ((cp >= $1F7E0) and (cp <= $1F7EB)) or (cp = $1F7F0) or
+      ((cp >= $1F90C) and (cp <= $1F93A)) or
+      ((cp >= $1F93C) and (cp <= $1F945)) or
+      ((cp >= $1F947) and (cp <= $1F9FF)) or
+      ((cp >= $1FA70) and (cp <= $1FA7C)) or
+      ((cp >= $1FA80) and (cp <= $1FA88)) or
+      ((cp >= $1FA90) and (cp <= $1FABD)) or
+      ((cp >= $1FABF) and (cp <= $1FAC5)) or
+      ((cp >= $1FACE) and (cp <= $1FADB)) or
+      ((cp >= $1FAE0) and (cp <= $1FAE8)) or
+      ((cp >= $1FAF0) and (cp <= $1FAF8));
+end;
+
+function LazCpWantsEmojiFont(cp: Integer; AEmojiFM: QFontMetricsH): Boolean;
+begin
+  Result := LazCpHasEmojiPresentation(cp) and QFontMetrics_inFontUcs4(AEmojiFM, cp);
+end;
+
+function LazStrHasEmojiChar(s: PWideString): Boolean;
+var
+  ws: WideString;
+  i, cp, cuCount: Integer;
+begin
+  Result := False;
+  if s = nil then
+    Exit;
+  ws := s^;
+  i := 1;
+  while i <= Length(ws) do
+  begin
+    LazDecodeCodepoint(ws, i, cp, cuCount);
+    if LazCpIsRegionalIndicator(cp) or LazCpHasEmojiPresentation(cp) then
+    begin
+      Result := True;
+      Exit;
+    end;
+    inc(i, cuCount);
+  end;
+end;
+
+function LazMakeEmojiFont(APainter: QPainterH): QFontH;
+var
+  fam, resolvedFam: WideString;
+  probe, base: QFontH;
+  fi: QFontInfoH;
+  aPixel: Integer;
+  aPoint: qreal;
+begin
+  fam := cLazEmojiFamily;
+  probe := QFont_Create();
+  QFont_setFamily(probe, @fam);
+  fi := QFontInfo_Create(probe);
+  QFontInfo_family(fi, @resolvedFam);
+  QFontInfo_Destroy(fi);
+  QFont_Destroy(probe);
+  if resolvedFam = '' then
+    resolvedFam := fam;
+  Result := QFont_Create();
+  QFont_setFamily(Result, @resolvedFam);
+  base := QPainter_font(APainter);
+  aPixel := QFont_pixelSize(base);
+  if aPixel > 0 then
+    QFont_setPixelSize(Result, aPixel)
+  else
+  begin
+    aPoint := QFont_pointSizeF(base);
+    if aPoint > 0 then
+      QFont_setPointSizeF(Result, aPoint);
+  end;
+end;
+
+function LazStrIsLoneRegionalIndicator(s: PWideString): Boolean;
+var
+  ws: WideString;
+  cp, cuCount: Integer;
+begin
+  Result := False;
+  if s = nil then
+    Exit;
+  ws := s^;
+  if Length(ws) <> 2 then
+    Exit;
+  LazDecodeCodepoint(ws, 1, cp, cuCount);
+  Result := (cuCount = 2) and LazCpIsRegionalIndicator(cp);
+end;
+
+function LazStrIsAllEmoji(APainter: QPainterH; s: PWideString): Boolean;
+var
+  ws: WideString;
+  emojiFont: QFontH;
+  emojiFM: QFontMetricsH;
+  i, cp, cuCount, cp2, cu2: Integer;
+  prevWasRI, chIsEmoji: Boolean;
+begin
+  Result := False;
+  ws := s^;
+  if ws = '' then
+    Exit;
+  emojiFont := LazMakeEmojiFont(APainter);
+  emojiFM := QFontMetrics_Create(emojiFont);
+  try
+    i := 1;
+    prevWasRI := False;
+    while i <= Length(ws) do
+    begin
+      LazDecodeCodepoint(ws, i, cp, cuCount);
+      if LazCpIsRegionalIndicator(cp) then
+      begin
+        chIsEmoji := prevWasRI;
+        if (not chIsEmoji) and (i + cuCount <= Length(ws)) then
+        begin
+          LazDecodeCodepoint(ws, i + cuCount, cp2, cu2);
+          chIsEmoji := LazCpIsRegionalIndicator(cp2);
+        end;
+      end
+      else
+        chIsEmoji := LazCpWantsEmojiFont(cp, emojiFM);
+      if not chIsEmoji then
+        Exit;
+      prevWasRI := LazCpIsRegionalIndicator(cp);
+      inc(i, cuCount);
+    end;
+    Result := True;
+  finally
+    QFontMetrics_Destroy(emojiFM);
+    QFont_Destroy(emojiFont);
+  end;
+end;
+
+procedure LazDrawTextEmojiFallback(APainter: QPainterH; x, y: Integer; s: PWideString);
+var
+  ws: WideString;
+  baseFont, emojiFont: QFontH;
+  baseFM, emojiFM: QFontMetricsH;
+  i, runStart, cp, cuCount, curX, cp2, cu2: Integer;
+  chIsEmoji, runIsEmoji, haveRun, prevWasRI: Boolean;
+
+  procedure FlushRun(AEndExcl: Integer);
+  var
+    rs: WideString;
+  begin
+    if AEndExcl <= runStart then
+      Exit;
+    rs := Copy(ws, runStart, AEndExcl - runStart);
+    if runIsEmoji then
+    begin
+      QPainter_setFont(APainter, emojiFont);
+      QPainter_drawText(APainter, curX, y, @rs);
+      QPainter_setFont(APainter, baseFont);
+      curX := curX + QFontMetrics_horizontalAdvance(emojiFM, @rs, -1);
+    end else
+    begin
+      QPainter_drawText(APainter, curX, y, @rs);
+      curX := curX + QFontMetrics_horizontalAdvance(baseFM, @rs, -1);
+    end;
+    runStart := AEndExcl;
+  end;
+
+begin
+  ws := s^;
+  baseFont := QFont_Create(QPainter_font(APainter));
+  emojiFont := LazMakeEmojiFont(APainter);
+  baseFM := QFontMetrics_Create(baseFont);
+  emojiFM := QFontMetrics_Create(emojiFont);
+  QPainter_save(APainter);
+  try
+    curX := x;
+    runStart := 1;
+    runIsEmoji := False;
+    haveRun := False;
+    prevWasRI := False;
+    i := 1;
+    while i <= Length(ws) do
+    begin
+      LazDecodeCodepoint(ws, i, cp, cuCount);
+      if LazCpIsRegionalIndicator(cp) then
+      begin
+        chIsEmoji := prevWasRI;
+        if (not chIsEmoji) and (i + cuCount <= Length(ws)) then
+        begin
+          LazDecodeCodepoint(ws, i + cuCount, cp2, cu2);
+          chIsEmoji := LazCpIsRegionalIndicator(cp2);
+        end;
+      end
+      else
+        chIsEmoji := LazCpWantsEmojiFont(cp, emojiFM);
+      if not haveRun then
+      begin
+        runIsEmoji := chIsEmoji;
+        runStart := i;
+        haveRun := True;
+      end else
+      if chIsEmoji <> runIsEmoji then
+      begin
+        FlushRun(i);
+        runIsEmoji := chIsEmoji;
+      end;
+      prevWasRI := LazCpIsRegionalIndicator(cp);
+      inc(i, cuCount);
+    end;
+    if haveRun then
+      FlushRun(i);
+  finally
+    QPainter_restore(APainter);
+    QFontMetrics_Destroy(emojiFM);
+    QFontMetrics_Destroy(baseFM);
+    QFont_Destroy(emojiFont);
+    QFont_Destroy(baseFont);
+  end;
+end;
+
 procedure TQtDeviceContext.drawText(x: Integer; y: Integer; s: PWideString);
 var
   APen: QPenH;
@@ -2932,7 +3230,13 @@ begin
   if Font.Angle <> 0 then
     QPainter_drawText(Widget, 0, Metrics.ascent, s)
   else
-    QPainter_drawText(Widget, x, y, s);
+  if not LazStrIsLoneRegionalIndicator(s) then
+  begin
+    if LazStrHasEmojiChar(s) then
+      LazDrawTextEmojiFallback(Widget, x, y, s)
+    else
+      QPainter_drawText(Widget, x, y, s);
+  end;
 
   if FPenTextInternal then
   begin
@@ -2961,6 +3265,8 @@ end;
 procedure TQtDeviceContext.drawText(x, y, w, h, flags: Integer; s: PWideString);
 var
   APen: QPenH;
+  emojiFont: QFontH;
+  useEmoji: Boolean;
 begin
   {$ifdef VerboseQt}
   Write('TQtDeviceContext.drawText x: ', X, ' Y: ', Y,' w: ',w,' h: ',h);
@@ -2980,10 +3286,28 @@ begin
     SetTextPen;
   end;
 
-  if Font.Angle <> 0 then
-    QPainter_DrawText(Widget, 0, 0, w, h, Flags, s)
-  else
-    QPainter_DrawText(Widget, x, y, w, h, Flags, s);
+  emojiFont := nil;
+  useEmoji := (Font.Angle = 0) and LazStrIsAllEmoji(Widget, s);
+  if useEmoji then
+  begin
+    emojiFont := LazMakeEmojiFont(Widget);
+    QPainter_save(Widget);
+    QPainter_setFont(Widget, emojiFont);
+  end;
+
+  if not ((Font.Angle = 0) and LazStrIsLoneRegionalIndicator(s)) then
+  begin
+    if Font.Angle <> 0 then
+      QPainter_DrawText(Widget, 0, 0, w, h, Flags, s)
+    else
+      QPainter_DrawText(Widget, x, y, w, h, Flags, s);
+  end;
+
+  if useEmoji then
+  begin
+    QPainter_restore(Widget);
+    QFont_Destroy(emojiFont);
+  end;
 
   if FPenTextInternal then
   begin
@@ -4379,6 +4703,7 @@ var
   i: integer;
   WStr: WideString;
   AFormats: QStringListH;
+  ASubstituted: Boolean;
   {$ENDIF}
 begin
   Result := False;
@@ -4388,6 +4713,7 @@ begin
   MimeType := UTF8ToUTF16(FormatToMimeType(FormatID));
 
   {$IF DEFINED(UNIX) AND NOT DEFINED(DARWIN)}
+  ASubstituted := False;
   //issue #40423
   if (MimeType = 'text/plain') then // do not translate
   begin
@@ -4404,6 +4730,7 @@ begin
         if (WStr = 'UTF8_STRING') or (WStr = 'text/plain;charset=utf-8') then // do not translate
         begin
           MimeType := WStr;
+          ASubstituted := True;
           break;
         end;
       end;
@@ -4414,6 +4741,18 @@ begin
   Data := QByteArray_create();
   QMimeData_data(QtMimeData, Data, @MimeType);
   s := QByteArray_size(Data);
+  {$IF DEFINED(UNIX) AND NOT DEFINED(DARWIN)}
+  //issue #42542: owner advertises the substituted format but refuses to serve
+  //it, retry with original text/plain so Qt converts from UTF8_STRING/STRING.
+  if ASubstituted and (s = 0) then
+  begin
+    QByteArray_destroy(Data);
+    MimeType := 'text/plain'; // do not translate
+    Data := QByteArray_create();
+    QMimeData_data(QtMimeData, Data, @MimeType);
+    s := QByteArray_size(Data);
+  end;
+  {$ENDIF}
   p := QByteArray_constData(Data);
   Stream.Write(p^, s);
   // what to do with p? FreeMem or nothing?

@@ -1,6 +1,7 @@
 unit FpDbgCpuX86;
 
 {$mode objfpc}{$H+}
+{$IFDEF INLINE_OFF}{$INLINE OFF}{$ENDIF}
 
 interface
 
@@ -27,7 +28,15 @@ type
     _CODE: Byte = $CC;
   end;
 
-  TBreakPointx86Handler = specialize TGenericBreakPointTargetHandler<Byte, TBreakInfoX86>;
+  { TBreakPointx86Handler }
+
+  TBreakPointx86Handler = class(specialize TGenericBreakPointTargetHandler<Byte, TBreakInfoX86>)
+  private
+    FLastHardcodedSize: integer;
+  public
+    function IsHardcodeBreakPointInCode(const ALocation: TDBGPtr): Boolean; override;
+    property LastHardcodedSize: integer read FLastHardcodedSize;
+  end;
 
   { TDbgx86Process }
 
@@ -83,7 +92,6 @@ type
     FSehUnwinder: TDbgStackUnwinder;
     FFrameUnwinder: TDbgStackUnwinderX86FramePointer;
     FAsmUnwinder: TDbgStackUnwinderIntelDisAssembler;
-    FFlags: TDbgUnwinderFlags;
   public
     constructor Create(AProcess: TDbgProcess);
     destructor Destroy; override;
@@ -91,7 +99,6 @@ type
     function Unwind(AFrameIndex: integer; var CodePointer, StackPointer,
       FrameBasePointer: TDBGPtr; ACurrentFrame: TDbgCallstackEntry; out
       ANewFrame: TDbgCallstackEntry): TTDbgStackUnwindResult; override;
-    procedure SetUnwindFlags(AFlags: TDbgUnwinderFlags); override;
   end;
 
 implementation
@@ -108,6 +115,24 @@ end;
 function TDbgx86Thread.GetCurrentStackFrameInfo: TDbgStackFrameInfo;
 begin
   Result := TDbgStackFrameSteppingInfoX86.Create(Self);
+end;
+
+{ TBreakPointx86Handler }
+
+function TBreakPointx86Handler.IsHardcodeBreakPointInCode(const ALocation: TDBGPtr): Boolean;
+var
+  OVal: Word;
+begin
+  FLastHardcodedSize := 1;
+  Result := inherited IsHardcodeBreakPointInCode(ALocation);
+  if Result or (ALocation = 0) then
+    exit;
+
+  // ALocation will be IP-1 (adjusted for 1 byte "int3"
+  if Process.ReadData(ALocation-1, 2, OVal) then begin
+    Result := OVal = $03CD;
+    FLastHardcodedSize := 2;
+  end;
 end;
 
 { TDbgx86Process }
@@ -365,7 +390,6 @@ begin
   if FSehUnwinder <> nil then FSehUnwinder.InitForThread(AThread);
   FFrameUnwinder.InitForThread(AThread);
   FAsmUnwinder.InitForThread(AThread);
-  FFlags := [];
 end;
 
 function TDbgStackUnwinderX86MultiMethod.Unwind(AFrameIndex: integer;
@@ -377,6 +401,8 @@ var
   CodePointer2, FrameBasePointer2, StackPointer2: TDBGPtr;
   ANewFrame2: TDbgCallstackEntry;
   ResSeh, ResAsm: TTDbgStackUnwindResult;
+  i: integer;
+  IsFinProc: Boolean;
 
   procedure InitPtr2;
   begin
@@ -415,7 +441,15 @@ begin
 
   (* *** SEH *** *)
 
-  if FSehUnwinder <> nil then begin
+  if (ACurrentFrame.OrigProcSymbol <> nil) then begin
+    i := Pos('$fin$', LowerCase(ACurrentFrame.OrigProcSymbol.Name));
+    IsFinProc := (i > 0) and (i < 5);
+  end
+  else
+    IsFinProc := False;
+
+  ResSeh := suFailed;
+  if (not IsFinProc) and (FSehUnwinder <> nil) then begin
     InitPtr2;
     ResSeh := FSehUnwinder.Unwind(AFrameIndex, CodePointer2, StackPointer2, FrameBasePointer2, ACurrentFrame, ANewFrame2);
     case ResSeh of
@@ -449,7 +483,7 @@ begin
   (* *** ASM *** *)
 
   ResAsm := suFailed;
-  if not (ufSkipArtificialFrames in FFlags) then begin
+  if (not IsFinProc) then begin
     // Get Asm unwind
     InitPtr2;
     ResAsm := FAsmUnwinder.Unwind(AFrameIndex, CodePointer2, StackPointer2, FrameBasePointer2, ACurrentFrame, ANewFrame2);
@@ -503,12 +537,6 @@ begin
     exit;
   end;
 
-
-end;
-
-procedure TDbgStackUnwinderX86MultiMethod.SetUnwindFlags(AFlags: TDbgUnwinderFlags);
-begin
-  FFlags := AFlags;
 end;
 
 end.

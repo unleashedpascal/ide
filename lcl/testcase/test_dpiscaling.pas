@@ -8,10 +8,12 @@ uses
   Classes, SysUtils, Math,
   // FPCUnit
   fpcunit, testregistry,
-  // LazUtils
-  LazLoggerBase,
   // LCL
-  Forms, Controls, StdCtrls, ExtCtrls, LResources, LMessages;
+  Forms, Controls, StdCtrls, ExtCtrls, LResources, LMessages,
+  // LazUtils
+  LazLoggerBase, ProjResConvert,
+  // LclTest
+  TestBase;
 
 type
 
@@ -73,6 +75,7 @@ type
     procedure AssertRightBottom(const AName: String; AControl: TControl; ExpRight, ExpBottom: Integer);
     procedure AssertBounds(const AName: String; AControl: TControl; ExpLeft, ExpTop, ExpWidth, ExpHeight: Integer);
     procedure SendNewDPI(APPI: integer; TheForm: TForm);
+    procedure TearDown; override;
   published
     procedure ScaleLfm_Anchor;
     procedure ScaleLfm_Align;
@@ -147,15 +150,6 @@ function DecodePos(APos: Integer): integer; inline;
 var IsRight, IsCenter, IsApprox, IsUnknown: boolean;
 begin
   Result := DecodePos(APos, IsRight, IsCenter, IsApprox, IsUnknown);
-end;
-
-function ToAnchors(i: integer): TAnchors;
-begin
-  Result := [];
-  if (i and 1) <> 0 then Result := Result + [akLeft];
-  if (i and 2) <> 0 then Result := Result + [akTop];
-  if (i and 4) <> 0 then Result := Result + [akRight];
-  if (i and 8) <> 0 then Result := Result + [akBottom];
 end;
 
 function ToSameAnchors(i: integer): TAnchors;
@@ -240,6 +234,7 @@ begin
 
   LrsStream := TStringStream.Create;
   LRSObjectTextToBinary(LfmStream, LrsStream);
+  LfmStream.Free;
 
   LrsStream.Position := 0;
   R := LazarusResources.Find(AFormName, 'FORMDATA');
@@ -247,6 +242,7 @@ begin
     R.Value := LrsStream.DataString
   else
     LazarusResources.Add(AFormName, 'FORMDATA', LrsStream.DataString);
+  LrsStream.Free;
 
   Result := AFormClass.Create(nil);
 end;
@@ -380,6 +376,12 @@ begin
   m.lParam := 0;
   m.wParam := Cardinal(APPI) + (Cardinal(APPI) << 16);
   TheForm.Dispatch(m);
+end;
+
+procedure TTestDpiScaling.TearDown;
+begin
+  inherited TearDown;
+  Application.ProcessMessages; // when running real WS
 end;
 
 procedure TTestDpiScaling.ScaleLfm_Anchor;

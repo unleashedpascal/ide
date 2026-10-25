@@ -29,6 +29,26 @@ msgstr "- Neue Gruppe hinzufügen -"
 msgid "No group"
 msgstr "Keine Gruppe"
 
+#: idedebuggerstringconstants.brkhandleignorebreakpoints
+msgid "Handle/Ignore breakpoints"
+msgstr "Haltepunkte verarbeiten/ignorieren"
+
+#: idedebuggerstringconstants.brkhandleignoreexceptions
+msgid "Handle/Ignore exceptions"
+msgstr "Exceptions verarbeiten/ignorieren"
+
+#: idedebuggerstringconstants.brkshowbreakpointsandwatchpo
+msgid "Show breakpoints and watchpoints"
+msgstr "Halte- und Überwachungspunkte anzeigen"
+
+#: idedebuggerstringconstants.brkshowbreakwatchpointsandex
+msgid "Show break/watchpoints and exception-filter"
+msgstr "Halte-, Überwachungspunkte und Exception-Filter anzeigen"
+
+#: idedebuggerstringconstants.brkshowexceptionfilter
+msgid "Show exception-filter"
+msgstr "Exception-Filter anzeigen"
+
 #: idedebuggerstringconstants.dbgasmwindowlinktarget
 msgid "Link target line"
 msgstr "Ziel-Linken-Zeile"
@@ -140,10 +160,9 @@ msgid "Please choose the formatter to add."
 msgstr "Wähle den Formatierer aus, der hinzu gefügt wird."
 
 #: idedebuggerstringconstants.dbgvaluedisabled
-#, fuzzy
 msgctxt "idedebuggerstringconstants.dbgvaluedisabled"
 msgid "Disabled"
-msgstr "Ausgeschaltet"
+msgstr "Deaktiviert"
 
 #: idedebuggerstringconstants.dbgvalueerror
 #, object-pascal-format
@@ -172,17 +191,15 @@ msgid "Auto open console Window (Linux):"
 msgstr "Konsolenfenster (Linux) automatisch öffnen:"
 
 #: idedebuggerstringconstants.dbgwatchcolordisabled
-#, fuzzy
 msgctxt "idedebuggerstringconstants.dbgwatchcolordisabled"
 msgid "Disabled"
-msgstr "Ausgeschaltet"
+msgstr "Deaktiviert"
 
 #: idedebuggerstringconstants.dbgwatchcolorellipsis
 msgid "Ellipsis"
 msgstr "Ellipse"
 
 #: idedebuggerstringconstants.dbgwatchcolorerror
-#, fuzzy
 msgctxt "idedebuggerstringconstants.dbgwatchcolorerror"
 msgid "Error"
 msgstr "Fehler"
@@ -258,7 +275,6 @@ msgid "Page-size"
 msgstr "Seitenlänge"
 
 #: idedebuggerstringconstants.dispformatbasebin
-#, fuzzy
 msgctxt "idedebuggerstringconstants.dispformatbasebin"
 msgid "Binary"
 msgstr "Binär"
@@ -269,7 +285,6 @@ msgid "Char"
 msgstr "Zeichen"
 
 #: idedebuggerstringconstants.dispformatbasedecimal
-#, fuzzy
 msgctxt "idedebuggerstringconstants.dispformatbasedecimal"
 msgid "Decimal"
 msgstr "Dezimal"
@@ -284,7 +299,6 @@ msgid "Oct"
 msgstr "Oct"
 
 #: idedebuggerstringconstants.dispformatboolname
-#, fuzzy
 msgctxt "idedebuggerstringconstants.dispformatboolname"
 msgid "Name"
 msgstr "Name"
@@ -300,7 +314,6 @@ msgid "Ordinal"
 msgstr "Ordinal"
 
 #: idedebuggerstringconstants.dispformatcategorydata
-#, fuzzy
 msgctxt "idedebuggerstringconstants.dispformatcategorydata"
 msgid "Value"
 msgstr "Wert"
@@ -322,6 +335,10 @@ msgstr "Beide"
 msgctxt "idedebuggerstringconstants.dispformatcharord"
 msgid "Ordinal"
 msgstr "Ordinal"
+
+#: idedebuggerstringconstants.dispformatdlgaddrprefix
+msgid "Address marker"
+msgstr "Adresskennzeichnung"
 
 #: idedebuggerstringconstants.dispformatdlgarraycombine
 msgid "Combine lengths"
@@ -368,6 +385,10 @@ msgstr "Einschließlich embedded"
 msgid "Address"
 msgstr "Adresse"
 
+#: idedebuggerstringconstants.dispformatdlgbtnadrformatdata
+msgid "Data-address"
+msgstr "Datenadresse"
+
 #: idedebuggerstringconstants.dispformatdlgbtnall
 msgid "All"
 msgstr "Alle"
@@ -386,7 +407,6 @@ msgid "Char"
 msgstr "Zeichen"
 
 #: idedebuggerstringconstants.dispformatdlgbtncurrent
-#, fuzzy
 msgctxt "idedebuggerstringconstants.dispformatdlgbtncurrent"
 msgid "Current"
 msgstr "Aktuell"
@@ -459,8 +479,11 @@ msgctxt "idedebuggerstringconstants.dispformatdlgindent"
 msgid "Multiline"
 msgstr "Mehrzeilig"
 
+#: idedebuggerstringconstants.dispformatdlgnumprefix
+msgid "Number marker"
+msgstr "Zahlenkennzeichnung"
+
 #: idedebuggerstringconstants.dispformatenumname
-#, fuzzy
 msgctxt "idedebuggerstringconstants.dispformatenumname"
 msgid "Name"
 msgstr "Name"
@@ -476,7 +499,6 @@ msgid "Ordinal"
 msgstr "Ordinal"
 
 #: idedebuggerstringconstants.dispformatfloatpoint
-#, fuzzy
 msgctxt "idedebuggerstringconstants.dispformatfloatpoint"
 msgid "Decimal"
 msgstr "Dezimal"
@@ -586,7 +608,6 @@ msgid "Separator (1000)"
 msgstr "Trenner (1000)"
 
 #: idedebuggerstringconstants.dispformatnumsepgroup
-#, fuzzy
 msgctxt "idedebuggerstringconstants.dispformatnumsepgroup"
 msgid "Group"
 msgstr "Gruppe"
@@ -657,7 +678,6 @@ msgid "Add Defaults"
 msgstr "Standards hinzufügen"
 
 #: idedebuggerstringconstants.dispformatpresetdel
-#, fuzzy
 msgctxt "idedebuggerstringconstants.dispformatpresetdel"
 msgid "Delete"
 msgstr "Löschen"
@@ -668,7 +688,6 @@ msgid "Down"
 msgstr "Runter"
 
 #: idedebuggerstringconstants.dispformatpresetname
-#, fuzzy
 msgctxt "idedebuggerstringconstants.dispformatpresetname"
 msgid "Name"
 msgstr "Name"
@@ -747,10 +766,9 @@ msgid "Presets"
 msgstr "Vorgaben"
 
 #: idedebuggerstringconstants.dispformattargetwatches
-#, fuzzy
 msgctxt "idedebuggerstringconstants.dispformattargetwatches"
 msgid "Watches"
-msgstr "Liste der überwachten Ausdrücke"
+msgstr "Überwachungen"
 
 #: idedebuggerstringconstants.dlgaddhiattrdefault
 msgid "Default Text"
@@ -769,7 +787,6 @@ msgid "Selected text"
 msgstr "Ausgewählter Text"
 
 #: idedebuggerstringconstants.dlgbackconvoptaction
-#, fuzzy
 msgctxt "idedebuggerstringconstants.dlgbackconvoptaction"
 msgid "Action"
 msgstr "Aktion"
@@ -787,7 +804,6 @@ msgid "Match types by name"
 msgstr "Typen auf Namen anpassen"
 
 #: idedebuggerstringconstants.dlgbackconvoptname
-#, fuzzy
 msgctxt "idedebuggerstringconstants.dlgbackconvoptname"
 msgid "Name"
 msgstr "Name"
@@ -815,6 +831,37 @@ msgstr "- Standard -"
 #: idedebuggerstringconstants.dlgbackendconvoptdisabled
 msgid "- Disabled -"
 msgstr "- Ausgeschaltet -"
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowchangetakeseffect
+msgid "A change takes effect when the next debug session starts."
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindoweditdiv
+msgid "Edit IDE console provider"
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowediting
+#, object-pascal-format
+msgid "Currently editing %s"
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindownone
+msgid "No console window is available."
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowoptions
+msgid "Debug Console Window"
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowrunparamshint
+msgid ""
+"Selects the default Console for showing the target's StdIn/Out in the IDE.\n"
+"Project can override this in their \"Run Parameters\". The default there is \"use IDE default\"."
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowselectdiv
+msgid "Select provider for IDE console window"
+msgstr ""
 
 #: idedebuggerstringconstants.dlgdisplayformatdebugoptions
 msgid "Display Format"
@@ -939,9 +986,8 @@ msgid "Address column"
 msgstr "Adressenspalte"
 
 #: idedebuggerstringconstants.drscolwidthbrkpointimg
-#, fuzzy
 msgid "Break indication column"
-msgstr "“Break indication”-Spalte"
+msgstr "Haltepunktanzeigespalte"
 
 #: idedebuggerstringconstants.drscolwidthexpression
 msgid "Expression column"
@@ -989,10 +1035,9 @@ msgid "Value formatter"
 msgstr "Wertformatierer"
 
 #: idedebuggerstringconstants.drsdisableenableupdatesforth
-#, fuzzy
 msgctxt "idedebuggerstringconstants.drsdisableenableupdatesforth"
 msgid "Disable/Enable updates for the entire window"
-msgstr "Aktualisierungen für das ganze Fenster de-/aktivieren"
+msgstr "Aktualisierungen für das gesamte Fenster deaktivieren/aktivieren"
 
 #: idedebuggerstringconstants.drsenterexpression
 msgid "Enter Expression"
@@ -1003,19 +1048,17 @@ msgid "Evaluate"
 msgstr "Auswerten"
 
 #: idedebuggerstringconstants.drshistory
-#, fuzzy
 msgctxt "idedebuggerstringconstants.drshistory"
 msgid "History"
-msgstr "Historie"
+msgstr "Verlauf"
 
 #: idedebuggerstringconstants.drshistorycolwidthcurrent
 msgid "Current column"
 msgstr "Aktuelle Spalte"
 
 #: idedebuggerstringconstants.drshistorycolwidthlocation
-#, fuzzy
 msgid "Location column"
-msgstr "Orts-Spalte"
+msgstr "Positionsspalte"
 
 #: idedebuggerstringconstants.drshistorycolwidthtime
 msgid "Time column"
@@ -1105,7 +1148,6 @@ msgid "Suspend"
 msgstr "Anhalten"
 
 #: idedebuggerstringconstants.drsusefunctioncalls
-#, fuzzy
 msgctxt "idedebuggerstringconstants.drsusefunctioncalls"
 msgid "Function"
 msgstr "Funktion"
@@ -1115,7 +1157,6 @@ msgid "Allow function calls"
 msgstr "Funktionsaufrufe erlauben"
 
 #: idedebuggerstringconstants.drsuseinstanceclass
-#, fuzzy
 msgctxt "idedebuggerstringconstants.drsuseinstanceclass"
 msgid "Instance"
 msgstr "Instanz"
@@ -1131,10 +1172,9 @@ msgid "Use Instance class type"
 msgstr "Instanz-Klassentyp benutzen"
 
 #: idedebuggerstringconstants.drswatchsplitterinspect
-#, fuzzy
 msgctxt "idedebuggerstringconstants.drswatchsplitterinspect"
 msgid "Inspect pane"
-msgstr "Scheibe überprüfen"
+msgstr "Inspektionsbereich"
 
 #: idedebuggerstringconstants.dsrevalusedebugconverter
 msgid "Use Backend Converter"
@@ -1270,7 +1310,6 @@ msgid "Object Instance"
 msgstr "Objekt-Instanz"
 
 #: idedebuggerstringconstants.liscolreturns
-#, fuzzy
 msgid "Returns"
 msgstr "Rückgabewerte"
 
@@ -1281,6 +1320,10 @@ msgstr "Sichtbarkeit"
 #: idedebuggerstringconstants.liscondition
 msgid "Condition"
 msgstr "Bedingung"
+
+#: idedebuggerstringconstants.lisconsolelocalecho
+msgid "Echo typed input"
+msgstr "Eingabe anzeigen"
 
 #: idedebuggerstringconstants.liscopyall
 msgid "Copy All"
@@ -1313,11 +1356,9 @@ msgid "Page up"
 msgstr "Eine Seite hoch"
 
 #: idedebuggerstringconstants.liscurrent
-#, fuzzy
-#| msgid "Current"
 msgctxt "lazarusidestrconsts.liscurrent"
 msgid "Select as context"
-msgstr "Aktuell"
+msgstr "Als Kontext auswählen"
 
 #: idedebuggerstringconstants.lisdadattach
 msgid "Attach"
@@ -1420,6 +1461,10 @@ msgctxt "idedebuggerstringconstants.lisdbgwinpowerhint"
 msgid "Disable/Enable updates for the entire window"
 msgstr "Aktualisierungen für das ganze Fenster de-/aktivieren"
 
+#: idedebuggerstringconstants.lisdebugconsolebuiltinname
+msgid "IDE Debug Console"
+msgstr ""
+
 #: idedebuggerstringconstants.lisdebuggerfeedbackerror
 msgid "Debugger Error"
 msgstr "Debugger-Fehler"
@@ -1491,7 +1536,7 @@ msgstr "Überwachung für \"%s\" löschen?"
 #: idedebuggerstringconstants.lisdeletetracepointforexception
 #, object-pascal-format
 msgid "Delete exception filter for \"%s\"?"
-msgstr ""
+msgstr "Exceptionfilter für \"%s\" löschen?"
 
 #: idedebuggerstringconstants.lisdigits
 msgid "Digits:"
@@ -1510,7 +1555,6 @@ msgid "Disable Groups"
 msgstr "Gruppen deaktivieren"
 
 #: idedebuggerstringconstants.lisdisassassembler
-#, fuzzy
 msgctxt "idedebuggerstringconstants.lisdisassassembler"
 msgid "Assembler"
 msgstr "Assembler"
@@ -1590,15 +1634,15 @@ msgstr "Kommentar hinzufügen"
 
 #: idedebuggerstringconstants.lisexceptionclass
 msgid "Class:"
-msgstr ""
+msgstr "Klasse:"
 
 #: idedebuggerstringconstants.lisexceptiondialog
 msgid "Debugger Exception Notification"
-msgstr "Debuggerausnahmen-Nachricht"
+msgstr "Debugger-Exception-Nachricht"
 
 #: idedebuggerstringconstants.lisexceptionfilter
 msgid "&Exception filter ..."
-msgstr ""
+msgstr "&Exceptionfilter ..."
 
 #: idedebuggerstringconstants.lisexport
 msgctxt "lazarusidestrconsts.lisexport"
@@ -1677,7 +1721,7 @@ msgstr "ID"
 
 #: idedebuggerstringconstants.lisignoreexceptiontype
 msgid "Ignore this exception type"
-msgstr "Diesen Ausnahmetyp übergehen"
+msgstr "Diesen Exceptiontyp übergehen"
 
 #: idedebuggerstringconstants.lisimport
 msgctxt "lazarusidestrconsts.lisimport"
@@ -1693,7 +1737,6 @@ msgid "&Inspect"
 msgstr "Überprüfung"
 
 #: idedebuggerstringconstants.lisinspectaddwatch
-#, fuzzy
 msgctxt "lazarusidestrconsts.lisinspectaddwatch"
 msgid "Add watch"
 msgstr "Überwachung hinzufügen"
@@ -1814,10 +1857,8 @@ msgid "Copy &RAW Value"
 msgstr "&RAW-Wert kopieren"
 
 #: idedebuggerstringconstants.lislocalsdlgcopyvalue
-#, fuzzy
-#| msgid "C&opy Value"
 msgid "C&opy Value (quoted)"
-msgstr "Wert k&opieren"
+msgstr "Wert k&opieren (in Anführungszeichen)"
 
 #: idedebuggerstringconstants.lislocalsnotevaluated
 msgid "Locals not evaluated"
@@ -1907,8 +1948,8 @@ msgid "Assembler"
 msgstr "Assembler"
 
 #: idedebuggerstringconstants.lismenuviewbreakpointsandexceptions
-msgid "BreakPoints/Exceptions"
-msgstr ""
+msgid "Breakpoints/Exceptions"
+msgstr "Haltepunkte/Exceptions"
 
 #: idedebuggerstringconstants.lismenuviewcallstack
 msgid "Call Stack"
@@ -1966,9 +2007,8 @@ msgid "Filename:"
 msgstr "Dateiname:"
 
 #: idedebuggerstringconstants.lispendingon
-#, fuzzy
 msgid "Pending (On)"
-msgstr "Pending (Ein)"
+msgstr "Ausstehend (An)"
 
 #: idedebuggerstringconstants.lisrawoutput
 msgid "Raw Output"
@@ -1997,14 +2037,13 @@ msgstr "MaxAnzahl:Namensmuster"
 
 #: idedebuggerstringconstants.lisskipexception
 msgid "Continue"
-msgstr ""
+msgstr "Fortsetzen"
 
 #: idedebuggerstringconstants.lissourcebreakpoint
 msgid "&Source Breakpoint ..."
 msgstr "&Quelltexthaltepunkt ..."
 
 #: idedebuggerstringconstants.lissrcline
-#, fuzzy
 msgctxt "idedebuggerstringconstants.lissrcline"
 msgid "Line"
 msgstr "Zeile"
@@ -2070,7 +2109,6 @@ msgid "Unformatted"
 msgstr "Unformatiert"
 
 #: idedebuggerstringconstants.lisvalue
-#, fuzzy
 msgctxt "idedebuggerstringconstants.lisvalue"
 msgid "Value"
 msgstr "Wert"
@@ -2163,10 +2201,9 @@ msgid "Expression"
 msgstr "Ausdruck"
 
 #: idedebuggerstringconstants.liswlinspectpane
-#, fuzzy
 msgctxt "idedebuggerstringconstants.liswlinspectpane"
 msgid "Inspect pane"
-msgstr "Scheibe überprüfen"
+msgstr "Inspektionsbereich"
 
 #: idedebuggerstringconstants.liswlmemview
 msgid "Memory"
@@ -2217,6 +2254,10 @@ msgstr "Word (Big Endian)"
 #: idedebuggerstringconstants.memviewgroupwordlittleendian
 msgid "Word (Little Endian)"
 msgstr "Word (Little Endian)"
+
+#: idedebuggerstringconstants.mnuconsoleinoutputwindow
+msgid "Console In/Output (Lazarus)"
+msgstr ""
 
 #: idedebuggerstringconstants.optdispguttercustomdisplayformat
 msgid "Custom Display Format"

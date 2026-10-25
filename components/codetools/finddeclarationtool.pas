@@ -37,6 +37,7 @@
 unit FindDeclarationTool;
 
 {$ifdef FPC}{$mode objfpc}{$endif}{$H+}
+{$modeswitch advancedrecords}
 
 interface
 
@@ -572,6 +573,25 @@ type
     property Kind: TFDHelpersListKind read FKind;
     property Tree: TAVLTree read FTree;
   end;
+  TNamesPair = record
+    GenericParamName: string; // <T> -> T
+    SpecializedType: string; // TAnyPrefix.TypeName
+  end;
+
+  { TSpecializeParamsDictionary }
+
+  TSpecializeParamsDictionary = record
+    ParamTypes: array of TNamesPair; // TNamesPair.GenericParamName field must be unique
+    function Add(KeyPair: TNamesPair): boolean;
+    function Add(const GenericParamName, SpecializedType: string): boolean;
+    function KeyToSpecialized(GenericParamName: string): string;
+    function GetVerse(GenericParamName: string): integer; // -1 when not present
+    function SubstituteGenericItems(GenExpr: string; SpecializedType: string): string;
+    function Used: boolean;
+    function Count: integer;
+    procedure Clear;
+    procedure ApplyFrom(Dictionary: TSpecializeParamsDictionary);
+  end;
 
   { TGenericParams }
 
@@ -582,15 +602,19 @@ type
     // "generic" definition to which those values can be applied
     GenericTool: TFindDeclarationTool;
     GenericNode: TCodeTreeNode;
+    SpecializeDictionary: TSpecializeParamsDictionary;
     // *chain* of earlier params, in case of nested generic
     // there will always be 0 or 1 entry. This acts like a pointer, only with automatic FreeMem
     OuterGenParam: array of TGenericParams;
   end;
 
+  PTGenericParams = ^TGenericParams;
+
   TFindDeclarationInput = record
     Flags: TFindDeclarationFlags;
     Identifier: PChar;
     IdentifierNode: TCodeTreeNode;
+    IdentifierGenParamCount: integer;
     ContextNode: TCodeTreeNode;
     OnIdentifierFound: TOnIdentifierFound;
     IdentifierTool: TFindDeclarationTool;
@@ -628,6 +652,10 @@ type
     FNeedHelpers: Boolean;
     FKnownIdentifierLength: integer;
     FKnownIdentifierSpecializeParamCnt: integer;
+    FKnownIdentSpecializeParamCntValid: boolean;
+    FIdentifierGenParamCount: integer; // -1 = derive from IdentifierNode
+    FSpecializedType: string;
+    FSpecializedClass: string;
     procedure ClearFoundProc;
     procedure FreeFoundProc(aFoundProc: PFoundProc; FreeNext: boolean);
     procedure RemoveFoundProcFromList(aFoundProc: PFoundProc);
@@ -687,11 +715,16 @@ type
     procedure SetIdentifier(NewIdentifierTool: TFindDeclarationTool;
                 NewIdentifier: PChar; NewOnIdentifierFound: TOnIdentifierFound;
                 const IdentifierLength: Integer = 0;
-                NewIdentifierNode: TCodeTreeNode = nil);
+                NewIdentifierNode: TCodeTreeNode = nil;
+                // NewGenParamCount: -1 = derive from NewIdentifierNode,
+                // 0 = must not be a generic, >0 = number of generic parameters
+                NewGenParamCount: integer = -1);
     procedure WriteDebugReport;
     function GetHelpers(HelperKind: TFDHelpersListKind; CreateIfNotExists: boolean = false): TFDHelpersList;
     function IdentSpecializeNodeParamCount: integer;
     property KnownIdentifierLength: integer read FKnownIdentifierLength;
+    property SpecializedTypeName: string read FSpecializedType;
+    property SpecializedClassName: string read FSpecializedClass;
   end;
   
   
@@ -808,6 +841,8 @@ type
     FFirstBaseTypeCache: TBaseTypeCache;
     FDependentCodeTools: TAVLTree;// the codetools, that depend on this codetool
     FDependsOnCodeTools: TAVLTree;// the codetools, that this codetool depends on
+    FTypeOfNodesInProgress: TFPList;// list of ctnTypeOf nodes, to detect cycles
+    FRecordCompositionsInProgress: array of TCodeTreeNode;// ctnRecordType nodes whose compositions are searched, to detect cycles
     FClearingDependentNodeCaches: boolean;
     FCheckingNodeCacheDependencies: boolean;
     FSourcesChangeStep, FFilesChangeStep: int64;
@@ -837,6 +872,8 @@ type
       Params: TFindDeclarationParams; var IdentFoundResult: TIdentifierFoundResult): boolean;
     function FindIdentifierInAncestors(ClassNode: TCodeTreeNode;
       Params: TFindDeclarationParams): boolean;
+    function FindIdentifierInRecordCompositions(RecordNode: TCodeTreeNode;
+      Params: TFindDeclarationParams; var IdentFoundResult: TIdentifierFoundResult): boolean;
     function FindIdentifierInUsesSection(UsesNode: TCodeTreeNode;
       Params: TFindDeclarationParams; FindMissingFPCUnits: Boolean): boolean;
     function FindIdentifierInHiddenUsedUnits(
@@ -891,6 +928,8 @@ type
     function FindEndOfExpression(StartPos: integer): integer; // read all operands and operators
     function ReadOperandTypeAtCursor(Params: TFindDeclarationParams;
       MaxEndPos: integer = -1; AliasType: PFindContext = nil): TExpressionType;
+    function FindExpressionTypeOf_TypeOf(TypeOfNode: TCodeTreeNode;
+      Params: TFindDeclarationParams; AliasType: PFindContext = nil): TExpressionType;
     function FindExpressionTypeOfPredefinedIdentifier(StartPos: integer;
       Params: TFindDeclarationParams; AliasType: PFindContext = nil): TExpressionType;
     function FindExpressionTypeOfConstSet(Node: TCodeTreeNode): TExpressionType;
@@ -898,6 +937,10 @@ type
     function CalculateBinaryOperator(LeftOperand, RightOperand: TOperand;
       BinaryOperator: TAtomPosition;
       Params: TFindDeclarationParams): TOperand;
+    function CombineStatementExprOperands(ThenOperand, ElseOperand: TOperand;
+      Params: TFindDeclarationParams; CleanPos: integer): TOperand;
+    function FindCommonAncestorClass(const Context1, Context2: TFindContext;
+      Params: TFindDeclarationParams): TFindContext;
     function GetParameterNode(Node: TCodeTreeNode): TCodeTreeNode;
     function GetExpressionTypeOfTypeIdentifier(
       Params: TFindDeclarationParams): TExpressionType;
@@ -930,6 +973,8 @@ type
       AliasType: PFindContext = nil): string;
   protected
     function CheckSrcIdentifier(Params: TFindDeclarationParams;
+      const FoundContext: TFindContext): TIdentifierFoundResult;
+    function CheckPathGenParamCount(Params: TFindDeclarationParams;
       const FoundContext: TFindContext): TIdentifierFoundResult;
     function FindDeclarationOfIdentAtParam(
       Params: TFindDeclarationParams; out ExprType: TExpressionType;
@@ -1032,6 +1077,9 @@ type
     function FindDeclarationOfPropertyPath(const PropertyPath: string;
       out NewPos: TCodeXYPosition; out NewTopLine: integer;
       IgnoreTypeLess: boolean = false): boolean;
+    function FindDeclarationPathAt(StartNode: TCodeTreeNode; aPath: string;
+      Flags: TFindSmartFlags): TFindContext;
+    function GetNodeGenericParamCount(Node: TCodeTreeNode): integer;
     function FindPropertyWithType(aPropertyNode: TCodeTreeNode; out aPropertyCtx: TFindContext): boolean;
 
     function FindDeclarationNodeInInterface(const Identifier: string;
@@ -1502,9 +1550,13 @@ begin
     Result:=xtConstOrdInteger
   else if CompareIdentifiers(Identifier,'BITALIGNOF')=0 then
     Result:=xtConstOrdInteger
+  else if CompareIdentifiers(Identifier,'NAMEOF')=0 then
+    Result:=xtConstString
   else if CompareIdentifiers(Identifier,'ORD')=0 then
     Result:=xtConstOrdInteger
   else if CompareIdentifiers(Identifier,'ASSIGNED')=0 then
+    Result:=xtConstBoolean
+  else if CompareIdentifiers(Identifier,'ISCONSTVALUE')=0 then
     Result:=xtConstBoolean
   else if CompareIdentifiers(Identifier,'VARIANT')=0 then
     Result:=xtVariant
@@ -2133,6 +2185,188 @@ begin
     Result := CleanFindContext;
 end;
 
+{ TSpecializeParamsDictionary }
+
+function TSpecializeParamsDictionary.Add(KeyPair: TNamesPair): boolean;
+begin
+  Result:=false;
+  //validate
+  if not IsValidDottedIdent(KeyPair.GenericParamName,false) then // generic names are not dotted
+    exit;
+  if not IsValidDottedIdent(KeyPair.SpecializedType) then
+    exit;
+  Result := (ParamTypes = nil) or (GetVerse(KeyPair.GenericParamName) < 0);
+  if Result then insert(KeyPair, ParamTypes, length(ParamTypes));
+end;
+
+function TSpecializeParamsDictionary.Add(const GenericParamName,
+  SpecializedType: string): boolean;
+var
+  APair: TNamesPair;
+begin
+  APair.GenericParamName:=GenericParamName;
+  APair.SpecializedType:=SpecializedType;
+  Result:=Add(APair);
+end;
+
+function TSpecializeParamsDictionary.KeyToSpecialized(GenericParamName: string): string;
+var
+  i: integer;
+begin
+  Result:='';
+  i:=GetVerse(GenericParamName);
+  if i>=0 then
+    Result:=ParamTypes[i].SpecializedType;
+end;
+
+function TSpecializeParamsDictionary.GetVerse(GenericParamName: string): integer;
+var
+  i: integer;
+begin
+  Result:=-1;
+  for i:=0 to high(ParamTypes) do
+    if CompareDottedIdentifiers(PChar(GenericParamName),PChar(ParamTypes[i].GenericParamName))=0
+    then exit(i); // used dotted version to catch wrong dotted parameter
+end;
+
+function TSpecializeParamsDictionary.SubstituteGenericItems(GenExpr: string;
+  SpecializedType: string): string;
+var
+  List: TStringList;
+  i,j,k: integer;
+  ident: string;
+begin
+  Result:=GenExpr;
+  if GenExpr='' then exit;
+  if Count=0 then exit;
+  i:=Pos('.',GenExpr);
+  if (i>0) and (SpecializedType<>'') then begin
+    delete(GenExpr,1,i-1);
+    insert(SpecializedType,GenExpr,0); // ?1
+  end;
+
+  i:=1;
+  k:= length(GenExpr);
+
+  // assumed clean declaration code  like for function 'AName(var param1, param2:T1):T2'
+  // or for property 'APropName:T'
+  // then colon always precedes a generic type name (spaces after colon possible),
+  // possible internal specialization e.g. 'specialize  AType<T1,T2>'
+
+  j:=Pos('<', GenExpr);
+  if j>0 then begin
+    try
+      List:=TStringList.Create;
+      List.Sorted:=false;
+      inc(j);
+      List.Append(SubString(PChar(@GenExpr[i]),j-i)); // 'prefix<'
+
+      repeat
+        while (j<=k) and (GenExpr[j]=' ') do
+          inc(j); // spaces
+        if j>k then break;
+        if IsIdentStartChar[GenExpr[j]] then
+          ident:=GetIdentifier(PChar(@GenExpr[j]))
+        else
+          exit;
+        i:= self.GetVerse(ident);
+        if i >= 0 then // dictionary knows generic "item"
+          List.Append(self.ParamTypes[i].SpecializedType)
+        else // preserve old type name
+          List.Append(ident);
+        j:=j+length(ident);
+        i:=j;
+        while (j<=k) and (GenExpr[j]=' ') do
+          inc(j); // spaces
+        if GenExpr[j]=',' then
+          inc(j);
+        while (j<=k) and (GenExpr[j]=' ') do
+          inc(j); // spaces
+        if GenExpr[j]='>' then
+          inc(j);
+        List.Append(SubString(PChar(@GenExpr[i]),j-i)); // tail
+      until j>k;
+
+      if List.Count>0 then begin
+        // debugln(['Old: ',Result]);
+        Result:='';
+        for i:=0 to List.Count-1 do
+          Result += List[i];
+        // debugln(['New: ',Result]);
+      end;
+
+    finally
+      List.Free;
+    end;
+    exit;
+  end else
+    j:=1;
+  try
+    List:=TStringList.Create;
+    List.Sorted:=false;
+
+    repeat
+      while (j<=k) and (GenExpr[j]<>':') do
+        inc(j);
+      if j>k then break;
+      if GenExpr[j]=':' then begin
+        inc(j);
+        if j>k then break;
+        while (j<=k) and (GenExpr[j]=' ') do
+          inc(j); // spaces
+        if j>k then break;
+        List.Append(SubString(PChar(@GenExpr[i]),j-i));
+        ident:=GetIdentifier(PChar(@GenExpr[j]));
+        i:= self.GetVerse(ident);
+        if i >= 0 then   // dictionary knows generic "item"
+          List.Append(self.ParamTypes[i].SpecializedType)
+        else // preserve old type name
+          List.Append(ident);
+        i:=j+length(ident);
+        while (j<=k) and (GenExpr[j]<>':') do
+          inc(j);
+        if j>k then break;
+      end;
+    until j>k;
+    if j>k then // tail
+        List.Append(SubString(PChar(@GenExpr[i]),j-i));
+
+    if List.Count>0 then begin
+      // debugln(['Old: ',Result]);
+      Result:='';
+      for i:=0 to List.Count-1 do
+        Result += List[i];
+      // debugln(['New: ',Result]);
+    end;
+  finally
+    List.Free;
+  end;
+end;
+
+function TSpecializeParamsDictionary.Used: boolean;
+begin
+  Result:=ParamTypes<>nil;
+end;
+
+function TSpecializeParamsDictionary.Count: integer;
+begin
+  Result:=length(ParamTypes);
+end;
+
+procedure TSpecializeParamsDictionary.Clear;
+begin
+  ParamTypes:=nil;
+end;
+
+procedure TSpecializeParamsDictionary.ApplyFrom(
+  Dictionary: TSpecializeParamsDictionary);
+var i: integer;
+begin
+  setlength(ParamTypes,length(Dictionary.ParamTypes));
+  for i:=0 to length(ParamTypes)-1 do
+    ParamTypes[i]:=Dictionary.ParamTypes[i];
+end;
+
 constructor TFindUsedUnitReferences.Create(Tool: TFindDeclarationTool; AContextNode: TCodeTreeNode);
 begin
   inherited Create;
@@ -2438,6 +2672,7 @@ var
   IdentifierStart: PChar;
   LineRange: TLineRange;
   Params: TFindDeclarationParams;
+  CommentStart, CommentEnd: Integer;
 begin
   Result:=false;
   NewExprType:=CleanExpressionType;
@@ -2574,7 +2809,7 @@ begin
       exit;
     end else begin
       if (cmsResult in Scanner.CompilerModeSwitches) and  // self.Scanner includes *.inc file
-      (CursorNode.Desc  = ctnVarDefinition) and
+      (CursorNode.Desc = ctnVarDefinition) and
       (CursorNode.FirstChild<>nil) and
       not CursorNode.HasParentOfType(ctnParameterList) and
       NodeIsInsideFunction(CursorNode) and
@@ -2609,6 +2844,24 @@ begin
     MoveCursorToCleanPos(CleanCursorPos);
     GetIdentStartEndAtPosition(Src,CleanCursorPos,
                                CurPos.StartPos,CurPos.EndPos);
+
+    if AtomIsStringConstant or CleanPosIsInComment(CleanCursorPos, CursorNode.StartPos, CommentStart, CommentEnd)
+    then begin
+      Result := False;
+      Exit;
+    end;  
+                                 
+    if (CursorNode.Desc = ctnProperty) and 
+      (CompareIdentifiers(PChar('PROPERTY'),PChar(@Src[CurPos.StartPos]))=0) then begin
+      Result := False;
+      Exit;
+    end;
+
+    // reset cursor on identifier after test CleanPosIsInComment
+    MoveCursorToCleanPos(CleanCursorPos);
+    GetIdentStartEndAtPosition(Src,CleanCursorPos,
+                               CurPos.StartPos,CurPos.EndPos);
+
     IdentStartPos:=CurPos.StartPos;
     CursorAtIdentifier:=CurPos.StartPos<CurPos.EndPos;
     if CursorAtIdentifier then
@@ -3021,6 +3274,313 @@ begin
   Result:=FindDeclarationOfPropertyPath(PropertyPath,Context,IgnoreTypeLess);
   if not Result then exit;
   Result:=Context.Tool.JumpToNode(Context.Node,NewPos,NewTopLine,false);
+end;
+
+function TFindDeclarationTool.FindDeclarationPathAt(StartNode: TCodeTreeNode;
+  aPath: string; Flags: TFindSmartFlags): TFindContext;
+{ Search the declaration of aPath, starting the search at StartNode.
+  Examples for aPath:
+    'Size'
+    'TBird.TWing.Size'
+    'unit2.TBird.Fly'
+    'ns1.ns2.unit3.TBird'
+    'TFPList<T>.Add'
+    'TBird.Fly<T,U>'
+  The types of the generic parameters are irrelevant, only their number is
+  used, as in mode delphi. This works for generic types and generic procedures. In mode delphi a part without '<>' means zero
+  generic parameters, e.g. 'TBird' does not find 'TBird<T>'.
+  In the other modes a part without '<>' matches any number of parameters.
+  ToDo: For the other modes there will be a modeswitch to either search like
+        mode delphi (number of parameters) or to ignore the parameters and stop
+        at the first generic or non generic matching the name.
+        See StrictGenParams below.
+  Note: the tree must already be built, StartNode must belong to this tool.
+  Returns CleanFindContext if not found.
+}
+var
+  Path: TIdentifierPath;
+  Params: TFindDeclarationParams;
+  PartIndex: integer;
+  Ctx, PropCtx: TFindContext;
+  ContextTool: TFindDeclarationTool;
+  ContextNode, Node: TCodeTreeNode;
+  SearchFlags: TFindDeclarationFlags;
+  StrictGenParams: boolean;
+
+  procedure SetPathIdentifier(Index: integer);
+  var
+    GenParamCnt: integer;
+  begin
+    GenParamCnt:=Path[Index].GenParamCount;
+    if (GenParamCnt<0) and StrictGenParams then
+      GenParamCnt:=0; // no '<>' means zero generic parameters
+    Params.SetIdentifier(Self,PChar(Path[Index].Name),@CheckPathGenParamCount,
+                         0,nil,GenParamCnt);
+  end;
+
+  function StartsInImplementation: boolean;
+  // the implementation uses section is visible in the implementation,
+  // initialization and finalization section
+  var
+    n: TCodeTreeNode;
+  begin
+    n:=StartNode;
+    while n<>nil do begin
+      if n.Desc in [ctnImplementation,ctnInitialization,ctnFinalization] then
+        exit(true);
+      n:=n.Parent;
+    end;
+    Result:=false;
+  end;
+
+  function FindUnitPrefix(out NewContext: TFindContext): boolean;
+  // Check if aPath starts with the source name or the name of a used unit.
+  // The longest match wins, e.g. 'a.b.c' can be the unit 'a.b' or the unit 'a'.
+
+    function FindUseUnitNode(const AnUnitName: string): TCodeTreeNode;
+    var
+      UsesNode: TCodeTreeNode;
+    begin
+      Result:=nil;
+      if StartsInImplementation then begin
+        // the implementation uses section hides the interface uses section
+        UsesNode:=FindImplementationUsesNode;
+        if UsesNode<>nil then
+          Result:=FindNameInUsesSection(UsesNode,AnUnitName);
+        if Result<>nil then exit;
+      end;
+      UsesNode:=FindMainUsesNode;
+      if UsesNode<>nil then
+        Result:=FindNameInUsesSection(UsesNode,AnUnitName);
+    end;
+
+  var
+    i, Cnt: integer;
+    AnUnitName, InFilename, SrcName: string;
+    UseUnitNode: TCodeTreeNode;
+    NewTool: TFindDeclarationTool;
+  begin
+    Result:=false;
+    NewContext:=CleanFindContext;
+    // a unit name has no generic parameters
+    Cnt:=0;
+    while (Cnt<length(Path)) and (Path[Cnt].GenParamCount<0) do
+      inc(Cnt);
+    SrcName:=GetSourceName(false);
+    while Cnt>0 do begin
+      AnUnitName:=Path[0].Name;
+      for i:=1 to Cnt-1 do
+        AnUnitName:=AnUnitName+'.'+Path[i].Name;
+      NewTool:=nil;
+      if (SrcName<>'')
+      and (CompareDottedIdentifiers(PChar(AnUnitName),PChar(SrcName))=0) then
+        NewTool:=Self
+      else begin
+        UseUnitNode:=FindUseUnitNode(AnUnitName);
+        if UseUnitNode<>nil then begin
+          InFilename:='';
+          AnUnitName:=ExtractUsedUnitName(UseUnitNode,@InFilename);
+          NewTool:=FindCodeToolForUsedUnit(AnUnitName,InFilename,false);
+        end;
+      end;
+      if NewTool<>nil then begin
+        // FindCodeToolForUsedUnit does not parse
+        if (NewTool.Tree=nil) or (NewTool.Tree.Root=nil) then
+          NewTool.BuildTree(lsrImplementationStart);
+        if (NewTool.Tree<>nil) and (NewTool.Tree.Root<>nil) then begin
+          NewContext.Tool:=NewTool;
+          NewContext.Node:=NewTool.Tree.Root;
+          PartIndex:=Cnt;
+          exit(true);
+        end;
+      end;
+      dec(Cnt);
+    end;
+  end;
+
+begin
+  Result:=CleanFindContext;
+  if StartNode=nil then exit;
+  {$IFDEF CheckNodeTool}CheckNodeTool(StartNode);{$ENDIF}
+  if not SplitIdentifierPath(aPath,Path) then exit;
+  if length(Path)=0 then exit;
+
+  SearchFlags:=[fdfSearchInAncestors,fdfSearchInHelpers,fdfFindVariable];
+  if fsfSkipClassForward in Flags then
+    Include(SearchFlags,fdfSkipClassForward);
+
+  // ToDo: for the other modes there will be a modeswitch to either search like
+  //       mode delphi or to ignore the generic parameters and stop at the first
+  //       generic or non generic matching the name
+  StrictGenParams:=Scanner.CompilerMode in [cmDELPHI,cmDELPHIUNICODE];
+
+  ActivateGlobalWriteLock;
+  Params:=TFindDeclarationParams.Create(Self,StartNode);
+  try
+    // search the first part in the scope of StartNode
+    PartIndex:=0;
+    SetPathIdentifier(0);
+    Params.ContextNode:=StartNode;
+    Params.Flags:=SearchFlags+[fdfSearchInParentNodes,fdfTopLvlResolving];
+    if FindIdentifierInContext(Params) and (Params.NewNode<>nil) then begin
+      Result:=CreateFindContext(Params);
+      PartIndex:=1;
+      Node:=Result.Node;
+      // a unit name can be found as the ctnIdentifier of a source name
+      if (Node.Desc=ctnIdentifier) and (Node.Parent<>nil)
+      and (Node.Parent.Desc in [ctnSrcName,ctnUseUnit,ctnUseUnitClearName,
+                                ctnUseUnitNamespace]) then
+        Node:=Node.Parent;
+      if Node.Desc in (AllSourceTypes
+        +[ctnSrcName,ctnUseUnit,ctnUseUnitClearName,ctnUseUnitNamespace])
+      then begin
+        // the path starts with a unit name or a namespace
+        if not FindUnitPrefix(Result) then
+          exit(CleanFindContext);
+      end;
+    end else begin
+      // maybe the path starts with a unit name, that is not an identifier here
+      if not FindUnitPrefix(Result) then
+        exit(CleanFindContext);
+    end;
+
+    // search the remaining parts
+    while PartIndex<length(Path) do begin
+      if Result.Node.Desc in AllSourceTypes then begin
+        // a unit -> search in its interface
+        ContextTool:=Result.Tool;
+        ContextNode:=ContextTool.FindInterfaceNode;
+        if ContextNode=nil then
+          ContextNode:=Result.Node;
+      end else begin
+        // resolve aliases to get the class/record/enumeration with the members
+        // Note: clear the identifier, so that the generic parameter check of
+        // this path is not applied to the sub searches of FindBaseTypeOfNode
+        Params.SetIdentifier(Self,nil,nil);
+        Ctx:=Result.Tool.FindBaseTypeOfNode(Params,Result.Node);
+        if Ctx.Node=nil then
+          exit(CleanFindContext);
+        ContextTool:=Ctx.Tool;
+        ContextNode:=Ctx.Node;
+      end;
+
+      if ContextNode.Desc=ctnEnumerationType then begin
+        // an enum value, e.g. 'TColor.clRed'
+        // Note: search it independent of the modeswitch scopedenums
+        Node:=ContextNode.FirstChild;
+        while Node<>nil do begin
+          if (Node.Desc=ctnEnumIdentifier)
+          and (CompareIdentifiers(PChar(Path[PartIndex].Name),
+                                  @ContextTool.Src[Node.StartPos])=0) then
+            break;
+          Node:=Node.NextBrother;
+        end;
+        if Node=nil then
+          exit(CleanFindContext);
+        Result.Tool:=ContextTool;
+        Result.Node:=Node;
+        inc(PartIndex);
+        continue;
+      end;
+
+      SetPathIdentifier(PartIndex);
+      Params.Flags:=SearchFlags;
+      if ContextNode.Desc=ctnInterface then begin
+        // use the interface identifier cache
+        if not ContextTool.FindIdentifierInInterface(Self,Params) then
+          exit(CleanFindContext);
+      end else begin
+        Params.ContextNode:=ContextNode;
+        if not ContextTool.FindIdentifierInContext(Params) then
+          exit(CleanFindContext);
+      end;
+      if Params.NewNode=nil then
+        exit(CleanFindContext);
+      Result:=CreateFindContext(Params);
+      inc(PartIndex);
+    end;
+
+    // apply the flags
+    if Result.Node=nil then
+      exit(CleanFindContext);
+    if fsfFindMainDeclaration in Flags then
+      Result:=Result.Tool.FindMainDeclarationNode(Result.Node,
+                                          fsfSkipPropertyWithoutType in Flags)
+    else if (fsfSkipPropertyWithoutType in Flags)
+    and (Result.Node.Desc=ctnProperty) then begin
+      if Result.Tool.FindPropertyWithType(Result.Node,PropCtx)
+      and (PropCtx.Node<>nil) then
+        Result:=PropCtx;
+    end;
+    if (fsfSearchSourceName in Flags)
+    and (Result.Node.Desc in AllSourceTypes) then begin
+      Node:=Result.Tool.GetSourceNameNode;
+      if Node<>nil then
+        Result.Node:=Node;
+    end;
+  finally
+    Params.Free;
+    DeactivateGlobalWriteLock;
+  end;
+end;
+
+function TFindDeclarationTool.GetNodeGenericParamCount(Node: TCodeTreeNode
+  ): integer;
+// returns the number of generic parameters of a type or procedure declaration
+// 0 = not a generic
+var
+  ParamsNode: TCodeTreeNode;
+begin
+  Result:=0;
+  if Node=nil then exit;
+  case Node.Desc of
+  ctnGenericType:
+    begin
+      ParamsNode:=Node.FirstChild; // ctnGenericName
+      if ParamsNode=nil then exit;
+      ParamsNode:=ParamsNode.NextBrother;
+      if (ParamsNode=nil) or (ParamsNode.Desc<>ctnGenericParams) then exit;
+      Result:=ParamsNode.ChildCount;
+    end;
+  ctnProcedure,ctnProcedureHead:
+    begin
+      // the ctnGenericParams are children of the ctnProcedureHead
+      if Node.Desc=ctnProcedure then begin
+        Node:=Node.FirstChild;
+        if (Node=nil) or (Node.Desc<>ctnProcedureHead) then exit;
+      end;
+      // a method body can have two: 'procedure TBird<A>.Fly<T>;'
+      // the last one belongs to the procedure name
+      ParamsNode:=Node.FirstChild;
+      while ParamsNode<>nil do begin
+        if ParamsNode.Desc=ctnGenericParams then
+          Result:=ParamsNode.ChildCount;
+        ParamsNode:=ParamsNode.NextBrother;
+      end;
+    end;
+  end;
+end;
+
+function TFindDeclarationTool.CheckPathGenParamCount(
+  Params: TFindDeclarationParams; const FoundContext: TFindContext
+  ): TIdentifierFoundResult;
+// this is a TOnIdentifierFound function, used by FindDeclarationPathAt
+// It checks the number of generic parameters.
+// FindIdentifierInContext checks it for types, but not for procedures, and
+// FindIdentifierInInterface searches the interface identifier cache, which
+// does not check it at all.
+var
+  GenParamCnt: integer;
+begin
+  Result:=ifrSuccess;
+  GenParamCnt:=Params.IdentSpecializeNodeParamCount;
+  if GenParamCnt<0 then
+    exit; // do not check the number of generic parameters
+  if FoundContext.Node=nil then
+    exit(ifrProceedSearch);
+  if FoundContext.Tool.GetNodeGenericParamCount(FoundContext.Node)<>GenParamCnt
+  then
+    exit(ifrProceedSearch);
 end;
 
 function TFindDeclarationTool.FindPropertyWithType(aPropertyNode: TCodeTreeNode; out
@@ -3766,7 +4326,7 @@ begin
 
     if Node.Desc = ctnGenericName then
       Node := Node.Parent;
-    if Node.Desc in AllPascalTypes then
+    if Node.Desc in AllPascalTypes-[ctnGenericType] then
       Node := Node.Parent;
     case Node.Desc of
     ctnIdentifier:
@@ -3870,6 +4430,8 @@ begin
             end;
           ctnRecordType:
             Result:=Result+'record';
+          ctnTypeOf:
+            Result += ExtractNode(TypeNode, [phpCommentsToSpace]);
           ctnTypeType:
             begin
               Result:=Result+'type';
@@ -4002,10 +4564,17 @@ begin
         MoveCursorToNodeStart(Node);
         Result := Result + ReadIdentifierWithDots+' ';
       end;
+    ctnGenericParameter:
+      begin
+        Result +=' <';
+        MoveCursorToNodeStart(Node);
+        Result := Result + ReadIdentifierWithDots+'> ';
+      end;
     else
       DebugLn('ToDo: TFindDeclarationTool.GetSmartHint ',Node.DescAsString);
     end;
   end;
+
   if WithPosition then begin
     // filename
     if Result<>'' then Result:=Result+LineEnding;
@@ -5004,7 +5573,10 @@ var
       Result:=CheckResult(true,false);
   end;
 
-  function SearchInTypeVarConstGlobPropDefinition(GenParamCnt: integer = 0; SkipEnums: boolean = False): boolean;
+  function SearchInTypeVarConstGlobPropDefinition(GenParamCnt: integer = -1; SkipEnums: boolean = False): boolean;
+  // GenParamCnt: -1 = do not check the number of generic parameters
+  //               0 = must not be a generic
+  //              >0 = must be a generic with this number of parameters
   // returns: true if ok to exit
   //          false if search should continue
   var
@@ -5025,11 +5597,12 @@ var
       {$ENDIF}
       // mode delphi can have overloads with different amount of gen param
       // in other mode they have to match anyway
-      if GenParamCnt > 0 then begin
-        if ContextNode.Desc<>ctnGenericType then
-          exit;
-        n := NameNode.NextBrother;
-        if n.ChildCount <> GenParamCnt then
+      if GenParamCnt >= 0 then begin
+        if ContextNode.Desc=ctnGenericType then begin
+          n := NameNode.NextBrother;
+          if (n=nil) or (n.ChildCount <> GenParamCnt) then
+            exit;
+        end else if GenParamCnt > 0 then
           exit;
       end;
 
@@ -5055,7 +5628,8 @@ var
     end;
   end;
 
-  function SearchInGenericType(GenParamCnt: integer = 0; SkipEnums: boolean = False): boolean;
+  function SearchInGenericType(GenParamCnt: integer = -1; SkipEnums: boolean = False): boolean;
+  // GenParamCnt: see SearchInTypeVarConstGlobPropDefinition
   // returns: true if ok to exit
   //          false if search should continue
   var
@@ -5074,11 +5648,12 @@ var
       {$ENDIF}
       // mode delphi can have overloads with different amount of gen param
       // in other mode they have to match anyway
-      if GenParamCnt > 0 then begin
-        if ContextNode.Desc<>ctnGenericType then
-          exit;
-        n := NameNode.NextBrother;
-        if n.ChildCount <> GenParamCnt then
+      if GenParamCnt >= 0 then begin
+        if ContextNode.Desc=ctnGenericType then begin
+          n := NameNode.NextBrother;
+          if (n=nil) or (n.ChildCount <> GenParamCnt) then
+            exit;
+        end else if GenParamCnt > 0 then
           exit;
       end;
 
@@ -5467,6 +6042,19 @@ var
           end;
         end;
 
+        if ContextNode.Desc=ctnRecordType then begin
+          // after searching the record members, search in the composed records
+          Result:=FindIdentifierInRecordCompositions(ContextNode,Params,IdentFoundResult);
+          if Result then begin
+            FindIdentifierInContext:=true;
+            {$IFDEF ShowCollect}
+            if fdfCollect in Flags then
+              raise Exception.Create('fdfCollect must never return true');
+            {$ENDIF}
+            exit(AbortNoCacheResult);
+          end;
+        end;
+
         //allow ctnRecordType and ctnTypeTypeBeforeHelper: they can have helpers!
         if (fdfSearchInAncestors in Flags) then begin
           // after searching in a class definition, search in its ancestors
@@ -5603,7 +6191,7 @@ var
         ctnInterface, ctnImplementation, ctnProgram, ctnLibrary,
         ctnClassPublished,ctnClassPublic,ctnClassProtected,ctnClassPrivate,
         ctnClassClassVar,
-        ctnRecordVariant,
+        ctnRecordVariant, ctnRecordComposition,
         ctnProcedureHead, ctnParameterList,
         ctnClassInheritance,ctnHelperFor,
         ctnBeginBlock, ctnInitialization, ctnFinalization:
@@ -5936,6 +6524,13 @@ begin
               MoveContextNodeToChildren;
             end;
 
+          ctnRecordComposition:
+            // named composition: search the field,
+            // the composed members are searched after the record members
+            if (ContextNode.FirstChild<>nil)
+            and (ContextNode.FirstChild.Desc=ctnVarDefinition) then
+              ContextNode:=ContextNode.FirstChild;
+
           end;
         end;
       end else begin
@@ -6191,6 +6786,8 @@ var
         end;
         SubParams.AppendGenericParamValues(Params.GenParams);
         Params.GenParams:=SubParams.GenParams;
+        Params.FSpecializedType:=SubParams.FSpecializedType;
+        Params.FSpecializedClass:=SubParams.FSpecializedClass;
         exit;
       end;
 
@@ -6211,7 +6808,7 @@ var
         if (not (TestContext.Node.Desc in [ctnTypeDefinition,ctnGenericType,ctnGenericParameter,ctnSpecializeParam]))
         // TODO: the parser marks ctnSpecializeParam as ctnIdentifier (at least for types like "string"
         // an anonymous type written as the argument (TArray<(a, b: integer)>) is its own type node
-        and not ((TestContext.Node.Desc in AllPascalTypes) and (TestContext.Node.Parent<>nil) and (TestContext.Node.Parent.Desc=ctnSpecializeParams))
+        and not ((TestContext.Node.Desc in AllPascalTypes+[ctnIdentifier,ctnTypeOf]) and (TestContext.Node.Parent<>nil) and (TestContext.Node.Parent.Desc=ctnSpecializeParams))
         then
         begin
           // not a type
@@ -6303,6 +6900,7 @@ var
   OldStartFlags: TFindDeclarationFlags;
   NodeStackEntry: PCodeTreeNodeStackEntry;
   Cache: TObject;
+  ExprType: TExpressionType;
 begin
   NewAliasNode := nil;
   {$IFDEF CheckNodeTool}CheckNodeTool(Node);{$ENDIF}
@@ -6572,6 +7170,13 @@ begin
         // a TypeType is for example 'MyInt = type integer;'
         // the context is not the 'type' keyword, but the identifier after it.
         Result.Node:=Result.Node.FirstChild;
+      end else
+      if (Result.Node.Desc=ctnTypeOf) then begin
+        // 'type of operand'
+        ExprType:=FindExpressionTypeOf_TypeOf(Result.Node,Params);
+        if (ExprType.Desc<>xtContext) or (ExprType.Context.Node=nil) then
+          break; // predefined type, see ConvertNodeToExpressionType
+        Result:=ExprType.Context;
       end else
       if (Result.Node.Desc=ctnEnumIdentifier) then begin
         // an enum identifier
@@ -7521,6 +8126,18 @@ var
     end;
   end;
 
+  function NodeHasParentNode(Node, ParentNode: TCodeTreeNode): boolean;
+  begin
+    Result:=false;
+    if Node=nil then exit;
+    if ParentNode=nil then exit;
+    while Node<>nil do begin
+      if Node=ParentNode then
+        exit(true);
+      Node:=Node.Parent;
+    end;
+  end;
+
   procedure ReadIdentifier(IsComment: boolean);
   var
     IdentStartPos: Integer;
@@ -7531,11 +8148,14 @@ var
     IdentStripped: string;
     aComment: string;
     UnitInFilename: ansistring;
-    Node: TCodeTreeNode;
+    Node, ClassNode: TCodeTreeNode;
     IsDotted: boolean;
-    dLen: integer;
+    dLen, i: integer;
     ExprType: TExpressionType;
     PropName: PChar;
+    PropNameStr: string;
+    ListOfPFindContext: TFPList;
+    AFindContext, FindContext: TFindContext;
   begin
     if (not IsComment) then
       UnitStartFound:=true;
@@ -7640,26 +8260,58 @@ var
         try
           if DeclarationNode.Desc=ctnProperty then begin // it needs additional checking
             Params.Flags:=[fdfSearchInAncestors,
-                          fdfExceptionOnNotFound,
                           fdfSearchInParentNodes,
                           fdfIgnoreCurContextNode,
                           fdfExceptionOnPredefinedIdent,
                           fdfTopLvlResolving];
             if FindDeclarationOfIdentAtParam(Params, ExprType) then begin
               Found := ExprType.Context.Node = DeclarationNode;
-              // first ancestor (if property found here) can be not enough
-              if not Found and (ExprType.Context.Node.Desc=ctnProperty) then begin
+              if not Found then begin
                 PropName:=ExprType.Context.Tool.GetPropertyNameIdentifier(ExprType.Context.Node);
+                i:=ExprType.Context.Tool.ConvertSrcPCharToPos(PropName);
+                PropNameStr:=GetIdentifier(@ExprType.Context.Tool.Src[i]);
                 Params.SetIdentifier(ExprType.Context.Tool, PropName,@CheckSrcIdentifier);
                 Params.ContextNode:=ExprType.Context.Node;
                 Params.IdentifierTool:=ExprType.Context.Tool;
                 Params.IdentifierNode:=ExprType.Context.Node;
                 Params.Flags:=[fdfSearchInAncestors,
-                              fdfExceptionOnNotFound,
                               fdfSearchInParentNodes,
-                              fdfExceptionOnPredefinedIdent];
+                              fdfSearchInHelpersInTheEnd];
                 if ExprType.Context.Tool.FindDeclarationOfIdentAtParam(Params, ExprType) then
                   Found:= ExprType.Context.Node = DeclarationNode;
+              end;
+              if not Found and (ExprType.Context.Node.Desc=ctnProperty) then begin
+              // try more ancestors classes
+                try
+                  ListOfPFindContext:=nil;
+                  ClassNode:= DeclarationTool.FindClassOfMethod(DeclarationNode,
+                    true,false);
+
+                  if DeclarationTool.
+                    FindClassAndAncestors(ClassNode,ListOfPFindContext,false) then
+                  begin
+                    i:=0;
+                    while i<=ListOfPFindContext.Count-1 do begin
+                      AFindContext:=TFindContext(ListOfPFindContext.Items[i]^);
+                      Found:= NodeHasParentNode(ExprType.Context.Node, AFindContext.Node);
+                      if not Found then begin
+                        FindContext:=FindClassMember(AFindContext.Node,
+                          PropNameStr,true);
+                        if FindContext.Node<>nil then
+                          Found:= NodeHasParentNode(FindContext.Node, AFindContext.Node);
+                      end;
+                      // Found = true -> declaration is in ancestor
+                      if Found then begin // show node as matching the declaration
+                        Params.NewNode:=DeclarationNode;
+                        Params.NewCodeTool:=DeclarationTool;
+                        break;
+                      end;
+                      inc(i);
+                    end;
+                  end;
+                finally
+                  FreeListOfPFindContext(ListOfPFindContext);
+                end;
               end;
             end;
           end else begin
@@ -7676,7 +8328,19 @@ var
             if E.Sender<>Self then begin
               // there is an error in another unit, which prevents searching
               // stop further searching in this unit
-              raise;
+
+              //debugln(['*** ID=',E.Id,', ', e.Message,', StartPos=',
+              //  e.Sender.CurPos.StartPos,' ', Params.IdentifierTool.GetSourceName(false),
+              //  ' IdentifierNode=nil -> ', Params.IdentifierNode=nil,
+              //  ' fdfExceptionOnNotFound in Flags -> ', fdfExceptionOnNotFound in Params.Flags
+              //]);
+
+              if not ((Params.IdentifierNode=nil) and
+                (Params.NewCodeTool=nil) and
+                (Params.NewNode=nil) and
+                (fdfExceptionOnNotFound in Params.Flags)) then
+              raise; // skip when symptoms of failure search in ancestors observed
+                     // to prevent gathered references
             end;
             // continue
           end;
@@ -9694,8 +10358,11 @@ begin
   if aClassNode=nil then exit;
   Node:=aClassNode.LastChild;
   while Node<>nil do begin
-    if (Node.Desc in AllClassSections)
-    and (Node.FirstChild<>nil) then begin
+    if (Node.FirstChild<>nil)
+    and ((Node.Desc in AllClassSections)
+      or ((Node.Desc=ctnRecordComposition)
+        and (Node.FirstChild.Desc=ctnVarDefinition))) then begin
+      // class section or named record composition
       Node:=Node.LastChild;
       continue;
     end
@@ -10161,6 +10828,134 @@ begin
   end;
 end;
 
+function TFindDeclarationTool.FindIdentifierInRecordCompositions(
+  RecordNode: TCodeTreeNode; Params: TFindDeclarationParams;
+  var IdentFoundResult: TIdentifierFoundResult): boolean;
+{ modeswitch RecordComposition: search in the records composed via 'contains'
+  This function is internally used by FindIdentifierInContext
+
+  examples:
+    contains Child: TChildRec;
+    contains TChildRec;
+    contains record a: word; end;
+    contains alias Child;
+}
+
+  function FindOwnField(ParentNode: TCodeTreeNode; Identifier: PChar): TCodeTreeNode;
+  var
+    Node: TCodeTreeNode;
+  begin
+    Node:=ParentNode.FirstChild;
+    while Node<>nil do begin
+      case Node.Desc of
+      ctnVarDefinition:
+        if CompareSrcIdentifiers(Node.StartPos,Identifier) then
+          exit(Node);
+      ctnRecordComposition:
+        if (Node.FirstChild<>nil) and (Node.FirstChild.Desc=ctnVarDefinition)
+        and CompareSrcIdentifiers(Node.FirstChild.StartPos,Identifier) then
+          exit(Node.FirstChild);
+      ctnClassPublic,ctnClassPublished,ctnClassPrivate,ctnClassProtected,
+      ctnVarSection,ctnClassClassVar,ctnRecordCase,ctnRecordVariant:
+        begin
+          Result:=FindOwnField(Node,Identifier);
+          if Result<>nil then exit;
+        end;
+      end;
+      Node:=Node.NextBrother;
+    end;
+    Result:=nil;
+  end;
+
+  function SearchInComposition(CompNode: TCodeTreeNode): boolean;
+  var
+    TypeNode: TCodeTreeNode;
+    TypeParams: TFindDeclarationParams;
+    Context: TFindContext;
+    OldInput: TFindDeclarationInput;
+  begin
+    Result:=false;
+    TypeNode:=CompNode.FirstChild;
+    if TypeNode=nil then exit;
+    if (CompNode.SubDesc and ctnsRecordCompositionAlias)>0 then begin
+      // contains alias <field>
+      TypeNode:=FindOwnField(RecordNode,@Src[TypeNode.StartPos]);
+      if TypeNode=nil then exit;
+    end;
+
+    // find the composed record
+    if TypeNode.Desc=ctnRecordType then
+      Context:=CreateFindContext(Self,TypeNode)
+    else begin
+      Context:=CleanFindContext;
+      TypeParams:=TFindDeclarationParams.Create(Params);
+      try
+        TypeParams.GenParams:=Params.GenParams;
+        TypeParams.ContextNode:=TypeNode;
+        TypeParams.Flags:=fdfDefaultForExpressions+[fdfFindChildren];
+        try
+          Context:=FindBaseTypeOfNode(TypeParams,TypeNode);
+        except
+          // ignore errors, e.g. unknown type
+          on E: ECodeToolError do ;
+        end;
+      finally
+        TypeParams.Free;
+      end;
+    end;
+    if (Context.Node=nil) or (Context.Node.Desc<>ctnRecordType) then exit;
+
+    // search in the composed record, including its compositions
+    Params.Save(OldInput);
+    Params.ContextNode:=Context.Node;
+    Params.Flags:=Params.Flags
+      -[fdfIgnoreCurContextNode,fdfSearchInParentNodes,fdfExceptionOnNotFound,
+        fdfSearchInHelpers,fdfSearchInHelpersInTheEnd];
+    Result:=Context.Tool.FindIdentifierInContext(Params,IdentFoundResult);
+    Params.Load(OldInput,true);
+  end;
+
+  function SearchInChildren(ParentNode: TCodeTreeNode): boolean;
+  var
+    Node: TCodeTreeNode;
+  begin
+    Node:=ParentNode.FirstChild;
+    while Node<>nil do begin
+      case Node.Desc of
+      ctnRecordComposition:
+        if SearchInComposition(Node) then exit(true);
+      ctnClassPublic,ctnClassPublished,ctnClassPrivate,ctnClassProtected,
+      ctnVarSection,ctnClassClassVar,ctnRecordCase,ctnRecordVariant:
+        if SearchInChildren(Node) then exit(true);
+      end;
+      Node:=Node.NextBrother;
+    end;
+    Result:=false;
+  end;
+
+var
+  i, Cnt: integer;
+begin
+  Result:=false;
+  {$IFDEF CheckNodeTool}CheckNodeTool(RecordNode);{$ENDIF}
+  if not (cmsRecordComposition in Scanner.CompilerModeSwitches) then exit;
+
+  // check for cycles
+  Cnt:=length(FRecordCompositionsInProgress);
+  for i:=0 to Cnt-1 do
+    if FRecordCompositionsInProgress[i]=RecordNode then exit;
+
+  SetLength(FRecordCompositionsInProgress,Cnt+1);
+  FRecordCompositionsInProgress[Cnt]:=RecordNode;
+  try
+    Result:=SearchInChildren(RecordNode);
+  finally
+    Cnt:=length(FRecordCompositionsInProgress);
+    if (Cnt>0) and (FRecordCompositionsInProgress[Cnt-1]=RecordNode) then
+      SetLength(FRecordCompositionsInProgress,Cnt-1);
+  end;
+end;
+
 {$IFDEF DebugPrefix}
 procedure TFindDeclarationTool.DecPrefix;
 begin
@@ -10189,7 +10984,7 @@ function TFindDeclarationTool.FindExpressionResultType(
         2. not @ sign
         3. * / div mod and shl shr as
         4. + - or xor
-        5. < <> > <= >= in is
+        5. < <> > <= >= in is, is not
     - nil is compatible to pointers and classes
     
 
@@ -10307,7 +11102,7 @@ var
 var
   OldFlags: TFindDeclarationFlags;
   StackEntry: POperandAndOperator;
-  IsEnd, IsBinOpMissing: Boolean;
+  IsEnd, IsBinOpMissing, IsOperatorIs: Boolean;
 begin
   {$IFDEF ShowExprEval}
   DebugLn(['[TFindDeclarationTool.FindExpressionResultType] Start',
@@ -10345,6 +11140,12 @@ begin
       StackEntry^.Operand.AliasType:=CleanFindContext;
     StackEntry^.theOperator.StartPos:=-1;
     StackEntry^.OperatorLvl:=5;
+    if (CurPos.EndPos<=EndPos) and UpAtomIs('NOT') then begin
+      // a "not" after an operand can only be the start of "not in"
+      ReadNextAtom;
+      if not UpAtomIs('IN') then
+        UndoReadNextAtom;
+    end;
     // check operator
     {$IFDEF ShowExprEval}
     DebugLn('[TFindDeclarationTool.FindExpressionResultType] Operator: ',
@@ -10390,10 +11191,15 @@ begin
       ExprStack[StackPtr].OperatorLvl:=4
     else
       RaiseInternalError;
+    IsOperatorIs:=UpAtomIs('IS');
     // execute stack if possible
     ExecuteStack(false);
     // move cursor to next atom (= next operand start)
     ReadNextAtom;
+    if IsOperatorIs and UpAtomIs('NOT') then begin
+      // "is not": the "not" belongs to the "is", not to the right operand
+      ReadNextAtom;
+    end;
   until false;
 end;
 
@@ -11095,10 +11901,15 @@ begin
     ReadPriorAtom;
     CurAtom:=CurPos;
     CurAtomType:=GetCurrentAtomType;
+    if (NextAtomType in [vatAS,vatSpecialize,vatINHERITED,vatKeyword])
+        and (CurAtomType <> vatPoint) then
+    begin
+      Result:=NextAtom.StartPos;
+      exit;
+    end;
     if CurAtomType=vatNone then begin
-      if AtomIs('>') and (NextAtomType = vatPoint)
-      and ReadBackGenericParamList(False)
-      then begin // y.specialize Foo<x>.
+      if AtomIs('>') and (NextAtomType = vatPoint) and ReadBackGenericParamList(False) then
+      begin // y.specialize Foo<x>.
         ReadPriorAtom;
         CurAtom:=CurPos; // generic type name "Foo"
         CurAtomType:=GetCurrentAtomType; // vatIdentifier
@@ -11403,6 +12214,8 @@ var
     IdentNode, Node: TCodeTreeNode;
   begin
     IdentNode:=PointerTypeNode.FirstChild;
+    if (IdentNode=nil) or (IdentNode.Desc=ctnTypeOf) then
+      exit(nil); // e.g. ^type of w
     Node:=PointerTypeNode.Parent.NextBrother;
     while Node<>nil do begin
       if (Node.Desc=ctnTypeDefinition)
@@ -11992,7 +12805,7 @@ var
   procedure ResolveIdentifier;
   var
     ProcNode: TCodeTreeNode;
-    Node: TCodeTreeNode;
+    Node, GenNode: TCodeTreeNode;
     ResultNode: TCodeTreeNode;
     IsStart: Boolean;
     Context: TFindContext;
@@ -12000,6 +12813,7 @@ var
     SearchForwardToo: Boolean;
     IdentFound, SubIdent: boolean;
     FPL: TFPList;
+    DictionaryEntry: TNamesPair;
   begin
     // for example  'AnObject[3]'
 
@@ -12007,13 +12821,23 @@ var
     debugln(['ResolveIdentifier "',GetAtom(CurAtom),'"']);
     {$ENDIF}
 
-    // check special identifier 'Self'
     IdentFound:=false;
     IsStart:=ExprType.Desc=xtNone;
     IsEnd:=IsIdentifierEndOfVariable;
-    if IsStart then begin
-      // start context
-      if (StartNode.Desc in AllPascalStatements) then begin
+    if IsStart then begin // start context
+      if (SpecializeNode<>nil) then begin
+      // specialized type is known, only first specialization is stored in Params
+        if  (Params.FSpecializedType<>'') then
+          debugln(['ResolveIdentifier: nested specializaton to ', Params.FSpecializedType]) else
+        begin
+          Params.FSpecializedType:=
+            GetIdentifier(PChar(@Src[SpecializeNode.Parent.StartPos]));
+          Params.FSpecializedClass:=ExtractCode(SpecializeNode.FirstChild.StartPos,
+            SpecializeNode.FirstChild.EndPos,[]);
+        end;
+      end
+      else if (StartNode.Desc in AllPascalStatements) then begin
+        // check special identifier 'Self'
         TrueSelf:=false;
         if CompareSrcIdentifiers(CurAtom.StartPos,'SELF') then begin
           // SELF in a method is the object itself
@@ -12075,7 +12899,8 @@ var
         // of this function will be assumed
 
       end else if (StartNode.Parent<>nil)
-          and (StartNode.Parent.Desc=ctnPointerType) and (NextAtomType<>vatPoint) then
+          and (StartNode.Parent.Desc=ctnPointerType) and (NextAtomType<>vatPoint)
+          and (StartNode.Desc<>ctnTypeOf) then
       begin
         Node:=FindPointedTypeBehind(Self,StartNode.Parent);
         if Node<>nil then begin
@@ -12208,6 +13033,31 @@ var
             if Params.NewNode.Desc <> ctnGenericType then
               RaiseException(20251125000000,'[TFindDeclarationTool.FindExpressionTypeOfTerm.ResolveIdentifier] Expected generic');
             Params.SetGenericParamValues(Self, SpecializeNode, Params.NewCodeTool, Params.NewNode);
+
+            // fill in Params.SpecializeDictionary
+            if Params.GenParams.SpecializeParamsNode.ChildCount>0 then begin
+              Node:=Params.GenParams.SpecializeParamsNode.FirstChild;
+
+              GenNode:=Params.GenParams.GenericNode.FirstChild.NextBrother;
+              if (GenNode<>nil) and (GenNode.Desc=ctnGenericParams) then
+                GenNode:=GenNode.FirstChild;
+
+              if GenNode<>nil then
+              while Node<>nil do begin
+                if GenNode<>nil then begin
+                  //debugln(['<parameter> ',GenNode.DescAsString,': ',
+                  //  GetIdentifier(PChar(@Params.GenParams.GenericTool.Src[GenNode.StartPos]))]);
+                  DictionaryEntry.GenericParamName:=
+                    GetIdentifier(PChar(@Params.GenParams.GenericTool.Src[GenNode.StartPos]));
+                  GenNode:=GenNode.NextBrother;
+                end;
+                //debugln([Node.DescAsString,'type = ',
+                //  GetDottedIdentifier(PChar(@Src[Node.StartPos]))]);
+                DictionaryEntry.SpecializedType:=GetDottedIdentifier(PChar(@Src[Node.StartPos]));
+                Params.GenParams.SpecializeDictionary.Add(DictionaryEntry);
+                Node:=Node.NextBrother;
+              end;
+            end;
           end
           else
           if (Params.NewNode.Desc = ctnGenericType) and (NextAtomType = vatNone)
@@ -12419,7 +13269,7 @@ var
       PointedNode:=FindPointedTypeBehind(NewTool,NewNode);
       if PointedNode<>nil then begin
         ExprType.Context:=NewTool.FindBaseTypeOfNode(Params,PointedNode);
-      end else begin
+      end else if CurAtomType=vatPoint then begin
         ExprType.Context:=NewTool.FindBaseTypeOfNode(Params,NewNode.FirstChild);
       end;
     end;
@@ -12455,8 +13305,9 @@ var
     end else if (ExprType.Context.Node.Desc=ctnEnumIdentifier) and
       (ExprType.Context.Node.Parent.Desc=ctnEnumerationType) then begin
       // enum can have a helper to type so "enum1. " is ok
-    end
-    else begin
+    end  else if Params.GenParams.SpecializeParamsNode<>nil then begin
+      //ok, specialized generics allowed
+    end else begin
       // not allowed
       //debugln(['ResolvePoint ',ExprTypeToString(ExprType)]);
       MoveCursorToCleanPos(CurAtom.StartPos);
@@ -12564,12 +13415,12 @@ var
     end;
 
     if (ExprType.Desc=xtContext)
-    and (ExprType.Context.Node.Desc=ctnProperty) then begin
+    and (ExprType.Context.Node.Desc in [ctnProperty, ctnGlobalProperty]) then begin
       // [] behind a property
       // -> Check if this property has parameters
       ResolveTypeLessProperty;
       if (ExprType.Desc=xtContext)
-      and (ExprType.Context.Node.Desc=ctnProperty)
+      and (ExprType.Context.Node.Desc in [ctnProperty, ctnGlobalProperty])
       and ExprType.Context.Tool.PropertyNodeHasParamList(ExprType.Context.Node)
       then begin
         // use the property type
@@ -12909,7 +13760,7 @@ begin
     vatINHERITED:         ResolveINHERITED;
     end;
     ReadNextExpressionAtom;
-  until CurAtom.EndPos>EndPos;
+  until (CurAtom.EndPos>EndPos) or (CurAtom.StartPos=CurAtom.EndPos);
 
   if (fdfFunctionResult in StartFlags)
   and ( ((Params.NewNode = nil) or (Params.NewNode.Desc <> ctnTypeDefinition))
@@ -12928,11 +13779,12 @@ end;
 
 function TFindDeclarationTool.FindEndOfExpression(StartPos: integer): integer;
 var
-  First: Integer;
+  First, IfLevel: Integer;
 begin
   MoveCursorToCleanPos(StartPos);
   Result:=CurPos.StartPos;
   First:=0;
+  IfLevel:=0;
   repeat
     ReadNextAtom;
     if First=0 then begin
@@ -12946,9 +13798,28 @@ begin
     if (CurPos.StartPos>SrcLen)
     or (CurPos.Flag in [cafSemicolon,cafComma,cafEnd,
                         cafRoundBracketClose,cafEdgedBracketClose])
-    or (AtomIsKeyWord
+    then
+      break;
+    if (UpAtomIs('CASE') or UpAtomIs('TRY'))
+    and (cmsStatementExpressions in Scanner.CompilerModeSwitches) then begin
+      if not ReadTilStatementExprEnd then
+        break;
+    end else if UpAtomIs('IF')
+    and (cmsStatementExpressions in Scanner.CompilerModeSwitches) then
+      inc(IfLevel)
+    else if (IfLevel>0) and UpAtomIs('THEN') then
+    else if (IfLevel>0) and UpAtomIs('ELSE') then
+      dec(IfLevel)
+    else if UpAtomIs('TYPE')
+    and (cmsTypeInquiry in Scanner.CompilerModeSwitches) then begin
+      // 'type of' operator
+      ReadNextAtom;
+      if not UpAtomIs('OF') then
+        break;
+    end
+    else if AtomIsKeyWord
       and not IsKeyWordInConstAllowed.DoItCaseInsensitive(Src,
-                                 CurPos.StartPos,CurPos.EndPos-CurPos.StartPos))
+                                 CurPos.StartPos,CurPos.EndPos-CurPos.StartPos)
     then begin
       break;
     end
@@ -13057,6 +13928,9 @@ begin
       Result:=Tool.ReadOperandTypeAtCursor(Params,Node.EndPos,CurAliasType);
       Params.Load(OldInput,true);
     end;
+  ctnTypeOf:
+    // for example: var a: type of b;
+    Result:=Tool.FindExpressionTypeOf_TypeOf(Node,Params,CurAliasType);
   ctnProcedureType:
     begin
       // atype = procedure abc();   nil is compatible
@@ -13144,69 +14018,251 @@ var EndPos, SubStartPos: integer;
     RaiseExceptionFmt(20170421200609,ctsStrExpectedButAtomFound,[ctsIdentifier,GetAtom]);
   end;
 
-  // `if c then a else b`, `case x of l: a; ... else b` and `try a except b`
-  // used as expressions have the type of their first value branch; the
-  // branches must be compatible, so the first one is enough
-  function ReadStatementExpressionType: TExpressionType;
+  function FindIfExprKeyword(const UpKeyWord: string): boolean;
+  // cursor is on the IF or THEN of an if-expression,
+  // moves the cursor to the THEN or ELSE of the same level
   var
-    BranchStart, BranchEnd, BracketDepth, Nesting: integer;
-    IsIf, IsCase, AfterOf: boolean;
+    Level: Integer;
   begin
-    Result:=CleanExpressionType;
-    IsIf:=UpAtomIs('IF');
-    IsCase:=UpAtomIs('CASE');
-    BracketDepth:=0;
-    AfterOf:=false;
-    // skip the condition (`then`) or the selector and first label (`of l:`);
-    // `try` has its value right after the keyword
-    while IsIf or IsCase do begin
+    Result:=false;
+    Level:=0;
+    repeat
       ReadNextAtom;
-      if (CurPos.StartPos>MaxEndPos) or (CurPos.StartPos>SrcLen) then exit;
-      case CurPos.Flag of
-        cafRoundBracketOpen,cafEdgedBracketOpen: inc(BracketDepth);
-        cafRoundBracketClose,cafEdgedBracketClose: dec(BracketDepth);
-        cafColon:
-          if IsCase and AfterOf and (BracketDepth=0) then break;
-        cafWord:
-          if BracketDepth=0 then begin
-            if IsIf and UpAtomIs('THEN') then break;
-            if IsCase and UpAtomIs('OF') then AfterOf:=true;
-          end;
-      end;
-    end;
+      if (CurPos.EndPos>MaxEndPos) or (CurPos.StartPos>SrcLen)
+      or (CurPos.Flag in [cafSemicolon,cafEnd,cafRoundBracketClose,
+                          cafEdgedBracketClose])
+      then
+        exit;
+      if CurPos.Flag in [cafRoundBracketOpen,cafEdgedBracketOpen] then
+        ReadTilBracketClose(true)
+      else if UpAtomIs('CASE') or UpAtomIs('TRY') then begin
+        if not ReadTilStatementExprEnd then
+          exit;
+      end else if UpAtomIs('IF') then
+        inc(Level)
+      else if UpAtomIs('ELSE') then begin
+        if Level=0 then
+          exit(UpKeyWord='ELSE');
+        dec(Level);
+      end else if (Level=0) and UpAtomIs(UpKeyWord) then
+        exit(true);
+    until false;
+  end;
+
+  procedure ReadIfExprOperand;
+  // if-expression: if Cond then A else B
+  var
+    ThenStartPos, ThenEndPos, ElseStartPos, ElseEndPos: integer;
+    ThenOperand, ElseOperand, IfOperand: TOperand;
+  begin
+    if not FindIfExprKeyword('THEN') then
+      RaiseExceptionFmt(20260910190100,ctsStrExpectedButAtomFound,['then',GetAtom]);
+    ThenStartPos:=CurPos.EndPos;
+    if not FindIfExprKeyword('ELSE') then
+      RaiseExceptionFmt(20260910190101,ctsStrExpectedButAtomFound,['else',GetAtom]);
+    ThenEndPos:=CurPos.StartPos;
+    ElseStartPos:=CurPos.EndPos;
+    // lowest precedence: the else-part extends as far as possible
+    ElseEndPos:=FindEndOfExpression(ElseStartPos);
+    if ElseEndPos>MaxEndPos then
+      ElseEndPos:=MaxEndPos;
+
+    ThenOperand.AliasType:=CleanFindContext;
+    ThenOperand.Expr:=FindExpressionResultType(Params,ThenStartPos,ThenEndPos,
+                                               @ThenOperand.AliasType);
+    ElseOperand.AliasType:=CleanFindContext;
+    ElseOperand.Expr:=FindExpressionResultType(Params,ElseStartPos,ElseEndPos,
+                                               @ElseOperand.AliasType);
+    IfOperand:=CombineStatementExprOperands(ThenOperand,ElseOperand,Params,ElseEndPos);
+    Result:=IfOperand.Expr;
+    if AliasType<>nil then
+      AliasType^:=IfOperand.AliasType;
+
+    MoveCursorToCleanPos(ElseEndPos);
     ReadNextAtom;
-    BranchStart:=CurPos.StartPos;
-    // find the end of the first branch: `else` / `;` / `except` at the outer
-    // level; a nested statement expression owns its own `else`
-    BranchEnd:=BranchStart;
-    BracketDepth:=0;
-    Nesting:=0;
-    while (CurPos.StartPos<=MaxEndPos) and (CurPos.StartPos<=SrcLen) do begin
-      case CurPos.Flag of
-        cafRoundBracketOpen,cafEdgedBracketOpen: inc(BracketDepth);
-        cafRoundBracketClose,cafEdgedBracketClose:
-          begin
-            if BracketDepth=0 then break;
-            dec(BracketDepth);
-          end;
-        cafSemicolon:
-          if (BracketDepth=0) and (Nesting=0) then break;
-        cafWord:
-          if BracketDepth=0 then begin
-            if UpAtomIs('IF') or UpAtomIs('CASE') or UpAtomIs('TRY') then
-              inc(Nesting)
-            else if UpAtomIs('ELSE') or UpAtomIs('EXCEPT') then begin
-              if Nesting=0 then break;
-              dec(Nesting);
-            end;
-          end;
-      end;
-      BranchEnd:=CurPos.EndPos;
+  end;
+
+  procedure ReadCaseExprOperand;
+  // case-expression: case Expr of Label1, Label2..Label3: Value1; else Value2 end
+  var
+    ValueStartPos, ValueEndPos: integer;
+    ValueOperand, CaseOperand: TOperand;
+    HasValue: Boolean;
+
+    procedure ReadValue;
+    begin
+      ValueStartPos:=CurPos.EndPos;
+      ValueEndPos:=FindEndOfExpression(ValueStartPos);
+      if ValueEndPos>MaxEndPos then
+        ValueEndPos:=MaxEndPos;
+      ValueOperand.AliasType:=CleanFindContext;
+      ValueOperand.Expr:=FindExpressionResultType(Params,ValueStartPos,ValueEndPos,
+                                                  @ValueOperand.AliasType);
+      if HasValue then
+        CaseOperand:=CombineStatementExprOperands(CaseOperand,ValueOperand,
+                                                  Params,ValueEndPos)
+      else
+        CaseOperand:=ValueOperand;
+      HasValue:=true;
+      MoveCursorToCleanPos(ValueEndPos);
       ReadNextAtom;
     end;
-    if BranchEnd>BranchStart then
-      Result:=FindExpressionResultType(Params,BranchStart,BranchEnd,AliasType);
-    MoveCursorToCleanPos(MaxEndPos);
+
+  begin
+    HasValue:=false;
+    CaseOperand.Expr:=CleanExpressionType;
+    CaseOperand.AliasType:=CleanFindContext;
+    // skip case value
+    ValueEndPos:=FindEndOfExpression(CurPos.EndPos);
+    MoveCursorToCleanPos(ValueEndPos);
+    ReadNextAtom;
+    if not UpAtomIs('OF') then
+      RaiseExceptionFmt(20260915120100,ctsStrExpectedButAtomFound,['of',GetAtom]);
+    ReadNextAtom;
+    repeat
+      if (CurPos.EndPos>MaxEndPos) or (CurPos.StartPos>SrcLen)
+      or (CurPos.Flag=cafEND) then
+        break;
+      if UpAtomIs('ELSE') or UpAtomIs('OTHERWISE') then begin
+        ReadValue;
+        if CurPos.Flag=cafSemicolon then
+          ReadNextAtom;
+        break;
+      end;
+      // skip labels, e.g. 1, 3..4:
+      while not (CurPos.Flag in [cafColon,cafSemicolon,cafEND]) do begin
+        if (CurPos.EndPos>MaxEndPos) or (CurPos.StartPos>SrcLen) then
+          RaiseExceptionFmt(20260915120101,ctsStrExpectedButAtomFound,[':',GetAtom]);
+        if CurPos.Flag in [cafRoundBracketOpen,cafEdgedBracketOpen] then
+          ReadTilBracketClose(true);
+        ReadNextAtom;
+      end;
+      if CurPos.Flag<>cafColon then
+        RaiseExceptionFmt(20260915120102,ctsStrExpectedButAtomFound,[':',GetAtom]);
+      ReadValue;
+      if CurPos.Flag=cafSemicolon then
+        ReadNextAtom;
+    until false;
+
+    Result:=CaseOperand.Expr;
+    if AliasType<>nil then
+      AliasType^:=CaseOperand.AliasType;
+    if CurPos.Flag=cafEND then
+      // operators can follow the end
+      ReadNextAtom;
+  end;
+
+  procedure ReadTryExprOperand;
+  // try-except-expression:
+  //   try Expr except Value end
+  //   try Expr except on E: Type do Value1; on Type do Value2; else Value3 end
+  var
+    TryStartPos, ValueEndPos: integer;
+    ValueOperand, TryOperand: TOperand;
+
+    procedure ReadValue(ValueStartPos: integer; InOnBlock: boolean);
+    var
+      OldContextNode, OnNode: TCodeTreeNode;
+    begin
+      ValueEndPos:=FindEndOfExpression(ValueStartPos);
+      if ValueEndPos>MaxEndPos then
+        ValueEndPos:=MaxEndPos;
+      OldContextNode:=Params.ContextNode;
+      try
+        if InOnBlock then begin
+          // the variable of "on E: T do Value" is only visible in the on-block
+          OnNode:=FindDeepestNodeAtPos(ValueStartPos,false);
+          if OnNode<>nil then
+            Params.ContextNode:=OnNode;
+        end;
+        ValueOperand.AliasType:=CleanFindContext;
+        ValueOperand.Expr:=FindExpressionResultType(Params,ValueStartPos,ValueEndPos,
+                                                    @ValueOperand.AliasType);
+      finally
+        Params.ContextNode:=OldContextNode;
+      end;
+      TryOperand:=CombineStatementExprOperands(TryOperand,ValueOperand,
+                                               Params,ValueEndPos);
+      MoveCursorToCleanPos(ValueEndPos);
+      ReadNextAtom;
+    end;
+
+  begin
+    // try value
+    TryStartPos:=CurPos.EndPos;
+    ValueEndPos:=FindEndOfExpression(TryStartPos);
+    if ValueEndPos>MaxEndPos then
+      ValueEndPos:=MaxEndPos;
+    TryOperand.AliasType:=CleanFindContext;
+    TryOperand.Expr:=FindExpressionResultType(Params,TryStartPos,ValueEndPos,
+                                              @TryOperand.AliasType);
+    MoveCursorToCleanPos(ValueEndPos);
+    ReadNextAtom;
+    if not UpAtomIs('EXCEPT') then
+      RaiseExceptionFmt(20260916100000,ctsStrExpectedButAtomFound,['except',GetAtom]);
+    ReadNextAtom;
+    repeat
+      if (CurPos.EndPos>MaxEndPos) or (CurPos.StartPos>SrcLen)
+      or (CurPos.Flag=cafEND) then
+        break;
+      if UpAtomIs('ON') then begin
+        // skip "on E: Type do"
+        repeat
+          ReadNextAtom;
+          if (CurPos.EndPos>MaxEndPos) or (CurPos.StartPos>SrcLen)
+          or (CurPos.Flag in [cafSemicolon,cafEND]) then
+            RaiseExceptionFmt(20260916100001,ctsStrExpectedButAtomFound,['do',GetAtom]);
+          if CurPos.Flag in [cafRoundBracketOpen,cafEdgedBracketOpen] then
+            ReadTilBracketClose(true);
+        until UpAtomIs('DO');
+        ReadValue(CurPos.EndPos,true);
+      end else if UpAtomIs('ELSE') then
+        ReadValue(CurPos.EndPos,false)
+      else
+        // try Expr except Value end
+        ReadValue(CurPos.StartPos,false);
+      if CurPos.Flag=cafSemicolon then
+        ReadNextAtom
+      else if not UpAtomIs('ELSE') then
+        break;
+    until false;
+
+    Result:=TryOperand.Expr;
+    if AliasType<>nil then
+      AliasType^:=TryOperand.AliasType;
+    if CurPos.Flag=cafEND then
+      // operators can follow the end
+      ReadNextAtom;
+  end;
+
+  procedure Read_TypeOf_Operand;
+  // type of Operand
+  //   type of a.b[1]
+  //   type of b(w)  // typecast
+  //   type of (a+b)
+  var
+    OldFlags: TFindDeclarationFlags;
+  begin
+    ReadNextAtom;
+    if not UpAtomIs('OF') then
+      RaiseExceptionFmt(20260923110000,ctsStrExpectedButAtomFound,['of',GetAtom]);
+    ReadNextAtom;
+    SubStartPos:=CurPos.StartPos;
+    EndPos:=FindEndOfTerm(SubStartPos,true,false);
+    if EndPos>MaxEndPos then
+      EndPos:=MaxEndPos;
+    OldFlags:=Params.Flags;
+    Params.Flags:=(Params.Flags*fdfGlobals)+[fdfFunctionResult];
+    Result:=FindExpressionTypeOfTerm(SubStartPos,EndPos,Params,false,AliasType);
+    Params.Flags:=OldFlags;
+    // the type of a constant, e.g. type of (1+2)
+    case Result.Desc of
+    xtConstOrdInteger: Result.Desc:=xtLongint;
+    xtConstBoolean: Result.Desc:=xtBoolean;
+    xtConstReal: Result.Desc:=xtDouble;
+    xtConstString: Result.Desc:=GetDefaultStringType;
+    end;
+    MoveCursorToCleanPos(EndPos);
     ReadNextAtom;
   end;
 
@@ -13221,12 +14277,6 @@ begin
   if CurPos.StartPos=CurPos.EndPos then
     ReadNextAtom;
   if MaxEndPos<0 then MaxEndPos:=SrcLen;
-
-  if (cmsStatementExpressions in Scanner.CompilerModeSwitches)
-  and (UpAtomIs('IF') or UpAtomIs('CASE') or UpAtomIs('TRY')) then begin
-    Result:=ReadStatementExpressionType;
-    exit;
-  end;
 
   // read unary operators which have no effect on the type: +, -, not, autofree
   while AtomIsChar('+') or AtomIsChar('-') or UpAtomIs('NOT') or UpAtomIs('AUTOFREE') do
@@ -13319,6 +14369,14 @@ begin
       Result.Desc:=xtPointer;
     end;
   end
+  else if UpAtomIs('IF') then
+    ReadIfExprOperand
+  else if UpAtomIs('CASE') then
+    ReadCaseExprOperand
+  else if UpAtomIs('TRY') then
+    ReadTryExprOperand
+  else if UpAtomIs('TYPE') and (cmsTypeInquiry in Scanner.CompilerModeSwitches) then
+    Read_TypeOf_Operand
   else
     RaiseIdentExpected;
 
@@ -13333,6 +14391,43 @@ begin
     DbgOut(' Alias=',FindContextToString(AliasType));
   DebugLn('');
   {$ENDIF}
+end;
+
+function TFindDeclarationTool.FindExpressionTypeOf_TypeOf(
+  TypeOfNode: TCodeTreeNode; Params: TFindDeclarationParams;
+  AliasType: PFindContext): TExpressionType;
+// returns the type of the operand of a 'type of' node
+var
+  OldInput: TFindDeclarationInput;
+  ContextNode: TCodeTreeNode;
+begin
+  {$IFDEF CheckNodeTool}CheckNodeTool(TypeOfNode);{$ENDIF}
+  if FTypeOfNodesInProgress=nil then
+    FTypeOfNodesInProgress:=TFPList.Create;
+  if FTypeOfNodesInProgress.IndexOf(TypeOfNode)>=0 then begin
+    // e.g. 'type TA = type of x; var x: TA;'
+    MoveCursorToNodeStart(TypeOfNode);
+    RaiseException(20260923110001,ctsCircleInDefinitions);
+  end;
+  // search in front of the definition, e.g. skip b in 'var b: type of b;'
+  ContextNode:=TypeOfNode;
+  while (ContextNode.Parent<>nil)
+  and (ContextNode.Parent.Desc in AllPascalTypeParts+[ctnSpecializeParams,ctnSpecializeParam]) do
+    ContextNode:=ContextNode.Parent;
+  if (ContextNode.Parent<>nil)
+  and (ContextNode.Parent.Desc in AllIdentifierDefinitions+[ctnProperty,ctnGlobalProperty]) then
+    ContextNode:=ContextNode.Parent;
+  FTypeOfNodesInProgress.Add(TypeOfNode);
+  Params.Save(OldInput);
+  try
+    Params.ContextNode:=ContextNode;
+    MoveCursorToNodeStart(TypeOfNode);
+    ReadNextAtom;
+    Result:=ReadOperandTypeAtCursor(Params,TypeOfNode.EndPos,AliasType);
+  finally
+    Params.Load(OldInput,true);
+    FTypeOfNodesInProgress.Remove(TypeOfNode);
+  end;
 end;
 
 function TFindDeclarationTool.FindExpressionTypeOfPredefinedIdentifier(
@@ -13640,6 +14735,103 @@ begin
     debugln(['TFindDeclarationTool.CalculateBinaryOperator unknown operator: ',GetAtom(BinaryOperator)]);
     {$ENDIF}
     Result:=RightOperand;
+  end;
+end;
+
+function TFindDeclarationTool.CombineStatementExprOperands(ThenOperand,
+  ElseOperand: TOperand; Params: TFindDeclarationParams; CleanPos: integer
+  ): TOperand;
+// returns the type of the if-expression "if Cond then ThenOperand else ElseOperand",
+// or of two values of a case-expression
+const
+  xtAllChars = [xtChar,xtAnsiChar,xtWideChar];
+  xtAllStrings = xtAllStringTypes+xtAllWideStringTypes;
+var
+  OrigThen, OrigElse: TOperand;
+  CommonContext: TFindContext;
+  ThenDesc, ElseDesc: TExpressionTypeDesc;
+begin
+  if ElseOperand.Expr.Desc in [xtNone,xtNil] then
+    exit(ThenOperand);
+  if ThenOperand.Expr.Desc in [xtNone,xtNil] then
+    exit(ElseOperand);
+
+  if (ThenOperand.Expr.Desc=xtContext) and (ElseOperand.Expr.Desc=xtContext) then
+  begin
+    if FindContextAreEqual(ThenOperand.Expr.Context,ElseOperand.Expr.Context) then
+      exit(ThenOperand);
+    if (ThenOperand.Expr.Context.Node.Desc in AllClasses)
+    and (ElseOperand.Expr.Context.Node.Desc in AllClasses) then begin
+      // e.g. TAnimal and TDog -> TAnimal, TAnt and TBird -> TAnimal
+      CommonContext:=FindCommonAncestorClass(ThenOperand.Expr.Context,
+                                             ElseOperand.Expr.Context,Params);
+      if CommonContext.Node=nil then
+        exit(ThenOperand);
+      if FindContextAreEqual(CommonContext,ThenOperand.Expr.Context) then
+        exit(ThenOperand);
+      if FindContextAreEqual(CommonContext,ElseOperand.Expr.Context) then
+        exit(ElseOperand);
+      Result:=ThenOperand;
+      Result.Expr.Context:=CommonContext;
+      Result.AliasType:=CleanFindContext;
+      exit;
+    end;
+  end;
+
+  // convert contexts to base types, e.g. an alias of longint
+  OrigThen:=ThenOperand;
+  OrigElse:=ElseOperand;
+  if ThenOperand.Expr.Desc=xtContext then
+    ThenOperand.Expr:=ThenOperand.Expr.Context.Tool.ConvertNodeToExpressionType(
+                      ThenOperand.Expr.Context.Node,Params);
+  if ElseOperand.Expr.Desc=xtContext then
+    ElseOperand.Expr:=ElseOperand.Expr.Context.Tool.ConvertNodeToExpressionType(
+                      ElseOperand.Expr.Context.Node,Params);
+  ThenDesc:=ThenOperand.Expr.Desc;
+  ElseDesc:=ElseOperand.Expr.Desc;
+  if (ThenDesc in xtAllRealConvertibles) and (ElseDesc in xtAllRealConvertibles) then
+  begin
+    // e.g. byte and int64 -> int64, longint and double -> double
+    if (ThenDesc in xtAllRealTypes) or (ElseDesc in xtAllRealTypes) then
+      Result:=RealTypesOrderList.Compare(ThenOperand,ElseOperand,Self,CleanPos)
+    else
+      Result:=IntegerTypesOrderList.Compare(ThenOperand,ElseOperand,Self,CleanPos);
+  end
+  else if (ThenDesc in xtAllChars) and (ElseDesc in xtAllStrings) then
+    // e.g. char and string -> string
+    Result:=OrigElse
+  else if (ElseDesc in xtAllChars) and (ThenDesc in xtAllStrings) then
+    Result:=OrigThen
+  else if (ThenDesc in xtAllStringCompatibleTypes)
+      and (ElseDesc in xtAllStringCompatibleTypes) then
+    Result:=StringTypesOrderList.Compare(ThenOperand,ElseOperand,Self,CleanPos)
+  else if (ThenDesc in xtAllBooleanConvertibles)
+      and (ElseDesc in xtAllBooleanConvertibles) then
+    Result:=BooleanTypesOrderList.Compare(ThenOperand,ElseOperand,Self,CleanPos)
+  else
+    Result:=OrigThen;
+end;
+
+function TFindDeclarationTool.FindCommonAncestorClass(const Context1,
+  Context2: TFindContext; Params: TFindDeclarationParams): TFindContext;
+// returns the first of Context1 and its ancestors, that Context2 descends from
+var
+  OldInput: TFindDeclarationInput;
+begin
+  Result:=Context1;
+  Params.Save(OldInput);
+  try
+    repeat
+      if FindContextAreEqual(Result,Context2)
+      or ContextIsDescendOf(Context2,Result,Params) then
+        exit;
+      if not Result.Tool.FindAncestorOfClass(Result.Node,Params,true) then
+        break;
+      Result:=CreateFindContext(Params);
+    until false;
+    Result:=CleanFindContext;
+  finally
+    Params.Load(OldInput,true);
   end;
 end;
 
@@ -14481,6 +15673,14 @@ begin
     else if WordIsKeyWord.DoItCaseInsensitive(Src,CurPos.StartPos,
              CurPos.EndPos-CurPos.StartPos) then
       exit(vatKeyWord)
+    else if IsKeyWordMethodSpecifier.DoItCaseInsensitive(Src,CurPos.StartPos,
+                CurPos.EndPos-CurPos.StartPos) then begin
+        Node:=FindDeepestNodeAtPos(CurPos.StartPos,false);
+        if (Node<>nil) and (Node.Desc=ctnProcedureHead) then
+          exit(vatKeyword)
+        else
+          exit(vatIdentifier)
+      end 
     else if UpAtomIs('PROPERTY') then begin
       Node:=FindDeepestNodeAtPos(CurPos.StartPos,false);
       if (Node<>nil) and (Node.Desc in [ctnProperty,ctnPropertySection]) then
@@ -14503,8 +15703,78 @@ begin
         exit(vatSpecialize)
       else
         exit(vatIdentifier);
-    end
-    else
+    end else
+    if UpAtomIs('PUBLIC') then begin
+      Node:=FindDeepestNodeAtPos(CurPos.StartPos,false);
+      if (Node<>nil) and (Node.Desc=ctnClassPublic) then
+        exit(vatKeyword)
+      else
+        exit(vatIdentifier);
+    end else
+    if UpAtomIs('PRIVATE') then begin
+      Node:=FindDeepestNodeAtPos(CurPos.StartPos,false);
+      if (Node<>nil) and (Node.Desc=ctnClassPrivate) then
+        exit(vatKeyword)
+      else
+        exit(vatIdentifier);
+    end else
+    if UpAtomIs('PUBLISHED') then begin
+      Node:=FindDeepestNodeAtPos(CurPos.StartPos,false);
+      if (Node<>nil) and (Node.Desc=ctnClassPublished) then
+        exit(vatKeyword)
+      else
+        exit(vatIdentifier);
+    end else
+    if UpAtomIs('PROTECTED') then begin
+      Node:=FindDeepestNodeAtPos(CurPos.StartPos,false);
+      if (Node<>nil) and (Node.Desc=ctnClassProtected) then
+        exit(vatKeyword)
+      else
+        exit(vatIdentifier);
+    end else
+    if UpAtomIs('DISPINTERFACE') then begin
+      Node:=FindDeepestNodeAtPos(CurPos.StartPos,false);
+      if (Node<>nil) and (Node.Desc=ctnDispinterface) then
+        exit(vatKeyword)
+      else
+        exit(vatIdentifier);
+    end else
+    if UpAtomIs('PACKAGE') then begin
+      Node:=FindDeepestNodeAtPos(CurPos.StartPos,false);
+      if (Node<>nil) and (Node.Desc=ctnPackage) then
+        exit(vatKeyword)
+      else
+        exit(vatIdentifier);
+    end else
+    if UpAtomIs('HELPER') then begin
+      Node:=FindDeepestNodeAtPos(CurPos.StartPos,false);
+      if (Node<>nil) and (Node.Desc in [ctnTypeHelper,ctnRecordHelper,ctnClassHelper]) then
+        exit(vatKeyword)
+      else
+        exit(vatIdentifier);
+    end else
+    if UpAtomIs('ON') then begin
+      Node:=FindDeepestNodeAtPos(CurPos.StartPos,false);
+      if (Node<>nil) and (Node.Desc=ctnOnBlock) then
+        exit(vatKeyword)
+      else
+        exit(vatIdentifier);
+    end else
+    if UpAtomIs('OUT') then begin
+      Node:=FindDeepestNodeAtPos(CurPos.StartPos,false);
+      if (cmsOut in Scanner.CompilerModeSwitches) and (Node<>nil) and 
+        (Node.Desc=ctnParameterList) then
+        exit(vatKeyword)
+      else
+        exit(vatIdentifier);
+    end else
+    if UpAtomIs('ABSOLUTE') then begin
+      Node:=FindDeepestNodeAtPos(CurPos.StartPos,false);
+      if (Node<>nil) and (Node.Desc = ctnVarDefinition) then
+        exit(vatKeyword)
+      else
+        exit(vatIdentifier);
+    end else
       exit(vatIdentifier);
   end else if (CurPos.StartPos=CurPos.EndPos-1) then begin
     case c of
@@ -14726,7 +15996,10 @@ begin
   if (ExpressionType.Desc=xtContext)
   and (ExpressionType.Context.Node.Desc=ctnGenericParameter) then
     exit(tcExact);
-  if (TargetType.Desc=ExpressionType.Desc) then begin
+  if (TargetType.Desc=ExpressionType.Desc) or
+    ((TargetType.Desc=xtContext) and (ExpressionType.Desc in xtAllConstTypes))
+  then begin
+
     case TargetType.Desc of
     
     xtNone: ;
@@ -14745,7 +16018,7 @@ begin
         if TargetNode=ExprNode then
           Result:=tcExact
         else
-        if ExprNode.Desc=TargetNode.Desc then begin
+        if (ExprNode<>nil) and (ExprNode.Desc=TargetNode.Desc) then begin
           // same context type
           case ExprNode.Desc of
           
@@ -14767,24 +16040,37 @@ begin
           end;
         end else begin
           // different context type
-          if (TargetNode.Desc=ctnOpenArrayType) and (ExprNode.Desc<>ctnOpenArrayType) then begin
-          // switch TargetNode to node of declaration of an array element type
-            try
-              ExprParams:= TFindDeclarationParams.Create(Params);
-              ExprParams.SetIdentifier(Self,nil,nil);
-              ExprParams.ContextNode:= TargetNode;
-              ExprOfElement:=
-                FindExpressionTypeOfTerm(TargetNode.FirstChild.StartPos,-1,ExprParams,false);
-              if ExprOfElement.Desc=xtContext then
-                TargetNode:=ExprOfElement.Context.Node
-              else
-                exit;
-            finally
-              ExprParams.Free;
-            end;
 
-            if TargetNode = ExprNode then
+          if (TargetNode.Desc = ctnVariantType) and (TargetNode.FirstChild=nil) then
+          begin // target is a typeless var, const, constref
+            if ExprNode.HasParentOfType(ctnVarDefinition) then
               Result:=tcExact;
+          end else
+          if (TargetNode.Desc = ctnOpenArrayType) and
+          ((ExprNode=nil) or (ExprNode.Desc <> ctnOpenArrayType))
+          then begin
+          // switch TargetNode to node of declaration of an array element type
+            if (TargetNode.FirstChild.Desc = ctnOfConstType) then begin
+              if (ExpressionType.Desc in xtAllConstTypes) then  // array of const
+                Result:=tcCompatible
+              else exit;
+            end else begin
+              try
+                ExprParams:= TFindDeclarationParams.Create(Params);
+                ExprParams.SetIdentifier(Self,nil,nil);
+                ExprParams.ContextNode:= TargetNode;
+                ExprOfElement:=
+                  TargetType.Context.Tool.FindExpressionTypeOfTerm(TargetNode.FirstChild.StartPos,-1,ExprParams,false);
+                if ExprOfElement.Desc=xtContext then
+                  TargetNode:=ExprOfElement.Context.Node
+                else
+                  exit;
+              finally
+                ExprParams.Free;
+              end;
+              if TargetNode = ExprNode then
+                Result:= tcCompatible;
+            end;
           end;
         end;
       end;
@@ -15287,6 +16573,8 @@ begin
     FreeAndNil(FInterfaceHelperCache[HelperKind]);
   FreeAndNil(FDependsOnCodeTools);
   FreeAndNil(FDependentCodeTools);
+  FreeAndNil(FTypeOfNodesInProgress);
+  FRecordCompositionsInProgress:=nil;
   if FDirectoryCache<>nil then begin
     FDirectoryCache.Release;
     FDirectoryCache:=nil;
@@ -15326,7 +16614,9 @@ begin
     NodeCacheMemManager.DisposeNodeCache(FRootNodeCache);
     FRootNodeCache:=nil;
   end;
-  
+  FreeAndNil(FTypeOfNodesInProgress);
+  FRecordCompositionsInProgress:=nil;
+
   // clear dependent codetools
   ClearDependentNodeCaches;
   ClearDependsOnToolRelationships;
@@ -15744,10 +17034,11 @@ function TFindDeclarationTool.FindTermTypeAsString(TermPos: TAtomPosition;
   Params: TFindDeclarationParams;
   out ExprType: TExpressionType): string;
 var
-  EdgedBracketsStartPos : integer;
+  EdgedBracketsStartPos, i : integer;
   SetNode, ClassNode, ExprClassNode: TCodeTreeNode;
   SetTool: TFindDeclarationTool;
-  AliasType, ProcContext: TFindContext;
+  AliasType: TFindContext;
+  Node: TCodeTreeNode;
 begin
   //debugln(['TFindDeclarationTool.FindTermTypeAsString START']);
   {$IFDEF CheckNodeTool}CheckNodeTool(Params.ContextNode);{$ENDIF}
@@ -15786,8 +17077,6 @@ begin
     end;
   end;
 
-  ProcContext:=CleanFindContext;
-
   // check if TermPos is @Name and a pointer (= ^Name) can be found
   if IsTermNamedPointer(TermPos,ExprType) then begin
     // pointer type
@@ -15802,9 +17091,6 @@ begin
     if (Params.NewNode<>nil) and (Params.NewNode.Desc=ctnProcedure)  then begin
       // a type (in parameters or result) known at proc header can be redeclared,
       // needed checking if not
-
-      ProcContext.Node:=Params.NewNode;
-      ProcContext.Tool:=Params.NewCodeTool;
 
       DebugLn(['proc header start = ',Params.NewNode.FirstChild.StartPos]);
       if AliasType.Node<>nil then
@@ -15838,11 +17124,37 @@ begin
 
   if Result='' then exit;
   if AliasType.Node<>nil then begin
-    ClassNode:=FindClassNode(AliasType.Node);
+    ClassNode:=AliasType.Tool.FindClassNode(AliasType.Node);
     if ClassNode=nil then exit;
-    ExprClassNode:= FindClassNode(Params.StartNode);
+    ExprClassNode:= Params.StartTool.FindClassNode(Params.StartNode);
     if ExprClassNode = ClassNode then exit; // inside a class no full path needed
-    Result:=ExtractClassName(ClassNode, false)+'.'+Result;
+    Result:=AliasType.Tool.ExtractClassName(ClassNode, false)+'.'+Result;
+  end else
+  if Params.NewNode<>nil then begin
+    i:=0;
+    repeat
+      if Params.NewNode.HasParentOfType(AllClassObjectsArray[i]) then begin
+        i:=-1; // mark as found in AllClassObjects
+        break;
+      end;
+      inc(i);
+    until  i>high(AllClassObjectsArray);
+    if i<0 then begin
+      // find type definition node
+      Node:=Params.NewNode;
+      while (Node<>nil) do begin
+        if Node.Desc=ctnTypeDefinition then break;
+        Node:=Node.Parent;
+      end;
+      if (Node<>nil) then begin
+        // find node of class of definition and check if it is parent of StartNode
+        ClassNode:= FindClassNode(Node);
+        ExprClassNode:= FindClassNode(Params.StartNode);
+        if (ClassNode<>nil) and (ExprClassNode<>ClassNode) and
+        ((ExprClassNode=nil) or not ExprClassNode.HasAsParent(ClassNode)) then
+          Result:=ExtractClassName(ClassNode, false)+'.'+Result;
+      end;
+    end;
   end;
 end;
 
@@ -17094,8 +18406,7 @@ begin
         case FindContext.Node.Desc of
 
         ctnTypeDefinition:
-          Result:=GetIdentifier(
-                              @FindContext.Tool.Src[FindContext.Node.StartPos]);
+          Result:=GetIdentifier(@FindContext.Tool.Src[FindContext.Node.StartPos]);
 
         ctnVarDefinition,ctnConstDefinition:
           begin
@@ -17173,6 +18484,15 @@ begin
             start:=FindStartOfArrayDefinition(ANode, FindContext.Tool, stop);
             if start>0 then
               Result:= FindContext.Tool.ExtractCode(start,stop,[]);
+          end;
+
+          ctnGenericType:
+          begin
+            ANode:= FindContext.Node;
+            Result:= FindContext.Tool.ExtractNode(ANode,[]);
+            stop:=Pos('>', Result);
+            if stop>1 then
+              delete(Result, stop+1, length(Result));
           end;
         end;
 
@@ -17520,6 +18840,9 @@ begin
   Parent:=ParentParams;
   FKnownIdentifierLength:=0;
   FKnownIdentifierSpecializeParamCnt := -1;
+  FKnownIdentSpecializeParamCntValid := false;
+  FSpecializedType:='';
+  FSpecializedClass:='';
 end;
 
 constructor TFindDeclarationParams.Create(Tool: TFindDeclarationTool;
@@ -17566,6 +18889,7 @@ begin
   Input.Flags:=Flags;
   Input.Identifier:=Identifier;
   Input.IdentifierNode:=IdentifierNode;
+  Input.IdentifierGenParamCount:=FIdentifierGenParamCount;
   Input.ContextNode:=ContextNode;
   Input.OnIdentifierFound:=OnIdentifierFound;
   Input.IdentifierTool:=IdentifierTool;
@@ -17591,6 +18915,9 @@ begin
   Flags:=Input.Flags;
   Identifier:=Input.Identifier;
   IdentifierNode:=Input.IdentifierNode;
+  FIdentifierGenParamCount:=Input.IdentifierGenParamCount;
+  FKnownIdentifierSpecializeParamCnt:=-1;
+  FKnownIdentSpecializeParamCntValid:=false;
   ContextNode:=Input.ContextNode;
   OnIdentifierFound:=Input.OnIdentifierFound;
   IdentifierTool:=Input.IdentifierTool;
@@ -17667,7 +18994,9 @@ begin
   Flags:=[];
   Identifier:=nil;
   IdentifierNode := nil;
+  FIdentifierGenParamCount := -1;
   FKnownIdentifierSpecializeParamCnt := -1;
+  FKnownIdentSpecializeParamCntValid := false;
   ContextNode:=nil;
   OnIdentifierFound:=nil;
   IdentifierTool:=nil;
@@ -17738,15 +19067,26 @@ begin
 end;
 
 function TFindDeclarationParams.IdentSpecializeNodeParamCount: integer;
+// -1 = the identifier has no generic parameters, do not check the number
+//  0 = the identifier has no generic parameters and must not be a generic
+// >0 = the identifier has this number of generic parameters
 var
   Nd: TCodeTreeNode;
 begin
-  Result := FKnownIdentifierSpecializeParamCnt;
-  if Result >= 0 then
-    exit;
+  if FKnownIdentSpecializeParamCntValid then
+    exit(FKnownIdentifierSpecializeParamCnt);
 
-  Result := 0;
-  FKnownIdentifierSpecializeParamCnt := 0;
+  FKnownIdentSpecializeParamCntValid := true;
+
+  if FIdentifierGenParamCount >= 0 then begin
+    // the count was given directly, e.g. by FindDeclarationPathAt
+    Result := FIdentifierGenParamCount;
+    FKnownIdentifierSpecializeParamCnt := Result;
+    exit;
+  end;
+
+  Result := -1;
+  FKnownIdentifierSpecializeParamCnt := -1;
 
   Nd := IdentifierNode;
   if Nd = nil then exit;
@@ -17768,12 +19108,14 @@ end;
 
 procedure TFindDeclarationParams.SetIdentifier(NewIdentifierTool: TFindDeclarationTool;
   NewIdentifier: PChar; NewOnIdentifierFound: TOnIdentifierFound; const IdentifierLength: Integer;
-  NewIdentifierNode: TCodeTreeNode);
+  NewIdentifierNode: TCodeTreeNode; NewGenParamCount: integer);
 begin
   Identifier:=NewIdentifier;
   IdentifierTool:=NewIdentifierTool;
   IdentifierNode:=NewIdentifierNode;
+  FIdentifierGenParamCount:=NewGenParamCount;
   FKnownIdentifierSpecializeParamCnt := -1;
+  FKnownIdentSpecializeParamCntValid := false;
   OnIdentifierFound:=NewOnIdentifierFound;
   ClearFoundProc;
   FKnownIdentifierLength:=IdentifierLength;

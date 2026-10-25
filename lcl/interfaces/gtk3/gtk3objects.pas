@@ -21,11 +21,12 @@ unit Gtk3Objects;
 interface
 
 uses
-  Classes, SysUtils, Types, math, FPCanvas,
+  Classes, SysUtils, Types, Math, FPCanvas,
   // LazUtils
-  LazUTF8, IntegerList, LazStringUtils,
+  LazUTF8, IntegerList, LazStringUtils, LazTracer, Maps,
   // LCL
   LCLType, LCLProc, Graphics,
+  //
   LazGtk3, LazGdk3, LazGObject2, LazGLib2, LazGdkPixbuf2,
   LazPango1, LazPangoCairo1, LazCairo1, gtk3procs, LazLogger;
 
@@ -53,6 +54,7 @@ type
     fContext:TGtk3DeviceContext;
   public
     constructor Create; override;
+    destructor Destroy; override;
     function Select(ACtx:TGtk3DeviceContext):TGtk3ContextObject; virtual;
     function Get(szbuf:integer;pbuf:pointer):integer; virtual;abstract;
     property Shared: Boolean read FShared write FShared;
@@ -100,6 +102,7 @@ type
     function Get(szbuf:integer;pbuf:pointer):integer; override;
     destructor Destroy; override;
     procedure UpdatePattern(const aColor: TColorRef);
+    procedure SetSharedColor(AValue: TColor);
     property Color: TColor read FColor write SetColor;
     property Context: TGtk3DeviceContext read FContext write FContext;
     property Style: LongWord read FStyle write SetStyle;
@@ -314,6 +317,7 @@ type
     procedure SetCanvasScaleFactor(const AValue: double);
     procedure SetXorMode(var xorSurface: Pcairo_surface_t; AMap: Tcairo_operator_t); // SetRasterOp
     procedure ApplyXorDrawing(xorSurface: Pcairo_surface_t; AMap: Tcairo_operator_t); // after each paint
+    procedure ForgetFont(const AFont: TGtk3Font);
   protected
     FCairo: Pcairo_t;
     FXorCairo: PCairo_t;
@@ -418,6 +422,8 @@ procedure Gtk3WordWrap(DC: HDC; AText: PChar;
 
 function Gtk3DefaultContext: TGtk3DeviceContext;
 function Gtk3ScreenContext: TGtk3DeviceContext;
+function Gtk3IsValidGDIObject(const AGDIObj: PtrUInt): Boolean;
+function Gtk3IsValidDeviceContext(const ADC: PtrUInt): Boolean;
 
 function ReplaceAmpersandsWithUnderscores(const S: string): string; inline;
 function ReplaceUnderscoresWithAmpersands(const S: string): string; inline;
@@ -428,6 +434,64 @@ uses gtk3int, Controls;
 
 const
   PixelOffset = 0.5; // Cairo API needs 0.5 pixel offset to not make blurry lines
+
+var
+  FGDIHandles: TMap;
+  FDCHandles: TMap;
+
+procedure Gtk3AddDeviceContext(AObject: TObject);
+var
+  Key: PtrUInt;
+begin
+  if (AObject = nil) or (FDCHandles = nil) then
+    exit;
+  Key := PtrUInt(AObject);
+  if not FDCHandles.HasId(Key) then
+    FDCHandles.Add(Key, AObject);
+end;
+
+procedure Gtk3RemoveDeviceContext(AObject: TObject);
+var
+  Key: PtrUInt;
+begin
+  if (AObject = nil) or (FDCHandles = nil) then
+    exit;
+  Key := PtrUInt(AObject);
+  if FDCHandles.HasId(Key) then
+    FDCHandles.Delete(Key);
+end;
+
+function Gtk3IsValidDeviceContext(const ADC: PtrUInt): Boolean;
+begin
+  Result := (ADC <> 0) and (FDCHandles <> nil) and FDCHandles.HasId(ADC);
+end;
+
+procedure Gtk3AddGDIObject(AObject: TObject);
+var
+  Key: PtrUInt;
+begin
+  if (AObject = nil) or (FGDIHandles = nil) then
+    exit;
+  Key := PtrUInt(AObject);
+  if not FGDIHandles.HasId(Key) then
+    FGDIHandles.Add(Key, AObject);
+end;
+
+procedure Gtk3RemoveGDIObject(AObject: TObject);
+var
+  Key: PtrUInt;
+begin
+  if (AObject = nil) or (FGDIHandles = nil) then
+    exit;
+  Key := PtrUInt(AObject);
+  if FGDIHandles.HasId(Key) then
+    FGDIHandles.Delete(Key);
+end;
+
+function Gtk3IsValidGDIObject(const AGDIObj: PtrUInt): Boolean;
+begin
+  Result := (AGDIObj <> 0) and (FGDIHandles <> nil) and FGDIHandles.HasId(AGDIObj);
+end;
 
 const
   Dash_Dash:        array [0..1] of double = (3, 2);              //____ ____
@@ -787,11 +851,18 @@ constructor TGtk3ContextObject.Create;
 begin
   inherited Create;
   FShared := False;
+  Gtk3AddGDIObject(Self);
+end;
+
+destructor TGtk3ContextObject.Destroy;
+begin
+  Gtk3RemoveGDIObject(Self);
+  inherited Destroy;
 end;
 
 function TGtk3ContextObject.Select(ACtx:TGtk3DeviceContext): TGtk3ContextObject;
 begin
-  DbgS('Default context object selected, please implement');
+  DebugLn('Default context object selected, please implement');
   Result:=nil;
 end;
 
@@ -817,6 +888,8 @@ begin
 end;
 
 constructor TGtk3Region.Create(X1,Y1,X2,Y2,nW,nH: Integer);
+// Like CreateEllipse: the rounded rectangle is drawn in the scratch surface's local
+// coordinates (0,0 .. W,H) and the resulting region is translated to X1,Y1.
 var
   ASurface: pcairo_surface_t;
   cr:Pcairo_t;
@@ -824,31 +897,37 @@ var
   w,h:integer;
 begin
   inherited Create;
-  FHandle := nil;
   w:=x2-x1;
   h:=y2-y1;
+  if (w<=0) or (h<=0) then
+  begin
+    FHandle := cairo_region_create;
+    exit;
+  end;
   rr:=nW/2;
 
+  FHandle := nil;
   ASurface := cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
   cr:=cairo_create(ASurface);
   try
     cairo_new_path(cr);
 
-    cairo_move_to(cr,x1,y2-rr);
-    cairo_line_to(cr,x1,y1+rr);
-    cairo_arc(cr,x1 + rr, y1 + rr, rr, pi, 3*pi/2);
-    cairo_line_to(cr,x2-rr,y1);
-    cairo_arc(cr,x2 - rr, y1 + rr, rr, 3*pi/2, 0);
-    cairo_line_to(cr,x2,y2-rr);
-    cairo_arc(cr,x2 - rr, y2 - rr, rr, 0, pi/2);
-    cairo_line_to(cr,x1-rr,y2);
-    cairo_arc(cr,x1 + rr, y2 - rr, rr, pi/2, pi);
+    cairo_move_to(cr,0,h-rr);
+    cairo_line_to(cr,0,rr);
+    cairo_arc(cr,rr, rr, rr, pi, 3*pi/2);
+    cairo_line_to(cr,w-rr,0);
+    cairo_arc(cr,w - rr, rr, rr, 3*pi/2, 2*pi);
+    cairo_line_to(cr,w,h-rr);
+    cairo_arc(cr,w - rr, h - rr, rr, 0, pi/2);
+    cairo_line_to(cr,rr,h);
+    cairo_arc(cr,rr, h - rr, rr, pi/2, pi);
 
     cairo_close_path(cr);
     cairo_set_source_rgba(cr,1,1,1,1);
     cairo_fill_preserve(cr);
 
     FHandle := gdk_cairo_region_create_from_surface(ASurface);
+    cairo_region_translate(FHandle, x1, y1);
   finally
     cairo_destroy(cr);
     cairo_surface_destroy(ASurface);
@@ -856,42 +935,47 @@ begin
 end;
 
 constructor TGtk3Region.CreateEllipse(X1,Y1,X2,Y2: Integer);
+// The ellipse is rasterized into a scratch surface that is only W x H pixels, so it
+// must be drawn in surface local coordinates (0,0 .. W,H). The region built from the
+// surface is then translated to X1,Y1 to give the caller device coordinates. Drawing
+// at X1,Y1 instead would put the ellipse outside the scratch surface and the region
+// would come out empty.
 var
   ASurface: pcairo_surface_t;
   cr:Pcairo_t;
   w,h:integer;
-  save_matrix: Tcairo_matrix_t;
 begin
   inherited Create;
-  FHandle := nil;
   w:=x2-x1;
   h:=y2-y1;
+  if (w<=0) or (h<=0) then
+  begin
+    FHandle := cairo_region_create;
+    exit;
+  end;
 
+  FHandle := nil;
   ASurface := cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
   cr:=cairo_create(ASurface);
   try
-    cairo_save(cr);
-    try
-      cairo_get_matrix(cr, @save_matrix);
-      cairo_translate (cr, x1 + w / 2.0 + PixelOffset, y1 + h / 2.0 + PixelOffset);
-      cairo_scale (cr, w / 2.0, h / 2.0);
-      cairo_new_path(cr);
-      cairo_arc
-          (
-            (*cr =*) cr,
-            (*xc =*) 0,
-            (*yc =*) 0,
-            (*radius =*) 1,
-            (*angle1 =*) 0,
-            (*angle2 =*) 2 * Pi
-          );
-      cairo_close_path(cr);
-      cairo_set_source_rgba(cr,1,1,1,1);
-      cairo_fill_preserve(cr);
-    finally
-      cairo_restore(cr);
-    end;
+    cairo_translate (cr, w / 2.0 + PixelOffset, h / 2.0 + PixelOffset);
+    cairo_scale (cr, w / 2.0, h / 2.0);
+    cairo_new_path(cr);
+    cairo_arc
+        (
+          (*cr =*) cr,
+          (*xc =*) 0,
+          (*yc =*) 0,
+          (*radius =*) 1,
+          (*angle1 =*) 0,
+          (*angle2 =*) 2 * Pi
+        );
+    cairo_close_path(cr);
+    cairo_set_source_rgba(cr,1,1,1,1);
+    cairo_fill_preserve(cr);
+
     FHandle := gdk_cairo_region_create_from_surface(ASurface);
+    cairo_region_translate(FHandle, x1, y1);
   finally
     cairo_destroy(cr);
     cairo_surface_destroy(ASurface);
@@ -969,6 +1053,7 @@ var
   AFaceStr: string;
   SavedEscapement, SavedOrientation: Longint;
   SavedCharSet: Byte;
+  ADpi: gdouble;
 begin
   if not Assigned(fHandle) then exit;
   SavedEscapement := fLogFont.lfEscapement;
@@ -1026,7 +1111,10 @@ begin
     begin
       { in points }
       //sz:=round(96*sz/PANGO_SCALE/72);//round(2.03*sz/PANGO_SCALE);
-      sz := MulDiv(PANGO_PIXELS(sz), Round(gdk_screen_get_resolution(gdk_screen_get_default)), 72 );
+      ADpi := gdk_screen_get_resolution(gdk_screen_get_default);
+      if ADpi <= 0 then
+        ADpi := 96;
+      sz := MulDiv(PANGO_PIXELS(sz), Round(ADpi), 72 );
     end;
 
     fLogFont.lfHeight:=sz;//round(sz/PANGO_SCALE);
@@ -1260,7 +1348,25 @@ begin
 end;
 
 destructor TGtk3Font.Destroy;
+var
+  AIter: TMapIterator;
+  ADC: TGtk3DeviceContext;
 begin
+  if FDCHandles <> nil then
+  begin
+    AIter := TMapIterator.Create(FDCHandles);
+    try
+      AIter.First;
+      while not AIter.EOM do
+      begin
+        AIter.GetData(ADC);
+        ADC.ForgetFont(Self);
+        AIter.Next;
+      end;
+    finally
+      AIter.Free;
+    end;
+  end;
   if Assigned(fContext) and (fContext.CurrentFont = Self) then
     fContext.CurrentFont := nil;
   if Assigned(FLayout) then
@@ -1642,6 +1748,11 @@ end;
 
 { TGtk3Brush }
 
+procedure TGtk3Brush.SetSharedColor(AValue: TColor);
+begin
+  FColor := AValue;
+end;
+
 procedure TGtk3Brush.SetColor(AValue: TColor);
 var
   ARed, AGreen, ABlue: Double;
@@ -1757,7 +1868,7 @@ begin
     inc(psrc); inc(pdst);
   end;
   {GTK3 states the buffer must exist, until image that uses the buffer - destroyed}
-  brush_pattern:=create_stipple(PByte(pat_buf),w,w);
+  brush_pattern:=create_stipple(PByte(pat_buf),w,h);
 end;
 
 
@@ -2094,18 +2205,22 @@ var
   NeedSource: Boolean;
   AMatrix: Tcairo_matrix_t;
   ReadOffsetX, ReadOffsetY: Double;
+  DRect: TRect;
 begin
   DestSurface := cairo_get_target(FCairo);
   if DestSurface = nil then
     exit;
 
-  CopyW := ADestRect.Right - ADestRect.Left;
-  CopyH := ADestRect.Bottom - ADestRect.Top;
+  DRect := Rect(LToDX(ADestRect.Left), LToDY(ADestRect.Top),
+    LToDX(ADestRect.Right), LToDY(ADestRect.Bottom));
+  CopyW := DRect.Right - DRect.Left;
+  CopyH := DRect.Bottom - DRect.Top;
 
   if (CopyW <= 0) or (CopyH <= 0) then
     exit;
 
-  if FBackTarget <> nil then
+  if (FBackTarget <> nil) and
+    (cairo_surface_get_type(DestSurface) <> CAIRO_SURFACE_TYPE_IMAGE) then
     TargetCairo := FBackTarget
   else
     TargetCairo := FCairo;
@@ -2114,7 +2229,7 @@ begin
   begin
 
     cairo_save(TargetCairo);
-    cairo_rectangle(TargetCairo, ADestRect.Left, ADestRect.Top, CopyW, CopyH);
+    cairo_rectangle(TargetCairo, DRect.Left, DRect.Top, CopyW, CopyH);
     cairo_clip(TargetCairo);
 
     case Rop of
@@ -2198,13 +2313,13 @@ begin
 
   TempDestSurface := nil;
 
-  if FBackTarget <> nil then
+  if TargetCairo = FBackTarget then
   begin
     //x11 type, read from underlying X11 surface via FBackTarget matrix.
     ReadSurface := cairo_get_target(FBackTarget);
     cairo_get_matrix(FBackTarget, @AMatrix);
-    ReadOffsetX := -(AMatrix.x0 + ADestRect.Left);
-    ReadOffsetY := -(AMatrix.y0 + ADestRect.Top);
+    ReadOffsetX := -(AMatrix.x0 + DRect.Left);
+    ReadOffsetY := -(AMatrix.y0 + DRect.Top);
     TempDestSurface := cairo_image_surface_create(CAIRO_FORMAT_ARGB32, CopyW, CopyH);
     TempCairo := cairo_create(TempDestSurface);
     cairo_set_source_surface(TempCairo, ReadSurface, ReadOffsetX, ReadOffsetY);
@@ -2223,8 +2338,8 @@ begin
     if (AMatrix.x0 <> 0) or (AMatrix.y0 <> 0) or
        (cairo_surface_get_type(DestSurface) <> CAIRO_SURFACE_TYPE_IMAGE) then
     begin
-      ReadOffsetX := -(AMatrix.x0 + ADestRect.Left);
-      ReadOffsetY := -(AMatrix.y0 + ADestRect.Top);
+      ReadOffsetX := -(AMatrix.x0 + DRect.Left);
+      ReadOffsetY := -(AMatrix.y0 + DRect.Top);
       TempDestSurface := cairo_image_surface_create(CAIRO_FORMAT_ARGB32, CopyW, CopyH);
       TempCairo := cairo_create(TempDestSurface);
       cairo_set_source_surface(TempCairo, DestSurface, ReadOffsetX, ReadOffsetY);
@@ -2265,7 +2380,7 @@ begin
   for Y := 0 to CopyH - 1 do
   begin
     if TempDestSurface = nil then
-      if (ADestRect.Top + Y < 0) or (ADestRect.Top + Y >= DstH) then
+      if (DRect.Top + Y < 0) or (DRect.Top + Y >= DstH) then
         continue;
 
     if NeedSource and (TempSurface = nil) then
@@ -2275,7 +2390,7 @@ begin
     for X := 0 to CopyW - 1 do
     begin
       if TempDestSurface = nil then
-        if (ADestRect.Left + X < 0) or (ADestRect.Left + X >= DstW) then
+        if (DRect.Left + X < 0) or (DRect.Left + X >= DstW) then
           continue;
 
       if NeedSource and (TempSurface = nil) then
@@ -2285,7 +2400,7 @@ begin
       if TempDestSurface <> nil then
         DstOff := Y * DstStride + X * 4
       else
-        DstOff := (ADestRect.Top + Y) * DstStride + (ADestRect.Left + X) * 4;
+        DstOff := (DRect.Top + Y) * DstStride + (DRect.Left + X) * 4;
 
       SrcOff := 0;
       if NeedSource then
@@ -2383,8 +2498,8 @@ begin
     //write back via x11 FBackTarget when X11-backed, else via FCairo.
     cairo_save(TargetCairo);
     cairo_set_operator(TargetCairo, CAIRO_OPERATOR_SOURCE);
-    cairo_set_source_surface(TargetCairo, TempDestSurface, ADestRect.Left, ADestRect.Top);
-    cairo_rectangle(TargetCairo, ADestRect.Left, ADestRect.Top, CopyW, CopyH);
+    cairo_set_source_surface(TargetCairo, TempDestSurface, DRect.Left, DRect.Top);
+    cairo_rectangle(TargetCairo, DRect.Left, DRect.Top, CopyW, CopyH);
     cairo_fill(TargetCairo);
     cairo_restore(TargetCairo);
     if TargetCairo = FCairo then
@@ -2628,6 +2743,7 @@ begin
      ' FromPaintEvent:',BoolToStr(APaintEvent),' )');
   {$endif}
   inherited Create;
+  Gtk3AddDeviceContext(Self);
   FXorSurface := nil;
   FXorSnapshot := nil;
   FCanvasScaleFactor := 1;
@@ -2686,6 +2802,7 @@ begin
      ' FromPaintEvent:',BoolToStr(APaintEvent),' )');
   {$endif}
   inherited Create;
+  Gtk3AddDeviceContext(Self);
   FDCSaveCounter := 0;
   FXorSurface := nil;
   FXorSnapshot := nil;
@@ -2722,6 +2839,7 @@ begin
      ' FromPaintEvent:',BoolToStr(True),' )');
   {$endif}
   inherited Create;
+  Gtk3AddDeviceContext(Self);
   FDCSaveCounter := 0;
   FXorSurface := nil;
   FXorSnapshot := nil;
@@ -2770,6 +2888,7 @@ begin
   {$ifdef VerboseGtk3DeviceContext}
     DebugLn('TGtk3DeviceContext.Destroy ',dbgHex(PtrUInt(Self)));
   {$endif}
+  Gtk3RemoveDeviceContext(Self);
   DeleteObjects;
 
   if FXorMode then
@@ -2863,6 +2982,24 @@ begin
   fncOrigin:=Point(round(Matrix.x0),round(Matrix.y0));
 end;
 
+procedure TGtk3DeviceContext.ForgetFont(const AFont: TGtk3Font);
+var
+  i: Integer;
+  AReplacement: TGtk3Font;
+begin
+  if FFont <> AFont then
+    AReplacement := FFont
+  else
+    AReplacement := nil;
+  if FCurrentFont = AFont then
+    FCurrentFont := AReplacement;
+  if Assigned(FSavedStateStack) then
+    for i := 0 to FSavedStateStack.Count - 1 do
+      if (FSavedStateStack[i] <> nil) and
+        (PGtk3DCSavedState(FSavedStateStack[i])^.FontObj = AFont) then
+        PGtk3DCSavedState(FSavedStateStack[i])^.FontObj := AReplacement;
+end;
+
 procedure TGtk3DeviceContext.DeleteObjects;
 var
   i: Integer;
@@ -2948,6 +3085,7 @@ var
   img_surf,view:Pcairo_surface_t;
 begin
   Result := 0;
+  APixelValue := 0;
 
   if CairoSurface = nil then
     exit;
@@ -4673,6 +4811,8 @@ begin
   if AMetrics = nil then
   begin
     Debugln('WARNING: GetTextExtentIgnoringAmpersands AMetrics=nil');
+    if NewStr <> Str then
+      StrDispose(NewStr);
     exit;
   end;
 
@@ -4880,5 +5020,13 @@ begin
 
   LinesList.Free;
 end;
+
+initialization
+  FGDIHandles := TMap.Create(TMapIdType(ituPtrSize), SizeOf(TObject));
+  FDCHandles := TMap.Create(TMapIdType(ituPtrSize), SizeOf(TObject));
+
+finalization
+  FreeAndNil(FGDIHandles);
+  FreeAndNil(FDCHandles);
 
 end.

@@ -82,7 +82,8 @@ uses
   Project, ProjectIcon, ProjectUserResources, BuildManager,
   // IDE
   LazarusIDEStrConsts, MainBase, MainBar, AddToProjectDlg, EnvGuiOptions,
-  ProjPackChecks, ProjPackEditing, ProjPackFilePropGui, EditableProject,
+  BuildModesManager,
+  ProjPackChecks, ProjPackEditing, ProjPackFilePropGui, EditableProject, BaseDebugManager,
   AddPkgDependencyDlg, AddFPMakeDependencyDlg;
 
 const
@@ -201,6 +202,7 @@ type
     FShowDirectoryHierarchy: boolean;
     FSortAlphabetically: boolean;
     FUpdateLock: integer;
+    FLockActiveEditChanged: integer;
     FLazProject: TProject;
     FFilesNode: TTreeNode;
     FNextSelectedPart: TObject;// select this file/dependency on next update
@@ -258,6 +260,8 @@ type
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
     function IsUpdateLocked: boolean; inline;
+    procedure LockActiveEditorChanged;
+    procedure UnlockActiveEditorChanged;
     procedure UpdateTitle(Immediately: boolean = false);
     procedure UpdateRequiredPackages(Immediately: boolean = false);
     function TreeViewToInspector(TV: TTreeView): TProjectInspectorForm;
@@ -522,12 +526,12 @@ begin
   ProjInspAddMenuSectionFiles:=RegisterIDEMenuSection(ProjectInspectorMenuAddRootName,'Files');
   AParent:=ProjInspAddMenuSectionFiles;
   ProjInspAddMenuDiskFile:=RegisterIDEMenuCommand(AParent,'Add disk file',lisBtnDlgAdd);
-  ProjInspAddMenuEditorFiles:=RegisterIDEMenuCommand(AParent,'Add editor files',lisProjAddEditorFile);
+  ProjInspAddMenuEditorFiles:=RegisterIDEMenuCommand(AParent,'Add editor files',lisProjAddEditorFile + ' ...');
 
   // register the section for adding dependency
   ProjInspAddMenuSectionDependencies:=RegisterIDEMenuSection(ProjectInspectorMenuAddRootName,'Dependencies');
   AParent:=ProjInspAddMenuSectionFiles;
-  ProjInspAddMenuDependency:=RegisterIDEMenuCommand(AParent,'Add dependency',lisProjAddNewRequirement);
+  ProjInspAddMenuDependency:=RegisterIDEMenuCommand(AParent,'Add dependency',lisProjAddNewRequirement + ' ...');
   ProjInspAddMenuFPMakeDependency:=RegisterIDEMenuCommand(AParent,'Add fpmake dependency',lisProjAddNewFPMakeRequirement);
 end;
 
@@ -565,10 +569,14 @@ begin
     exit;
   end;
 
+  if not CheckBuildModeCompilerBeforeSwitch(NewMode.Identifier) then exit; // user cancelled
+
   Project1.ActiveBuildMode := NewMode;
   Project1.DefineTemplates.AllChanged(false);
   IncreaseCompilerParseStamp;
   MainBuildBoss.SetBuildTargetProject1(false);
+  if DebugBoss <> nil then
+    DebugBoss.BreakPoints.TriggerChanged;
   MainIDE.UpdateCaption;
   MainIDE.UpdateDefineTemplates;
   if Assigned(ProjInspector) then
@@ -581,6 +589,18 @@ end;
 function TProjectInspectorForm.IsUpdateLocked: boolean;
 begin
   Result:=FUpdateLock>0;
+end;
+
+procedure TProjectInspectorForm.LockActiveEditorChanged;
+begin
+  inc(FLockActiveEditChanged);
+end;
+
+procedure TProjectInspectorForm.UnlockActiveEditorChanged;
+begin
+  if FLockActiveEditChanged=0 then
+    raise Exception.Create('20260719224317');
+  dec(FLockActiveEditChanged);
 end;
 
 function TProjectInspectorForm.TVNodeFiles: TTreeNode;
@@ -795,8 +815,8 @@ function TProjectInspectorForm.AddOneFile(aFilename: string): TModalResult;
 var
   NewUnit: TUnitInfo;
 begin
-  Result := mrOK;
-  NewUnit:=LazProject.UnitInfoWithFilename(aFilename);
+  Result:=mrOK;
+  NewUnit:=LazProject.UnitWithFilename(aFilename);
   if NewUnit<>nil then begin
     if NewUnit.IsPartOfProject then Exit(mrIgnore);
   end else begin
@@ -1159,22 +1179,29 @@ var
   NodeData: TPENodeData;
   Item: TObject;
 begin
-  for i:=0 to ItemsTreeView.SelectionCount-1 do
-  begin
-    if GetNodeDataItem(ItemsTreeView.Selections[i], NodeData, Item) then
+  // opening a file/package activates a source editor or the package editor,
+  // which must not change the selection here
+  LockActiveEditorChanged;
+  try
+    for i:=0 to ItemsTreeView.SelectionCount-1 do
     begin
-      if Item is TUnitInfo then
+      if GetNodeDataItem(ItemsTreeView.Selections[i], NodeData, Item) then
       begin
-        if LazarusIDE.DoOpenEditorFile(TUnitInfo(Item).Filename,
-                                       -1,-1,[ofAddToRecent]) <> mrOk then
-          Exit;
-      end
-      else if Item is TPkgDependency then
-        if not OpmAddOrOpenDependency(TPkgDependency(Item)) then
-          Exit;
+        if Item is TUnitInfo then
+        begin
+          if LazarusIDE.DoOpenEditorFile(TUnitInfo(Item).Filename,
+                                         -1,-1,[ofAddToRecent]) <> mrOk then
+            Exit;
+        end
+        else if Item is TPkgDependency then
+          if not OpmAddOrOpenDependency(TPkgDependency(Item)) then
+            Exit;
+      end;
     end;
+    OpmInstallPendingDependencies;
+  finally
+    UnlockActiveEditorChanged;
   end;
-  OpmInstallPendingDependencies;
 end;
 
 procedure TProjectInspectorForm.OptionsBitBtnClick(Sender: TObject);
@@ -1896,9 +1923,20 @@ begin
 end;
 
 procedure TProjectInspectorForm.ActiveEditorChanged(Sender: TObject);
+var
+  TVNode: TTreeNode;
+  NodeData: TPENodeData;
+  Item: TObject;
 begin
-  if Assigned(SourceEditorManagerIntf.ActiveEditor) then
-    SelectFileNode(SourceEditorManagerIntf.ActiveEditor.FileName);
+  if FLockActiveEditChanged>0 then exit;
+  if SourceEditorManagerIntf.ActiveEditor=nil then exit;
+  // only follow the source editor when a file is selected, so that a
+  // selected dependency/package is not silently replaced
+  TVNode:=ItemsTreeView.Selected;
+  if (TVNode<>nil)
+  and not (GetNodeDataItem(TVNode,NodeData,Item) and (Item is TUnitInfo)) then
+    exit;
+  SelectFileNode(SourceEditorManagerIntf.ActiveEditor.FileName);
 end;
 
 destructor TProjectInspectorForm.Destroy;
@@ -2239,7 +2277,7 @@ begin
     if NodeData.Removed then
       Result:=nil
     else
-      Result:=LazProject.UnitInfoWithFilename(NodeData.Name,[pfsfOnlyProjectFiles]);
+      Result:=LazProject.UnitWithFilename(NodeData.Name,[pfsfOnlyProjectFiles]);
   penDependency:
     if NodeData.Removed then
       Result:=LazProject.FindRemovedDependencyByName(NodeData.Name)
@@ -2321,8 +2359,6 @@ initialization
   Project.OnHasDesigner := @HasDesigner;
   ProjectIcon.OnLoadProjectMainIcon := @LoadProjectMainIcon2Stream;
   ProjectUserResources.OnAddIDEMessage := @AddProjectIDEMessage;
-  RegisterIDEOptionsGroup(GroupProject, TProjectIDEOptions);
-  RegisterIDEOptionsGroup(GroupCompiler, TProjectCompilerOptions);
 
 finalization
   FreeAndNil(ProjInspectors);

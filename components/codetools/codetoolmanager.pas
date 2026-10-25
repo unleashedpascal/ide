@@ -785,7 +785,8 @@ type
     function FindUsedUnitNames(Code: TCodeBuffer; var MainUsesSection,
           ImplementationUsesSection: TStrings): boolean; // names in the uses section, ignoring 'in'
     function FindUsedDottedUnitNames(Code: TCodeBuffer; var MainUsesSection,
-          ImplementationUsesSection: TStrings): boolean; deprecated 'use FindUsedUnitNames instead'; // ignoring 'in'
+          ImplementationUsesSection: TStrings): boolean;
+      deprecated 'use FindUsedUnitNames instead'; // ignoring 'in'  // Will be removed in 6.99
     function FindMissingUnits(Code: TCodeBuffer; var MissingUnits: TStrings;
           FixCase: boolean = false; SearchImplementation: boolean = true): boolean;
     function FindDelphiProjectUnits(Code: TCodeBuffer;
@@ -815,6 +816,9 @@ type
           RootMustBeClassInUnit, RootMustBeClassInIntf,
           ObjectsMustExist: boolean): boolean;
     function ParseLFM(LFMBuf: TCodeBuffer; out LFMTree: TLFMTree): boolean;
+    function FindLFMDeclaration(PasCode: TCodeBuffer; LFMCode: TCodeBuffer;
+          X, Y: integer; out NewCode: TCodeBuffer;
+          out NewX, NewY: integer): boolean;
     function FindLFMReferences(IdentifierCode: TCodeBuffer;
           X, Y: integer; PascalCode, LFMCode: TCodeBuffer;
           var LFMReferences: TCodeXYPositions;
@@ -6129,6 +6133,48 @@ begin
     Result:=LFMTree.ParseIfNeeded;
   except
     on e: Exception do HandleException(e);
+  end;
+end;
+
+function TCodeToolManager.FindLFMDeclaration(PasCode: TCodeBuffer;
+  LFMCode: TCodeBuffer; X, Y: integer; out NewCode: TCodeBuffer; out NewX,
+  NewY: integer): boolean;
+var
+  Context: TFindContext;
+  Caret: TCodeXYPosition;
+  IdentPos: integer;
+begin
+  Result:=false;
+  NewCode:=nil;
+  NewX:=0;
+  NewY:=0;
+  {$IFDEF CTDEBUG}
+  DebugLn('TCodeToolManager.FindLFMDeclaration A ',PasCode.Filename,' ',LFMCode.Filename,' x=',dbgs(X),' y=',dbgs(Y));
+  {$ENDIF}
+  if not InitCurCodeTool(PasCode) then exit;
+  try
+    Context:=FCurCodeTool.FindLFMDeclaration(LFMCode,X,Y);
+    if (Context.Tool=nil) or (Context.Node=nil) then exit;
+    IdentPos:=Context.Node.StartPos;
+    case Context.Node.Desc of
+    ctnProperty:
+      // StartPos is the 'property' keyword -> jump to the name instead
+      if Context.Tool.MoveCursorToPropName(Context.Node) then
+        IdentPos:=Context.Tool.CurPos.StartPos;
+    ctnProcedure:
+      begin
+        // StartPos is the 'procedure' keyword -> jump to the name instead
+        Context.Tool.MoveCursorToProcName(Context.Node,true);
+        IdentPos:=Context.Tool.CurPos.StartPos;
+      end;
+    end;
+    if not Context.Tool.CleanPosToCaret(IdentPos,Caret) then exit;
+    NewCode:=Caret.Code;
+    NewX:=Caret.X;
+    NewY:=Caret.Y;
+    Result:=true;
+  except
+    on e: Exception do Result:=HandleException(e);
   end;
 end;
 

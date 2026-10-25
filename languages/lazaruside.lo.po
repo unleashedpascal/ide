@@ -482,11 +482,6 @@ msgstr "ໂຄງສ້າງການຫຍໍ້ໂຄ້ດ"
 msgid "Code folding (current)"
 msgstr "ການຫຍໍ້ໂຄ້ດ (ປັດຈຸບັນ)"
 
-#: lazarusidestrconsts.dlgaddhiattrcustom
-#, object-pascal-format
-msgid "Custom %d"
-msgstr "ກຳນົດເອງ %d"
-
 #: lazarusidestrconsts.dlgaddhiattrdefault
 msgid "Default Text"
 msgstr "ຂໍ້ຄວາມເລີ່ມຕົ້ນ"
@@ -641,11 +636,6 @@ msgstr "ແຖວທີ່ຖືກແກ້ໄຂ"
 msgid "Mouse link"
 msgstr "ລິງກ໌ເມົ້າ"
 
-#: lazarusidestrconsts.dlgaddhiattrnestedbracket
-#, object-pascal-format
-msgid "Nested bracket %d"
-msgstr "ວົງເລັບຊ້ອນກັນ %d"
-
 #: lazarusidestrconsts.dlgaddhiattroutlinelevelcolor
 #, object-pascal-format
 msgid "Level %s"
@@ -779,6 +769,15 @@ msgstr "ເດັສທັອບດີບັກທີ່ກ່ຽວຂ້ອງ
 #: lazarusidestrconsts.dlgassociateddebugdesktophint
 msgid "If you select the desktop, the associated debug desktop will be selected as well."
 msgstr "ຖ້າທ່ານເລືອກເດັສທັອບ, ເດັສທັອບດີບັກທີ່ກ່ຽວຂ້ອງຈະຖືກເລືອກເຊັ່ນກັນ."
+
+#: lazarusidestrconsts.dlgassociateddesigndesktop
+#, object-pascal-format
+msgid "Associated design desktop for \"%s\""
+msgstr ""
+
+#: lazarusidestrconsts.dlgassociateddesigndesktophint
+msgid "If you select the desktop, the associated design desktop will be selected as well."
+msgstr ""
 
 #: lazarusidestrconsts.dlgautocreateforms
 msgid "Auto-create forms:"
@@ -1067,6 +1066,10 @@ msgstr "ຟອມອາດຈະຕ້ອງການແພັກເກັດເ
 msgid "Choose code template file (*.dci)"
 msgstr "ເລືອກໄຟລ໌ແມ່ແບບໂຄ້ດ (*.dci)"
 
+#: lazarusidestrconsts.dlgclass
+msgid "Class:"
+msgstr ""
+
 #: lazarusidestrconsts.dlgclosebuttonsnotebook
 msgid "Show close buttons in notebook"
 msgstr "ສະແດງປຸ່ມປິດໃນ notebook"
@@ -1344,9 +1347,34 @@ msgstr "ການຕັ້ງຄ່າ ແລະ ເປົ້າໝາຍ"
 msgid "Config files"
 msgstr "ໄຟລ໌ Config"
 
+#: lazarusidestrconsts.dlgconsolegroup
+msgid "Console"
+msgstr ""
+
+#: lazarusidestrconsts.dlgconsoleidewindow
+msgid "IDE internal window"
+msgstr ""
+
+#: lazarusidestrconsts.dlgconsolemodeide
+msgid "Internal IDE console"
+msgstr ""
+
+#: lazarusidestrconsts.dlgconsolemodeos
+msgid "OS console"
+msgstr ""
+
 #: lazarusidestrconsts.dlgconsolesizenotsupported
 msgid "Current debugger does not support this."
 msgstr "Debugger ປັດຈຸບັນບໍ່ຮອງຮັບສິ່ງນີ້."
+
+#: lazarusidestrconsts.dlgconsoleunknown
+#, object-pascal-format
+msgid "Unknown console \"%s\""
+msgstr ""
+
+#: lazarusidestrconsts.dlgconsoleuseidedefault
+msgid "-- Use IDE default console --"
+msgstr ""
 
 #: lazarusidestrconsts.dlgcootherdebugginginfo
 msgid "Other debugging info"
@@ -1532,6 +1560,10 @@ msgstr "ລຶບເດັສທັອບທີ່ເລືອກ"
 #: lazarusidestrconsts.dlgdeltemplate
 msgid "Delete template "
 msgstr "ລຶບແມ່ແບບ "
+
+#: lazarusidestrconsts.dlgdesigndesktop
+msgid "design"
+msgstr ""
 
 #: lazarusidestrconsts.dlgdesktopbuttons
 msgid "Buttons - "
@@ -1826,6 +1858,7 @@ msgid "Backup"
 msgstr "ສຳຮອງຂໍ້ມູນ"
 
 #: lazarusidestrconsts.dlgenvfiles
+msgctxt "lazarusidestrconsts.dlgenvfiles"
 msgid "Files"
 msgstr "ໄຟລ໌"
 
@@ -2199,6 +2232,120 @@ msgstr "While/Do"
 msgid "With/Do"
 msgstr "With/Do"
 
+#: lazarusidestrconsts.dlgfoldsqlaltertable
+msgid "Alter Table"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlbegin
+msgid "Begin"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlcreatedb
+msgid "Create Database"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlcreateprocedure
+msgid "Create Procedure"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlcreatetable
+msgid "Create Table"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqldelete
+#, fuzzy
+msgctxt "lazarusidestrconsts.dlgfoldsqldelete"
+msgid "Delete"
+msgstr "ລຶບ"
+
+#: lazarusidestrconsts.dlgfoldsqldropdb
+msgid "Drop Database"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqldroptable
+msgid "Drop Table"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlfrom
+msgid "From"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlgroup
+#, fuzzy
+msgctxt "lazarusidestrconsts.dlgfoldsqlgroup"
+msgid "Group"
+msgstr "ກຸ່ມ"
+
+#: lazarusidestrconsts.dlgfoldsqlhaving
+msgid "Having"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlinsert
+#, fuzzy
+msgctxt "lazarusidestrconsts.dlgfoldsqlinsert"
+msgid "Insert"
+msgstr "ແຊກ"
+
+#: lazarusidestrconsts.dlgfoldsqlinsertselect
+msgid "Insert-Select"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlinto
+msgid "Into"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqljoin
+msgid "Join"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqljoinon
+msgid "Join-On"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqllimit
+msgid "Limit"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlorder
+#, fuzzy
+msgctxt "lazarusidestrconsts.dlgfoldsqlorder"
+msgid "Order"
+msgstr "ລຳດັບ"
+
+#: lazarusidestrconsts.dlgfoldsqlselect
+#, fuzzy
+msgctxt "lazarusidestrconsts.dlgfoldsqlselect"
+msgid "Select"
+msgstr "ເລືອກ"
+
+#: lazarusidestrconsts.dlgfoldsqlset
+msgid "Set"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlsubselect
+msgid "Sub-Select"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlupdate
+#, fuzzy
+msgctxt "lazarusidestrconsts.dlgfoldsqlupdate"
+msgid "Update"
+msgstr "ອັບເດດ"
+
+#: lazarusidestrconsts.dlgfoldsqlupdateselect
+msgid "Update-Select"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlvalues
+#, fuzzy
+msgctxt "lazarusidestrconsts.dlgfoldsqlvalues"
+msgid "Values"
+msgstr "ຄ່າຕ່າງໆ"
+
+#: lazarusidestrconsts.dlgfoldsqlwhere
+msgid "Where"
+msgstr ""
+
 #: lazarusidestrconsts.dlgfoldxmlcdata
 msgid "CData"
 msgstr "CData"
@@ -2423,6 +2570,16 @@ msgstr "ບໍ່ຕ້ອງສະແດງ IDE ເລີຍໃນຂະນະ�
 msgid "Hide tab in single page windows"
 msgstr "ເຊື່ອງແຖບໃນປ່ອງຢ້ຽມໜ້າດຽວ"
 
+#: lazarusidestrconsts.dlghighlightbothsidesofcursorleft
+msgctxt "lazarusidestrconsts.dlghighlightbothsidesofcursorleft"
+msgid "On both sides (left first)"
+msgstr ""
+
+#: lazarusidestrconsts.dlghighlightbothsidesofcursorright
+msgctxt "lazarusidestrconsts.dlghighlightbothsidesofcursorright"
+msgid "On both sides (right first)"
+msgstr ""
+
 #: lazarusidestrconsts.dlghighlightcolor
 msgid "Highlight Color"
 msgstr "ສີໄຮໄລ້"
@@ -2432,11 +2589,15 @@ msgid "Highlight Font Color"
 msgstr "ສີຟອນໄຮໄລ້"
 
 #: lazarusidestrconsts.dlghighlightleftofcursor
-msgid "Left Of Caret"
+#, fuzzy
+#| msgid "Left Of Caret"
+msgid "Left of Caret"
 msgstr "ຊ້າຍຂອງຕົວຊີ້ພິມ"
 
 #: lazarusidestrconsts.dlghighlightrightofcursor
-msgid "Right Of Caret"
+#, fuzzy
+#| msgid "Right Of Caret"
+msgid "Right of Caret"
 msgstr "ຂວາຂອງຕົວຊີ້ພິມ"
 
 #: lazarusidestrconsts.dlghintsparametersendernotused
@@ -2569,9 +2730,13 @@ msgid "Included mixed state $IFDEF node"
 msgstr "ໂນດ $IFDEF ສະຖານະປະສົມທີ່ລວມຢູ່"
 
 #: lazarusidestrconsts.dlgimportdesktopexists
+#, fuzzy
+#| msgid ""
+#| "A desktop with the same name already exists.\n"
+#| "Please confirm the desktop name:"
 msgid ""
 "A desktop with the same name already exists.\n"
-"Please confirm the desktop name:"
+"Please confirm or change the desktop name:"
 msgstr ""
 "ມີເດັສທັອບທີ່ມີຊື່ດຽວກັນຢູ່ແລ້ວ.\n"
 "ກະລຸນາຢືນຢັນຊື່ເດັສທັອບ:"
@@ -2962,17 +3127,13 @@ msgstr "ຕົວນັບສູງສຸດ"
 msgid "Max line length:"
 msgstr "ຄວາມຍາວແຖວສູງສຸດ:"
 
-#: lazarusidestrconsts.dlgmaxrecentfiles
-msgid "Max recent files"
-msgstr "ໄຟລ໌ລ່າສຸດສູງສຸດ"
+#: lazarusidestrconsts.dlgmaxrecentcount
+msgid "Max count of recent items"
+msgstr ""
 
 #: lazarusidestrconsts.dlgmaxrecenthint
 msgid "Value 0 means unlimited."
 msgstr "ຄ່າ 0 ໝາຍເຖິງບໍ່ຈຳກັດ."
-
-#: lazarusidestrconsts.dlgmaxrecentprojs
-msgid "Max recent project files"
-msgstr "ໄຟລ໌ໂປຣເຈັກລ່າສຸດສູງສຸດ"
 
 #: lazarusidestrconsts.dlgmixmethodsandproperties
 msgid "Mix methods and properties"
@@ -3398,6 +3559,10 @@ msgstr "ແຖບສະໝຸດບັນທຶກ"
 msgid "Naming"
 msgstr "ການຕັ້ງຊື່"
 
+#: lazarusidestrconsts.dlgnewdebuggerbackend
+msgid "New debugger backend"
+msgstr ""
+
 #: lazarusidestrconsts.dlgnewdesktop
 msgid "New desktop ..."
 msgstr "ເດັສທັອບໃໝ່ ..."
@@ -3713,6 +3878,10 @@ msgstr ""
 msgid "Generic highlight in procedure names (implementation)"
 msgstr ""
 
+#: lazarusidestrconsts.dlgpasresolvecompilermodeswitcheswithcodetools
+msgid "Resolve compiler mode switches with CodeTools"
+msgstr ""
+
 #: lazarusidestrconsts.dlgpassoptslinker
 msgid "Pass options to linker with \"-k\", delimiter is space"
 msgstr "ສົ່ງຕົວເລືອກໃຫ້ linker ດ້ວຍ \"-k\", ຕົວຂັ້ນແມ່ນຍະຫວ່າງ"
@@ -3746,6 +3915,10 @@ msgstr "ເຄີເຊີເບິ່ງເຫັນໄດ້ໃນຕົວແ
 #: lazarusidestrconsts.dlgpersistentcursornoblink
 msgid "Caret in unfocused editor does not blink"
 msgstr "ເຄີເຊີໃນຕົວແກ້ໄຂທີ່ບໍ່ໄດ້ໂຟກັດບໍ່ກະພິບ"
+
+#: lazarusidestrconsts.dlgpleasechoosethedebuggerbackend
+msgid "Please choose the debugger backend to add."
+msgstr ""
 
 #: lazarusidestrconsts.dlgpoansiutf8
 msgid "ANSI codepage is UTF-8 (Windows 10 1903+)"
@@ -3864,7 +4037,9 @@ msgid "Session"
 msgstr "ເຊດຊັນ"
 
 #: lazarusidestrconsts.dlgpotitle
-msgid "Title:"
+#, fuzzy
+#| msgid "Title:"
+msgid "Title"
 msgstr "ຫົວຂໍ້:"
 
 #: lazarusidestrconsts.dlgpouiaccess
@@ -3941,6 +4116,36 @@ msgstr "ດູດເຂົ້າຫາເສັ້ນຕາຕະລາງ"
 #, object-pascal-format
 msgid "Really delete desktop \"%s\"?"
 msgstr "ຕ້ອງການລຶບເດັສທັອບ \"%s\" ແທ້ບໍ່?"
+
+#: lazarusidestrconsts.dlgrecent
+msgid "Recent"
+msgstr ""
+
+#: lazarusidestrconsts.dlgrecentfilescaption
+#, fuzzy
+msgctxt "lazarusidestrconsts.dlgrecentfilescaption"
+msgid "Files"
+msgstr "ໄຟລ໌"
+
+#: lazarusidestrconsts.dlgrecentfilesheader
+msgid "Recent Files:"
+msgstr ""
+
+#: lazarusidestrconsts.dlgrecentpackagescaption
+msgid "Packages"
+msgstr ""
+
+#: lazarusidestrconsts.dlgrecentpackagesheader
+msgid "Recent Packages:"
+msgstr ""
+
+#: lazarusidestrconsts.dlgrecentprojectscaption
+msgid "Projects"
+msgstr ""
+
+#: lazarusidestrconsts.dlgrecentprojectsheader
+msgid "Recent Projects:"
+msgstr ""
 
 #: lazarusidestrconsts.dlgredirappend
 msgid "To file (append)"
@@ -4317,6 +4522,10 @@ msgstr "ສະແດງຄຳແນະນຳ"
 msgid "Showing Windows"
 msgstr "ການສະແດງໜ້າຕ່າງ"
 
+#: lazarusidestrconsts.dlgshowinopencoolbarbutton
+msgid "Show in \"Open\" drop-down toolbar button"
+msgstr ""
+
 #: lazarusidestrconsts.dlgshowlinenumbers
 msgctxt "lazarusidestrconsts.dlgshowlinenumbers"
 msgid "Show line numbers"
@@ -4386,6 +4595,10 @@ msgstr "ຍະຫວ່າງ"
 #: lazarusidestrconsts.dlgspbhints
 msgid "Hints for main speed buttons (open, save, ...)"
 msgstr "ຄຳແນະນຳສຳລັບປຸ່ມດ່ວນຫຼັກ (ເປີດ, ບັນທຶກ, ...)"
+
+#: lazarusidestrconsts.dlgsqlexthighlightgroup
+msgid "Extended SQL Highlight Options"
+msgstr ""
 
 #: lazarusidestrconsts.dlgsrcedcolorlabelinthesourceareonlyco
 msgid "Label in the source are only colored if the colon \":\" is placed immediately after the label."
@@ -4507,6 +4720,14 @@ msgstr "ສະລັບເປັນ debug desktop"
 msgctxt "lazarusidestrconsts.dlgtoggledebugdesktopbtnhint"
 msgid "Toggle as debug desktop"
 msgstr "ສະລັບເປັນ debug desktop"
+
+#: lazarusidestrconsts.dlgtoggledesigndesktopbtncaption
+msgid "Toggle as design desktop"
+msgstr ""
+
+#: lazarusidestrconsts.dlgtoggledesigndesktopbtnhint
+msgid "Activate this desktop while the form designer is shown (Toggle Form/Unit)"
+msgstr ""
 
 #: lazarusidestrconsts.dlgtopinfohint
 msgid "Current Class/Proc Hint"
@@ -4836,10 +5057,6 @@ msgstr "ຕົວເລືອກ: ດູດເຂົ້າຫາເສັ້ນ�
 msgid "Z-order"
 msgstr "Z-order"
 
-#: lazarusidestrconsts.gldhighlightbothsidesofcursor
-msgid "On Both Sides"
-msgstr "ທັງສອງຂ້າງ"
-
 #: lazarusidestrconsts.initdlgdebugchangepath
 msgid "Change path"
 msgstr "ປ່ຽນທີ່ຢູ່"
@@ -5071,7 +5288,9 @@ msgid "New class name:"
 msgstr "ຊື່ class ໃໝ່:"
 
 #: lazarusidestrconsts.lisa2pnewfile
-msgid "New File"
+#, fuzzy
+#| msgid "New File"
+msgid "New file ..."
 msgstr "ໄຟລ໌ໃໝ່"
 
 #: lazarusidestrconsts.lisa2pnopackagefoundfordependencypleasechooseanexisting
@@ -5190,6 +5409,10 @@ msgstr "ປະຖິ້ມການປ່ຽນແປງບໍ່?"
 #: lazarusidestrconsts.lisabortallloading
 msgid "Abort all loading"
 msgstr "ຍົກເລີກການໂຫຼດທັງໝົດ"
+
+#: lazarusidestrconsts.lisabortifanycompilerpathorexecut
+msgid "Abort if any compiler path or execute-before/after command is missing in the IDE trust whitelist."
+msgstr ""
 
 #: lazarusidestrconsts.lisabortloadingproject
 msgid "Abort loading project"
@@ -5366,6 +5589,10 @@ msgstr "ເພີ່ມແພັກເກັດໃສ່ໂປຣເຈັກ"
 msgid "Add parameter brackets"
 msgstr "ເພີ່ມວົງເລັບພາຣາມິເຕີ"
 
+#: lazarusidestrconsts.lisaddpathtotrustedexe
+msgid "Add path to trusted executable"
+msgstr ""
+
 #: lazarusidestrconsts.lisaddthefollowingfiles
 msgid "Add the following files:"
 msgstr "ເພີ່ມໄຟລ໌ຕໍ່ໄປນີ້:"
@@ -5490,15 +5717,6 @@ msgstr "ການແກ້ໄຂທັງໝົດຂອງທ່ານຕໍ່
 #: lazarusidestrconsts.lisalpha
 msgid "Alpha"
 msgstr "Alpha"
-
-#: lazarusidestrconsts.lisalreadycontainsthehe
-#, object-pascal-format
-msgid ""
-"%s already contains the help:\n"
-"%s"
-msgstr ""
-"%s ມີ help ຢູ່ແລ້ວ:\n"
-"%s"
 
 #: lazarusidestrconsts.lisalternativekey
 msgid "Alternative key"
@@ -5945,10 +6163,22 @@ msgstr "ສ້າງໂຄງການໃໝ່"
 msgid "Build number"
 msgstr "ໝາຍເລກການສ້າງ"
 
+#: lazarusidestrconsts.lisbuildreleasepackagesstorecompi
+msgid "Build release packages. Store compiler checksum instead of date in package.compiled files. Ignore session and environment options."
+msgstr ""
+
 #: lazarusidestrconsts.lisbuildstage
 msgctxt "lazarusidestrconsts.lisbuildstage"
 msgid "Build"
 msgstr "ສ້າງ"
+
+#: lazarusidestrconsts.lisbuildtheminimalidewithdefaults
+msgid "Build the minimal IDE with defaults."
+msgstr ""
+
+#: lazarusidestrconsts.lisbuildthereleaseidesameasminima
+msgid "Build the release IDE. Same as minimal plus a fixed set of extra packages."
+msgstr ""
 
 #: lazarusidestrconsts.lisbusy
 msgid "Busy"
@@ -6210,10 +6440,6 @@ msgstr "(ຕົວຄັດຕອງ)"
 msgid "Follow cursor"
 msgstr "ຕາມເຄີເຊີ"
 
-#: lazarusidestrconsts.lisceisarootcontrol
-msgid "Is a root control"
-msgstr "ເປັນ control ຮາກຖານ"
-
 #: lazarusidestrconsts.liscelongparamlistcount
 msgid "Parameters count treated as \"many\""
 msgstr "ຈຳນວນພາຣາມິເຕີທີ່ຖືວ່າ \"ຫຼາຍ\""
@@ -6306,6 +6532,7 @@ msgid "Other"
 msgstr "ອື່ນໆ"
 
 #: lazarusidestrconsts.lisceoupdate
+msgctxt "lazarusidestrconsts.lisceoupdate"
 msgid "Update"
 msgstr "ອັບເດດ"
 
@@ -6481,10 +6708,6 @@ msgstr "ປ່ຽນພິກັດ %s ຂອງ %s ຈາກ \"%d\" ເປັ�
 msgid "Change Encoding"
 msgstr "ປ່ຽນການເຂົ້າລະຫັດ"
 
-#: lazarusidestrconsts.lischangefile
-msgid "Change file"
-msgstr "ປ່ຽນຟາຍລ໌"
-
 #: lazarusidestrconsts.lischangemethodvisibilityto
 #, object-pascal-format
 msgid "Change method visibility to \"%s\""
@@ -6523,6 +6746,10 @@ msgstr "ກວດສອບການປ່ຽນແປງຟາຍລ໌ໃນດ
 msgid "Check if the next token in source is an \"end\" and if not return \"LineEnding + end; + LineEnding\"."
 msgstr "ກວດສອບວ່າ token ຕໍ່ໄປໃນຊອດໂຄດແມ່ນ \"end\" ຫຼື ບໍ່ ແລະ ຖ້າບໍ່ແມ່ນ ໃຫ້ສົ່ງຄ່າ \"LineEnding + end; + LineEnding\"."
 
+#: lazarusidestrconsts.lischeckingfiles
+msgid "Checking ..."
+msgstr ""
+
 #: lazarusidestrconsts.lischeckoptions
 msgid "Check options"
 msgstr "ຕົວເລືອກການກວດສອບ"
@@ -6554,10 +6781,6 @@ msgstr "ເລືອກຊື່ອື່ນ"
 msgid "Choose a file with CodeTools templates"
 msgstr "ເລືອກຟາຍລ໌ທີ່ມີແມ່ແບບ CodeTools"
 
-#: lazarusidestrconsts.lischooseafpdoclink
-msgid "Choose a FPDoc link"
-msgstr "ເລືອກລິ້ງ FPDoc"
-
 #: lazarusidestrconsts.lischooseakey
 msgid "Choose a key ..."
 msgstr "ເລືອກ key ..."
@@ -6565,10 +6788,6 @@ msgstr "ເລືອກ key ..."
 #: lazarusidestrconsts.lischooseanameforthecomponent
 msgid "Choose a name for the component"
 msgstr "ເລືອກຊື່ສຳລັບອົງປະກອບ"
-
-#: lazarusidestrconsts.lischooseanexamplefile
-msgid "Choose an example file"
-msgstr "ເລືອກຟາຍລ໌ຕົວຢ່າງ"
 
 #: lazarusidestrconsts.lischooseanfpcmessagefile
 msgid "Choose an FPC message file"
@@ -6895,102 +7114,17 @@ msgstr "ຕົວເລືອກການສ້າງໂຄດ"
 msgid "Add path"
 msgstr "ເພີ່ມ path"
 
-#: lazarusidestrconsts.liscodehelpbrowseexamplebutton
-msgctxt "lazarusidestrconsts.liscodehelpbrowseexamplebutton"
-msgid "Browse"
-msgstr "ເບິ່ງ"
-
-#: lazarusidestrconsts.liscodehelpconfirmreplace
-msgid "Confirm replace"
-msgstr "ຢືນຢັນການແທນທີ່"
-
-#: lazarusidestrconsts.liscodehelpcreatebutton
-msgid "Create help item"
-msgstr "ສ້າງລາຍການຊ່ວຍເຫຼືອ"
-
 #: lazarusidestrconsts.liscodehelpdeletepathbutton
 msgid "Remove path"
 msgstr "ລຶບ path"
 
 #: lazarusidestrconsts.liscodehelpdescrtag
-msgctxt "lazarusidestrconsts.liscodehelpdescrtag"
 msgid "Description"
-msgstr "ຄຳອະທິບາຍ"
-
-#: lazarusidestrconsts.liscodehelperrorstag
-msgctxt "lazarusidestrconsts.liscodehelperrorstag"
-msgid "Errors"
-msgstr "ຂໍ້ຜິດພາດ"
-
-#: lazarusidestrconsts.liscodehelpexampletag
-msgid "Example"
-msgstr "ຕົວຢ່າງ"
+msgstr ""
 
 #: lazarusidestrconsts.liscodehelpgroupbox
 msgid "FPDoc settings"
 msgstr "ການຕັ້ງຄ່າ FPDoc"
-
-#: lazarusidestrconsts.liscodehelphintboldformat
-msgid "Insert bold formatting tag"
-msgstr "ແຊກແທັກຮູບແບບຕົວໜາ"
-
-#: lazarusidestrconsts.liscodehelphintinsertcodetag
-msgid "Insert code formatting tag"
-msgstr "ແຊກແທັກຮູບແບບໂຄດ"
-
-#: lazarusidestrconsts.liscodehelphintitalicformat
-msgid "Insert italic formatting tag"
-msgstr "ແຊກແທັກຮູບແບບຕົວອ່ຽງ"
-
-#: lazarusidestrconsts.liscodehelphintremarktag
-msgid "Insert remark formatting tag"
-msgstr "ແຊກແທັກຮູບແບບໝາຍເຫດ"
-
-#: lazarusidestrconsts.liscodehelphintunderlineformat
-msgid "Insert underline formatting tag"
-msgstr "ແຊກແທັກຮູບແບບຂີດກ້ອງ"
-
-#: lazarusidestrconsts.liscodehelphintvartag
-msgid "Insert var formatting tag"
-msgstr "ແຊກແທັກຮູບແບບ var"
-
-#: lazarusidestrconsts.liscodehelpinherited
-msgctxt "lazarusidestrconsts.liscodehelpinherited"
-msgid "Inherited"
-msgstr "ສືບທອດ"
-
-#: lazarusidestrconsts.liscodehelpinsertalink
-msgid "Insert a link ..."
-msgstr "ແຊກລິ້ງ ..."
-
-#: lazarusidestrconsts.liscodehelpinsertparagraphformattingtag
-msgid "Insert paragraph formatting tag"
-msgstr "ແຊກແທັກຮູບແບບຫຍໍ້ໜ້າ"
-
-#: lazarusidestrconsts.liscodehelpmainformcaption
-msgctxt "lazarusidestrconsts.liscodehelpmainformcaption"
-msgid "FPDoc Editor"
-msgstr "ຕົວແກ້ໄຂ FPDoc"
-
-#: lazarusidestrconsts.liscodehelpnoinheriteddescriptionfound
-msgid "(no inherited description found)"
-msgstr "(ບໍ່ພົບຄຳອະທິບາຍທີ່ສືບທອດມາ)"
-
-#: lazarusidestrconsts.liscodehelpnotagcaption
-msgid "<NONE>"
-msgstr "<ບໍ່ມີ>"
-
-#: lazarusidestrconsts.liscodehelpseealsotag
-msgid "See also"
-msgstr "ເບິ່ງເພີ່ມເຕີມ"
-
-#: lazarusidestrconsts.liscodehelpshortdescriptionof
-msgid "Short description of"
-msgstr "ຄຳອະທິບາຍສັ້ນຂອງ"
-
-#: lazarusidestrconsts.liscodehelpshorttag
-msgid "Short"
-msgstr "ສັ້ນ"
 
 #: lazarusidestrconsts.liscodeobignoreconstinfuncs
 msgctxt "lazarusidestrconsts.liscodeobignoreconstinfuncs"
@@ -8318,10 +8452,6 @@ msgstr "ຄືນຄ່າການຕັ້ງຄ່າ Fppkg"
 msgid "Create function"
 msgstr "ສ້າງຟັງຊັນ"
 
-#: lazarusidestrconsts.liscreatehelpnode
-msgid "Create Help node"
-msgstr "ສ້າງໂນດ Help"
-
 #: lazarusidestrconsts.liscreateit
 msgid "Create it"
 msgstr "ສ້າງມັນ"
@@ -8551,6 +8681,10 @@ msgstr "ຢືນຢັນການລຶບລ້າງປະຫວັດ"
 #: lazarusidestrconsts.lisdebugdialogconfirmdelwatches
 msgid "Confirm to delete all Watches"
 msgstr "ຢືນຢັນການລຶບ Watches ທັງໝົດ"
+
+#: lazarusidestrconsts.lisdebugdialogshowwatcheshint
+msgid "Show hint for watches/locals (with same delay as source hint)"
+msgstr ""
 
 #: lazarusidestrconsts.lisdebugger
 msgctxt "lazarusidestrconsts.lisdebugger"
@@ -9041,11 +9175,6 @@ msgctxt "lazarusidestrconsts.lisdlgimport"
 msgid "Import ..."
 msgstr "ນຳເຂົ້າ ..."
 
-#: lazarusidestrconsts.lisdlgopen
-msgctxt "lazarusidestrconsts.lisdlgopen"
-msgid "Open ..."
-msgstr "ເປີດ ..."
-
 #: lazarusidestrconsts.lisdoesnotexists
 #, object-pascal-format
 msgid "%s does not exist: %s"
@@ -9078,6 +9207,10 @@ msgstr "ບໍ່ຕ້ອງສະແດງກ່ອງໂຕ້ຕອບນີ
 #: lazarusidestrconsts.lisdonotshowthismessageagain
 msgid "Do not show this message again"
 msgstr "ບໍ່ຕ້ອງສະແດງຂໍ້ຄວາມນີ້ອີກ"
+
+#: lazarusidestrconsts.lisdonottrustcompiler
+msgid "Do not trust"
+msgstr ""
 
 #: lazarusidestrconsts.lisdonotwriteupdatedprojectinfoafterbuild
 msgid "Do not write updated project info file after build. If not specified, build number will be incremented if configured."
@@ -9261,10 +9394,6 @@ msgstr "ແກ້ໄຂຄວາມຊ່ວຍເຫຼືອເພີ່ມເ
 msgid "Edit build modes"
 msgstr "ແກ້ໄຂ Build modes"
 
-#: lazarusidestrconsts.liseditcontexthelp
-msgid "Edit context help"
-msgstr "ແກ້ໄຂ Context help"
-
 #: lazarusidestrconsts.liseditfpcmessagehelp
 msgid "Edit FPC Message Help ..."
 msgstr ""
@@ -9321,19 +9450,24 @@ msgid "Macros"
 msgstr "Macros"
 
 #: lazarusidestrconsts.lisedtexttoolparameters
-msgid "Parameters:"
+#, fuzzy
+#| msgid "Parameters:"
+msgctxt "lazarusidestrconsts.lisedtexttoolparameters"
+msgid "Parameters"
 msgstr "Parameters:"
 
-#: lazarusidestrconsts.lisedtexttoolprogramfilename
-msgid "Program Filename:"
-msgstr "ຊື່ໄຟລ໌ໂປຣແກຣມ:"
+#: lazarusidestrconsts.lisedtexttoolprogramexecutable
+msgid "Program Executable"
+msgstr ""
 
 #: lazarusidestrconsts.lisedtexttooltitleandfilenamerequired
 msgid "Title and Filename required"
 msgstr "ຕ້ອງການຫົວຂໍ້ ແລະ ຊື່ໄຟລ໌"
 
 #: lazarusidestrconsts.lisedtexttoolworkingdirectory
-msgid "Working Directory:"
+#, fuzzy
+#| msgid "Working Directory:"
+msgid "Working Directory"
 msgstr "ໄດເຣັກທໍຣີເຮັດວຽກ:"
 
 #: lazarusidestrconsts.liselevatethemessageprioritytoalwaysshowitbydefaultit
@@ -9586,15 +9720,6 @@ msgstr "ເກີດຂໍ້ຜິດພາດໃນການແຍກ lfm comp
 msgid "Error reading package list from file%s%s%s%s"
 msgstr "ເກີດຂໍ້ຜິດພາດໃນການອ່ານລາຍການແພັກເກັດຈາກໄຟລ໌%s%s%s%s"
 
-#: lazarusidestrconsts.liserrorreadingxml
-msgid "Error reading XML"
-msgstr "ເກີດຂໍ້ຜິດພາດໃນການອ່ານ XML"
-
-#: lazarusidestrconsts.liserrorreadingxmlfile
-#, object-pascal-format
-msgid "Error reading xml file \"%s\"%s%s"
-msgstr "ເກີດຂໍ້ຜິດພາດໃນການອ່ານໄຟລ໌ xml \"%s\"%s%s"
-
 #: lazarusidestrconsts.liserrors
 msgctxt "lazarusidestrconsts.liserrors"
 msgid "Errors"
@@ -9609,6 +9734,11 @@ msgstr ", ຂໍ້ຜິດພາດ: %s"
 msgid "Error saving form"
 msgstr "ເກີດຂໍ້ຜິດພາດໃນການບັນທຶກ Form"
 
+#: lazarusidestrconsts.liserrorscount
+#, object-pascal-format
+msgid "Errors: %s"
+msgstr ""
+
 #: lazarusidestrconsts.liserrorsettingthenameofacomponentto
 #, object-pascal-format
 msgid "Error setting the name of a component %s to %s"
@@ -9617,7 +9747,7 @@ msgstr "ເກີດຂໍ້ຜິດພາດໃນການຕັ້ງຊື
 #: lazarusidestrconsts.liserrorwritingfile
 #, object-pascal-format
 msgid "Error writing file \"%s\""
-msgstr "ເກີດຂໍ້ຜິດພາດໃນການຂຽນໄຟລ໌ \"%s\""
+msgstr ""
 
 #: lazarusidestrconsts.liserrorwritingpackagelisttofile
 #, object-pascal-format
@@ -9631,13 +9761,6 @@ msgstr "ສະແດງເລກແຖວທຸກໆ n ແຖວ"
 #: lazarusidestrconsts.lisexamplefile
 msgid "Example file:"
 msgstr "ໄຟລ໌ຕົວຢ່າງ:"
-
-#: lazarusidestrconsts.lisexamplesidentifiertmyenumenumunitnameidentifierpac
-#, object-pascal-format
-msgid "Examples:%sIdentifier%sTMyEnum.Enum%sUnitname.Identifier%s#PackageName.UnitName.Identifier"
-msgstr ""
-"ຕົວຢ່າງ:\n"
-"%sIdentifier%sTMyEnum.Enum%sUnitname.Identifier%s#PackageName.UnitName.Identifier"
 
 #: lazarusidestrconsts.lisexclude
 msgid "Exclude"
@@ -10081,13 +10204,13 @@ msgstr "ການທົດສອບທຳອິດ"
 msgid "Fix LFM file"
 msgstr "ສ້ອມແປງໄຟລ໌ LFM"
 
-#: lazarusidestrconsts.lisfocusatcompilation
-msgid "Focus at compilation"
-msgstr ""
-
 #: lazarusidestrconsts.lisfocushint
 msgid "Focus hint"
 msgstr "Focus hint"
+
+#: lazarusidestrconsts.lisfocuswindow
+msgid "Focus window"
+msgstr ""
 
 #: lazarusidestrconsts.lisforcerenaming
 msgid "Force renaming"
@@ -10146,15 +10269,6 @@ msgctxt "lazarusidestrconsts.lisfpdoceditor"
 msgid "FPDoc Editor"
 msgstr "ຕົວແກ້ໄຂ FPDoc"
 
-#: lazarusidestrconsts.lisfpdocerrorwriting
-#, object-pascal-format
-msgid "Error writing \"%s\"%s%s"
-msgstr "ເກີດຂໍ້ຜິດພາດໃນການຂຽນ \"%s\"%s%s"
-
-#: lazarusidestrconsts.lisfpdocfpdocsyntaxerror
-msgid "FPDoc syntax error"
-msgstr "FPDoc syntax ຜິດພາດ"
-
 #: lazarusidestrconsts.lisfpdocpackagename
 msgid "FPDoc package name:"
 msgstr "ຊື່ແພັກເກັດ FPDoc:"
@@ -10162,11 +10276,6 @@ msgstr "ຊື່ແພັກເກັດ FPDoc:"
 #: lazarusidestrconsts.lisfpdocpackagenamedefaultisprojectfilename
 msgid "FPDoc package name. Default is project file name."
 msgstr "ຊື່ແພັກເກັດ FPDoc. ຄ່າເລີ່ມຕົ້ນແມ່ນຊື່ໄຟລ໌ໂປຣເຈັກ."
-
-#: lazarusidestrconsts.lisfpdocthereisasyntaxerrorinthefpdocelement
-#, object-pascal-format
-msgid "There is a syntax error in the fpdoc element \"%s\":%s%s"
-msgstr "ມີ syntax ຜິດພາດໃນ fpdoc element \"%s\":%s%s"
 
 #: lazarusidestrconsts.lisfppkgcompilerproblem
 msgid "there is a problem with the Free Pascal compiler executable, "
@@ -10414,6 +10523,7 @@ msgstr ""
 "ສຳເນົາຂອງ GNU General Public License ສາມາດເບິ່ງໄດ້ທີ່ World Wide Web ທີ່ <http://www.gnu.org/copyleft/gpl.html>. ເຈົ້າຍັງສາມາດຂໍໄດ້ໂດຍການຂຽນຫາ Free Software Foundation, Inc., 51 Franklin Street - Fifth Floor, Boston, MA 02110-1335, USA."
 
 #: lazarusidestrconsts.lisgroup
+msgctxt "lazarusidestrconsts.lisgroup"
 msgid "Group"
 msgstr "ກຸ່ມ"
 
@@ -10441,10 +10551,6 @@ msgstr "ເບິ່ງເຫັນໄດ້"
 msgid "Width"
 msgstr "ຄວາມກວ້າງ"
 
-#: lazarusidestrconsts.lishashelp
-msgid "Has Help"
-msgstr "ມີ Help"
-
 #: lazarusidestrconsts.lisheadercolors
 msgid "Header colors"
 msgstr "ສີຂອງ Header"
@@ -10452,10 +10558,6 @@ msgstr "ສີຂອງ Header"
 #: lazarusidestrconsts.lisheadercommentforclass
 msgid "Header comment for class"
 msgstr "Header comment ສຳລັບ class"
-
-#: lazarusidestrconsts.lishelpentries
-msgid "Help entries"
-msgstr "ລາຍການ Help"
 
 #: lazarusidestrconsts.lishelpselectordialog
 msgid "Help selector"
@@ -10490,6 +10592,11 @@ msgstr "ເຊື່ອງການຄົ້ນຫາ"
 msgctxt "lazarusidestrconsts.lishidewindow"
 msgid "Hide window"
 msgstr "ເຊື່ອງໜ້າຕ່າງ"
+
+#: lazarusidestrconsts.lishidewithpackageoptioniffpcfullversion
+#, object-pascal-format
+msgid "Hide with package option IF FPC_FULLVERSION>=%s THEN CustomOptions+=' -vm%s'"
+msgstr ""
 
 #: lazarusidestrconsts.lishidewithpackageoptionvm
 #, object-pascal-format
@@ -10609,10 +10716,6 @@ msgstr "IDE ຮັກສາ Application.Scaled (Hi-DPI) ໃນ main unit."
 #: lazarusidestrconsts.lisidemaintainsthetitleinmainunit
 msgid "The IDE maintains the title in main unit."
 msgstr "IDE ຮັກສາຫົວຂໍ້ (title) ໃນ main unit."
-
-#: lazarusidestrconsts.lisidentifier
-msgid "identifier"
-msgstr "identifier"
 
 #: lazarusidestrconsts.lisidentifierbeginswith
 msgid "Identifier begins with ..."
@@ -10962,10 +11065,6 @@ msgstr "ແຊກ Macro"
 msgid "Insert name of current procedure."
 msgstr "ແຊກຊື່ຂອງ procedure ປັດຈຸບັນ."
 
-#: lazarusidestrconsts.lisinsertprintshorttag2
-msgid "Insert printshort tag"
-msgstr "ແຊກ printshort tag"
-
 #: lazarusidestrconsts.lisinsertprocedurehead
 msgid "insert procedure head"
 msgstr "ແຊກ procedure head"
@@ -10985,10 +11084,6 @@ msgstr "ແຊກເວລາ"
 #: lazarusidestrconsts.lisinserttimeoptionalformatstring
 msgid "Insert time. Optional: format string."
 msgstr "ແຊກເວລາ. ທາງເລືອກ: format string."
-
-#: lazarusidestrconsts.lisinserturltag
-msgid "Insert url tag"
-msgstr "ແຊກ url tag"
 
 #: lazarusidestrconsts.lisinsession
 msgid "In session"
@@ -11036,10 +11131,6 @@ msgstr "Interactive"
 #, object-pascal-format
 msgid "internal error: %s"
 msgstr "internal error: %s"
-
-#: lazarusidestrconsts.lisinvaliddeclaration
-msgid "Invalid Declaration"
-msgstr "Declaration ບໍ່ຖືກຕ້ອງ"
 
 #: lazarusidestrconsts.lisinvaliddelete
 msgid "Invalid delete"
@@ -11170,6 +11261,30 @@ msgstr "ໄປທີ່ procedure %s"
 #, object-pascal-format
 msgid "%s KB"
 msgstr "%s KB"
+
+#: lazarusidestrconsts.liskecbreakignoreoff
+msgid "Unset Ignore all Breakpoints"
+msgstr ""
+
+#: lazarusidestrconsts.liskecbreakignoreon
+msgid "Set Ignore all Breakpoints"
+msgstr ""
+
+#: lazarusidestrconsts.liskecbreakignoretoggle
+msgid "Toggle Ignore all Breakpoints"
+msgstr ""
+
+#: lazarusidestrconsts.liskecexceptignoreoff
+msgid "Unset Ignore all Exceptions"
+msgstr ""
+
+#: lazarusidestrconsts.liskecexceptignoreon
+msgid "Set Ignore all Exceptions"
+msgstr ""
+
+#: lazarusidestrconsts.liskecexceptignoretoggle
+msgid "Toggle Ignore all Exceptions"
+msgstr ""
 
 #: lazarusidestrconsts.liskeep2
 msgid "Keep"
@@ -11736,32 +11851,6 @@ msgstr "ອັບເດດຂໍ້ມູນ revision ໃນກ່ອງໂຕ�
 msgid "Package distributed with Lazarus"
 msgstr ""
 
-#: lazarusidestrconsts.lisldaddlinktoinherited
-msgid "Add link to inherited"
-msgstr "ເພີ່ມລິ້ງໄປຫາ inherited"
-
-#: lazarusidestrconsts.lisldcopyfrominherited
-msgid "Copy from inherited"
-msgstr "ສຳເນົາຈາກ inherited"
-
-#: lazarusidestrconsts.lislddoesnothaveanyvalidfpdocpathunabletocreatethefpdo
-#, object-pascal-format
-msgid "%s does not have any valid FPDoc path.%sUnable to create the fpdoc file for %s"
-msgstr "%s ບໍ່ມີ path FPDoc ທີ່ຖືກຕ້ອງ.%sບໍ່ສາມາດສ້າງໄຟລ໌ fpdoc ສຳລັບ %s"
-
-#: lazarusidestrconsts.lisldmoveentriestoinherited
-msgid "Move entries to inherited"
-msgstr "ຍ້າຍລາຍການໄປຫາ inherited"
-
-#: lazarusidestrconsts.lisldnovalidfpdocpath
-msgid "No valid FPDoc path"
-msgstr "ບໍ່ມີ path FPDoc ທີ່ຖືກຕ້ອງ"
-
-#: lazarusidestrconsts.lisldtheunitisnotownedbeanypackageorprojectpleaseaddthe
-#, object-pascal-format
-msgid "The unit %s is not owned be any package or project.%sPlease add the unit to a package or project.%sUnable to create the fpdoc file."
-msgstr "ຢູນິດ %s ບໍ່ໄດ້ຢູ່ໃນແພັກເກັດ ຫຼື ໂຄງການໃດໆ.%sກະລຸນາເພີ່ມຢູນິດໃສ່ແພັກເກັດ ຫຼື ໂຄງການ.%sບໍ່ສາມາດສ້າງໄຟລ໌ fpdoc ໄດ້."
-
 #: lazarusidestrconsts.lisleft
 msgctxt "lazarusidestrconsts.lisleft"
 msgid "Left"
@@ -11852,17 +11941,9 @@ msgstr "ເສັ້ນທາງ library"
 msgid "A Free Pascal shared library (.dll under Windows, .so under Linux, .dylib under macOS)."
 msgstr "Free Pascal shared library (.dll ໃນ Windows, .so ໃນ Linux, .dylib ໃນ macOS)."
 
-#: lazarusidestrconsts.lislink
-msgid "Link:"
-msgstr "ລິ້ງ:"
-
 #: lazarusidestrconsts.lislinkeroptions
 msgid "linker options"
 msgstr "ຕົວເລືອກ linker"
-
-#: lazarusidestrconsts.lislinktarget
-msgid "Link target"
-msgstr "ເປົ້າໝາຍລິ້ງ"
 
 #: lazarusidestrconsts.lislistofallcasevalues
 msgid "list of all case values"
@@ -11894,7 +11975,9 @@ msgid "Maximize compatibility of project files (LPI and LPS)"
 msgstr "ເພີ່ມຄວາມເຂົ້າກັນໄດ້ຂອງໄຟລ໌ໂຄງການໃຫ້ສູງສຸດ (LPI ແລະ LPS)"
 
 #: lazarusidestrconsts.lislpicompatibilitymodecheckboxhint
-msgid "Check this if you want to open your project in legacy (2.0 and older) Lazarus versions."
+#, fuzzy
+#| msgid "Check this if you want to open your project in legacy (2.0 and older) Lazarus versions."
+msgid "Check this if you want to open your project in legacy (2.2 - 4.8) Lazarus versions."
 msgstr "ໝາຍຕິກບ່ອນນີ້ຖ້າເຈົ້າຕ້ອງການເປີດໂຄງການໃນ Lazarus ເວີຊັນເກົ່າ (2.0 ແລະ ຕ່ຳກວ່າ)."
 
 #: lazarusidestrconsts.lislpkcompatibilitymodecheckbox
@@ -11902,7 +11985,9 @@ msgid "Maximize compatibility of package file (LPK)"
 msgstr "ເພີ່ມຄວາມເຂົ້າກັນໄດ້ຂອງໄຟລ໌ແພັກເກັດໃຫ້ສູງສຸດ (LPK)"
 
 #: lazarusidestrconsts.lislpkcompatibilitymodecheckboxhint
-msgid "Check this if you want to open your package in legacy (2.0 and older) Lazarus versions."
+#, fuzzy
+#| msgid "Check this if you want to open your package in legacy (2.0 and older) Lazarus versions."
+msgid "Check this if you want to open your package in legacy (2.2 - 4.8) Lazarus versions."
 msgstr "ໝາຍຕິກບ່ອນນີ້ຖ້າເຈົ້າຕ້ອງການເປີດແພັກເກັດໃນ Lazarus ເວີຊັນເກົ່າ (2.0 ແລະ ຕ່ຳກວ່າ)."
 
 #: lazarusidestrconsts.lislpkhasvanishedondiskusingasalternative
@@ -12148,7 +12233,9 @@ msgid "Configure Custom Components ..."
 msgstr "ກຳນົດຄ່າ ອົງປະກອບທີ່ກຳນົດເອງ..."
 
 #: lazarusidestrconsts.lismenuconfigexternaltools
-msgid "Configure External Tools ..."
+#, fuzzy
+#| msgid "Configure External Tools ..."
+msgid "Configure &External Tools ..."
 msgstr "ກຳນົດຄ່າ ເຄື່ອງມືພາຍນອກ..."
 
 #: lazarusidestrconsts.lismenuconfigurebuildlazarus
@@ -13127,6 +13214,10 @@ msgctxt "lazarusidestrconsts.lismenuprojectrun"
 msgid "&Run"
 msgstr "&ແລ່ນ (Run)"
 
+#: lazarusidestrconsts.lismenupublishpackage
+msgid "Publish Package ..."
+msgstr ""
+
 #: lazarusidestrconsts.lismenupublishproject
 msgid "Publish Project ..."
 msgstr "ເຜີຍແຜ່ໂຄງການ..."
@@ -13237,6 +13328,7 @@ msgid "&Search"
 msgstr "&ຄົ້ນຫາ"
 
 #: lazarusidestrconsts.lismenuselect
+msgctxt "lazarusidestrconsts.lismenuselect"
 msgid "Select"
 msgstr "ເລືອກ"
 
@@ -13999,10 +14091,6 @@ msgstr "ຄຳນຳໜ້າ Free Pascal compiler ຫວ່າງເປົ່�
 msgid "no hints"
 msgstr "ບໍ່ມີ hints"
 
-#: lazarusidestrconsts.lisnoidewindowselected
-msgid "No IDE window selected"
-msgstr "ບໍ່ມີປ່ອງຢ້ຽມ IDE ຖືກເລືອກ"
-
 #: lazarusidestrconsts.lisnolfmfile
 msgid "No LFM file"
 msgstr "ບໍ່ມີໄຟລ໌ LFM"
@@ -14030,10 +14118,6 @@ msgstr "(ບໍ່ໄດ້ເລືອກ)"
 #: lazarusidestrconsts.lisnonewfilefound
 msgid "No new file found"
 msgstr "ບໍ່ພົບໄຟລ໌ໃໝ່"
-
-#: lazarusidestrconsts.lisnonodeselected
-msgid "no node selected"
-msgstr "ບໍ່ມີ node ຖືກເລືອກ"
 
 #: lazarusidestrconsts.lisnopascalfile
 msgid "No Pascal file"
@@ -14282,6 +14366,25 @@ msgstr "ເປີດ"
 msgid "Open as XML file"
 msgstr "ເປີດເປັນໄຟລ໌ XML"
 
+#: lazarusidestrconsts.lisopenautomatically
+msgid "Open automatically"
+msgstr ""
+
+#: lazarusidestrconsts.lisopenautonever
+#, fuzzy
+msgctxt "lazarusidestrconsts.lisopenautonever"
+msgid "Never"
+msgstr "ບໍ່ເຄີຍ"
+
+#: lazarusidestrconsts.lisopenautoonlywhenerrorsoccur
+msgctxt "lazarusidestrconsts.lisopenautoonlywhenerrorsoccur"
+msgid "Only when errors occur"
+msgstr ""
+
+#: lazarusidestrconsts.lisopenautowhencompiling
+msgid "When getting messages"
+msgstr ""
+
 #: lazarusidestrconsts.lisopencontexthelpinbrowser
 msgid "Open context help in the browser"
 msgstr "ເປີດ context help ໃນເບຣົາເຊີ"
@@ -14396,10 +14499,6 @@ msgstr "ເປີດ Unit"
 msgid "Open URL"
 msgstr "ເປີດ URL"
 
-#: lazarusidestrconsts.lisopenxml
-msgid "Open XML"
-msgstr "ເປີດ XML"
-
 #: lazarusidestrconsts.lisoptions
 msgctxt "lazarusidestrconsts.lisoptions"
 msgid "Options"
@@ -14506,10 +14605,6 @@ msgstr "ໂຟນເດີຊອດໂຄດຂອງແພັກເກັດ"
 msgid "packages=%s/%s units=%s/%s identifiers=%s/%s lines=%s bytes=%s"
 msgstr "ແພັກເກັດ=%s/%s units=%s/%s identifiers=%s/%s ແຖວ=%s ໄບຕ໌=%s"
 
-#: lazarusidestrconsts.lispackageunit
-msgid "package unit"
-msgstr "unit ຂອງແພັກເກັດ"
-
 #: lazarusidestrconsts.lispage
 msgctxt "lazarusidestrconsts.lispage"
 msgid "Page"
@@ -14528,6 +14623,11 @@ msgstr "ຊື່ໜ້າ \"%s\" ມີຢູ່ແລ້ວ. ບໍ່ໄດ�
 msgctxt "lazarusidestrconsts.lispanic"
 msgid "Panic"
 msgstr "Panic"
+
+#: lazarusidestrconsts.lisparameters
+msgctxt "lazarusidestrconsts.lisparameters"
+msgid "Parameters:"
+msgstr ""
 
 #: lazarusidestrconsts.lisparsed
 msgid ", parsed "
@@ -14558,9 +14658,9 @@ msgstr "ວາງຈາກ clipboard."
 msgid "Pastel Colors"
 msgstr "ສີພາສເທວ"
 
-#: lazarusidestrconsts.lispath
-msgid "Path"
-msgstr "ເສັ້ນທາງ"
+#: lazarusidestrconsts.lispathalreadyexists
+msgid "The path already exists."
+msgstr ""
 
 #: lazarusidestrconsts.lispatheditbrowse
 msgctxt "lazarusidestrconsts.lispatheditbrowse"
@@ -15086,7 +15186,9 @@ msgid "Show directory hierarchy"
 msgstr "ສະແດງລຳດັບຊັ້ນໂຟນເດີ"
 
 #: lazarusidestrconsts.lispeshowmissingfiles
-msgid "Show Missing Files"
+#, fuzzy
+#| msgid "Show Missing Files"
+msgid "Show Missing Files ..."
 msgstr "ສະແດງໄຟລ໌ທີ່ຂາດຫາຍ"
 
 #: lazarusidestrconsts.lispeshowpropspanel
@@ -15522,6 +15624,14 @@ msgstr "ແພັກເກັດທີ່ຍັງບໍ່ໄດ້ບັນທ
 msgid "Use unit"
 msgstr "ໃຊ້ Unit"
 
+#: lazarusidestrconsts.lispkgmangvirtualunit
+msgid "Virtual unit"
+msgstr ""
+
+#: lazarusidestrconsts.lispkgmangvirtualunithint
+msgid "Package has only a unit's name. The unit itself is found elsewhere."
+msgstr ""
+
 #: lazarusidestrconsts.lispkgmangwarningthefilebelongstothecurrentproject
 #, object-pascal-format
 msgid "Warning: The file \"%s\"%sbelongs to the current project."
@@ -15624,10 +15734,6 @@ msgstr "ກະລຸນາແກ້ໄຂຂໍ້ຜິດພາດທີ່ສ
 #: lazarusidestrconsts.lispleaseopenaunitbeforerun
 msgid "Please open a unit before run."
 msgstr "ກະລຸນາເປີດ Unit ກ່ອນທີ່ຈະ Run."
-
-#: lazarusidestrconsts.lispleaseplacetheeditorcaretonanidentifierifthisisane
-msgid "Please place the editor caret on an identifier. If this is a new unit, please save the file first."
-msgstr "ກະລຸນາວາງ editor caret ໃສ່ identifier. ຖ້ານີ້ແມ່ນ Unit ໃໝ່, ກະລຸນາບັນທຶກໄຟລ໌ກ່ອນ."
 
 #: lazarusidestrconsts.lispleaseselectsomecodetoextractanewproceduremethod
 msgid "Please select some code to extract a new procedure/method."
@@ -15800,7 +15906,9 @@ msgid "Minimum Version (optional):"
 msgstr "ເວີຊັນຕໍ່າສຸດ (ທາງເລືອກ):"
 
 #: lazarusidestrconsts.lisprojaddnewfpmakerequirement
-msgid "New FPMake Requirement"
+#, fuzzy
+#| msgid "New FPMake Requirement"
+msgid "New FPMake requirement ..."
 msgstr "FPMake Requirement ໃໝ່"
 
 #: lazarusidestrconsts.lisprojaddnewrequirement
@@ -15957,10 +16065,6 @@ msgstr "%0:s%0:s ໃນໄຟລ໌ '%1:s' ທີ່ແຖວ %2:d"
 msgid "%0:s%0:s In file '%1:s' at line %2:d:%0:s%3:s"
 msgstr "%0:s%0:s ໃນໄຟລ໌ '%1:s' ທີ່ແຖວ %2:d:%0:s%3:s"
 
-#: lazarusidestrconsts.lisprojectunit
-msgid "project unit"
-msgstr "unit ໂຄງການ"
-
 #: lazarusidestrconsts.lisprojectwizard
 msgid "Project Wizard"
 msgstr "ຕົວຊ່ວຍສ້າງໂຄງການ"
@@ -16112,6 +16216,14 @@ msgstr "ເປີດໂຄງການ&ຫຼ້າສຸດ"
 #: lazarusidestrconsts.lispwviewexampleprojects
 msgid "View &Example Projects"
 msgstr "ເບິ່ງໂຄງການ&ຕົວຢ່າງ"
+
+#: lazarusidestrconsts.lisquerycompilerfortargets
+msgid "Query installed compiler for available targets"
+msgstr ""
+
+#: lazarusidestrconsts.lisquerycompilerfortargetshint
+msgid "List only the targets, processors and controllers the configured compiler actually supports"
+msgstr ""
 
 #: lazarusidestrconsts.lisquickcheckfppkgconfigurationatstart
 msgid "Quick check Fppkg configuration at start"
@@ -16292,9 +16404,9 @@ msgstr "ຂໍ້ຂັດແຍ່ງການປ່ຽນຊື່"
 msgid "Reopen project"
 msgstr "ເປີດໂຄງການຄືນໃໝ່"
 
-#: lazarusidestrconsts.lisreopenwithanotherencoding
-msgid "Reopen with another encoding"
-msgstr "ເປີດຄືນໃໝ່ດ້ວຍການເຂົ້າລະຫັດອື່ນ"
+#: lazarusidestrconsts.lisreopenwithnewencoding
+msgid "Reopen with new encoding"
+msgstr ""
 
 #: lazarusidestrconsts.lisrepeat
 msgctxt "lazarusidestrconsts.lisrepeat"
@@ -16665,6 +16777,10 @@ msgstr "ບັນທຶກຂໍ້ຄວາມທີ່ສະແດງລົງ
 msgid "Save "
 msgstr "ບັນທຶກ "
 
+#: lazarusidestrconsts.lissavewithnewencoding
+msgid "Save with new encoding"
+msgstr ""
+
 #: lazarusidestrconsts.lissavingfileasloosescharactersatlinecolumn
 #, object-pascal-format
 msgid "Saving file \"%s\" as \"%s\" looses characters at line %s, column %s."
@@ -16845,10 +16961,6 @@ msgstr "ຕັ້ງຄ່ານີ້ເພື່ອແປຂໍ້ຄວາມ
 msgid "(Set up default indentation)"
 msgstr "(ຕັ້ງຄ່າການຫຍໍ້ໜ້າເລີ່ມຕົ້ນ)"
 
-#: lazarusidestrconsts.lisshort
-msgid "Short:"
-msgstr "ສັ້ນ:"
-
 #: lazarusidestrconsts.lisshortnopath
 msgid "Short, no path"
 msgstr "ສັ້ນ, ບໍ່ມີເສັ້ນທາງ"
@@ -16866,24 +16978,6 @@ msgstr "ສະແດງ"
 #, object-pascal-format
 msgid "Show abstract methods of \"%s\""
 msgstr "ສະແດງ abstract methods ຂອງ \"%s\""
-
-#: lazarusidestrconsts.lisshowautomatically
-msgid "Show automatically"
-msgstr ""
-
-#: lazarusidestrconsts.lisshowautonever
-#, fuzzy
-msgctxt "lazarusidestrconsts.lisshowautonever"
-msgid "Never"
-msgstr "ບໍ່ເຄີຍ"
-
-#: lazarusidestrconsts.lisshowautoonlywhenerrorsoccur
-msgid "Only when errors occur"
-msgstr ""
-
-#: lazarusidestrconsts.lisshowautowhencompiling
-msgid "When compiling"
-msgstr ""
 
 #: lazarusidestrconsts.lisshowcomponenttreeinobjectinspector
 msgid "Show component tree"
@@ -17195,6 +17289,14 @@ msgstr "ເສັ້ນທາງໄຟລ໌ຕົ້ນສະບັບ"
 msgid "Space equally"
 msgstr "ໄລຍະຫ່າງເທົ່າກັນ"
 
+#: lazarusidestrconsts.lissqlhighlighterdialect
+msgid "Override dialect for SQL highlighter"
+msgstr ""
+
+#: lazarusidestrconsts.lissqlhighlightopts
+msgid "SQL highlight"
+msgstr ""
+
 #: lazarusidestrconsts.lisssearching
 msgid "Searching"
 msgstr "ກຳລັງຄົ້ນຫາ"
@@ -17369,6 +17471,10 @@ msgstr "ແຖບສຳລັບ %s"
 #: lazarusidestrconsts.listarget
 msgid "Target:"
 msgstr "ເປົ້າໝາຍ:"
+
+#: lazarusidestrconsts.listargetcontroller
+msgid "Target controller"
+msgstr ""
 
 #: lazarusidestrconsts.listargetfilenameemptyuseunitoutputdirectory
 msgid "Target file name: (-o, empty = use unit output directory)"
@@ -17716,6 +17822,21 @@ msgstr "ແພັກເກັດ %s ບໍ່ແມ່ນແພັກເກັ�
 msgid "The package \"%s\" is used by"
 msgstr "ແພັກເກັດ \"%s\" ຖືກນຳໃຊ້ໂດຍ"
 
+#: lazarusidestrconsts.listhepackagewantstorunthecommand
+#, object-pascal-format
+msgid "The package \"%s\" wants to run the command:%s%s%sBuilding with a custom command can run arbitrary programs.%sDo you want to trust and run this command?"
+msgstr ""
+
+#: lazarusidestrconsts.listhepackagewantstousethecompiler
+#, object-pascal-format
+msgid "The package \"%s\" wants to use the compiler:%s%s%sThis is not the default compiler configured in the IDE. Opening a package with a custom compiler can run arbitrary programs.%sDo you want to trust and use this compiler?"
+msgstr ""
+
+#: lazarusidestrconsts.listhepackagewantstousethecompilerbuild
+#, object-pascal-format
+msgid "The package \"%s\" wants to use the compiler:%s%s%sThis is not the default compiler configured in the IDE. Building with a custom compiler can run arbitrary programs.%sDo you want to trust and use this compiler?"
+msgstr ""
+
 #: lazarusidestrconsts.listhepathofmakeisnotcorrect
 #, object-pascal-format
 msgid "The path of \"make\" is not correct: \"%s\""
@@ -17778,6 +17899,21 @@ msgstr "ໂປຣເຈັກຕ້ອງຖືກບັນທຶກກ່ອນ
 #: lazarusidestrconsts.listheprojectusesfpcresourceswhichrequireatleast
 msgid "The project uses FPC resources which require at least FPC 2.4"
 msgstr "ໂປຣເຈັກໃຊ້ FPC resources ເຊິ່ງຕ້ອງການຢ່າງໜ້ອຍ FPC 2.4"
+
+#: lazarusidestrconsts.listheprojectwantstorunthecommand
+#, object-pascal-format
+msgid "The project \"%s\" wants to run the command:%s%s%sBuilding with a custom command can run arbitrary programs.%sDo you want to trust and run this command?"
+msgstr ""
+
+#: lazarusidestrconsts.listheprojectwantstousethecompiler
+#, object-pascal-format
+msgid "The project \"%s\" wants to use the compiler:%s%s%sThis is not the default compiler configured in the IDE. Opening a project with a custom compiler can run arbitrary programs.%sDo you want to trust and use this compiler?"
+msgstr ""
+
+#: lazarusidestrconsts.listheprojectwantstousethecompilerbuild
+#, object-pascal-format
+msgid "The project \"%s\" wants to use the compiler:%s%s%sThis is not the default compiler configured in the IDE. Building with a custom compiler can run arbitrary programs.%sDo you want to trust and use this compiler?"
+msgstr ""
 
 #: lazarusidestrconsts.listheprojectwritesthedebugsymbolstoanexternalfilethe
 #, object-pascal-format
@@ -17940,11 +18076,6 @@ msgstr "Unit ມີຊື່ນີ້"
 msgid "The unit filename \"%s\" is not lowercase.%sThe Free Pascal compiler does not search for all cases. It is recommended to use lowercase filename.%sRename file lowercase?"
 msgstr "ຊື່ໄຟລ໌ unit \"%s\" ບໍ່ແມ່ນຕົວພິມນ້ອຍ.%sFree Pascal compiler ບໍ່ຄົ້ນຫາທຸກກໍລະນີຕົວພິມ. ແນະນຳໃຫ້ໃຊ້ຊື່ໄຟລ໌ຕົວພິມນ້ອຍ.%sປ່ຽນຊື່ໄຟລ໌ເປັນຕົວພິມນ້ອຍບໍ່?"
 
-#: lazarusidestrconsts.listheunitispartofthefpcsourcesbutthecorrespondingfpd
-#, object-pascal-format
-msgid "The unit %s is part of the FPC sources but the corresponding fpdoc xml file was not found.%sEither you have not yet added the fpcdocs directory to the search path or the unit is not yet documented.%sThe fpdoc files for the FPC sources can be downloaded from: %s%sPlease add the directory in the fpdoc editor options.%sIn order to create a new file the directory must be writable."
-msgstr "Unit %s ແມ່ນສ່ວນໜຶ່ງຂອງ FPC sources ແຕ່ບໍ່ພົບໄຟລ໌ fpdoc xml ທີ່ກ່ຽວຂ້ອງ.%sທ່ານອາດຈະຍັງບໍ່ໄດ້ເພີ່ມໄດເຣັກທໍຣີ fpcdocs ໃສ່ເສັ້ນທາງຄົ້ນຫາ ຫຼື unit ຍັງບໍ່ໄດ້ຖືກບັນທຶກເອກະສານ.%sໄຟລ໌ fpdoc ສຳລັບ FPC sources ສາມາດດາວໂຫຼດໄດ້ຈາກ: %s%sກະລຸນາເພີ່ມໄດເຣັກທໍຣີໃນຕົວເລືອກ fpdoc editor.%sເພື່ອສ້າງໄຟລ໌ໃໝ່ ໄດເຣັກທໍຣີຕ້ອງສາມາດຂຽນໄດ້."
-
 #: lazarusidestrconsts.listheunitisusedbyotherfilesupdatereferencesautomatic
 #, object-pascal-format
 msgid "The unit %s is used by other files.%sUpdate references automatically?"
@@ -18021,10 +18152,6 @@ msgstr "&ຫົວຂໍ້"
 msgid "Show the custom IDE title before the IDE's name and other info in the title. Example: project1 - Lazarus."
 msgstr "ສະແດງຫົວຂໍ້ IDE ແບບກຳນົດເອງກ່ອນຊື່ຂອງ IDE ແລະ ຂໍ້ມູນອື່ນໆໃນຫົວຂໍ້. ຕົວຢ່າງ: project1 - Lazarus."
 
-#: lazarusidestrconsts.listitleleaveemptyfordefault
-msgid "Title (leave empty for default)"
-msgstr "ຫົວຂໍ້ (ປະວ່າງໄວ້ເພື່ອໃຊ້ຄ່າເລີ່ມຕົ້ນ)"
-
 #: lazarusidestrconsts.listofpcpath
 msgid "Path:"
 msgstr "ເສັ້ນທາງ:"
@@ -18040,10 +18167,6 @@ msgstr "Tool Header: ລົ້ມເຫຼວ"
 #: lazarusidestrconsts.listoolheaderrunning
 msgid "Tool Header: Running"
 msgstr "Tool Header: ກຳລັງເຮັດວຽກ"
-
-#: lazarusidestrconsts.listoolheaderscrolledup
-msgid "Tool Header: Scrolled up"
-msgstr "Tool Header: ເລື່ອນຂຶ້ນ"
 
 #: lazarusidestrconsts.listoolheadersuccess
 msgid "Tool Header: Success"
@@ -18096,6 +18219,34 @@ msgstr "ໜ້າທັງໝົດ: %s"
 #: lazarusidestrconsts.listreeneedsrefresh
 msgid "Tree needs refresh"
 msgstr "Tree ຕ້ອງການການຣີເຟຣຊ"
+
+#: lazarusidestrconsts.listrustcommandcaption
+msgid "Trust build command?"
+msgstr ""
+
+#: lazarusidestrconsts.listrustcompileralways
+msgid "Trust always"
+msgstr ""
+
+#: lazarusidestrconsts.listrustcompilercaption
+msgid "Trust project compiler?"
+msgstr ""
+
+#: lazarusidestrconsts.listrustcompilerthistime
+msgid "Trust until project closes"
+msgstr ""
+
+#: lazarusidestrconsts.listrustedcommands
+msgid "Trusted commands"
+msgstr ""
+
+#: lazarusidestrconsts.listrustedcompilers
+msgid "Trusted compilers"
+msgstr ""
+
+#: lazarusidestrconsts.listrustpkgcompilercaption
+msgid "Trust package compiler?"
+msgstr ""
 
 #: lazarusidestrconsts.listwomovedfileswillhavethesamefilenamein
 #, object-pascal-format
@@ -18745,6 +18896,10 @@ msgstr "ໃຊ້ CheckBox ສຳລັບຄ່າ Boolean"
 msgid "Use comments in custom options"
 msgstr "ໃຊ້ຄຳເຫັນໃນຕົວເລືອກກຳນົດເອງ"
 
+#: lazarusidestrconsts.lisusedefaultcompiler
+msgid "Use default compiler"
+msgstr ""
+
 #: lazarusidestrconsts.lisusedesigntimepackages
 msgid "Use design time packages"
 msgstr "ໃຊ້ design time packages"
@@ -18842,6 +18997,7 @@ msgid "Value: "
 msgstr "ຄ່າ: "
 
 #: lazarusidestrconsts.lisvalues
+msgctxt "lazarusidestrconsts.lisvalues"
 msgid "Values"
 msgstr "ຄ່າຕ່າງໆ"
 
@@ -18987,6 +19143,10 @@ msgstr "ໄດເຣັກທໍຣີເຮັດວຽກສຳລັບກາ
 msgid "Working directory for run"
 msgstr "ໄດເຣັກທໍຣີເຮັດວຽກສຳລັບການ run"
 
+#: lazarusidestrconsts.liswraplongmessagelinesotherwisetheyareclippedandahi
+msgid "Wrap long message lines into several rows. Otherwise they are clipped and a hint shows the full text."
+msgstr ""
+
 #: lazarusidestrconsts.liswriteconfiginsteadofcommandlineparameters
 msgid "Write config instead of command line parameters"
 msgstr "ຂຽນ config ແທນ parameter ຂອງ command line"
@@ -19038,6 +19198,7 @@ msgid "Source Editor"
 msgstr "ຕົວແກ້ໄຂຊອດໂຄ້ດ"
 
 #: lazarusidestrconsts.lrsplddeleteselected
+msgctxt "lazarusidestrconsts.lrsplddeleteselected"
 msgid "Delete selected"
 msgstr "ລຶບທີ່ເລືອກ"
 
@@ -19211,6 +19372,38 @@ msgstr "ໃຊ້ສີແຖວປັດຈຸບັນ (gutter: ອື່ນ�
 msgid "Use current line number color (gutter: number)"
 msgstr "ໃຊ້ສີເລກແຖວປັດຈຸບັນ (gutter: ຕົວເລກ)"
 
+#: lazarusidestrconsts.optedcompletebackspacebehaviour
+msgid "Backspace behaviour"
+msgstr ""
+
+#: lazarusidestrconsts.optedcompletecancelifcaretatstart
+msgid "Cancel, if caret at start"
+msgstr ""
+
+#: lazarusidestrconsts.optedcompletecancelifcaretatstartsingl
+msgid "Cancel, if caret at start (single press, not on repeat key)"
+msgstr ""
+
+#: lazarusidestrconsts.optedcompletecancelifcompletionwasjust
+msgid "Cancel, if completion was just opened"
+msgstr ""
+
+#: lazarusidestrconsts.optedcompletecancelifcompletionwasjust2
+msgid "Cancel, if completion was just opened, and caret at start"
+msgstr ""
+
+#: lazarusidestrconsts.optedcompletecancelifjustopenedorcaret
+msgid "Cancel, if just opened, or caret at start (not on repeat key)"
+msgstr ""
+
+#: lazarusidestrconsts.optedcompletecancelifopenedbydot
+msgid "Cancel, if opened by dot"
+msgstr ""
+
+#: lazarusidestrconsts.optedcompleteonlydeletepreviouschar
+msgid "Only delete previous char"
+msgstr ""
+
 #: lazarusidestrconsts.podaddpackageunittousessection
 msgid "Add package unit to uses section"
 msgstr "ເພີ່ມ unit ຂອງແພັກເກັດໃສ່ໃນສ່ວນ uses"
@@ -19364,10 +19557,6 @@ msgstr "ປະເພດ"
 #: lazarusidestrconsts.rsrevision
 msgid "&Revision:"
 msgstr "&Revision:"
-
-#: lazarusidestrconsts.rsselectaninheritedentry
-msgid "Select an inherited entry"
-msgstr "ເລືອກລາຍການທີ່ສືບທອດມາ"
 
 #: lazarusidestrconsts.rsshowabspath
 msgid "Absolute path"
@@ -20923,38 +21112,6 @@ msgstr "ແກ້ໄຂປຸ່ມຂອງຄຳສັ່ງ"
 msgid "Continue with next mouse up action"
 msgstr "ດຳເນີນການຕໍ່ກັບການກະທຳປ່ອຍເມົາສ໌ຖັດໄປ"
 
-#: lazarusidestrconsts.synffoldcomments
-msgid "Fold comments"
-msgstr "ພັບຄຳອະທິບາຍ (comments)"
-
-#: lazarusidestrconsts.synffoldcommentsinselection
-msgid "Fold comments in selection"
-msgstr "ພັບຄຳອະທິບາຍໃນສ່ວນທີ່ເລືອກ"
-
-#: lazarusidestrconsts.synffoldinactiveifdef
-msgid "Fold inactive Ifdef"
-msgstr "ພັບ Ifdef ທີ່ບໍ່ໄດ້ເຮັດວຽກ"
-
-#: lazarusidestrconsts.synffoldinactiveifdefexcludemixedstate
-msgid "Fold inactive Ifdef (exclude mixed state)"
-msgstr "ພັບ Ifdef ທີ່ບໍ່ໄດ້ເຮັດວຽກ (ຍົກເວັ້ນສະຖານະປະສົມ)"
-
-#: lazarusidestrconsts.synffoldinactiveifdefinselection
-msgid "Fold inactive Ifdef in selection"
-msgstr "ພັບ Ifdef ທີ່ບໍ່ໄດ້ເຮັດວຽກໃນສ່ວນທີ່ເລືອກ"
-
-#: lazarusidestrconsts.synffoldinactiveifdefinselectionexcludemixedstate
-msgid "Fold inactive Ifdef in selection (exclude mixed state)"
-msgstr "ພັບ Ifdef ທີ່ບໍ່ໄດ້ເຮັດວຽກໃນສ່ວນທີ່ເລືອກ (ຍົກເວັ້ນສະຖານະປະສົມ)"
-
-#: lazarusidestrconsts.synfhidecomments
-msgid "Hide comments"
-msgstr "ເຊື່ອງຄຳອະທິບາຍ"
-
-#: lazarusidestrconsts.synfhidecommentsinselection
-msgid "Hide comments in selection"
-msgstr "ເຊື່ອງຄຳອະທິບາຍໃນສ່ວນທີ່ເລືອກ"
-
 #: lazarusidestrconsts.synfmatchactionbuttonofmousedown
 msgid "Match action button of mouse down"
 msgstr "ຈັບຄູ່ປຸ່ມການກະທຳຂອງການກົດເມົາສ໌"
@@ -20974,47 +21131,6 @@ msgstr "ຈັບຄູ່ຕຳແໜ່ງການກະທຳຂອງກາ
 #: lazarusidestrconsts.synfsearchallactionofmousedown
 msgid "Search all action of mouse down"
 msgstr "ຄົ້ນຫາການກະທຳທັງໝົດຂອງການກົດເມົາສ໌"
-
-#: lazarusidestrconsts.synfunfoldactiveifdef
-msgid "Unfold active Ifdef"
-msgstr "ຄາຍ Ifdef ທີ່ເຮັດວຽກຢູ່ອອກ"
-
-#: lazarusidestrconsts.synfunfoldactiveifdefinselection
-msgid "Unfold active Ifdef in selection"
-msgstr "ຄາຍ Ifdef ທີ່ເຮັດວຽກຢູ່ອອກໃນສ່ວນທີ່ເລືອກ"
-
-#: lazarusidestrconsts.synfunfoldall
-msgctxt "lazarusidestrconsts.synfunfoldall"
-msgid "Unfold all"
-msgstr "ຄາຍອອກທັງໝົດ"
-
-#: lazarusidestrconsts.synfunfoldallifdef
-msgid "Unfold all Ifdef"
-msgstr "ຄາຍ Ifdef ທັງໝົດອອກ"
-
-#: lazarusidestrconsts.synfunfoldallifdefinselection
-msgid "Unfold all Ifdef in selection"
-msgstr "ຄາຍ Ifdef ທັງໝົດອອກໃນສ່ວນທີ່ເລືອກ"
-
-#: lazarusidestrconsts.synfunfoldallinselection
-msgid "Unfold all in selection"
-msgstr "ຄາຍທັງໝົດອອກໃນສ່ວນທີ່ເລືອກ"
-
-#: lazarusidestrconsts.synfunfoldcomments
-msgid "Unfold comments"
-msgstr "ຄາຍຄຳອະທິບາຍອອກ"
-
-#: lazarusidestrconsts.synfunfoldcommentsinselection
-msgid "Unfold comments in selection"
-msgstr "ຄາຍຄຳອະທິບາຍອອກໃນສ່ວນທີ່ເລືອກ"
-
-#: lazarusidestrconsts.synfunfoldinactiveifdef
-msgid "Unfold inactive Ifdef"
-msgstr "ຄາຍ Ifdef ທີ່ບໍ່ໄດ້ເຮັດວຽກອອກ"
-
-#: lazarusidestrconsts.synfunfoldinactiveifdefinselection
-msgid "Unfold inactive Ifdef in selection"
-msgstr "ຄາຍ Ifdef ທີ່ບໍ່ໄດ້ເຮັດວຽກອອກໃນສ່ວນທີ່ເລືອກ"
 
 #: lazarusidestrconsts.synspelloptmousewheelchangestabs
 msgid "Mouse-wheel changes tabs"

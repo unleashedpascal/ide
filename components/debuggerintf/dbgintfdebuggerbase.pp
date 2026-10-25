@@ -65,6 +65,16 @@ type
     dfThreadSuspension,
     dfConsoleWinPos,        // Able to set position of console Window
     dfStdInOutRedirect,     // Able to redirect StdIn/Out
+    dfAttachToExecStarter,  // Can attach to a starter, that will then execv the actual target app
+
+    (* dfStdInOutCapture:
+    Able to capture the debuggee's standard streams into the IDE, i.e. to
+    honour diomCaptureInternal. Whether that is on offer is a property of the
+    backend and not of the platform: on Windows FpDebug can, and a backend
+    driving an external debugger may not. The frontend must ask rather than
+    assume, or it will select a destination that silently receives nothing. *)
+    dfStdInOutCapture,
+    dfStdInOutCaptureDefault, // There is no other default console, capture is on, even without diomCaptureInternal
 
     (* dfNotSuitableForOsArch:
        If this is set, then this debugger can not be used on the current
@@ -73,6 +83,22 @@ type
     dfNotSuitableForOsArch
   );
   TDBGFeatures = set of TDBGFeature;
+
+  (* What is to become of one of the debuggee's standard streams.
+
+     diomDefault is NOT "no redirection". It is whatever this OS and this
+     backend already do when nothing is asked for -- on Windows that means the
+     debuggee inherits the parent process's console. Targets differ in what
+     their default is, which is why the value is not called "Off".
+
+     diomCaptureInternal means captured into the IDE process (the debug
+     terminal), as opposed to a destination outside it. *)
+  TLzDbgTargetIoMode = (
+    diomDefault,
+    diomRedirectFileOverwrite,
+    diomRedirectFileAppend,
+    diomCaptureInternal
+  );
 
   TDBGCommand = (
     dcRun,
@@ -86,6 +112,7 @@ type
     dcRunTo,
     dcJumpto,
     dcAttach,
+    dcAttachToTargetStarter, // wait for execv event
     dcDetach,
     dcBreak,
     dcWatch,
@@ -108,6 +135,7 @@ type
     SrcFile: String;
     SrcFullName: String;
     SrcLine: Integer;
+    StackIndex: integer; // only if SrcLine = -3
   end;
 
   TDBGExceptionType = (
@@ -365,7 +393,6 @@ type
     function GetDebuggerState: TDBGState;
     procedure SetSlave(const ASlave : TBaseBreakPoint);
   protected
-    procedure SetEnabled(const AValue: Boolean); override; // TODO: remove, currently used by WatchPoint, instead of vsInvalid
     procedure DoChanged; override;
     procedure DoStateChange(const AOldState: TDBGState); virtual;
     property  Debugger: TDebuggerIntf read GetDebugger;
@@ -375,6 +402,7 @@ type
     destructor Destroy; override;
     procedure Hit(var ACanContinue: Boolean);
     procedure Hit(var ACanContinue, ANeedInternalPause: Boolean);
+    procedure MakeDisabled;
     property Slave: TBaseBreakPoint read FSlave write SetSlave;
     property Kind: TDBGBreakPointKind read GetKind write SetKind; // TODO: remove, used by TIDEBreakPoint.SetKind
 
@@ -398,6 +426,7 @@ type
   public
     destructor Destroy; override;
     procedure BeginUpdate; override;
+    property Enabled: Boolean read GetEnabled write SetEnabled;
   end deprecated 'to be removed in 5.99';
 
   { TBaseBreakPoints }
@@ -413,7 +442,7 @@ type
   public
     constructor Create(const ABreakPointClass: TBaseBreakPointClass);
     destructor Destroy; override;
-    procedure Clear; reintroduce;
+    procedure Clear; reintroduce; virtual;
     function Add(AnUpdating: Boolean = False): TBaseBreakPoint; reintroduce; overload;
     function Add(const ASource: String; const ALine: Integer; AnUpdating: Boolean = False): TBaseBreakPoint; overload;
     function Add(const AAddress: TDBGPtr; AnUpdating: Boolean = False): TBaseBreakPoint; overload;
@@ -435,6 +464,7 @@ type
   TDBGBreakPoints = class(TBaseBreakPoints)
   private
     FDebugger: TDebuggerIntf;  // reference to our debugger
+    FIgnoreAll: boolean;
     function GetItem(const AnIndex: Integer): TDBGBreakPoint;
     procedure SetItem(const AnIndex: Integer; const AValue: TDBGBreakPoint);
   protected
@@ -457,6 +487,7 @@ type
                   const AKind: TDBGWatchPointKind; const AIgnore: TDBGBreakPoint): TDBGBreakPoint; overload;
 
     property Items[const AnIndex: Integer]: TDBGBreakPoint read GetItem write SetItem; default;
+    property IgnoreAll: boolean read FIgnoreAll write FIgnoreAll;
   end;
 
 {%endregion   ^^^^^  Breakpoints  ^^^^^   }
@@ -476,9 +507,9 @@ type
                          saArray, saDynArray
                         );
   TDBGSymbolAttributes = set of TDBGSymbolAttribute;
-  TDBGFieldLocation = (flPrivate, flProtected, flPublic, flPublished);
-  TDBGFieldFlag = (ffVirtual,ffConstructor,ffDestructor);
-  TDBGFieldFlags = set of TDBGFieldFlag;
+  TDBGFieldLocation = (flPrivate, flProtected, flPublic, flPublished) deprecated 'to be removed / use IDbgWatchDataIntf / to be removed in 5.99';
+  TDBGFieldFlag = (ffVirtual,ffConstructor,ffDestructor) deprecated 'to be removed / use IDbgWatchDataIntf / to be removed in 5.99';
+  TDBGFieldFlags = set of TDBGFieldFlag deprecated 'to be removed / use IDbgWatchDataIntf / to be removed in 5.99';
 
   TDBGType = class;
 
@@ -492,7 +523,7 @@ type
       4: (AsSingle: Single);
       5: (AsDouble: Double);
       6: (AsPointer: Pointer);
-  end;
+  end deprecated 'to be removed / use IDbgWatchDataIntf / to be removed in 5.99';
 
   { TDBGField }
 
@@ -518,7 +549,7 @@ type
     property Location: TDBGFieldLocation read FLocation;
     property Flags: TDBGFieldFlags read FFlags;
     property ClassName: String read FClassName write FClassName; // the class in which the field was declared
-  end;
+  end deprecated 'to be removed / use IDbgWatchDataIntf / to be removed in 5.99';
 
   { TDBGFields }
 
@@ -534,7 +565,7 @@ type
     property Count: Integer read GetCount;
     property Items[const AIndex: Integer]: TDBGField read GetField; default;
     procedure Add(const AField: TDBGField);
-  end;
+  end deprecated 'to be removed / use IDbgWatchDataIntf / to be removed in 5.99';
 
   TDBGTypes = class(TObject)
   private
@@ -547,7 +578,7 @@ type
     destructor Destroy; override;
     property Count: Integer read GetCount;
     property Items[const AIndex: Integer]: TDBGType read GetType; default;
-  end;
+  end deprecated 'to be removed / use IDbgWatchDataIntf / to be removed in 5.99';
 
   { TDBGType }
 
@@ -587,7 +618,7 @@ type
     property BoundLow: Integer read FBoundLow;              // Array
     property BoundHigh: Integer read FBoundHigh;            // Array
     property Result: TDBGType read FResult;
-  end;
+  end deprecated 'to be removed / use IDbgWatchDataIntf / to be removed in 5.99';
 
 {%endregion   ^^^^^  Debug Info  ^^^^^   }
 
@@ -1574,12 +1605,12 @@ type
     FExitCode: Integer;
     FExternalDebugger: String;
     FFileName: String;
-    FFileNameStdErr: String;
-    FFileNameStdIn: String;
-    FFileNameStdOut: String;
-    FFileOverwriteStdErr: Boolean;
-    FFileOverwriteStdIn: Boolean;
-    FFileOverwriteStdOut: Boolean;
+    FTargetIoStdErrFileName: String;
+    FTargetIoStdInFileName: String;
+    FTargetIoStdOutFileName: String;
+    FTargetIoStdErrMode: TLzDbgTargetIoMode;
+    FTargetIoStdInMode: TLzDbgTargetIoMode;
+    FTargetIoStdOutMode: TLzDbgTargetIoMode;
     FIsInReset: Boolean;
     FLocals: TLocalsSupplier;
     FLineInfo: TDBGLineInfo;
@@ -1711,6 +1742,7 @@ type
     procedure RunTo(const ASource: String; const ALine: Integer);                // Executes til a certain point
     procedure JumpTo(const ASource: String; const ALine: Integer);               // No execute, only set exec point
     procedure Attach(AProcessID: String);
+    procedure AttachToTargetStarter(AProcessID: String);
     procedure Detach;
     procedure SendConsoleInput(AText: String);
     function  Evaluate(const AExpression: String; ACallback: TDBGEvaluateResultCallback;
@@ -1736,12 +1768,12 @@ type
     procedure SetConsoleWinBuffer(AColumns, ARows: Integer); virtual;
     procedure UnSetConsoleWinBuffer; virtual;
 
-    property FileNameStdIn:  String read FFileNameStdIn  write FFileNameStdIn;
-    property FileNameStdOut: String read FFileNameStdOut write FFileNameStdOut;
-    property FileNameStdErr: String read FFileNameStdErr write FFileNameStdErr;
-    property FileOverwriteStdIn:  Boolean read FFileOverwriteStdIn  write FFileOverwriteStdIn;
-    property FileOverwriteStdOut: Boolean read FFileOverwriteStdOut write FFileOverwriteStdOut;
-    property FileOverwriteStdErr: Boolean read FFileOverwriteStdErr write FFileOverwriteStdErr;
+    property TargetIoStdInMode:  TLzDbgTargetIoMode read FTargetIoStdInMode  write FTargetIoStdInMode;
+    property TargetIoStdOutMode: TLzDbgTargetIoMode read FTargetIoStdOutMode write FTargetIoStdOutMode;
+    property TargetIoStdErrMode: TLzDbgTargetIoMode read FTargetIoStdErrMode write FTargetIoStdErrMode;
+    property TargetIoStdInFileName:  String read FTargetIoStdInFileName  write FTargetIoStdInFileName;
+    property TargetIoStdOutFileName: String read FTargetIoStdOutFileName write FTargetIoStdOutFileName;
+    property TargetIoStdErrFileName: String read FTargetIoStdErrFileName write FTargetIoStdErrFileName;
 
     property Arguments: String read FArguments write FArguments;                 // Arguments feed to the program
     property BreakPoints: TDBGBreakPoints read FBreakPoints;                     // list of all breakpoints
@@ -1847,9 +1879,9 @@ const
   COMMANDMAP: array[TDBGState] of TDBGCommands = (
   {dsNone } [],
   {dsIdle } [dcRun, dcStepOver, dcStepInto, dcStepOverInstr, dcStepIntoInstr, dcRunTo,
-             dcAttach, dcBreak, dcWatch, {dcEvaluate,} dcEnvironment],
+             dcAttach, dcAttachToTargetStarter, dcBreak, dcWatch, {dcEvaluate,} dcEnvironment],
   {dsStop } [dcRun, dcStepOver, dcStepInto, dcStepOverInstr, dcStepIntoInstr, dcRunTo,
-             dcAttach, dcBreak, dcWatch, {dcEvaluate,} dcEnvironment,
+             dcAttach, dcAttachToTargetStarter, dcBreak, dcWatch, {dcEvaluate,} dcEnvironment,
              dcSendConsoleInput],
   {dsPause} [dcRun, dcStop, dcStepOver, dcStepInto, dcStepOverInstr, dcStepIntoInstr,
              dcStepOut, dcStepTo, dcContinueLastStep,
@@ -3406,6 +3438,12 @@ begin
   Debugger.DoBreakpointHit(Self, ACanContinue)
 end;
 
+procedure TDBGBreakPoint.MakeDisabled;
+begin
+  inherited SetEnabled(False);
+  if FSlave <> nil then FSlave.Enabled := False;
+end;
+
 procedure TDBGBreakPoint.DoChanged;
 begin
   inherited DoChanged;
@@ -3422,8 +3460,11 @@ begin
 
   BeginUpdate;
   try
-    SetLocation(FSource, Line);
-    Enabled := InitialEnabled;
+    if FSlave <> nil then begin
+      if Kind = bpkSource then
+        SetLocation(FSlave.Source, FSlave.Line); // Source file may have been renamed
+      FSlave.SetEnabled(InitialEnabled);
+    end;
     SetHitCount(0);
   finally
     EndUpdate;
@@ -3495,14 +3536,6 @@ procedure TDBGBreakPoint.SetSlave(const ASlave : TBaseBreakPoint);
 begin
   Assert((FSlave = nil) or (ASlave = nil), 'TDBGBreakPoint.SetSlave already has a slave');
   FSlave := ASlave;
-end;
-
-procedure TDBGBreakPoint.SetEnabled(const AValue: Boolean);
-begin
-  if Enabled = AValue then exit;
-  inherited SetEnabled(AValue);
-  // feedback to IDEBreakPoint
-  if FSlave <> nil then FSlave.Enabled := AValue;
 end;
 
 { TIdeBreakPointBase }
@@ -5720,6 +5753,12 @@ procedure TDebuggerIntf.Attach(AProcessID: String);
 begin
   if State = dsIdle then SetState(dsStop);  // Needed, because no filename was set
   ReqCmd(dcAttach, [AProcessID]);
+end;
+
+procedure TDebuggerIntf.AttachToTargetStarter(AProcessID: String);
+begin
+  if State = dsIdle then SetState(dsStop);  // Needed, because no filename was set
+  ReqCmd(dcAttachToTargetStarter, [AProcessID]);
 end;
 
 procedure TDebuggerIntf.Detach;

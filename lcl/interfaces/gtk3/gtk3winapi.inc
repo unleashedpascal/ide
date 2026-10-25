@@ -215,13 +215,20 @@ begin
   if FormatID = TClipboardFormat(TGdkAtom.intern('text/plain', true)) then
   begin
     pc:=pclp^.wait_for_text;
-    Stream.Write(pc^,strlen(pc));
+    if pc <> nil then
+    begin
+      Stream.Write(pc^,strlen(pc));
+      g_free(pc);
+    end;
   end
   else
   begin
     data:=pclp^.wait_for_contents(PGdkAtom(FormatID));
     if data <> nil then
+    begin
       Stream.Write(data^.get_data^, data^.get_length);
+      gtk_selection_data_free(data);
+    end;
   end;
   Result:=true;
 end;
@@ -357,7 +364,7 @@ begin
      end;
      RGN_COPY:
      begin
-       ARegion := cairo_region_copy(RSrc2);
+       ARegion := cairo_region_copy(RSrc1);
        AStatus := CAIRO_STATUS_SUCCESS;
      end;
      RGN_DIFF:
@@ -532,7 +539,7 @@ begin
   end;
   case ADepth of
     1: Format := CAIRO_FORMAT_A1;
-    2: Format := CAIRO_FORMAT_A8;
+    8: Format := CAIRO_FORMAT_A8;
     24: Format := CAIRO_FORMAT_RGB24;
     else
       Format := CAIRO_FORMAT_ARGB32;
@@ -815,14 +822,11 @@ begin
   {$ifdef VerboseGtk3DeviceContext}
   DebugLn('TGtk3WidgetSet.DeleteObject GDIObject: ', dbghex(GdiObject),' name ',dbgsName(TObject(GdiObject)));
   {$endif}
-  if TObject(GDIObject) is TGtk3ContextObject then
+  if not TGtk3ContextObject(GDIObject).Shared then
   begin
-    if TGtk3ContextObject(GDIOBJECT).Shared then
-      // DebugLn('ERROR: TGtk3WidgetSet.DeleteObject trial to delete shared object ',dbgsName(TGtk3ContextObject(GdiObject)))
-    else
-      TGtk3ContextObject(GDIObject).Free;
-  end else
-    TObject(GDIObject).Free;
+    TGtk3ContextObject(GDIObject).Free;
+    Result := True;
+  end;
 end;
 
 function TGtk3WidgetSet.DestroyCaret(Handle: HWND): Boolean;
@@ -1501,6 +1505,7 @@ function TGtk3WidgetSet.Ellipse(DC: HDC; x1, y1, x2, y2: Integer): Boolean;
 var
   bFill, bBorder: Boolean;
 begin
+  if not IsValidDC(DC) then exit(False);
   bFill := (TGtk3DeviceContext(DC).CurrentBrush.Style <> BS_NULL);
   bBorder := TGtk3DeviceContext(DC).CurrentPen.Style <> psClear;
   TGtk3DeviceContext(DC).drawEllipse(x1, y1, x2 - x1 - 1, y2 - y1 - 1, bFill, bBorder);
@@ -2011,7 +2016,10 @@ function TGtk3WidgetSet.ExtTextOut(DC: HDC; X, Y: Integer; Options: Longint;
   Rect: PRect; Str: PChar; Count: Longint; Dx: PInteger): Boolean;
 var
   GtkDC: TGtk3DeviceContext absolute DC;
-  ScrX, CharLen: LongInt;
+  ScrX, ScrY, CharLen: LongInt;
+  Orientation: LongInt;
+  Advance: Int64;
+  CosA, SinA: Double;
   IsVectorSurf: Boolean;
   ClipL, ClipT, ClipR, ClipB, Tmp: Integer;
 begin
@@ -2060,11 +2068,30 @@ begin
       else
       begin
         ScrX := X;
+        ScrY := Y;
+        Orientation := 0;
+        if Assigned(GtkDC.CurrentFont) then
+          Orientation := GtkDC.CurrentFont.LogFont.lfOrientation;
+        Advance := 0;
+        CosA := 1;
+        SinA := 0;
+        if Orientation <> 0 then
+        begin
+          CosA := Cos(Orientation * Pi / 1800);
+          SinA := Sin(Orientation * Pi / 1800);
+        end;
         while Count > 0 do
         begin
           CharLen := UTF8CodepointSize(Str);
-          GtkDC.drawText(ScrX,Y,Str,CharLen, (GtkDC.BkMode=OPAQUE) and Assigned(GtkDC.BgBrush));
-          inc(ScrX, Dx^);
+          GtkDC.drawText(ScrX,ScrY,Str,CharLen, (GtkDC.BkMode=OPAQUE) and Assigned(GtkDC.BgBrush));
+          if Orientation = 0 then
+            inc(ScrX, Dx^)
+          else
+          begin
+            inc(Advance, Dx^);
+            ScrX := X + Round(Advance * CosA);
+            ScrY := Y - Round(Advance * SinA);
+          end;
           inc(Dx);
           inc(Str, CharLen);
           dec(Count, CharLen);
@@ -2096,13 +2123,30 @@ end;
 
 function TGtk3WidgetSet.FillRgn(DC: HDC; RegionHnd: HRGN; hbr: HBRUSH): Bool;
 var
-  R: TRect;
+  ADC: TGtk3DeviceContext;
+  ARegion: Pcairo_region_t;
+  ACairoRect: Tcairo_rectangle_int_t;
+  cr: Pcairo_t;
+  i: Integer;
 begin
   Result := False;
   if IsValidDC(DC) and IsValidGDIObject(RegionHnd) then
   begin
-    R := TGtk3Region(RegionHnd).GetExtents;
-    TGtk3DeviceContext(DC).fillRect(R.Left, R.Top, R.Right - R.Left, R.Bottom - R.Top);
+    ADC := TGtk3DeviceContext(DC);
+    ARegion := TGtk3Region(RegionHnd).Handle;
+    cr := ADC.pcr;
+    cairo_save(cr);
+    for i := 0 to cairo_region_num_rectangles(ARegion) - 1 do
+    begin
+      cairo_region_get_rectangle(ARegion, i, @ACairoRect);
+      cairo_rectangle(cr, ADC.LToDX(ACairoRect.x), ADC.LToDY(ACairoRect.y),
+        ADC.LToDX(ACairoRect.x + ACairoRect.width) - ADC.LToDX(ACairoRect.x),
+        ADC.LToDY(ACairoRect.y + ACairoRect.height) - ADC.LToDY(ACairoRect.y));
+    end;
+    if IsValidGDIObject(hbr) then
+      ADC.SetSourceColor(TGtk3Brush(hbr).Color);
+    cairo_fill(cr);
+    cairo_restore(cr);
     Result := True;
   end;
 end;
@@ -2235,31 +2279,76 @@ var
   AData, AWidget: gpointer;
   Hndl: HWND;
   i: Integer;
+  AList, L: PGList;
 begin
   Result := 0;
   AWindow := gdk_screen_get_active_window(gdk_screen_get_default);
   if AWindow <> nil then
   begin
-    gdk_window_get_user_data(AWindow,@AWidget);
-    if AWidget <> nil then
-    begin
-      AData := g_object_get_data(AWidget, 'lclwidget');
-      // DebugLn('TGtk3WidgetSet.GetActiveWindow found window from data ...',dbgsName(TGtk3Widget(AData).LCLObject));
-      exit({%H-}HWND(AData));
-    end;
-    for i := 0 to Screen.FormCount - 1 do
-    begin
-      if Screen.Forms[i].HandleAllocated then
+    //gdk_screen_get_active_window returns a new reference !
+    try
+      gdk_window_get_user_data(AWindow,@AWidget);
+      if AWidget <> nil then
       begin
-        Hndl := Screen.Forms[i].Handle;
-        AGtkWin := PGtkWindow(TGtk3Window(Hndl).Widget);
-        if AGtkWin^.get_window = AWindow then
+        AData := g_object_get_data(AWidget, 'lclwidget');
+        // DebugLn('TGtk3WidgetSet.GetActiveWindow found window from data ...',dbgsName(TGtk3Widget(AData).LCLObject));
+        exit({%H-}HWND(AData));
+      end;
+      for i := 0 to Screen.FormCount - 1 do
+      begin
+        if Screen.Forms[i].HandleAllocated then
         begin
-          AGtkWin^.get_focus;
-          Result := Hndl;
+          Hndl := Screen.Forms[i].Handle;
+          AGtkWin := PGtkWindow(TGtk3Window(Hndl).Widget);
+          if AGtkWin^.get_window = AWindow then
+          begin
+            AGtkWin^.get_focus;
+            Result := Hndl;
+          end;
         end;
       end;
+    finally
+      g_object_unref(PGObject(AWindow));
     end;
+  end else
+  if IsWayland then
+  begin
+    AList := gtk_window_list_toplevels;
+    L := AList;
+    while L <> nil do
+    begin
+      if Gtk3IsGtkWindow(PGObject(L^.data)) then
+      begin
+        AGtkWin := PGtkWindow(L^.data);
+        if AGtkWin^.has_toplevel_focus then
+        begin
+          Result := HwndFromGtkWidget(PGtkWidget(AGtkWin));
+          if Result <> 0 then
+            break;
+        end;
+      end;
+      L := L^.next;
+    end;
+    if Result = 0 then
+    begin
+      L := AList;
+      while L <> nil do
+      begin
+        if Gtk3IsGtkWindow(PGObject(L^.data)) then
+        begin
+          AGtkWin := PGtkWindow(L^.data);
+          if AGtkWin^.is_active then
+          begin
+            Result := HwndFromGtkWidget(PGtkWidget(AGtkWin));
+            if Result <> 0 then
+              break;
+          end;
+        end;
+        L := L^.next;
+      end;
+    end;
+    if AList <> nil then
+      g_list_free(AList);
   end;
 end;
 
@@ -2610,6 +2699,8 @@ begin
       begin
         pscr := TGdkScreen.get_default;
         Result := round(pscr^.get_resolution);
+        if Result <= 0 then
+          Result := 96;
       end;
     end;
   end;
@@ -2621,6 +2712,7 @@ var
   ARect: TGdkRectangle;
 begin
   Result := False;
+  p := Point(0, 0);
   if not IsValidDC(DC) then
     exit;
   if TGtk3DeviceContext(DC).Parent <> nil then
@@ -2752,6 +2844,9 @@ begin
   if AActiveWindow <> 0 then
   begin
     AWidget := PGtkWindow(TGtk3Widget(AActiveWindow).Widget)^.get_focus;
+    if (TGtk3Widget(AActiveWindow) is TGtk3Window) and
+       (wwiDeactivating in TGtk3Window(AActiveWindow).StateFlags) then
+      AWidget := nil;
   end else
   begin
     // worst case scenario is to search for widget or when application
@@ -2861,6 +2956,7 @@ var
   device: PGdkDevice;
   window: PGdkWindow;
   windowWidget: PGtkWindow;
+  AUnrefWindow: Boolean;
 begin
   Result := 0;
 
@@ -2885,17 +2981,29 @@ begin
     device := gdk_seat_get_pointer(seat);
     if device = nil then
       exit;
-    window := gdk_screen_get_active_window(gdk_screen_get_default);
-    if window = nil then // gdk_screen_get_active_window may not be implemented
+
+    window := nil;
+    AUnrefWindow := False;
+    //gdk_screen_get_active_window is X11 only and returns a new reference !
+    if not IsWayland then
+    begin
+      window := gdk_screen_get_active_window(gdk_screen_get_default);
+      AUnrefWindow := window <> nil;
+    end;
+    if window = nil then
     begin
       windowWidget := GetActiveGtkWindow;
       if windowWidget <> nil then
-        window := windowWidget^.window;
+        window := gtk_widget_get_window(PGtkWidget(windowWidget));
     end;
+    if window = nil then
+      window := gdk_device_get_window_at_position(device, nil, nil);
     if window = nil then
       Exit;
     // no axes buffer: gdk fills one double per device axis
-    device^.get_state(window, nil, @AModifiers);
+    gdk_device_get_state(device, window, nil, @AModifiers);
+    if AUnrefWindow then
+      g_object_unref(PGObject(window));
   end else
   begin
     AKeyMap := gdk_keymap_get_for_display(display);
@@ -2948,7 +3056,7 @@ function TGtk3WidgetSet.GetMonitorInfo(Monitor: HMONITOR; lpmi: PMonitorInfo
 var
   MonitorRect, MonitorWorkArea: TGdkRectangle;
 begin
-  Result := (lpmi <> nil) and (lpmi^.cbSize >= SizeOf(TMonitorInfo)) or (Monitor = 0);
+  Result := (lpmi <> nil) and (lpmi^.cbSize >= SizeOf(TMonitorInfo)) and (Monitor <> 0);
   if not Result then Exit;
   Dec(Monitor);
   gdk_screen_get_monitor_geometry(gdk_screen_get_default, Monitor, @MonitorRect);
@@ -3001,7 +3109,10 @@ begin
   begin
     lpRect^ := TGtk3Region(RGN).GetExtents;
     if IsRectEmpty(lpRect^) then
-      Result := NullRegion
+    begin
+      lpRect^ := Rect(0, 0, 0, 0);
+      Result := NullRegion;
+    end
     else
     if cairo_region_num_rectangles(TGtk3Region(RGN).Handle) > 1 then
       Result := ComplexRegion
@@ -3762,11 +3873,14 @@ function TGtk3WidgetSet.GetWindowSize(Handle: hwnd; var Width, Height: integer
   ): boolean;
 var
   aWidget: PGtkWidget;
+  AGtkControl: TGtk3Widget;
+  MenuH: gint;
 begin
   Result := False;
   if Handle <> 0 then
   begin
-    aWidget:= TGtk3Widget(Handle).Widget;
+    AGtkControl := TGtk3Widget(Handle);
+    aWidget := AGtkControl.Widget;
     if aWidget<>nil then
     begin
       if Gtk3WidgetSet.IsWayland and Gtk3IsGtkWindow(aWidget) then
@@ -3775,6 +3889,18 @@ begin
       begin
         Width := aWidget^.get_allocated_width;
         Height := aWidget^.get_allocated_Height;
+      end;
+      if (AGtkControl is TGtk3Window) and Gtk3IsGtkWindow(aWidget) and
+         Assigned(AGtkControl.LCLObject) and
+         not Assigned(AGtkControl.LCLObject.Parent) and
+         (not (AGtkControl.LCLObject is TCustomForm) or
+          (TCustomForm(AGtkControl.LCLObject).FormStyle <> fsMDIChild)) then
+      begin
+        MenuH := TGtk3Window(AGtkControl).GetMenuBarHeight;
+        if MenuH > 0 then
+        begin
+          Height := Max(0, Height - MenuH);
+        end;
       end;
       Result := True;
     end;
@@ -4035,6 +4161,11 @@ var
   pscr:PGdkScreen;
   nmon:gint;
 begin
+  if not IsValidHandle(hWnd) then
+  begin
+    Result := HMONITOR(1);
+    Exit;
+  end;
   pscr:=TGdkScreen.get_default;
   nmon:=pscr^.get_monitor_at_window(TGtk3Widget(hWnd).GetWindow);
   Result:=HMONITOR(nmon+1);
@@ -4158,7 +4289,7 @@ begin
   if user_data <> nil then
   begin
     AMsg := TCustomGtk3Message(user_data^);
-    if AMsg.Handle <> 0 then
+    if Gtk3WidgetSet.IsValidHandle(AMsg.Handle) then
     begin
       FillChar(AMessage{%H-}, SizeOf(AMessage), #0);
       AMessage.Msg := AMsg.Msg;
@@ -4180,7 +4311,7 @@ var
   AEvent: PCustomGtk3Message;
 begin
   Result := False;
-  if Handle <> 0 then
+  if IsValidHandle(Handle) then
   begin
     AEvent := GetMem(SizeOf(TCustomGtk3Message));
     AEvent^.Handle := Handle;
@@ -4497,7 +4628,8 @@ begin
           ChildW3 := TGtk3Widget(HwndFromGtkWidget(ChildWidget));
         if (ALayout <> nil) and (ChildWidget <> nil) and (ChildW3 <> nil) then
         begin
-          if gtk_widget_get_parent(ChildWidget) = PGtkWidget(ALayout) then
+          if (gtk_widget_get_parent(ChildWidget) = PGtkWidget(ALayout)) and
+            ChildWidget^.get_visible then
           begin
             ChildW3.LCLLeft := ChildW3.LCLLeft + dx;
             ChildW3.LCLTop := ChildW3.LCLTop + dy;
@@ -4687,6 +4819,7 @@ var
   Caret: TGtk3Caret;
   Widget: TGtk3Widget;
   GtkWidget: PGtkWidget;
+  ACursorRect: TGdkRectangle;
 begin
   Result := False;
   if Handle = 0 then
@@ -4699,6 +4832,14 @@ begin
   if Assigned(Caret) then
   begin
     Caret.SetPosition(X, Y);
+    if Assigned(FIMContext) and (FIMTarget = TObject(Widget)) then
+    begin
+      ACursorRect.x := X;
+      ACursorRect.y := Y;
+      ACursorRect.width := 0;
+      ACursorRect.height := Caret.Height;
+      gtk_im_context_set_cursor_location(FIMContext, @ACursorRect);
+    end;
     Result := True;
   end;
 end;
@@ -4955,9 +5096,9 @@ var
         if Round(adjustment^.upper) <> uHeight then
         begin
           if HaveLogicalValues and (ScrollInfo.nPage = ScrollInfo.nMax) and (ScrollInfo.nMax > 0) then
-            PGtkLayout(TGtk3ScrollableWin(AControl).GetContainerWidget)^.set_size(uWidth, ScrollInfo.nMax)
+            PGtkLayout(TGtk3ScrollableWin(AControl).GetContainerWidget)^.set_size(uWidth, Max(0, ScrollInfo.nMax))
           else
-            PGtkLayout(TGtk3ScrollableWin(AControl).GetContainerWidget)^.set_size(uWidth, Round(adjustment^.upper + 0.5)); //eg TTreeView
+            PGtkLayout(TGtk3ScrollableWin(AControl).GetContainerWidget)^.set_size(uWidth, Max(0, Round(adjustment^.upper + 0.5)));
           PGtkLayout(TGtk3ScrollableWin(AControl).GetContainerWidget)^.queue_resize;
           TGtk3ScrollableWin(AControl).LCLObject.InvalidateClientRectCache(False);
         end;
@@ -4967,9 +5108,9 @@ var
         if Round(adjustment^.upper) <> uWidth then
         begin
           if HaveLogicalValues and (ScrollInfo.nPage = ScrollInfo.nMax) and (ScrollInfo.nMax > 0) then
-            PGtkLayout(TGtk3ScrollableWin(AControl).GetContainerWidget)^.set_size(ScrollInfo.nMax, uHeight)
+            PGtkLayout(TGtk3ScrollableWin(AControl).GetContainerWidget)^.set_size(Max(0, ScrollInfo.nMax), uHeight)
           else
-            PGtkLayout(TGtk3ScrollableWin(AControl).GetContainerWidget)^.set_size(Round(adjustment^.upper + 0.5), uHeight);
+            PGtkLayout(TGtk3ScrollableWin(AControl).GetContainerWidget)^.set_size(Max(0, Round(adjustment^.upper + 0.5)), uHeight);
           PGtkLayout(TGtk3ScrollableWin(AControl).GetContainerWidget)^.queue_resize;
           TGtk3ScrollableWin(AControl).LCLObject.InvalidateClientRectCache(False);
         end;
@@ -5001,7 +5142,7 @@ var
       Adjustment^.lower := ATarget;
 
       ATarget := Adjustment^.upper;
-      SetGDouble(ATarget, ScrollInfo.nMax - ScrollInfo.nMin, HasChanged);
+      SetGDouble(ATarget, ScrollInfo.nMax, HasChanged);
       Adjustment^.upper := ATarget;
     end;
 
@@ -5354,7 +5495,7 @@ begin
   Result := Round(Adjustment^.value);
   if Result < 0 then
   begin
-    DebugLn(Format('WARNING: TGtk3WidgetSet.SetScrollInfo: Result < 0 control %s',[Result, dbgsName(TGtk3Widget(Handle).LCLObject)]));
+    DebugLn(Format('WARNING: TGtk3WidgetSet.SetScrollInfo: Result %d < 0 control %s',[Result, dbgsName(TGtk3Widget(Handle).LCLObject)]));
     Result := 0;
   end;
 
@@ -5516,6 +5657,9 @@ var
   DisableUpdates: boolean;
   AGtkWidget: TGtk3Widget absolute hWnd;
   Alloc: TGtkAllocation;
+  AX, AY: gint;
+  SizeMsg: TLMSize;
+  MoveMsg: TLMMove;
 begin
   Result := IsValidHandle(hWnd);
   if not Result then
@@ -5543,7 +5687,37 @@ begin
       end;
 
       if (SWP_NOSIZE and uFlags) = 0 then
-        AGtkWidget.SetBounds(X, Y, CX, CY);
+      begin
+        if Gtk3IsGtkWindow(AGtkWidget.Widget) then
+        begin
+          PGtkWindow(AGtkWidget.Widget)^.get_position(@AX, @AY);
+          AGtkWidget.SetBounds(AX, AY, CX, CY);
+        end else
+        begin
+          AGtkWidget.Widget^.get_allocation(@Alloc);
+          AGtkWidget.SetBounds(Alloc.X, Alloc.Y, CX, CY);
+        end;
+      end;
+    end;
+
+    if (SWP_NOSIZE and uFlags) = 0 then
+    begin
+      FillChar(SizeMsg{%H-}, SizeOf(SizeMsg), 0);
+      SizeMsg.Msg := LM_SIZE;
+      SizeMsg.SizeType := SIZE_RESTORED or Size_SourceIsInterface;
+      SizeMsg.Width := Word(CX);
+      SizeMsg.Height := Word(CY);
+      AGtkWidget.DeliverMessage(SizeMsg);
+    end;
+
+    if (SWP_NOMOVE and uFlags) = 0 then
+    begin
+      FillChar(MoveMsg{%H-}, SizeOf(MoveMsg), 0);
+      MoveMsg.Msg := LM_MOVE;
+      MoveMsg.MoveType := Move_SourceIsInterface;
+      MoveMsg.XPos := SmallInt(X);
+      MoveMsg.YPos := SmallInt(Y);
+      AGtkWidget.DeliverMessage(MoveMsg);
     end;
 
     if (SWP_SHOWWINDOW and uFlags) <> 0 then
@@ -5579,6 +5753,8 @@ function TGtk3WidgetSet.SetWindowRgn(hWnd: HWND; hRgn: HRGN; bRedraw: Boolean
 var
   PCR: Pcairo_region_t;
 begin
+  if not IsValidHandle(hWnd) then exit(0);
+  if (hRgn <> 0) and not IsValidGDIObject(hRgn) then exit(0);
   if hRgn = 0 then
     PCR := nil
   else
@@ -5586,6 +5762,8 @@ begin
   gtk_widget_shape_combine_region(TGtk3Widget(hWnd).Widget, PCR);
   if bRedraw and Gtk3IsGtkWindow(TGtk3Widget(hWnd).Widget^.get_toplevel) then
     TGtk3Widget(hWnd).Widget^.realize;
+  if hRgn <> 0 then
+    DeleteObject(hRgn);
   Result:=1;
 end;
 
@@ -5751,11 +5929,18 @@ begin
       SrcH := cairo_image_surface_get_height(ASrcSurface);
       FreshSrcPixbuf := gdk_pixbuf_get_from_surface(ASrcSurface, 0, 0, SrcW, SrcH);
     end;
+    if (FreshSrcPixbuf = nil) and Assigned(SrcContext.CurrentImage) then
+      FreshSrcPixbuf := SrcContext.CurrentImage.Handle;
     if FreshSrcPixbuf = nil then
-      FreshSrcPixbuf := SrcContext.CurrentImage.Handle;  // fallback
+    begin
+      if ATempSurface <> nil then
+        cairo_surface_destroy(ATempSurface);
+      Result := False;
+      exit;
+    end;
     DestContext.drawImage1(@ATargetRect, FreshSrcPixbuf, @ASrcRect,
       TGtk3Image(mask).Handle, @AMaskRect);
-    if FreshSrcPixbuf <> SrcContext.CurrentImage.Handle then
+    if (not Assigned(SrcContext.CurrentImage)) or (FreshSrcPixbuf <> SrcContext.CurrentImage.Handle) then
       g_object_unref(FreshSrcPixbuf);
   end else
   begin

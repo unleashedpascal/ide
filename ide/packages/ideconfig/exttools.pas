@@ -597,7 +597,6 @@ procedure TExternalTool.DoExecute;
     end;
     CreateView;
     NotifyHandlerStopped;
-
     Result:=true;
   end;
 
@@ -965,6 +964,7 @@ begin
     EnterCriticalSection;
     try
       if Stage=etsDestroying then exit;
+      //writeln('TExternalTool.WaitForExit ',Title,' ',Stage,' FindUnfinishedView=',FindUnfinishedView=nil);
       if (Stage=etsStopped) and (FindUnfinishedView=nil) then exit;
     finally
       LeaveCriticalSection;
@@ -973,7 +973,7 @@ begin
     if MainThreadID=ThreadID then
     begin
       Assert(Owner is TExternalToolsBase, 'TExternalTool.WaitForExit: Owner is not TExternalToolsBase.');
-             TExternalToolsBase(Owner).HandleMessages;
+      TExternalToolsBase(Owner).HandleMessages;
     end;
     Assert(Assigned(ExternalToolList), 'TExternalTool.WaitForExit: ExternalToolList=Nil.');
     // check if this tool still exists
@@ -1797,7 +1797,7 @@ begin
         end;
         {$IFDEF VerboseExtToolThread}
         if Tool.ExitStatus<>0 then
-          DebuglnThreadLog(['TExternalToolThread.Execute ',Title,' exit status=',Tool.ExitStatus,' ExitCode=',Tool.ExitCode]);
+          DebuglnThreadLog(['TExternalToolThread.Execute ',Title,' exit status=',IntToStr(Tool.ExitStatus),' ExitCode=',IntToStr(Tool.ExitCode)]);
         {$ENDIF}
       except
         Tool.ErrorMessage:=lisUnableToReadProcessExitStatus;
@@ -1805,7 +1805,7 @@ begin
     except
       on E: Exception do begin
         {$IFDEF VerboseExtToolThread}
-        DebuglnThreadLog(['TExternalToolThread.Execute ',Title,' run: ',E.Message]);
+        DebuglnThreadLog(['TExternalToolThread.Execute Exception ',Title,' run: ',E.Message]);
         {$ENDIF}
         if (Tool<>nil) and (Tool.ErrorMessage='') then begin
           Tool.ErrorMessage:=E.Message;

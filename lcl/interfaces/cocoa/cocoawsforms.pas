@@ -26,7 +26,7 @@ uses
   // RTL,FCL
   Classes, SysUtils,
   // LCL
-  Controls, Forms, Graphics, LCLType, Messages, LMessages, LCLProc, GraphMath,
+  Controls, Forms, Graphics, LCLType, Messages, LMessages, GraphMath,
   // Widgetset
   WSForms, WSLCLClasses, LCLMessageGlue,
   // LCL Cocoa
@@ -35,7 +35,8 @@ uses
   CocoaCommonCallback, CocoaWSPrivate,
   CocoaGDIObjects, CocoaWindows, CocoaToolBar, CocoaCustomControl,
   CocoaScrolling,
-  CocoaUtils, CocoaMenus, Cocoa_Extra;
+  CocoaUtils, CocoaMenus, Cocoa_Extra,
+  LazLoggerBase;
 
 type
   { TLCLWindowCallback }

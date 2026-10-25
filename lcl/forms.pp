@@ -588,6 +588,7 @@ type
     FDelayedEventCtr: Integer;
     FDelayedOnChangeBounds, FDelayedOnResize: Boolean;
     FIsFirstOnShow, FIsFirstOnActivate: Boolean;
+    FFirstActivatePending: Boolean;
     FSnapOptions: TWindowMagnetOptions;
     function GetClientHandle: HWND;
     function GetEffectiveShowInTaskBar: TShowInTaskBar;

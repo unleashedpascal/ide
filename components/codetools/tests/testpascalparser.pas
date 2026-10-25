@@ -67,6 +67,21 @@ type
     procedure TestParseModeTP;
     procedure TestParseIFOpt;
     procedure TestParseProcAnoAssign;
+    procedure TestParseIfExpr;
+    procedure TestParseIfExprModeSwitch;
+    procedure TestParseIfExprObjFPCFail;
+    procedure TestParseCaseExpr;
+    procedure TestParseCaseExprModeSwitch;
+    procedure TestParseCaseExprObjFPCFail;
+    procedure TestParseTryExpr;
+    procedure TestParse_TypeOf_Types;
+    procedure TestParse_TypeOf_Expr;
+    procedure TestParse_TypeOf_ModeSwitch;
+    procedure TestParse_TypeOf_ModeFPCFail;
+    procedure TestParse_TypeOf_ModeDelphiFail;
+    procedure TestParse_RecordComposition;
+    procedure TestParse_RecordComposition_NoModeSwitch;
+    procedure TestParse_RecordComposition_FieldNameFail;
     procedure TestParseProcAnoArg;
     procedure TestParseProcAnoArgSubFunc;
     procedure TestParseThreadVar;
@@ -77,6 +92,7 @@ type
     procedure TestParseObjectSealedAbstract;
     procedure TestParseProcType_OfObjectDeprecated;
     procedure TestGetProcResultNode;
+    procedure TestBuildSubTreeForProcHead_GenericProc;
     procedure TestVarTypeSectionEndAtGenericProc;
     procedure TestVarWithClassOf;
   end;
@@ -676,6 +692,140 @@ begin
   ParseModule;
 end;
 
+procedure TTestPascalParser.TestParseIfExpr;
+begin
+  Add([
+  'program test1;',
+  '{$mode delphi}',
+  'const',
+  '  c = if 3>2 then 1 else 0;',
+  '  d: word = if c>0 then 1 else if c<0 then 2 else 3;',
+  '  e = 1 + if c>0 then 2 else 3 + 4;',
+  '  f = (if c>0 then 2 else 3) * 4;',
+  'type',
+  '  TEnum = (a = if c>0 then 1 else 2, b);',
+  'var',
+  '  v: integer = if c>0 then 1 else 2;',
+  'procedure DoIt(i: integer = if c>0 then 1 else 2; j: word = 3);',
+  'begin',
+  '  i:=if c>0 then 1 else 2;',
+  '  if c>0 then i:=if c>1 then 1 else 2 else i:=3;',
+  'end;',
+  'begin',
+  '  DoIt(if c>0 then 1 else 2);',
+  '']);
+  ParseModule;
+end;
+
+procedure TTestPascalParser.TestParseIfExprModeSwitch;
+begin
+  StartProgram;
+  Add([
+  '{$modeswitch statementexpressions}',
+  'const',
+  '  c = if 3>2 then 1 else 0;',
+  'procedure DoIt(i: integer = if c>0 then 1 else 2);',
+  'begin',
+  'end;',
+  'begin',
+  '']);
+  ParseModule;
+end;
+
+procedure TTestPascalParser.TestParseIfExprObjFPCFail;
+begin
+  StartProgram;
+  Add([
+  'const',
+  '  c = if true then 1 else 0;',
+  'begin',
+  'end.']);
+  CheckParseError(CodeXYPosition(7,6,Code),'expected constant, but if found');
+end;
+
+procedure TTestPascalParser.TestParseCaseExpr;
+begin
+  Add([
+  'program test1;',
+  '{$mode delphi}',
+  'const',
+  '  c = case 3 of 1: 0; 2..4: 1; else 0 end;',
+  '  d: word = case c of 0: 1; 1, 2: 2 otherwise 3; end;',
+  '  e = 1 + case c of 0: 2 else 3 end * 4;',
+  '  f = (case c of 0: 2 else 3 end) * 4;',
+  '  g = case c of 0: if c>0 then 1 else 2; else case c of 1: 3 else 4 end end;',
+  'type',
+  '  TEnum = (a = case c of 0: 1 else 2 end, b);',
+  'var',
+  '  v: integer = case c of 0: 1 else 2 end;',
+  '  w: boolean = case c>0 of false: false; true: true end;',
+  'procedure DoIt(i: integer = case c of 0: 1; else 2 end; j: word = 3);',
+  'begin',
+  '  i:=case c of 0: 1; else 2 end;',
+  '  if c>0 then i:=case c of 1: 1 else 2 end else i:=3;',
+  '  case c of',
+  '  0: i:=case c of 0: 1 else 2 end;',
+  '  else i:=case c of 0: 1 else 2 end;',
+  '  end;',
+  'end;',
+  'begin',
+  '  DoIt(case c of 0: 1 else 2 end);',
+  '']);
+  ParseModule;
+end;
+
+procedure TTestPascalParser.TestParseCaseExprModeSwitch;
+begin
+  StartProgram;
+  Add([
+  '{$modeswitch statementexpressions}',
+  'const',
+  '  c = case 3 of 1: 0; else 1 end;',
+  'procedure DoIt(i: integer = case c of 0: 1 else 2 end);',
+  'begin',
+  'end;',
+  'begin',
+  '']);
+  ParseModule;
+end;
+
+procedure TTestPascalParser.TestParseCaseExprObjFPCFail;
+begin
+  StartProgram;
+  Add([
+  'const',
+  '  c = case 1 of 1: 0 else 1 end;',
+  'begin',
+  'end.']);
+  CheckParseError(CodeXYPosition(7,6,Code),'expected constant, but case found');
+end;
+
+procedure TTestPascalParser.TestParseTryExpr;
+begin
+  Add([
+  'program test1;',
+  '{$mode delphi}',
+  'var',
+  '  b: boolean;',
+  '  i: integer;',
+  'procedure DoIt(j: integer);',
+  'begin',
+  '  i:=try j except 2 end;',
+  '  i:=try j except on E: TObject do 1; on EAbort do 2; else 3; end;',
+  '  DoIt(try j except on E: TObject do 1 else 2 end);',
+  '  i:=1+try j except 2 end*3;',
+  '  i:=try if b then 1 else 2 except case i of 1: 3; else 4 end end;',
+  '  if try b except false end then ;',
+  '  case i of',
+  '  0: i:=try j except on E: TObject do 1; else 2 end;',
+  '  end;',
+  'end;',
+  'begin',
+  '  DoIt(try i except on E: TObject do 1; else 2 end);',
+  '']);
+  ParseModule;
+end;
+
 procedure TTestPascalParser.TestParseProcAnoAssign;
 begin
   Add([
@@ -697,6 +847,268 @@ begin
   '  p:=procedure begin p:=procedure(w:word) begin end; end;',
   '']);
   ParseModule;
+end;
+
+procedure TTestPascalParser.TestParse_TypeOf_Types;
+
+  function GetTypeOfNodes(Tool: TCodeTool): string;
+  var
+    Node: TCodeTreeNode;
+  begin
+    Result:='|';
+    Node:=Tool.Tree.Root;
+    while Node<>nil do begin
+      if Node.Desc=ctnTypeOf then
+        Result:=Result+Tool.ExtractNode(Node,[phpCommentsToSpace])+'|';
+      Node:=Node.Next;
+    end;
+  end;
+
+  procedure CheckTypeOf(const Nodes, Expected: string);
+  begin
+    if Pos('|'+Expected+'|',Nodes)<1 then
+      Fail('missing ctnTypeOf "'+Expected+'" in "'+Nodes+'"');
+  end;
+
+var
+  Tool: TCodeTool;
+  Node, ResultNode: TCodeTreeNode;
+  Nodes, Head: String;
+begin
+  StartProgram;
+  Add([
+  'type',
+  '  TRec = record',
+  '    b: byte;',
+  '    w: word;',
+  '  end;',
+  '  generic TBird<T> = class',
+  '    Value: T;',
+  '  end;',
+  '  PWord = ^word;',
+  'var',
+  '  i: longint;',
+  '  w: word;',
+  '  r: TRec;',
+  '  p: PWord;',
+  '  Arr: array of byte;',
+  'type',
+  '  TInt = type of i;',
+  '  TUniqueInt = type type of i;',
+  '  TArr = array of type of w;',
+  '  TStatArr = array[1..2] of type of w;',
+  '  PInt = ^type of i;',
+  '  TSet = set of type of r.b;',
+  '  TGen = specialize TBird<type of w>;',
+  '  TSum = type of (i+w);',
+  '  TObj = class',
+  '  private',
+  '    FVal: type of w;',
+  '  public',
+  '    property Val: type of w read FVal write FVal;',
+  '  end;',
+  '  TRec2 = record',
+  '    f: type of r.w;',
+  '  end;',
+  '  TFunc = function(a: type of w): type of i;',
+  'var',
+  '  a: type of r.b;',
+  '  c: type of p^;',
+  '  d: type of w = 3;',
+  '  e: type of TRec(r).b deprecated;',
+  '  g: type of Arr[0];',
+  'const',
+  '  k: type of w = 4;',
+  'function Fly(a: type of w; const b: array of type of w): type of i;',
+  'begin',
+  'end;',
+  'begin',
+  'end.']);
+  DoParseModule(Code,Tool);
+  CheckNodeTree(Tool.Scanner.MainFilename, Tool, Self);
+
+  Nodes:=GetTypeOfNodes(Tool);
+  CheckTypeOf(Nodes,'type of i');
+  CheckTypeOf(Nodes,'type of w');
+  CheckTypeOf(Nodes,'type of r.b');
+  CheckTypeOf(Nodes,'type of (i+w)');
+  CheckTypeOf(Nodes,'type of r.w');
+  CheckTypeOf(Nodes,'type of p^');
+  CheckTypeOf(Nodes,'type of TRec(r).b');
+  CheckTypeOf(Nodes,'type of Arr[0]');
+
+  // function result and params
+  Node:=Tool.Tree.Root;
+  while (Node<>nil) and (Node.Desc<>ctnProcedure) do
+    Node:=Node.Next;
+  AssertNotNull('missing function Fly',Node);
+  Tool.BuildSubTreeForProcHead(Node,ResultNode);
+  AssertNotNull('missing result node of Fly',ResultNode);
+  AssertEquals('result node of Fly',NodeDescriptionAsString(ctnTypeOf),
+    NodeDescriptionAsString(ResultNode.Desc));
+  AssertEquals('result type of Fly','type of i',Tool.ExtractNode(ResultNode,[]));
+  Head:=Tool.ExtractProcHead(Node,[phpWithVarModifiers,phpWithParameterNames,
+                                   phpWithResultType,phpCommentsToSpace]);
+  if Pos('a: type of w;',Head)<1 then
+    Fail('missing param a in "'+Head+'"');
+  if Pos('b: array of type of w)',Head)<1 then
+    Fail('missing param b in "'+Head+'"');
+end;
+
+procedure TTestPascalParser.TestParse_TypeOf_Expr;
+begin
+  StartProgram;
+  Add([
+  'var',
+  '  b: byte;',
+  '  w: word;',
+  '  i: longint;',
+  '  c: longword;',
+  '  Arr: array of byte;',
+  '  p: pointer;',
+  'const',
+  '  k = SizeOf(type of b);',
+  '  m = type of b(3) + 1;',
+  'procedure Run(v: word = High(type of w));',
+  'begin',
+  'end;',
+  'begin',
+  '  i:=High(type of b);',
+  '  i:=Low(type of b)+SizeOf(type of w);',
+  '  b:=Default(type of b);',
+  '  p:=TypeInfo(type of b);',
+  '  Run(type of b(w));',
+  '  Run((type of w)(b));',
+  '  Run(type of Arr[0](w));',
+  '  Run(type of w(type of b(w)));',
+  '  b:=type of b(w);',
+  '  type of c(i):=7;',
+  '  if SizeOf(type of b)>1 then ;',
+  '  case type of b(w) of',
+  '  1: ;',
+  '  end;',
+  '']);
+  ParseModule;
+end;
+
+procedure TTestPascalParser.TestParse_TypeOf_ModeSwitch;
+begin
+  Add([
+  'program test1;',
+  '{$mode delphi}{$modeswitch typeinquiry}',
+  'var',
+  '  b: byte;',
+  '  v: type of b;',
+  'procedure Run(a: type of b);',
+  'begin',
+  'end;',
+  'begin',
+  '  Run(type of b(v));',
+  '']);
+  ParseModule;
+end;
+
+procedure TTestPascalParser.TestParse_TypeOf_ModeFPCFail;
+begin
+  Add([
+  'program test1;',
+  '{$mode fpc}',
+  'var',
+  '  b: byte;',
+  '  v: type of b;',
+  'begin',
+  'end.']);
+  CheckParseError(CodeXYPosition(11,5,Code),'identifier expected, but of found');
+end;
+
+procedure TTestPascalParser.TestParse_TypeOf_ModeDelphiFail;
+begin
+  Add([
+  'program test1;',
+  '{$mode delphi}',
+  'var',
+  '  b: byte;',
+  '  v: type of b;',
+  'begin',
+  'end.']);
+  CheckParseError(CodeXYPosition(11,5,Code),'identifier expected, but of found');
+end;
+
+procedure TTestPascalParser.TestParse_RecordComposition;
+begin
+  Add([
+  'program test1;',
+  '{$mode objfpc}',
+  '{$modeswitch advancedrecords}',
+  '{$modeswitch recordcomposition}',
+  'type',
+  '  TChildRec = record',
+  '    C: Integer;',
+  '  end;',
+  '  TChildRec2 = record',
+  '    D: Integer;',
+  '  end;',
+  '  generic TGenRec<T> = record',
+  '    contains T;',
+  '  end;',
+  '  TComposed = record',
+  '    A: Integer;',
+  '    contains child: TChildRec;',
+  '    contains test1.TChildRec2;',
+  '    contains record',
+  '      E: Integer;',
+  '    end;',
+  '    contains alias A;',
+  '    contains union: record',
+  '      case Boolean of',
+  '      True: (contains c1: TChildRec);',
+  '      False: (contains TChildRec2);',
+  '    end;',
+  '  strict private',
+  '    contains priv: TChildRec deprecated;',
+  '  public',
+  '    B: Integer;',
+  '    case Integer of',
+  '    0: (contains record',
+  '         F: Integer;',
+  '       end);',
+  '    1: (G: Integer);',
+  '  end;',
+  '  TBasic = record',
+  '    contains TChildRec',
+  '  end;',
+  'begin',
+  'end.']);
+  ParseModule;
+end;
+
+procedure TTestPascalParser.TestParse_RecordComposition_NoModeSwitch;
+begin
+  Add([
+  'program test1;',
+  '{$mode objfpc}',
+  'type',
+  '  TTest = record',
+  '    contains: Integer;',
+  '  end;',
+  'begin',
+  'end.']);
+  ParseModule;
+end;
+
+procedure TTestPascalParser.TestParse_RecordComposition_FieldNameFail;
+begin
+  Add([
+  'program test1;',
+  '{$mode objfpc}',
+  '{$modeswitch recordcomposition}',
+  'type',
+  '  TTest = record',
+  '    contains: Integer;',
+  '  end;',
+  'begin',
+  'end.']);
+  CheckParseError(CodeXYPosition(13,6,Code),'identifier expected, but : found');
 end;
 
 procedure TTestPascalParser.TestParseProcAnoArg;
@@ -871,6 +1283,69 @@ begin
   'end;',
   'begin']);
   ParseModule;
+end;
+
+procedure TTestPascalParser.TestBuildSubTreeForProcHead_GenericProc;
+// the generic parameters must not be mistaken for the function result
+
+  function NodeAsStr(Tool: TCodeTool; Node: TCodeTreeNode): string;
+  begin
+    if Node=nil then
+      Result:=''
+    else
+      Result:=Tool.ExtractNode(Node,[]);
+  end;
+
+var
+  Tool: TCodeTool;
+  Node, ResultNode: TCodeTreeNode;
+  ProcName, ResultStr: string;
+  Cnt: integer;
+begin
+  StartProgram;
+  Add([
+  '{$mode delphi}',
+  'procedure Run<T>;',
+  'begin',
+  'end;',
+  'function Fly<T>: word;',
+  'begin',
+  'end;',
+  'procedure Walk;',
+  'begin',
+  'end;',
+  'function Swim: boolean;',
+  'begin',
+  'end;',
+  'begin',
+  'end.']);
+  DoParseModule(Code,Tool);
+
+  Cnt:=0;
+  Node:=Tool.Tree.Root;
+  while Node<>nil do begin
+    if Node.Desc=ctnProcedure then begin
+      inc(Cnt);
+      ProcName:=Tool.ExtractProcName(Node,[phpWithoutGenericParams]);
+      Tool.BuildSubTreeForProcHead(Node,ResultNode);
+      ResultStr:=NodeAsStr(Tool,ResultNode);
+      if ProcName='Run' then
+        AssertEquals('result of "procedure Run<T>"','',ResultStr)
+      else if ProcName='Fly' then
+        AssertEquals('result of "function Fly<T>: word"','word',ResultStr)
+      else if ProcName='Walk' then
+        AssertEquals('result of "procedure Walk"','',ResultStr)
+      else if ProcName='Swim' then
+        AssertEquals('result of "function Swim: boolean"','boolean',ResultStr)
+      else
+        Fail('unexpected procedure "'+ProcName+'"');
+      // GetProcResultNode must return the same
+      AssertEquals('GetProcResultNode of "'+ProcName+'"',ResultStr,
+                   NodeAsStr(Tool,Tool.GetProcResultNode(Node)));
+    end;
+    Node:=Node.Next;
+  end;
+  AssertEquals('number of procedures',4,Cnt);
 end;
 
 procedure TTestPascalParser.TestGetProcResultNode;

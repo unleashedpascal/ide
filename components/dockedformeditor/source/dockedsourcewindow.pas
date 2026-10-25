@@ -30,7 +30,7 @@ uses
   // LCL
   Forms, Controls, LCLProc,
   // IDEIntf
-  SrcEditorIntf, LazIDEIntf, FormEditingIntf, ExtendedNotebook,
+  SrcEditorIntf, LazIDEIntf, FormEditingIntf,
   // DockedFormEditor
   DockedDesignForm, DockedSourcePageControl,
   DockedOptionsIDE, DockedTools;
@@ -44,7 +44,6 @@ type
     FActiveDesignForm: TDesignForm;
     FLastActiveSourceEditor: TSourceEditorInterface;
     FLastTopParent: TControl;
-    FNotebook: TExtendedNotebook;
     FPageControlList: TSourcePageControls;
     FSourceWindowIntf: TSourceEditorWindowInterface;
     function GetActiveEditor: TSourceEditorInterface;
@@ -324,8 +323,7 @@ begin
       LSourceEditorInterface := LSourceWindow.ActiveEditor;
       if LSourceEditorInterface = nil then Exit;
       // Use GetDesigner(False): this is a lookup and must not create/load the
-      // designer form (would ignore the "Open designer on open unit" option).
-      // A wrapper only exists for an already loaded designer anyway.
+      // designer form. A wrapper only exists for an already loaded designer anyway.
       Result := DesignForms.Find(LSourceEditorInterface.GetDesigner(False));
       Exit;
     end;
@@ -399,11 +397,7 @@ begin
       LPageCtrl.RemoveDesignPages
     else
       if Assigned(LPageCtrl.DesignForm) then
-      begin
         LPageCtrl.CreateTabSheetDesigner;
-        if not (LPageCtrl.DesignForm.Form is TNonControlProxyDesignerForm) then
-          LPageCtrl.CreateTabSheetAnchors;
-      end;
   end;
 end;
 
@@ -417,7 +411,9 @@ begin
     begin
       LPageCtrl.TabPosition := DockedOptions.TabPosition;
       LPageCtrl.RefreshResizer;
-      if not DockedOptions.AnchorTabVisible then
+      if DockedOptions.AnchorTabVisible then
+        LPageCtrl.CreateTabSheetAnchors
+      else
         LPageCtrl.RemoveTabSheetAnchors;
     end;
 end;

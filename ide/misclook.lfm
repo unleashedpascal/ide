@@ -99,22 +99,6 @@ object MiscLookForm: TMiscLookForm
     ButtonColor = clBlack
     OnColorChanged = ColorChanged
   end
-  object LabelAutoHeader: TLabel
-    Left = 220
-    Height = 15
-    Top = 103
-    Width = 90
-    Caption = 'LabelAutoHeader'
-    ParentColor = False
-  end
-  object ButtonAutoHeader: TColorButton
-    Left = 316
-    Height = 24
-    Top = 99
-    Width = 92
-    ButtonColor = clBlack
-    OnColorChanged = ColorChanged
-  end
   object LabelHint: TLabel
     Left = 12
     Height = 15

@@ -247,15 +247,7 @@ begin
       QRegion_xored(RSrc1, RDest, RSrc2);
   end;
 
-  if QRegion_isEmpty(RDest) then
-    Result := NULLREGION
-  else
-  begin
-    if TQtRegion(Dest).IsPolyRegion or (TQtRegion(Dest).numRects > 0) then
-      Result := COMPLEXREGION
-    else
-      Result := SIMPLEREGION;
-  end;
+  Result := TQtRegion(Dest).GetRegionType;
 end;
 
 {------------------------------------------------------------------------------
@@ -2183,29 +2175,73 @@ var
 
   procedure DoDrawCharByChar(const AClipped: Boolean);
   var
-    CurX, CharLen: Integer;
+    CurX, CurY, CharLen, ClusterBytes, ClusterDx, NextLen: Integer;
     CurCount: LongInt;
+    Advance: Int64;
+    CosA, SinA: Double;
     CurDx: PInteger;
     CurStr: PChar;
     W: WideString;
+
+    function IsRegionalIndicator(P: PChar; Len: Integer): Boolean;
+    var
+      cp, cpLen: Integer;
+    begin
+      if Len <> 4 then
+        Result := False
+      else
+      begin
+        cp := UTF8CodepointToUnicode(P, cpLen);
+        Result := LazCpIsRegionalIndicator(cp);
+      end;
+    end;
+
   begin
     CurDx := Dx;
     CurStr := Str;
     CurCount := Count;
     CurX := X;
+    CurY := Y;
+    Advance := 0;
+    CosA := 1;
+    SinA := 0;
+    if QtDC.Font.Angle <> 0 then
+    begin
+      CosA := Cos(QtDC.Font.Angle * Pi / 1800);
+      SinA := Sin(QtDC.Font.Angle * Pi / 1800);
+    end;
     while CurCount > 0 do
     begin
       CharLen := UTF8CodepointSize(CurStr);
-      W := {%H-}Copy(CurStr, 1, CharLen);
+      ClusterBytes := CharLen;
+      ClusterDx := CurDx^;
+      if IsRegionalIndicator(CurStr, CharLen) then
+        while ClusterBytes < CurCount do
+        begin
+          NextLen := UTF8CodepointSize(CurStr + ClusterBytes);
+          if not IsRegionalIndicator(CurStr + ClusterBytes, NextLen) then
+            Break;
+          inc(CurDx);
+          inc(ClusterDx, CurDx^);
+          inc(ClusterBytes, NextLen);
+        end;
+      W := {%H-}Copy(CurStr, 1, ClusterBytes);
       if AClipped then
-        QtDC.drawText(CurX, Y, Rect^.Right - Rect^.Left, Rect^.Bottom - Rect^.Top,
+        QtDC.drawText(CurX, CurY, Rect^.Right - Rect^.Left, Rect^.Bottom - Rect^.Top,
           QtTextDontClip, @W)
       else
-        QtDC.drawText(CurX, Y, @W);
-      inc(CurX, CurDx^);
+        QtDC.drawText(CurX, CurY, @W);
+      if QtDC.Font.Angle = 0 then
+        inc(CurX, ClusterDx)
+      else
+      begin
+        inc(Advance, ClusterDx);
+        CurX := X + Round(Advance * CosA);
+        CurY := Y - Round(Advance * SinA);
+      end;
       inc(CurDx);
-      inc(CurStr, CharLen);
-      dec(CurCount, CharLen);
+      inc(CurStr, ClusterBytes);
+      dec(CurCount, ClusterBytes);
     end;
   end;
 
@@ -2344,8 +2380,9 @@ begin
     if HasClipping then
       QPainter_clipRegion(QtDC.Widget, OldRgn.FHandle);
 
-    if SelectClipRgn(DC, RegionHnd) <> ERROR then
+    if TQtRegion(RegionHnd).GetRegionType <> ERROR then
     begin
+      QtDC.setClipRegion(TQtRegion(RegionHnd).FHandle);
       if TQtRegion(RegionHnd).IsPolyRegion then
       begin
         APath := QPainterPath_create();
@@ -2363,7 +2400,7 @@ begin
         QtDC.fillRect(@R, TQtBrush(hbr).FHandle);
       end;
       if HasClipping then
-        SelectClipRgn(DC, HRGN(OldRgn));
+        QtDC.setClipRegion(OldRgn.FHandle);
       Result := True;
     end;
   finally
@@ -3447,13 +3484,7 @@ begin
     if not (Result in [ERROR, NULLREGION]) and (lpRect <> nil) then
     begin
       R := TQtRegion(RGN).getBoundingRect;
-      with lpRect^ do
-      begin
-        Left   := R.Left;
-        Top    := R.Top;
-        Right  := R.Left + R.Right;
-        Bottom := R.Top + R.Bottom;
-      end;
+      lpRect^ := R;
     end;
   end;
 end;
@@ -3619,7 +3650,8 @@ begin
     if (ScrollInfo.fMask and SIF_POS) <> 0 then
     begin
       // if QtScrollBar.ChildOfComplexWidget = ccwAbstractScrollArea then
-      if QtScrollBar.SliderPressed then
+      if QtScrollBar.SliderPressed or
+        (QtScrollBar.InActionTriggered and QtScrollBar.PosSetInAction) then
         ScrollInfo.nPos := QtScrollBar.getSliderPosition
       else
         ScrollInfo.nPos := QtScrollBar.getValue;
@@ -5826,6 +5858,7 @@ function TQtWidgetSet.SelectClipRGN(DC: hDC; RGN: HRGN): Longint;
 var
   QtDC: TQtDeviceContext;
   EmptyRegion: QRegionH;
+  TransRegion: QRegionH;
   P: TPoint;
 begin
   Result := ERROR;
@@ -5838,8 +5871,13 @@ begin
       // RGN is in Device coordinates. Qt expects logical coordinates
       // so we need to convert RGN coords.
       GetWindowOrgEx(DC, @P);
-      TQtRegion(Rgn).translate(P.X, P.Y);
-      QtDC.setClipRegion(TQtRegion(Rgn).FHandle);
+      TransRegion := QRegion_create;
+      try
+        QRegion_translated(TQtRegion(Rgn).FHandle, TransRegion, P.X, P.Y);
+        QtDC.setClipRegion(TransRegion);
+      finally
+        QRegion_destroy(TransRegion);
+      end;
     end else
     begin
       EmptyRegion := QRegion_create;
@@ -6602,6 +6640,8 @@ var
          Do not use ScrollBar.setValue here.}
         if (ScrollBar.getSliderPosition <> ScrollInfo.nPos) then
           ScrollBar.setSliderPosition(ScrollInfo.nPos);
+        if ScrollBar.InActionTriggered then
+          ScrollBar.PosSetInAction := True;
         // setValue(ScrollInfo.nPos);
       end;
     end;

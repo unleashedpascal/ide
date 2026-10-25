@@ -754,6 +754,8 @@ type
     procedure MouseLeave; override;
     function GetPopupMenu: TPopupMenu; override;
     class procedure WSRegisterClass; override;
+  public
+    constructor Create(TheOwner: TComponent); override;
   end;
   TNoteBookStringsTabControlClass = class of TNoteBookStringsTabControl;
 
@@ -3857,9 +3859,6 @@ type
     property TopItem: TTreeNode read GetTopItem write SetTopItem;
     property TreeLineColor: TColor read FTreeLineColor write FTreeLineColor default clWindowFrame;
     property TreeLinePenStyle: TPenStyle read FTreeLinePenStyle write FTreeLinePenStyle default psPattern;
-    // When HideSelection is false, switches between Lazarus (sel nodes gray) and Delphi mode (sel nodes hidden)
-    property HideSelectionMode: THideSelectionMode read FHideSelectionMode write FHideSelectionMode;
-      deprecated 'Use HideSelection=false to show selection for the non-focused treeview';  // To be removed in v5.99
   published
     property TabStop default true;
   end;

@@ -78,6 +78,11 @@ type
     FThresholdValue: Integer;//treshold before the drag becomes activated
     FWaitForTreshold: boolean;//are we waiting on the treshold activation?
     FInDragStop: Boolean; // semaphore to prevent second execution of dragStop
+    FDelay: Integer;//<>0 delay before the drag becomes activated if mouse
+                    //not moved (taking into account FThresholdValue)
+                    //=0 old mechanism based on FThresholdValue
+    FDelayTimer: TCustomTimer;
+    procedure DelayExpired(Sender: TObject);
   protected
     //Support input capture
     procedure KeyUp(var Key: Word; Shift : TShiftState); override;
@@ -98,6 +103,7 @@ type
 
     //The Drag and Drop routines
     procedure DragStart(AControl: TControl; AImmediate: Boolean; AThreshold: Integer; StartFromCurrentMouse:Boolean=False); override;
+    procedure DragStartAfterDelay(AControl: TControl; AThreshold: Integer; ADelay:Integer); override;
     procedure DragMove(APosition: TPoint); override;
     procedure DragStop(ADropped: Boolean); override;
 
@@ -684,6 +690,7 @@ end;
 destructor TDragManagerDefault.Destroy;
 begin
   FreeAndNil(FDockSites);
+  FreeAndNil(FDelayTimer);
   inherited Destroy;
 end;
 
@@ -702,15 +709,27 @@ begin
     Result := FPerformer.Dragging(AControl)
 end;
 
+procedure TDragManagerDefault.DelayExpired(Sender: TObject);
+begin
+  FDelayTimer.Enabled := False;
+  FWaitForTreshold := false;
+  if FPerformer <> nil then
+  begin
+    FPerformer.DragStarted(FStartPosition);
+    DragMove(FStartPosition);
+  end;
+end;
+
 procedure TDragManagerDefault.DragStart(AControl: TControl; AImmediate: Boolean; AThreshold: Integer; StartFromCurrentMouse:Boolean=False);
 //Start a drag operation
 begin
   if FPerformer = nil then
   begin
+    FDelay := 0;
     if AThreshold >= 0 then
-      FThresholdValue := AThreshold
+      FThresholdValue := AControl.Scale96ToForm(AThreshold)
     else
-      FThresholdValue := DragThreshold;
+      FThresholdValue := AControl.Scale96ToForm(DragThreshold);
     FWaitForTreshold := not AImmediate;
     if StartFromCurrentMouse then
       FStartPosition:=AControl.ClientToScreen(point(0,0))
@@ -732,6 +751,39 @@ begin
   end;
 end;
 
+procedure TDragManagerDefault.DragStartAfterDelay(AControl: TControl; AThreshold: Integer; ADelay:Integer);
+begin
+  if FPerformer = nil then
+  begin
+    FDelay := ADelay;
+
+    if FDelayTimer = nil then
+    begin
+      FDelayTimer := TCustomTimer.Create(nil);
+      FDelayTimer.OnTimer := @DelayExpired;
+    end;
+
+    FDelayTimer.Interval := ADelay;
+    FDelayTimer.Enabled := True;
+
+    if AThreshold >= 0 then
+      FThresholdValue := AControl.Scale96ToForm(AThreshold)
+    else
+      FThresholdValue := AControl.Scale96ToForm(DragThreshold);
+
+    FWaitForTreshold := true;
+
+    GetCursorPos(FStartPosition);
+
+    AControl.BeforeDragStart;
+
+    case AControl.DragKind of
+      dkDrag: FPerformer := TDragPerformer.Create(Self, AControl);
+      dkDock: FPerformer := TDockPerformer.Create(Self, AControl);
+    end;
+  end;
+end;
+
 procedure TDragManagerDefault.DragMove(APosition: TPoint);
 //The captured input device has moved
 begin
@@ -747,7 +799,10 @@ begin
         FWaitForTreshold := false
       else
         exit;
-      FPerformer.DragStarted(APosition);
+      if FDelay = 0 then
+        FPerformer.DragStarted(APosition)
+      else
+        DragStop(False);
     end;
     if FPerformer<>nil then
       FPerformer.DragMove(APosition);
@@ -757,6 +812,8 @@ end;
 procedure TDragManagerDefault.DragStop(ADropped : Boolean);
 //End the drag operation
 begin
+  if FDelayTimer <> nil then
+    FDelayTimer.Enabled := False;
   if Assigned(FPerformer) and not FInDragStop then
   begin
     FInDragStop := True;
@@ -896,9 +953,9 @@ var
   aRect:TRect;
 begin
   if AThreshold<=0 then
-    Threshold:=DragThreshold
+    Threshold:=Site.Scale96ToForm(DragThreshold)
   else
-    Threshold:=AThreshold;
+    Threshold:=Site.Scale96ToForm(AThreshold);
   aRect := Site.ClientRect;
   InflateRect(aRect, Threshold, Threshold);
   Result := not PtInRect(aRect, Point(X, Y));

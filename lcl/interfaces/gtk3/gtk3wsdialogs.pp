@@ -67,6 +67,7 @@ type
       Chooser: PGtkFileChooser); virtual;
   published
     class function CreateHandle(const ACommonDialog: TCommonDialog): TLCLHandle; override;
+    class procedure DestroyHandle(const ACommonDialog: TCommonDialog); override;
   end;
 
   { TGtk3WSSaveDialog }
@@ -113,6 +114,8 @@ uses gtk3procs;
   { file dialog }
 
 type
+  TWinControlAccess = class(TWinControl);
+
   PFileSelHistoryEntry = ^TFileSelHistoryEntry;
   TFileSelHistoryEntry = record
       Filename: PChar;
@@ -302,11 +305,18 @@ var
   FileDetailLabel: PGtkWidget;
   Filename, OldFilename, Details: String;
   Widget: PGtkWidget;
+  cFilename: PChar;
 begin
   //DebugLn(['UpdateDetailView ']);
   Widget := TGtk3Dialog(OpenDialog.Handle).Widget;
 
-  FileName := gtk_file_chooser_get_filename(PGtkFileChooser(Widget));
+  cFilename := gtk_file_chooser_get_filename(PGtkFileChooser(Widget));
+  if Assigned(cFilename) then
+  begin
+    FileName := cFilename;
+    g_free(cFilename);
+  end else
+    FileName := '';
 
   OldFilename := OpenDialog.Filename;
   if Filename = OldFilename then
@@ -449,8 +459,11 @@ begin
   //DebugLn(['Gtk3FileChooserResponseCB ']);
   theDialog := TFileDialog(TGtk3Dialog(Data).CommonDialog);
 
+  if arg1 = GTK_RESPONSE_NONE then
+    exit;
+
   if (arg1 = GTK_RESPONSE_CANCEL) or (arg1 = GTK_RESPONSE_DELETE_EVENT) or
-     (arg1 = GTK_RESPONSE_NONE) or (arg1 = GTK_RESPONSE_REJECT) then
+     (arg1 = GTK_RESPONSE_REJECT) then
   begin
     TheDialog.UserChoice := mrCancel;
     Exit;
@@ -711,6 +724,7 @@ var
   // filedialog
   rowNum   : gint;
   fileInfo : PGChar;
+  pch : PGChar;
 
   fileList : PGSList;
   FontDesc: PPangoFontDescription;
@@ -758,7 +772,9 @@ begin
 
   if theDialog is TFileDialog then
   begin
-    FileName := gtk_file_chooser_get_filename(PGtkFileChooser(FPointer));
+    pch := gtk_file_chooser_get_filename(PGtkFileChooser(FPointer));
+    FileName := pch;
+    g_free(pch);
 
     if theDialog is TOpenDialog then
     begin
@@ -788,14 +804,18 @@ begin
           begin
             CurFilename:=DirName+fileInfo;
             Result:=CheckOpenedFilename(CurFilename);
-            if not Result then exit;
+            if not Result then
+            begin
+              g_slist_free_full(FileList, TGDestroyNotify(@g_free));
+              exit;
+            end;
             Files.Add(CurFilename);
           end;
           // inc(FileList);
           inc(rowNum);
         end;
         // Dec(FileList, rowNum);
-        g_slist_free(FileList);
+        g_slist_free_full(FileList, TGDestroyNotify(@g_free));
         // g_strfreev(fileList);
       end
       else
@@ -826,7 +846,9 @@ begin
   if theDialog is TFontDialog then
   begin
     //DebugLn('Trace:Pressed OK in FontDialog');
-    FontName := gtk_font_chooser_get_font(PGtkFontChooser(FPointer));
+    pch := gtk_font_chooser_get_font(PGtkFontChooser(FPointer));
+    FontName := pch;
+    g_free(pch);
     // FontName := gtk_font_selection_dialog_get_font_name(
     //                                         pgtkfontselectiondialog(FPointer));
     //DebugLn('gtkDialogOKclickedCB FontName=',FontName);
@@ -1239,7 +1261,6 @@ begin
     SubWin := TWinControl(Win.Controls[0]);    // image
     AHnd1:=TGtk3Widget(Win.Handle);
     SubWidget:=AHnd1.Widget;
-    AHnd1.SetParent(Ahnd,0,0);
     gtk_widget_set_size_request({%H-}SubWidget, AControl.Width, AControl.Height);
     SubWin.width := AControl.Width-4;          // skip borders
     SubWin.height := AControl.Height-15;       //
@@ -1247,6 +1268,23 @@ begin
 
   gtk_file_chooser_set_preview_widget(Chooser, PreviewWidget);
   gtk_widget_show(PreviewWidget);
+end;
+
+class procedure TGtk3WSOpenDialog.DestroyHandle(const ACommonDialog: TCommonDialog);
+var
+  AControl: TPreviewFileControl;
+begin
+  // the preview widget is a child of the GtkFileChooserDialog and gets destroyed
+  // with it -> destroy the LCL handles of the preview control first, otherwise
+  // they keep dangling pointers to the freed gtk widgets
+  if ACommonDialog.HandleAllocated and (ACommonDialog is TPreviewFileDialog) then
+  begin
+    AControl := TPreviewFileDialog(ACommonDialog).PreviewFileControl;
+    if (AControl <> nil) and AControl.HandleAllocated then
+      TWinControlAccess(AControl).DestroyHandle;
+  end;
+  // TGtk3WSOpenDialog does not descend from TGtk3WSCommonDialog
+  TGtk3WSCommonDialog.DestroyHandle(ACommonDialog);
 end;
 
 class function TGtk3WSOpenDialog.CreateHandle(const ACommonDialog: TCommonDialog): TLCLHandle;
@@ -1326,7 +1364,15 @@ begin
       InitialFilename := TrimFilename(OpenDialog.InitialDir + PathDelim + InitialFilename);
     if not FilenameIsAbsolute(InitialFilename) then
       InitialFilename := CleanAndExpandFilename(InitialFilename);
-    gtk_file_chooser_set_filename(Chooser, PChar(InitialFilename));
+    if gtk_file_chooser_get_action(Chooser) in
+      [GTK_FILE_CHOOSER_ACTION_SAVE, GTK_FILE_CHOOSER_ACTION_CREATE_FOLDER] then
+    begin
+      if FileExistsUTF8(InitialFilename) then
+        gtk_file_chooser_set_filename(Chooser, PChar(InitialFilename))
+      else
+        gtk_file_chooser_set_current_name(Chooser, PChar(ExtractFileName(InitialFilename)));
+    end else
+      gtk_file_chooser_set_filename(Chooser, PChar(InitialFilename));
   end;
 
   //if InitialFilter <> 'none' then
@@ -1524,6 +1570,7 @@ class procedure TGtk3WSCommonDialog.ShowModal(const ACommonDialog: TCommonDialog
 var
   AGtkWindow: PGtkWidget;
   ATime: guint32;
+  ATransient: PGtkWindow;
 begin
   if not ACommonDialog.HandleAllocated then
     exit;
@@ -1534,7 +1581,11 @@ begin
   // ReleaseMouseCapture;
   // GtkWindow^.set_title(PChar(ACommonDialog.Title));
   PGtkDialog(AGtkWindow)^.set_position(GTK_WIN_POS_CENTER);
-  PGtkDialog(AGtkWindow)^.set_transient_for(Gtk3WidgetSet.Gtk3Application^.get_active_window);
+  // the transient parent must be mapped, some WMs crash otherwise, e.g. Cinnamon
+  ATransient := Gtk3WidgetSet.Gtk3Application^.get_active_window;
+  if (ATransient <> nil) and not ATransient^.get_mapped then
+    ATransient := GetActiveGtkWindow;
+  PGtkDialog(AGtkWindow)^.set_transient_for(ATransient);
   PGtkDialog(AGtkWindow)^.set_modal(True);
   PGtkDialog(AGtkWindow)^.set_type_hint(GDK_WINDOW_TYPE_HINT_DIALOG);
   PGtkDialog(AGtkWindow)^.show_all;

@@ -32,7 +32,11 @@ uses
   // lazutils
   TestLazUtils, TestLazFileUtils, TestLazUTF8, TestLazUTF16, TestLConvEncoding, TestAvgLvlTree,
   // lcltests
-  TestPen, TestPreferredSize, TestTextStrings, TestListView
+  TestPen, TestPreferredSize, TestTextStrings, TestListView, TestGraphUtil, TestLazCanvasCopyRect,
+  TestLazCanvas
+  {$IFDEF LCLCustomDrawn}
+  , TestCustomDrawnStretchMaskBlt
+  {$ENDIF}
   {$IFNDEF NoSemiAutomatedTests}
   // semi-automatic tests
   , testpagecontrol, idesemiautotests, lclsemiautotests

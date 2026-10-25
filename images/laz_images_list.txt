@@ -148,6 +148,9 @@ codecompletion/cc_label_200.png
 codecompletion/cc_namespace.png
 codecompletion/cc_namespace_150.png
 codecompletion/cc_namespace_200.png
+codecompletion/cc_operator.png
+codecompletion/cc_operator_150.png
+codecompletion/cc_operator_200.png
 codecompletion/cc_procedure.png
 codecompletion/cc_procedure_150.png
 codecompletion/cc_procedure_200.png
@@ -768,6 +771,12 @@ menu/menu_project_save_as_200.png
 menu/menu_quick_compile.png
 menu/menu_quick_compile_150.png
 menu/menu_quick_compile_200.png
+menu/menu_recompile_all_required.png
+menu/menu_recompile_all_required_150.png
+menu/menu_recompile_all_required_200.png
+menu/menu_recompile_clean.png
+menu/menu_recompile_clean_150.png
+menu/menu_recompile_clean_200.png
 menu/menu_redo.png
 menu/menu_redo_150.png
 menu/menu_redo_200.png

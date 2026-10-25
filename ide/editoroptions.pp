@@ -86,6 +86,7 @@ uses
 const
   DefaultCompletionLongLineHintType = sclpExtendRightOnly;
   DefaultEditorDisableAntiAliasing = false;
+  DefaultEditorFontHeight = 10;
 
 type
   TPreviewPasSyn = TIDESynFreePasSyn;
@@ -843,6 +844,60 @@ const
       )
     );
 
+  EditorOptionsFoldInfoSql: Array [0..24] of TEditorOptionsFoldInfo
+  = (
+      ( Name: dlgFoldSqlSelect;            Xml: 'Select';
+        Index: ord(cfbtSelect);            Enabled: True),
+      ( Name: dlgFoldSqlSubSelect;         Xml: 'SubSelect';
+        Index: ord(cfbtSubSelect);         Enabled: True),
+      ( Name: dlgFoldSqlUpdateSelect;      Xml: 'UpdateSelect';
+        Index: ord(cfbtUpdateSelect);      Enabled: True),
+      ( Name: dlgFoldSqlInsertSelect;      Xml: 'InsertSelect';
+        Index: ord(cfbtInsertSelect);      Enabled: True),
+      ( Name: dlgFoldSqlUpdate;                Xml: 'Update';
+        Index: ord(cfbtUpdate);            Enabled: True),
+      ( Name: dlgFoldSqlInsert;                   Xml: 'Insert';
+        Index: ord(cfbtInsert);            Enabled: True),
+      ( Name: dlgFoldSqlDelete;            Xml: 'Delete';
+        Index: ord(  cfbtDelete);          Enabled: True),
+      ( Name: dlgFoldSqlFrom;              Xml: 'From';
+        Index: ord(cfbtFrom);              Enabled: True),
+      ( Name: dlgFoldSqlJoin;              Xml: 'Join';
+        Index: ord(cfbtJoin);              Enabled: True),
+      ( Name: dlgFoldSqlJoinOn;            Xml: 'JoinOn';
+        Index: ord(cfbtJoinOn);            Enabled: True),
+      ( Name: dlgFoldSqlWhere;             Xml: 'Where';
+        Index: ord(cfbtWhere);             Enabled: True),
+      ( Name: dlgFoldSqlGroup;             Xml: 'Group';
+        Index: ord(cfbtGroup);             Enabled: True),
+      ( Name: dlgFoldSqlHaving;            Xml: 'Having';
+        Index: ord(cfbtHaving);            Enabled: True),
+      ( Name: dlgFoldSqlOrder;             Xml: 'Order';
+        Index: ord(cfbtOrder);             Enabled: True),
+      ( Name: dlgFoldSqlLimit;             Xml: 'Limit';
+        Index: ord(cfbtLimit);             Enabled: True),
+      ( Name: dlgFoldSqlInto;              Xml: 'Into';
+        Index: ord(cfbtInto);              Enabled: True),
+      ( Name: dlgFoldSqlValues;            Xml: 'Values';
+        Index: ord(cfbtValues);            Enabled: True),
+      ( Name: dlgFoldSqlSet;               Xml: 'Set';
+        Index: ord(cfbtSet);               Enabled: True),
+      ( Name: dlgFoldSqlCreateTable;       Xml: 'CreateTable';
+        Index: ord(cfbtCreateTable);       Enabled: True),
+      ( Name: dlgFoldSqlAlterTable;        Xml: 'AlterTable';
+        Index: ord(cfbtAlterTable);        Enabled: True),
+      ( Name: dlgFoldSqlDropTable;         Xml: 'DropTable';
+        Index: ord(cfbtDropTable);         Enabled: True),
+      ( Name: dlgFoldSqlCreateDb;          Xml: 'CreateDb';
+        Index: ord(cfbtCreateDb);          Enabled: True),
+      ( Name: dlgFoldSqlDropDb;            Xml: 'DropDb';
+        Index: ord(cfbtDropDb);            Enabled: True),
+      ( Name: dlgFoldSqlCreateProcedure;   Xml: 'CreateProcedure';
+        Index: ord(cfbtCreateProcedure);   Enabled: True),
+      ( Name: dlgFoldSqlBegin;             Xml: 'Begin';
+        Index: ord(cfbtBegin);             Enabled: True)
+    );
+
   (* When adding new entries, ensure that resourcestrings are re-assigned in InitLocale *)
   EditorOptionsFoldDefaults: array[TLazSyntaxHighlighter] of TEditorOptionsFoldRecord =
     ( (Count:  0; HasMarkup: False; Info: nil), // none
@@ -858,7 +913,7 @@ const
       (Count:  0; HasMarkup: False; Info: nil), // shell
       (Count:  0; HasMarkup: False; Info: nil), // python
       (Count:  0; HasMarkup: False; Info: nil), // php
-      (Count:  0; HasMarkup: False; Info: nil), // sql
+      (Count: 25; HasMarkup: True;  Info: @EditorOptionsFoldInfoSql[0]), // sql
       (Count:  0; HasMarkup: False; Info: nil), // css
       (Count:  0; HasMarkup: False; Info: nil), // jscript
       (Count:  3; HasMarkup: False; Info: @EditorOptionsFoldInfoDiff[0]), // Diff
@@ -972,8 +1027,8 @@ type
     constructor Create;
     destructor Destroy; override;
     function CreateNewSynInstance: TSrcIDEHighlighter; virtual;
-    function GetDefaultFilextension: String;
-    procedure SetBothFilextensions(const Extensions: string);
+    function GetDefaultFileExtension: String;
+    procedure SetBothFileExtensions(const Extensions: string);
     function SampleLineToAddAttr(Line: Integer): TAdditionalHilightAttribute;
   end;
 
@@ -1016,10 +1071,7 @@ type
 
     function GetNewSynInstance(AnID: TIdeSyntaxHighlighterID): TSrcIDEHighlighter;
     function FindByName(const Name: String): Integer;
-    function GetDefaultFilextension(AnId: TIdeSyntaxHighlighterID): String;
-    function FindByType(AType: TLazSyntaxHighlighter): Integer;                 deprecated '(to be removed in 4.99)';
-    function GetDefaultFilextension(AType: TLazSyntaxHighlighter): String;      deprecated '(to be removed in 4.99)';
-    function GetInfoByType(AType: TLazSyntaxHighlighter): TEditOptLanguageInfo; deprecated '(to be removed in 4.99)';
+    function GetDefaultFileExtension(AnId: TIdeSyntaxHighlighterID): String;
     property Items[Index: Integer]: TEditOptLanguageInfo read GetInfos; default;
 
     property Captions       [AnID: TIdeSyntaxHighlighterID]: String  read GetCaptions;
@@ -1651,8 +1703,8 @@ type
     FVisible: boolean;
     FWidth: integer;
   protected
-    constructor DoCreate(AIdx: Integer; AGClass: TSynGutterPartBaseClass);
   public
+    constructor DoCreate(AIdx: Integer; AGClass: TSynGutterPartBaseClass);
     constructor Create(AIdx: Integer; AGClass: TSynGutterPartBaseClass);
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
@@ -1689,6 +1741,31 @@ type
     pnmProcNameOnly,
     pnmPlain
   );
+
+  //TSynCompletionBackSpaceAction
+  //TIdeCompletionBackSpaceAction
+  TIdeCompletionBackSpaceAction = (
+    ibsOnlyDelete,
+    ibsCancelIfNewlyOpened,     // if no user action has happened after completion opened, then use backspace to cancel
+    ibsCancelIfPos0NewlyOpened, // if no user action... AND caret is at start after dot.
+    ibsCancelIfPos0,            // if caret is at start after dot, then cancel
+    ibsCancelIfPos0NoRepeat,    // if caret is at start after dot, and the key is not generated by key-repeat
+    ibsCancelIfNewlyOpenedOrPos0NoRepeat,
+    ibsCancelAfterDot // only if opened by dot (and at start, and no action)
+  );
+const
+  Ide2SynCompletionBackSpaceAction: array [TIdeCompletionBackSpaceAction] of TSynCompletionBackSpaceAction =
+  ( cbsOnlyDelete,
+    cbsCancelIfNewlyOpened,     // if no user action has happened after completion opened, then use backspace to cancel
+    cbsCancelIfPos0NewlyOpened, // if no user action... AND caret is at start after dot.
+    cbsCancelIfPos0,            // if caret is at start after dot, then cancel
+    cbsCancelIfPos0NoRepeat,    // if caret is at start after dot, and the key is not generated by key-repeat
+    cbsCancelIfNewlyOpenedOrPos0NoRepeat,
+    cbsCancelIfPos0NewlyOpened // after dot
+  );
+
+type
+
   { TEditorOptionsBase }
 
   TEditorOptionsBase = class(TIDEEditorOptions)
@@ -1745,12 +1822,15 @@ type
     fPasExtendedKeywordsMode: Boolean;
     fPasStringKeywordMode: TSynPasStringMode;
     FCaseLabelAttriMatchesElseOtherwise: Boolean;
+    FResolveCompilerModeSwitchesWithCodeTools: Boolean;
     FDeclaredTypeAttributeMode: TSynPasTypeAttributeMode;
     FDeclaredValueAttributeMachesStringNum: Boolean;
     FDeclaredValueAttributeMode: TSynPasTypeAttributeMode;
     FGenericParamAttrMode: TSynPasTypeAttributeMode;
     FProcHeaderNameDeclMode: TProcHeaderNameMode;
     FProcHeaderNameImplMode: TProcHeaderNameMode;
+    // Highlighter SQL
+    FSQLDialect: TSQLDialect;
     // Multi window
     fCtrlMiddleTabClickClosesOthers: Boolean;
     fMiddleTabClickClosesOthersModifier: TShiftState;
@@ -1788,6 +1868,8 @@ type
     FScrollOnEditLeftOptions: TSynScrollOnEditLeftOptions;
     FScrollOnEditRightOptions: TSynScrollOnEditRightOptions;
     FScrollPastEolMode: TEditorOptsScrollPastEolMode;
+
+    FBackSpaceAction: TIdeCompletionBackSpaceAction;
     procedure InitForRttiXmlConf;
   protected
     function GetTabPosition: TTabPosition; override;
@@ -1858,6 +1940,8 @@ type
       read fPasStringKeywordMode write fPasStringKeywordMode default spsmDefault;
     property CaseLabelAttriMatchesElseOtherwise: Boolean
        read FCaseLabelAttriMatchesElseOtherwise write FCaseLabelAttriMatchesElseOtherwise default True;
+    property ResolveCompilerModeSwitchesWithCodeTools: Boolean
+       read FResolveCompilerModeSwitchesWithCodeTools write FResolveCompilerModeSwitchesWithCodeTools default True;
     property DeclaredTypeAttributeMode: TSynPasTypeAttributeMode
        read FDeclaredTypeAttributeMode write FDeclaredTypeAttributeMode default tamIdentifierOnly;
     property DeclaredValueAttributeMode: TSynPasTypeAttributeMode
@@ -1870,6 +1954,9 @@ type
        read FProcHeaderNameDeclMode write FProcHeaderNameDeclMode default pnmGenericOnly;
     property ProcHeaderNameImplMode: TProcHeaderNameMode
        read FProcHeaderNameImplMode write FProcHeaderNameImplMode default pnmProcNameOnly;
+    // Highlighter SQL
+    property SQLDialect: TSQLDialect
+      read FSQLDialect write FSQLDialect default sqlStandard;
     // Multi window
     property CtrlMiddleTabClickClosesOthers: Boolean
       read fCtrlMiddleTabClickClosesOthers write fCtrlMiddleTabClickClosesOthers stored False default True;
@@ -1934,6 +2021,8 @@ type
     // Tabs
     property ElasticTabs: Boolean read FElasticTabs write FElasticTabs default False;
     property ElasticTabsMinWidth: Integer read fElasticTabsMinWidth write fElasticTabsMinWidth default 1;
+    // Completion
+    property CompleteBackSpaceAction: TIdeCompletionBackSpaceAction read FBackSpaceAction write FBackSpaceAction default ibsOnlyDelete;
   end;
 
   { TEditorOptionsDefaults }
@@ -2958,7 +3047,7 @@ procedure RepairEditorFontSize(var FontSize: integer);
 begin
   if ((FontSize>=0) and (FontSize<=EditorOptionsMinimumFontSize))
   or ((FontSize<0) and (FontSize>=-EditorOptionsMinimumFontSize)) then
-    FontSize := SynDefaultFontSize;
+    FontSize := DefaultEditorFontHeight;
 end;
 
 const
@@ -3174,6 +3263,32 @@ begin
   EditorOptionsFoldInfoDiff[1].Name := dlgFoldDiffChunk;
   EditorOptionsFoldInfoDiff[2].Name := dlgFoldDiffChunkSect;
 
+  EditorOptionsFoldInfoSql[0].Name := dlgFoldSqlSelect;
+  EditorOptionsFoldInfoSql[1].Name := dlgFoldSqlSubSelect;
+  EditorOptionsFoldInfoSql[2].Name := dlgFoldSqlUpdateSelect;
+  EditorOptionsFoldInfoSql[3].Name := dlgFoldSqlInsertSelect;
+  EditorOptionsFoldInfoSql[4].Name := dlgFoldSqlUpdate;
+  EditorOptionsFoldInfoSql[5].Name := dlgFoldSqlInsert;
+  EditorOptionsFoldInfoSql[6].Name := dlgFoldSqlDelete;
+  EditorOptionsFoldInfoSql[7].Name := dlgFoldSqlFrom;
+  EditorOptionsFoldInfoSql[8].Name := dlgFoldSqlJoin;
+  EditorOptionsFoldInfoSql[9].Name := dlgFoldSqlJoinOn;
+  EditorOptionsFoldInfoSql[10].Name := dlgFoldSqlWhere;
+  EditorOptionsFoldInfoSql[11].Name := dlgFoldSqlGroup;
+  EditorOptionsFoldInfoSql[12].Name := dlgFoldSqlHaving;
+  EditorOptionsFoldInfoSql[13].Name := dlgFoldSqlOrder;
+  EditorOptionsFoldInfoSql[14].Name := dlgFoldSqlLimit;
+  EditorOptionsFoldInfoSql[15].Name := dlgFoldSqlInto;
+  EditorOptionsFoldInfoSql[16].Name := dlgFoldSqlValues;
+  EditorOptionsFoldInfoSql[17].Name := dlgFoldSqlSet;
+  EditorOptionsFoldInfoSql[18].Name := dlgFoldSqlCreateTable;
+  EditorOptionsFoldInfoSql[19].Name := dlgFoldSqlAlterTable;
+  EditorOptionsFoldInfoSql[20].Name := dlgFoldSqlDropTable;
+  EditorOptionsFoldInfoSql[21].Name := dlgFoldSqlCreateDb;
+  EditorOptionsFoldInfoSql[22].Name := dlgFoldSqlDropDb;
+  EditorOptionsFoldInfoSql[23].Name := dlgFoldSqlCreateProcedure;
+  EditorOptionsFoldInfoSql[24].Name := dlgFoldSqlBegin;
+
   EditorOptionsDividerInfoPas[0].Name:=dlgDivPasUnitSectionName;
   EditorOptionsDividerInfoPas[1].Name:=dlgDivPasUsesName;
   EditorOptionsDividerInfoPas[2].Name:=dlgDivPasVarGlobalName;
@@ -3321,7 +3436,7 @@ begin
   Result := ahaNone;
 end;
 
-function TEditOptLanguageInfo.GetDefaultFilextension: String;
+function TEditOptLanguageInfo.GetDefaultFileExtension: String;
 var
   p: Integer;
 begin
@@ -3335,7 +3450,7 @@ begin
     Result := '';
 end;
 
-procedure TEditOptLanguageInfo.SetBothFilextensions(const Extensions: string);
+procedure TEditOptLanguageInfo.SetBothFileExtensions(const Extensions: string);
 begin
   FileExtensions:=Extensions;
   DefaultFileExtensions:=Extensions;
@@ -3548,7 +3663,7 @@ begin
     TheType := lshNone;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := nil;
-    SetBothFilextensions('');
+    SetBothFileExtensions('');
     SampleSource := '';
     MappedAttributes := TStringList.Create;
     CaretXY := Point(1,1);
@@ -3562,7 +3677,7 @@ begin
     TheType := lshFreePascal;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := LazSyntaxHighlighterClasses{%H-}[TheType].Create(nil);
-    SetBothFilextensions('pp;pas;inc;lpr;lrs;dpr;dpk;fpd');
+    SetBothFileExtensions('pp;pas;inc;lpr;lrs;dpr;dpk;fpd');
     SampleSource :=
   'program Sample; { Comment with Pasdoc @author someone }'#13+
   '{$mode objfpc}{$R- compiler directive}'#13+
@@ -3583,9 +3698,9 @@ begin
   'const BREAK_CHAR: char = ^C;'#13+
   'var  // Slash Comment'#13+
   '  Number, I, X: Integer;'#13+
-  '  MyVar: System.integer = 2 * (1 + 5);'#13+
+  '  MyVar: System.Integer = 2 * (1 + 5);'#13+
   '  Text: String; MoreText: AnsiString;'#13+
-  '  List: Array of record x,y: Byte; end;'#13+
+  '  List: array of record x, y: Byte; end;'#13+
   'begin'#13+
   '  Number := 12345 * (2 + 9); // << Brackets at caret'#13+
   '  Caption := ''The number is '' + IntToStr(Number);'#13+
@@ -3602,9 +3717,9 @@ begin
   '    Inc(X, 2); {$R+} { Enabled breakpoint }'#13+
   '    Dec(X, 3); {$R+} { Disabled breakpoint }'#13+
   '    {$R-} // { Invalid breakpoint }'#13+
-  '    WriteLN(X); {$R-} { Unknown breakpoint }'#13+
+  '    WriteLn(X); {$R-} { Unknown breakpoint }'#13+
   '    X := X + 1.0; {$R-} { Error line }'#13+
-  '    case ModalResult o'#13+
+  '    case ModalResult of'#13+
   '      mrOK: inc(X)'#13+
   '      mrCancel, mrIgnore: dec(X)'#13+
   '    end'#13+
@@ -3663,7 +3778,7 @@ begin
     TheType := lshDelphi;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := LazSyntaxHighlighterClasses{%H-}[TheType].Create(nil);
-    SetBothFilextensions('pp;pas;inc;lpr;lrs;dpr;dpk;fpd');
+    SetBothFileExtensions('pp;pas;inc;lpr;lrs;dpr;dpk;fpd');
     SampleSource :=
   'program Sample; { Comment with Pasdoc @author someone }'#13+
   '{$mode objfpc}{$R- compiler directive}'#13+
@@ -3684,9 +3799,9 @@ begin
   'const BREAK_CHAR: char = ^C;'#13+
   'var  // Slash Comment'#13+
   '  Number, I, X: Integer;'#13+
-  '  MyVar: System.integer = 2 * (1 + 5);'#13+
+  '  MyVar: System.Integer = 2 * (1 + 5);'#13+
   '  Text: String; MoreText: AnsiString;'#13+
-  '  List: Array of record x,y: Byte; end;'#13+
+  '  List: array of record x, y: Byte; end;'#13+
   'begin'#13+
   '  Number := 12345 * (2 + 9); // << Brackets at caret'#13+
   '  Caption := ''The number is '' + IntToStr(Number);'#13+
@@ -3703,9 +3818,9 @@ begin
   '    Inc(X, 2); {$R+} { Enabled breakpoint }'#13+
   '    Dec(X, 3); {$R+} { Disabled breakpoint }'#13+
   '    {$R-} // { Invalid breakpoint }'#13+
-  '    WriteLN(X); {$R-} { Unknown breakpoint }'#13+
+  '    WriteLn(X); {$R-} { Unknown breakpoint }'#13+
   '    X := X + 1.0; {$R-} { Error line }'#13+
-  '    case ModalResult o'#13+
+  '    case ModalResult of'#13+
   '      mrOK: inc(X)'#13+
   '      mrCancel, mrIgnore: dec(X)'#13+
   '    end'#13+
@@ -3764,7 +3879,7 @@ begin
     TheType := lshHTML;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := LazSyntaxHighlighterClasses{%H-}[TheType].Create(nil);
-    SetBothFilextensions('htm;html;xhtml');
+    SetBothFileExtensions('htm;html;xhtml');
     SampleSource :=
       '<html>'#13 + '<title>Lazarus Sample source for html</title>'#13 +
       '<body bgcolor=#ffffff background="bg.jpg">'#13 +
@@ -3791,7 +3906,7 @@ begin
     TheType := lshCPP;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := LazSyntaxHighlighterClasses{%H-}[TheType].Create(nil);
-    SetBothFilextensions('c;cc;cpp;h;hpp;hh');
+    SetBothFileExtensions('c;cc;cpp;h;hpp;hh');
     SampleSource :=
       '/* Comment */'#13 + '#include <stdio.h>'#13 +
       '#include <stdlib.h>'#13 + #13 +
@@ -3824,7 +3939,7 @@ begin
     TheType := lshXML;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := LazSyntaxHighlighterClasses{%H-}[TheType].Create(nil);
-    SetBothFilextensions('xml;xsd;xsl;xslt;dtd;lpi;lps;lpk;wsdl;svg');
+    SetBothFileExtensions('xml;xsd;xsl;xslt;dtd;lpi;lps;lpk;wsdl;svg');
     SampleSource :=
       '<?xml version="1.0"?>'#13 + '<!DOCTYPE root ['#13 +
       '  ]>'#13 + '<!-- Comment -->'#13 + '<root version="&test;">'#13 +
@@ -3851,7 +3966,7 @@ begin
     TheType := lshLFM;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := LazSyntaxHighlighterClasses{%H-}[TheType].Create(nil);
-    SetBothFilextensions('lfm;dfm;fmx');
+    SetBothFileExtensions('lfm;dfm;fmx');
     SampleSource :=
       '{ Lazarus Form Definitions }'#13 + 'object TestForm: TTestForm'#13 +
       '  Left = 273'#13 + '  Top = 103'#13 +
@@ -3881,7 +3996,7 @@ begin
     TheType := lshPerl;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := LazSyntaxHighlighterClasses{%H-}[TheType].Create(nil);
-    SetBothFilextensions('pl;pm;cgi');
+    SetBothFileExtensions('pl;pm;cgi');
     SampleSource :=
       '#!/usr/bin/perl'#13 + '# Perl sample code'#13 +
       ''#13 + '$i = "10";'#13 + 'print "$ENV{PATH}\n";'#13 +
@@ -3910,7 +4025,7 @@ begin
     TheType := lshJava;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := LazSyntaxHighlighterClasses{%H-}[TheType].Create(nil);
-    SetBothFilextensions('java');
+    SetBothFileExtensions('java');
     SampleSource :=
       '/* Java syntax highlighting */'#13#10 +
       'import java.util.*;'#13#10 + #13#10 +
@@ -3946,7 +4061,7 @@ begin
     TheType := lshBash;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := LazSyntaxHighlighterClasses{%H-}[TheType].Create(nil);
-    SetBothFilextensions('sh');
+    SetBothFileExtensions('sh');
     SampleSource :=
       '#!/bin/bash'#13#13 +
       '# Bash syntax highlighting'#13#10 + 'set -x'#13#10 +
@@ -3980,7 +4095,7 @@ begin
     TheType := lshPython;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := LazSyntaxHighlighterClasses{%H-}[TheType].Create(nil);
-    SetBothFilextensions('py;pyw');
+    SetBothFileExtensions('py;pyw');
     SampleSource :=
       '# Python syntax highlighting'#13#10 +
       'import math'#13#10 + #13#10 +
@@ -4014,9 +4129,9 @@ begin
     TheType := lshPHP;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := LazSyntaxHighlighterClasses{%H-}[TheType].Create(nil);
-    SetBothFilextensions('php;php3;php4');
+    SetBothFileExtensions('php;php3;php4');
     SampleSource :=
-      '<?if ( ($HTTP_HOST == "www.lazarus.com") || ($HTTP_HOST == "lazarus.com") ){'#10 + '   HEADER("Location:http://www.lazarus.freepascal.org/\n\n");'#10
+      '<?if ( ($HTTP_HOST == "www.lazarus.com") || ($HTTP_HOST == "lazarus.com") ){'#10 + '   HEADER("Location:https://www.lazarus-ide.org/\n\n");'#10
       + '};'#10 + '?>'#10 + #10;
     AddAttrSampleLines[ahaTextBlock] := 8;
     MappedAttributes := TStringList.Create;
@@ -4042,7 +4157,7 @@ begin
     TheType := lshSQL;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := LazSyntaxHighlighterClasses{%H-}[TheType].Create(nil);
-    SetBothFilextensions('sql');
+    SetBothFileExtensions('sql');
     SampleSource :=
       '-- ansi sql sample source'#10 +
         'select name , region'#10 +
@@ -4073,7 +4188,7 @@ begin
     TheType := lshCss;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := TSynCssSyn.Create(nil);
-    SetBothFilextensions('css');
+    SetBothFileExtensions('css');
     SampleSource :=
       '.field :hover {'#10 +
       '   display:inline;'#10+
@@ -4105,7 +4220,7 @@ begin
     TheType := lshJScript;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := LazSyntaxHighlighterClasses{%H-}[TheType].Create(nil);
-    SetBothFilextensions('js');
+    SetBothFileExtensions('js');
     SampleSource :=
       '/* JScript */'#13#10 +
       'var semafor={'#13#10 +
@@ -4146,7 +4261,7 @@ begin
     TheType := lshDiff;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := LazSyntaxHighlighterClasses{%H-}[TheType].Create(nil);
-    SetBothFilextensions('diff');
+    SetBothFileExtensions('diff');
     SampleSource :=
       '*** /a/file'#13#10 +
       '--- /b/file'#13#10 +
@@ -4174,7 +4289,7 @@ begin
     TheType := lshBat;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := LazSyntaxHighlighterClasses{%H-}[TheType].Create(nil);
-    SetBothFilextensions('bat');
+    SetBothFileExtensions('bat');
     SampleSource :=
       'rem MS-DOS batch file'#13#10 +
       'rem'#13#10 +
@@ -4206,7 +4321,7 @@ begin
     TheType := lshIni;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := LazSyntaxHighlighterClasses{%H-}[TheType].Create(nil);
-    SetBothFilextensions('ini');
+    SetBothFileExtensions('ini');
     SampleSource :=
       '; Syntax highlighting'#13#10+
       '[Section]'#13#10+
@@ -4233,7 +4348,7 @@ begin
     TheType := lshPo;
     DefaultCommentType := DefaultCommentTypes{%H-}[TheType];
     SynInstance := LazSyntaxHighlighterClasses{%H-}[TheType].Create(nil);
-    SetBothFilextensions('po');
+    SetBothFileExtensions('po');
     SampleSource :=
       '#: foo.bar'#13#10 +
       '#, fuzzy'#13#10 +
@@ -4258,7 +4373,7 @@ begin
   NewInfo.TheType := lshPike;
   NewInfo.DefaultCommentType := DefaultCommentTypes{%H-}[NewInfo.TheType];
   NewInfo.SynInstance := LazSyntaxHighlighterClasses{%H-}[NewInfo.TheType].Create(nil);
-  NewInfo.SetBothFilextensions('pike;pmod');
+  NewInfo.SetBothFileExtensions('pike;pmod');
   NewInfo.SampleSource := TSynPikeSyn.Pike_GetSampleSource();
   with NewInfo do
   begin
@@ -4284,7 +4399,7 @@ begin
   NewInfo.TheType := lshText;
   NewInfo.DefaultCommentType := DefaultCommentTypes{%H-}[NewInfo.TheType];
   NewInfo.SynInstance := LazSyntaxHighlighterClasses{%H-}[NewInfo.TheType].Create(nil);
-  NewInfo.SetBothFilextensions('txt');
+  NewInfo.SetBothFileExtensions('txt');
   NewInfo.SampleSource := 'Text in the source editor.'+#13#10+
                           'Example line 2'+#13#10+
                           'Example line 3'+#13#10+
@@ -4302,7 +4417,7 @@ begin
   NewInfo.TheType := lshMarkdown;
   NewInfo.DefaultCommentType := DefaultCommentTypes{%H-}[NewInfo.TheType];
   NewInfo.SynInstance := LazSyntaxHighlighterClasses{%H-}[NewInfo.TheType].Create(nil);
-  NewInfo.SetBothFilextensions('md');
+  NewInfo.SetBothFileExtensions('md');
   NewInfo.SampleSource := '### Header'+#13#10+
                           'Example line'+#13#10+
                           'Example line'+#13#10+
@@ -4347,7 +4462,7 @@ begin
       NewInfo.TheType := lshNone;
       NewInfo.DefaultCommentType := comtNone;
       NewInfo.SynInstance := tmlHighlighter;
-      NewInfo.SetBothFilextensions('');
+      NewInfo.SetBothFileExtensions('');
       if (tmlHighlighter.TextMateGrammar.SampleText <> '') then
         NewInfo.SampleSource := tmlHighlighter.TextMateGrammar.SampleText
       else
@@ -4430,43 +4545,13 @@ begin
     dec(Result);
 end;
 
-function TEditOptLangList.GetDefaultFilextension(AnId: TIdeSyntaxHighlighterID
+function TEditOptLangList.GetDefaultFileExtension(AnId: TIdeSyntaxHighlighterID
   ): String;
 begin
   if AnId >= 0 then
-    Result := Items[AnId].GetDefaultFilextension
+    Result := Items[AnId].GetDefaultFileExtension
   else
     Result := '';
-end;
-
-function TEditOptLangList.FindByType(AType: TLazSyntaxHighlighter): Integer;
-begin
-  Result := Count - 1;
-  while (Result >= 0) and (Items[Result].TheType <> AType) do
-    dec(Result);
-end;
-
-function TEditOptLangList.GetDefaultFilextension(
-  AType: TLazSyntaxHighlighter): String;
-var
-  i: Integer;
-begin
-  i := FindByType(AType){%H-};
-  if i >= 0 then
-    Result := Items[i].GetDefaultFilextension
-  else
-    Result := '';
-end;
-
-function TEditOptLangList.GetInfoByType(AType: TLazSyntaxHighlighter): TEditOptLanguageInfo;
-var
-  i: LongInt;
-begin
-  i:=FindByType(AType){%H-};
-  if i>=0 then
-    Result:=Items[i]
-  else
-    Result:=nil;
 end;
 
 { TEditorMouseOptions }
@@ -5762,12 +5847,15 @@ begin
   fPasExtendedKeywordsMode := False;
   fPasStringKeywordMode := spsmDefault;
   FCaseLabelAttriMatchesElseOtherwise := True;
+  FResolveCompilerModeSwitchesWithCodeTools := True;
   FDeclaredTypeAttributeMode := tamIdentifierOnly;
   FDeclaredValueAttributeMode := tamIdentifierOnly;
   FGenericParamAttrMode := tamIdentifierOnly;
   FDeclaredValueAttributeMachesStringNum := False;
   FProcHeaderNameDeclMode := pnmGenericOnly;
   FProcHeaderNameImplMode := pnmProcNameOnly;
+  // sql highlighter
+  FSQLDialect := sqlStandard;
   // Multi window
   fCtrlMiddleTabClickClosesOthers := True;
   fMiddleTabClickClosesOthersModifier := [ssCtrl];
@@ -5820,6 +5908,8 @@ begin
   FScrollPastEolMode := optScrollPage;
 
   FElasticTabsMinWidth := 1;
+
+  FBackSpaceAction := ibsOnlyDelete;
 end;
 
 function TEditorOptionsBase.GetTabPosition: TTabPosition;
@@ -5933,7 +6023,7 @@ begin
   fBracketHighlightStyle := sbhsBoth;
   // Display options
   fEditorFont := DefaultEditorFontName;
-  fEditorFontSize := SynDefaultFontSize;
+  fEditorFontSize := DefaultEditorFontHeight;
   fDisableAntialiasing := DefaultEditorDisableAntiAliasing;
   // Key Mappings
   fKeyMappingScheme := KeyMapSchemeNames[kmsLazarus];
@@ -6136,7 +6226,7 @@ begin
       fEditorFontSize := FontHeightToSize(fEditorFontSize);
     end else begin
       fEditorFontSize :=
-        XMLConfig.GetValue('EditorOptions/Display/EditorFontSize', SynDefaultFontSize);
+        XMLConfig.GetValue('EditorOptions/Display/EditorFontSize', DefaultEditorFontHeight);
     end;
     RepairEditorFontSize(fEditorFontSize);
     fExtraCharSpacing :=
@@ -6355,7 +6445,7 @@ begin
       fEditorFont, DefaultEditorFontName);
     XMLConfig.DeleteValue('EditorOptions/Display/EditorFontHeight'); // unused old value
     XMLConfig.SetDeleteValue('EditorOptions/Display/EditorFontSize'
-      ,fEditorFontSize, SynDefaultFontSize);
+      ,fEditorFontSize, DefaultEditorFontHeight);
     XMLConfig.SetDeleteValue('EditorOptions/Display/ExtraCharSpacing'
       ,fExtraCharSpacing, 0);
     XMLConfig.SetDeleteValue('EditorOptions/Display/ExtraLineSpacing'
@@ -6893,6 +6983,8 @@ begin
         pnmPlain:              TSynPasSyn(Syn).ProcNameImplAttributeMode := [pamSupressGenParamAttr, pamDots];
       end;
     end;
+    if Syn is TSynSQLSyn then
+      TSynSQLSyn(Syn).SQLDialect := FSQLDialect;
   finally
     Syn.EndUpdate;
   end;
@@ -8222,6 +8314,9 @@ begin
         if Attri <> nil
           then Attri.ApplyTo(MarkupIfDef.MarkupInfoTempEnabled )
           else MarkupIfDef.MarkupInfoTempEnabled.Clear;
+        if Attri <> nil
+          then Attri.ApplyTo(MarkupIfDef.MarkupInfoTempDisabled )
+          else MarkupIfDef.MarkupInfoTempDisabled.Clear;
         Attri := AttributeByEnum[ahaIfDefNodeInactive];
         if Attri <> nil
           then Attri.ApplyTo(MarkupIfDef.MarkupInfoNodeDisabled )
@@ -8234,6 +8329,9 @@ begin
         if Attri <> nil
           then Attri.ApplyTo(MarkupIfDef.MarkupInfoTempNodeEnabled )
           else MarkupIfDef.MarkupInfoTempNodeEnabled.Clear;
+        if Attri <> nil
+          then Attri.ApplyTo(MarkupIfDef.MarkupInfoTempNodeDisabled )
+          else MarkupIfDef.MarkupInfoTempNodeDisabled.Clear;
       end;
     end;
     SetGutterColorByClass(ahaLineNumber,      TSynGutterLineNumber);
@@ -8592,8 +8690,6 @@ end;
 
 constructor TColorSchemeFromFile.CreateFrom(aXMLConfig: TRttiXMLConfig; const AFileName, AName,
   aPath: String);
-var
-  XmlConf: TRttiXMLConfig;
 begin
   FFileName := AFileName;
   CreateFromXml(aXMLConfig, AName, aPath);
@@ -9108,8 +9204,41 @@ begin
   Result := CompareText(s1, s2);
 end;
 
+procedure InitIdeDefaultSynFont;
+  procedure CheckFont(f: String);
+  begin
+    if SynDefaultFontName <> '' then exit;
+    if Screen.Fonts.IndexOf(f) >= 0 then
+      SynDefaultFontName  := f;
+  end;
+var
+  s: String;
+begin
+  // stick to the old order of tests
+  s := SynDefaultFontName;
+  SynDefaultFontName := '';
+  {$IFDEF LCLcarbon}
+    // Note: carbon is case sensitive
+    CheckFont('Monaco'); // Note: carbon is case sensitive
+  {$ENDIF}
+  {$IFDEF LCLcocoa}
+    // Note: carbon is case sensitive
+    CheckFont('Andale Mono');
+  {$ENDIF}
+
+  CheckFont('Courier New');
+  CheckFont('DejaVu Sans Mono');
+  {$IFnDEF WINDOWS}
+  CheckFont('Monospace');
+  {$ENDIF}
+
+  if SynDefaultFontName <> '' then
+    exit;
+  SynDefaultFontName := s;
+end;
 
 initialization
+  InitIdeDefaultSynFont;
   RegisterIDEOptionsGroup(GroupEditor, TEditorOptions);
   IdeSyntaxHighlighters := HighlighterList;
 

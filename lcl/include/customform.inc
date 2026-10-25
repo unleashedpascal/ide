@@ -521,6 +521,8 @@ begin
   if (Parent = nil) and (ParentWindow = 0) and
      (FormStyle <> fsMDIForm) or (csDesigning in ComponentState) then
     SetActive(Message.Active <> WA_INACTIVE);
+  if (Message.Active <> WA_INACTIVE) and FFirstActivatePending then
+    Activate;
   if Message.Active = WA_INACTIVE then
   begin
     if Assigned(Application) then
@@ -615,8 +617,12 @@ end;
 procedure TCustomForm.Activate;
 begin
   if FIsFirstOnActivate and (WindowState in [wsMaximized, wsFullScreen]) then
+  begin
+    FFirstActivatePending := True;
     Exit;
+  end;
   FIsFirstOnActivate := False;
+  FFirstActivatePending := False;
   if Assigned(FOnActivate) then FOnActivate(Self);
 end;
 
@@ -1862,6 +1868,8 @@ end;
        TCustomForm SetActiveControl
 ------------------------------------------------------------------------------}
 procedure TCustomForm.SetActiveControl(AWinControl: TWinControl);
+var
+  OrgControl: TWinControl;
 begin
   if FActiveControl = AWinControl then exit;
   if Assigned(AWinControl) and IsVisible then
@@ -1872,6 +1880,7 @@ begin
        (GetParentForm(AWinControl, FDesigner = nil) <> Self) or
        not ((csLoading in ComponentState) or AWinControl.CanFocus) then
     begin
+      OrgControl := AWinControl;
       DebugLn(['TCustomForm.SetActiveControl ',DbgSName(Self),' AWinControl=',DbgSName(AWinControl),' GetParentForm(AWinControl)=',
               DbgSName(GetParentForm(AWinControl)),'=Self=',GetParentForm(AWinControl) = Self,
               ' csLoading=',csLoading in ComponentState,
@@ -1882,7 +1891,7 @@ begin
         debugln(['  ',DbgSName(AWinControl),' IsControlVisible=',AWinControl.IsControlVisible,' Enabled=',AWinControl.Enabled,' CanFocus=',AWinControl.CanFocus,' HandleVisib=',AWinControl.HandleAllocated and IsWindowVisible(AWinControl.Handle)]);
         AWinControl:=AWinControl.Parent;
       end;
-      raise EInvalidOperation.Create(Format(SCannotFocus,[AWinControl.Name+':'+AWinControl.ClassName]));
+      raise EInvalidOperation.Create(Format(SCannotFocus,[DbgSName(OrgControl)]));
     end;
   end;
   {$IFDEF VerboseFocus}
@@ -2017,6 +2026,7 @@ begin
   FDelayedOnResize := False;
   FIsFirstOnShow := True;
   FIsFirstOnActivate := True;
+  FFirstActivatePending := False;
   GlobalNameSpace.BeginWrite;
   try
     CreateNew(AOwner, 1); // this calls BeginFormUpdate, which is ended in AfterConstruction
@@ -2235,7 +2245,7 @@ begin
     // Query children forms whether we can close
     if not Check(Self) then exit(False);
     for I := 0 to MDIChildCount - 1 do
-      if not MDIChildren[I].CloseQuery then Exit(False);
+      if Assigned(MDIChildren[I]) and not MDIChildren[I].CloseQuery then Exit(False);
   end;
   Result := True;
   if Assigned(FOnCloseQuery) then

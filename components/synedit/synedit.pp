@@ -125,7 +125,7 @@ uses
   Types, SysUtils, Classes,
   // LCL
   LCLIntf, LCLType, LMessages, LResources, Messages, Controls, Graphics,
-  Forms, StdCtrls, ExtCtrls, Menus, Clipbrd, StdActns,
+  Forms, StdCtrls, ExtCtrls, Menus, Clipbrd, StdActns, LCLClasses,
   // LazUtils
   LazUtilities, LazMethodList, LazLoggerBase, LazTracer, LazUTF8,
   // SynEdit
@@ -148,16 +148,29 @@ uses
 
 const
   // SynDefaultFont is determined in InitSynDefaultFont()
+  SynFontNameForDefault = 'syn/default';
   SynDefaultFontName:    String       = '';
-  SynDefaultFontHeight:  Integer      = 13;
-  SynDefaultFontSize:    Integer      = 10;
-  SynDefaultFontPitch:   TFontPitch   = fpFixed;
-  SynDefaultFontQuality: TFontQuality = fqNonAntialiased;
+  SynDefaultFontHeight:  Integer      = 0;
+  SynDefaultFontSize:    Integer      = 0;
+  SynDefaultFontPitch   = fpFixed;
+  SynDefaultFontQuality = fqDefault;
 
   // maximum scroll range
   MAX_SCROLL = 32767;
 
 type
+
+  { TSynControlFont }
+
+  TSynControlFont = class(TControlFont)
+  private
+    function IsSynFontNameStored: Boolean;
+  published
+    property Name stored IsSynFontNameStored;
+    property Pitch default SynDefaultFontPitch;
+    property Quality default SynDefaultFontQuality;
+  end;
+
   TSynEditMarkupClass = SynEditMarkup.TSynEditMarkupClass;
   TSynReplaceAction = (raCancel, raSkip, raReplace, raReplaceAll);
 
@@ -216,6 +229,7 @@ type
   TSynStateFlag = (sfCaretChanged, sfHideCursor,
     sfEnsureCursorPos, sfEnsureCursorPosAtResize, sfEnsureCursorPosForEditRight, sfEnsureCursorPosForEditLeft,
     sfExplicitTopLine, sfExplicitLeftChar,  // when doing EnsureCursorPos keep top/Left, if they where set explicitly after the caret (only applies before handle creation)
+    sfExplicitTopLineForFoldState,
     sfCheckScrollRangeVert, sfCheckScrollRangeHoriz,  // Call TopView:=TopView / Ensure they are in MAX-scrollRange
     sfRecalculateScrollOnEdit,
     sfPreventScrollAfterSelect,
@@ -530,7 +544,7 @@ type
     fMarkupSpecialLine : TSynEditMarkupSpecialLine;
     fMarkupSelection : TSynEditMarkupSelection;
     fMarkupSpecialChar : TSynEditMarkupSpecialChar;
-    fFontDummy: TFont;
+    fSynTextFont: TFont;
     FLastSetFontSize: Integer;
     fInserting: Boolean;
     FLastMouseLocation: TSynMouseLocationInfo;
@@ -584,8 +598,7 @@ type
     FMouseWheelAccumulator, FMouseWheelLinesAccumulator: Array [Boolean] of integer;
     fOverwriteCaret: TSynEditCaretType;
     fInsertCaret: TSynEditCaretType;
-    FKeyStrokes: TSynEditKeyStrokes;
-    FKeyStrokesDefault: Boolean;
+    FKeyStrokes: TSynEditMainKeyStrokes;
     FCurrentComboKeyStrokes: TSynEditKeyStrokes; // Holding info about the keystroke(s) already received for a mult-stroke-combo
     FMouseActions, FMouseSelActions, FMouseTextActions: TSynEditMouseInternalActions;
     FMouseActionSearchHandlerList: TSynEditMouseActionSearchList;
@@ -639,10 +652,11 @@ type
     FPendingFoldState: String;
 
     procedure DoTopViewChanged(Sender: TObject);
+    function GetFont: TSynControlFont; inline;
     function GetIsStickySelecting: Boolean;
+    function GetKeyStrokesStored: Boolean;
     function GetOnSpecialLineMarkupEx: TSpecialLineMarkupExEvent;
-    function IsKeyStrokesStored: Boolean;
-    procedure SetKeyStrokesDefault(const ADefaultKeyStrokes: Boolean);
+    procedure SetFont(AValue: TSynControlFont);
     procedure SetOnSpecialLineMarkupEx(AValue: TSpecialLineMarkupExEvent);
     procedure SetScrollOnEditLeftOptions(AValue: TSynScrollOnEditOptions);
     procedure SetScrollOnEditRightOptions(AValue: TSynScrollOnEditOptions);
@@ -740,7 +754,7 @@ type
     procedure RemoveHooksFromHighlighter;
     procedure SetInsertCaret(const Value: TSynEditCaretType);
     procedure SetInsertMode(const Value: boolean);
-    procedure SetKeyStrokes(const Value: TSynEditKeyStrokes);
+    procedure SetKeyStrokes(const Value: TSynEditMainKeyStrokes);
     procedure SetLastMouseCaret(const AValue: TPoint);
     function  CurrentMaxLeftChar(AIncludeCharsInWin: Boolean = False): Integer;
 
@@ -876,11 +890,8 @@ type
     procedure SetLogicalCaretXY(const NewLogCaretXY: TPoint); override;
 
     function GetMouseActions: TSynEditMouseActions; override;
-    function IsMouseActionsStored: Boolean;
     function GetMouseSelActions: TSynEditMouseActions; override;
-    function IsMouseSelActionsStored: Boolean;
     function GetMouseTextActions: TSynEditMouseActions; override;
-    function IsMouseTextActionsStored: Boolean;
     procedure SetMouseActions(const AValue: TSynEditMouseActions); override;
     procedure SetMouseSelActions(const AValue: TSynEditMouseActions); override;
     procedure SetMouseTextActions(AValue: TSynEditMouseActions); override;
@@ -888,7 +899,6 @@ type
     procedure SetExtraCharSpacing(const Value: integer); override;
     procedure SetExtraLineSpacing(const Value: integer); override;
 
-    procedure KeyStrokesChanged(Sender: TObject);
     procedure SetHighlighter(const Value: TLazEditCustomHighlighter); virtual;
     procedure UpdateShowing; override;
     procedure SetColor(Value: TColor); override;
@@ -916,6 +926,7 @@ type
     function GetSelectedColor : TLazEditHighlighterAttributesModifier; override;
     function GetTextViewsManager: TSynTextViewsManager; override;
     procedure FontChanged(Sender: TObject); override;
+    function ControlFontClass: TControlFontClass; override;
     Procedure LineCountChanged(Sender: TSynEditStrings; AIndex, ACount : Integer);
     Procedure LineTextChanged(Sender: TSynEditStrings; AIndex, ACount : Integer);
     procedure SizeOrFontChanged(bFont: boolean);
@@ -1255,15 +1266,11 @@ type
     property Gutter: TSynGutter read FLeftGutter write SetGutter;
     property RightGutter: TSynGutter read FRightGutter write SetRightGutter;
     property InsertMode: boolean read fInserting write SetInsertMode default true;
-    property KeyStrokes: TSynEditKeyStrokes read FKeyStrokes write SetKeyStrokes stored IsKeyStrokesStored;
-    // we do not have to store "DefaultKeyStrokes" because it is determined by the existence/absence of the KeyStrokes entry in the LFM
-    // this is also better for forwards-compatibility, since no new property is defined that old Lazarus version don't know
-    // DefaultKeyStrokes is needed so that the user can reset KeyStrokes to default in design-time
-    property DefaultKeyStrokes: Boolean read FKeyStrokesDefault write SetKeyStrokesDefault stored False;
+    property KeyStrokes: TSynEditMainKeyStrokes read FKeyStrokes write SetKeyStrokes stored GetKeyStrokesStored;
     property MaxUndo: Integer read GetMaxUndo write SetMaxUndo default 1024;
-    property MouseActions stored IsMouseActionsStored;
-    property MouseSelActions stored IsMouseSelActionsStored;
-    property MouseTextActions stored IsMouseTextActionsStored;
+    property MouseActions;
+    property MouseSelActions;
+    property MouseTextActions;
     property ShareOptions: TSynEditorShareOptions read FShareOptions write SetShareOptions
       default SYNEDIT_DEFAULT_SHARE_OPTIONS; experimental;
     property VisibleSpecialChars: TSynVisibleSpecialChars read FVisibleSpecialChars write SetVisibleSpecialChars
@@ -1300,6 +1307,7 @@ type
     property OnSpecialLineMarkup: TSpecialLineMarkupEvent read FOnSpecialLineMarkup write SetSpecialLineMarkup; deprecated;
     property OnSpecialLineMarkupEx: TSpecialLineMarkupExEvent read GetOnSpecialLineMarkupEx write SetOnSpecialLineMarkupEx;
     property OnStatusChange: TStatusChangeEvent read fOnStatusChange write fOnStatusChange;
+    property Font: TSynControlFont read GetFont write SetFont;
   end;
 
   TSynEdit = class(TCustomSynEdit)
@@ -1370,7 +1378,6 @@ type
     property Highlighter;
     property InsertCaret;
     property InsertMode;
-    property DefaultKeyStrokes;
     property KeyStrokes;
     property MouseActions;
     property MouseTextActions;
@@ -1824,36 +1831,41 @@ begin
 end;
 
 procedure InitSynDefaultFont;
+  procedure CheckFont(f: String);
+  begin
+    if SynDefaultFontName <> '' then exit;
+    if Screen.Fonts.IndexOf(f) >= 0 then
+      SynDefaultFontName  := f;
+  end;
 begin
   if SynDefaultFontName <> '' then exit;
-  Screen.Fonts;
-  {$UNDEF SynDefaultFont}
-  {$IFDEF LCLgtk}
-    SynDefaultFontName   := '-adobe-courier-medium-r-normal-*-*-140-*-*-*-*-iso10646-1';
-    SynDefaultFontHeight := 14;
-    {$DEFINE SynDefaultFont}
+  {$IFDEF WINDOWS}
+    CheckFont('Consolas');
+    CheckFont('Cascadia Mono');
+    CheckFont('Courier New');
+    CheckFont('DejaVu Sans Mono');
+    CheckFont('Lucida Console');
   {$ENDIF}
   {$IFDEF LCLcarbon}
-    SynDefaultFontName   := 'Monaco'; // Note: carbon is case sensitive
-    SynDefaultFontHeight := 12;
-    {$DEFINE SynDefaultFont}
+    // Note: carbon is case sensitive
+    CheckFont('SF Mono');
+    CheckFont('Menlo');
+    CheckFont('Monaco'); // Note: carbon is case sensitive
+    CheckFont('DejaVu Sans Mono');
   {$ENDIF}
   {$IFDEF LCLcocoa}
-    SynDefaultFontName   := 'Andale Mono'; // Note: cocoa is case sensitive
-    SynDefaultFontHeight := 10;
-    {$DEFINE SynDefaultFont}
+    // Note: carbon is case sensitive
+    CheckFont('SF Mono');
+    CheckFont('Menlo');
+    CheckFont('Monaco');
+    CheckFont('Andale Mono');
+    CheckFont('DejaVu Sans Mono');
   {$ENDIF}
-  // LCLgtk2 and LCLQt use default settings
-  {$IFnDEF SynDefaultFont}
-    SynDefaultFontName   := 'Courier New';
-    SynDefaultFontHeight := -13;
-  {$ENDIF}
-  if Screen.Fonts.IndexOf(SynDefaultFontName) >= 0 then
-    exit;
-  if Screen.Fonts.IndexOf('DejaVu Sans Mono') >= 0 then begin
-    SynDefaultFontName   := 'DejaVu Sans Mono';
-    SynDefaultFontHeight := 13;
-  end;
+
+  // Fallback for all other OS, or not resolved above
+  CheckFont('Monospace');
+  CheckFont('DejaVu Sans Mono');
+  CheckFont('Courier New');
 end;
 
 { TSynScrollOnEditOptions }
@@ -1938,6 +1950,13 @@ begin
   FScrollExtraColumns        := CScrollExtraColumns;
   FScrollExtraMax            := CScrollExtraMax;
   FScrollExtraPercent        := CScrollExtraPercent;
+end;
+
+{ TSynControlFont }
+
+function TSynControlFont.IsSynFontNameStored: Boolean;
+begin
+  Result := LowerCase(Name) <> LowerCase(SynFontNameForDefault);
 end;
 
 { TCustomSynEdit }
@@ -2321,14 +2340,30 @@ begin
     SizeOrFontChanged(True);
 end;
 
+function TCustomSynEdit.GetFont: TSynControlFont;
+begin
+  Result := TSynControlFont(inherited Font);
+end;
+
 function TCustomSynEdit.GetIsStickySelecting: Boolean;
 begin
   Result := FBlockSelection.StickyAutoExtend;
 end;
 
+function TCustomSynEdit.GetKeyStrokesStored: Boolean;
+begin
+  if LCL_SaveBackwardCompatibleLfm then exit(True);
+  Result := FKeyStrokes.IsModified or FKeyStrokes.ForceSaveToLfm;
+end;
+
 function TCustomSynEdit.GetOnSpecialLineMarkupEx: TSpecialLineMarkupExEvent;
 begin
   Result := fMarkupSpecialLine.OnSpecialLineMarkupEx;
+end;
+
+procedure TCustomSynEdit.SetFont(AValue: TSynControlFont);
+begin
+  inherited Font := AValue;
 end;
 
 procedure TCustomSynEdit.SetOnSpecialLineMarkupEx(AValue: TSpecialLineMarkupExEvent);
@@ -2440,7 +2475,7 @@ begin
 
   FCaret.Lines := FTheLinesView;
   FInternalCaret.Lines := FTheLinesView;
-  FFontDummy := TFont.Create;
+  FSynTextFont := TFont.Create;
 
   with FTheLinesView do begin
     AddChangeHandler(senrLineCount, @LineCountChanged);
@@ -2486,8 +2521,14 @@ begin
 
   RecreateMarkList;
 
-  fFontDummy.Style := [fsBold];
-  fTextDrawer := TLazEditTextGridPainter.Create(Canvas, fFontDummy);
+  fSynTextFont.BeginUpdate;
+  fSynTextFont.Name := SynDefaultFontName;
+  fSynTextFont.Height := SynDefaultFontHeight;
+  fSynTextFont.Pitch := SynDefaultFontPitch;
+  fSynTextFont.Quality := SynDefaultFontQuality;
+  fSynTextFont.Style := [fsBold];
+  fSynTextFont.EndUpdate;
+  fTextDrawer := TLazEditTextGridPainter.Create(Canvas, fSynTextFont);
   {$IFDEF WithSynExperimentalCharWidth}
   FSysCharWidthLinesView.TextDrawer := fTextDrawer;
   {$ENDIF} // WithSynExperimentalCharWidth
@@ -2568,12 +2609,8 @@ begin
   FImeHandler.InvalidateLinesMethod := @InvalidateLines;
   {$ENDIF}
 
-  fFontDummy.Name := SynDefaultFontName;
-  fFontDummy.Height := SynDefaultFontHeight;
-  fFontDummy.Pitch := SynDefaultFontPitch;
-  fFontDummy.Quality := SynDefaultFontQuality;
-  fFontDummy.Style := [];
-  FLastSetFontSize := fFontDummy.Height;
+  fSynTextFont.Style := [];
+  FLastSetFontSize := fSynTextFont.Height;
   FLastMouseLocation.LastMouseCaret := Point(-1,-1);
   FLastMouseLocation.LastMousePoint := Point(-1,-1);
   fBlockIndent := 2;
@@ -2602,7 +2639,9 @@ begin
   FPaintArea.DisplayView := FTheLinesView.DisplayView;
 
   Color := clWhite;
-  Font.Assign(fFontDummy);
+  Font.Name := SynFontNameForDefault;
+  Font.Pitch   := SynDefaultFontPitch;
+  Font.Quality := SynDefaultFontQuality;
   ParentFont := False;
   ParentColor := False;
   TabStop := True;
@@ -2612,11 +2651,9 @@ begin
   BorderStyle := bsSingle;
   fInsertCaret := ctVerticalLine;
   fOverwriteCaret := ctBlock;
-  FKeyStrokes := TSynEditKeyStrokes.Create(Self);
-  FKeyStrokes.OnChanged := @KeyStrokesChanged;
   FCurrentComboKeyStrokes := nil;
+  FKeyStrokes := TSynEditMainKeyStrokes.Create(Self);
   SetDefaultKeystrokes;
-
   fWantTabs := True;
   fTabWidth := 8;
   FOldTopView := 1;
@@ -2984,7 +3021,7 @@ begin
   FreeAndNil(FPaintLineColor);
   FreeAndNil(FPaintLineColor2);
   FreeAndNil(fTextDrawer);
-  FreeAndNil(fFontDummy);
+  FreeAndNil(fSynTextFont);
   DestroyMarkList; // before detach from FLines
   FreeAndNil(FWordBreaker);
   FreeAndNil(FInternalBlockSelection);
@@ -3053,7 +3090,12 @@ procedure TCustomSynEdit.FontChanged(Sender: TObject);
 begin // TODO: inherited ?
   FPaintArea.ForegroundColor := Font.Color;
   FLastSetFontSize := Font.Height;
-  RecalcCharExtent;
+  RecalcCharExtent;  // Updates fSynTextFont;
+end;
+
+function TCustomSynEdit.ControlFontClass: TControlFontClass;
+begin
+  Result := TSynControlFont;
 end;
 
 function TCustomSynEdit.GetTextBuffer: TSynEditStrings;
@@ -3533,11 +3575,6 @@ begin
     // Key was handled anyway, so eat it!
     Key:=#0;
   end;
-end;
-
-procedure TCustomSynEdit.KeyStrokesChanged(Sender: TObject);
-begin
-  FKeyStrokesDefault := False;
 end;
 
 function TCustomSynEdit.DoHandleMouseAction(AnActionList: TSynEditMouseActions;
@@ -6096,7 +6133,7 @@ begin
   InvalidateLines(StartLine, StartLine + ACount - 1);
   InvalidateGutterLines(AIndex + 1, AIndex + 1 + ACount);
   FFoldedLinesView.FixFoldingAtTextIndex(AIndex, AIndex + ACount);
-  if (Highlighter = nil) or (Highlighter.FirstUnpreparedLine < 0) then begin
+  if (Highlighter = nil) or (Highlighter.FirstUnpreparedLineFor(FLines) < 0) then begin
     if sfAfterLoadFromFileNeeded in fStateFlags then
       AfterLoadFromFile
     else
@@ -6181,6 +6218,8 @@ begin
 
   if WaitingForInitialSize then
     Include(fStateFlags, sfExplicitTopLine);
+  if FPendingFoldState <> '' then
+    Include(fStateFlags, sfExplicitTopLineForFoldState);
 
   (* ToDo: FFoldedLinesView.TopLine := AValue;
     Required, if "TopView := TopView" or "TopLine := TopLine" is called,
@@ -6526,10 +6565,11 @@ begin
 end;
 
 procedure TCustomSynEdit.SetFoldState(const AValue: String);
+var
+  tl: integer;
 begin
   if assigned(fHighlighter) then begin
-    fHighlighter.CurrentLines := FTheLinesView;
-    if fHighlighter.FirstUnpreparedLine >= 0 then begin
+    if fHighlighter.FirstUnpreparedLineFor(FLines) >= 0 then begin
       FPendingFoldState := AValue;
       exit;
     end;
@@ -6538,10 +6578,16 @@ begin
     FPendingFoldState := AValue;
     exit;
   end;
+  if sfExplicitTopLineForFoldState in fStateFlags then
+    tl := TopLine;
   FFoldedLinesView.Lock;
   FFoldedLinesView.ApplyFoldDescription(0, 0, -1, -1, PChar(AValue), length(AValue), True);
   FFoldedLinesView.UnLock;
   FPendingFoldState := '';
+  if sfExplicitTopLineForFoldState in fStateFlags then begin
+    TopLine := tl;
+    Exclude(fStateFlags, sfExplicitTopLineForFoldState);
+  end;
 end;
 
 procedure TCustomSynEdit.SetHiddenCodeLineColor(AValue: TLazEditHighlighterAttributesModifier);
@@ -6645,7 +6691,7 @@ begin
   FUndoList := NewBuffer.UndoList;
   FRedoList := NewBuffer.RedoList;
 
-  // Recreate te public access to FLines
+  // Recreate the public access to FLines
   FreeAndNil(FStrings);
   FStrings := TSynEditLines.Create(TSynEditStringList(FLines), @MarkTextAsSaved);
 
@@ -6676,21 +6722,6 @@ begin
     dec(i);
   end;
   Result := j > 1;
-end;
-
-function TCustomSynEdit.IsMouseActionsStored: Boolean;
-begin
-  Result := MouseActions.Count>0;
-end;
-
-function TCustomSynEdit.IsMouseSelActionsStored: Boolean;
-begin
-  Result := MouseSelActions.Count>0;
-end;
-
-function TCustomSynEdit.IsMouseTextActionsStored: Boolean;
-begin
-  Result := MouseTextActions.Count>0;
 end;
 
 procedure TCustomSynEdit.RecreateMarkList;
@@ -7230,7 +7261,7 @@ begin
       // There may not have been a scan
       if fHighlighter <> nil then
         FHighlighter.CurrentLines := FLines;
-      FLines.SendNotification(senrHighlightChanged, FLines, -1, -1);
+      FLines.SendNotification(senrHighlightChanged, FLines, -1, -1); // This may change FHighlighter.CurrentLine to a view belonging to a shared editor
     finally
       DecPaintLock;
     end;
@@ -7380,20 +7411,12 @@ begin
   end;
 end;
 
-procedure TCustomSynEdit.SetKeyStrokes(const Value: TSynEditKeyStrokes);
+procedure TCustomSynEdit.SetKeyStrokes(const Value: TSynEditMainKeyStrokes);
 begin
   if Value = nil then
     FKeyStrokes.Clear
   else
     FKeyStrokes.Assign(Value);
-end;
-
-procedure TCustomSynEdit.SetKeyStrokesDefault(const ADefaultKeyStrokes: Boolean);
-begin
-  if FKeyStrokesDefault = ADefaultKeyStrokes then Exit;
-  FKeyStrokesDefault := ADefaultKeyStrokes;
-  if FKeyStrokesDefault then
-    SetDefaultKeystrokes;
 end;
 
 procedure TCustomSynEdit.SetExtraCharSpacing(const Value: integer);
@@ -7416,7 +7439,6 @@ end;
 procedure TCustomSynEdit.SetDefaultKeystrokes;
 begin
   FKeyStrokes.ResetDefaults;
-  FKeyStrokesDefault := True;
 end;
 
 procedure TCustomSynEdit.ResetMouseActions;
@@ -8365,7 +8387,7 @@ end;
 procedure TCustomSynEdit.AfterLoadFromFile;
 begin
   if ( WaitingForInitialSize and
-       ( (fHighlighter = nil) or (fHighlighter.FirstUnpreparedLine >= 0) )
+       ( (fHighlighter = nil) or (fHighlighter.FirstUnpreparedLineFor(FLines) >= 0) )
      ) or
      (FPaintLock > 1) or
      ( (FPaintLock = 1) and
@@ -9424,8 +9446,9 @@ begin
   try
     inc(FRecalcCharsAndLinesLock);
     try
-      FFontDummy.Assign(Font);
-      with FFontDummy do begin
+      fSynTextFont.BeginUpdate;
+      FSynTextFont.Assign(Font);
+      with FSynTextFont do begin
         // Keep GTK happy => By ensuring a change the XFLD fontname gets cleared
         {$IFDEF LCLGTK1}
         Pitch := fpVariable;
@@ -9435,10 +9458,20 @@ begin
         // TODO: Clear style only, if Highlighter uses styles
         Style := [];        // Reserved for Highlighter
       end;
-      //debugln(['TCustomSynEdit.RecalcCharExtent ',fFontDummy.Name,' ',fFontDummy.Size]);
+      if LowerCase(Font.Name) = LowerCase(SynFontNameForDefault) then begin
+        FSynTextFont.Name := SynDefaultFontName;
+        if Font.Height = 0 then
+          FSynTextFont.Height := SynDefaultFontHeight;
+        if Font.Pitch = fpDefault then
+          FSynTextFont.Pitch   := SynDefaultFontPitch;
+        if Font.Quality = fqDefault then
+          FSynTextFont.Quality := SynDefaultFontQuality;
+      end;
+      FSynTextFont.EndUpdate;
+      //debugln(['TCustomSynEdit.RecalcCharExtent ',fSynTextFont.Name,' ',fSynTextFont.Size]);
       //debugln('TCustomSynEdit.RecalcCharExtent  CharHeight=',dbgs(CharHeight));
 
-      fTextDrawer.SetBaseFont(FFontDummy);
+      fTextDrawer.SetBaseFont(FSynTextFont);
       if Assigned(fHighlighter) then
         for i := 0 to Pred(fHighlighter.AttrCount) do
           fTextDrawer.AddBaseStyle(fHighlighter.Attribute[i].Style);
@@ -10470,11 +10503,6 @@ begin
   Result:=(length(c)=1) and (c[1] in IdentChars);
 end;
 
-function TCustomSynEdit.IsKeyStrokesStored: Boolean;
-begin
-  Result := not FKeyStrokesDefault;
-end;
-
 procedure TCustomSynEdit.GetWordBoundsAtRowCol(const XY: TPoint; out StartX,
   EndX: integer); // all params are logical (byte) positions
 var
@@ -10829,7 +10857,7 @@ end;
 procedure TCustomSynEdit.DoOnPaint;
 begin
   if Assigned(fOnPaint) then begin
-    Canvas.Font.Assign(Font);
+    Canvas.Font.Assign(fSynTextFont);
     Canvas.Brush.Color := Color;
     fOnPaint(Self, Canvas);
   end;

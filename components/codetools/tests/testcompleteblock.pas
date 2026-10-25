@@ -43,6 +43,8 @@ type
   published
     procedure TestCompleteBlock_ProgamBeginEnd;
     procedure TestCompleteBlock_ProgamBeginMissingEnd;
+    procedure TestCompleteBlock_ProgamBeginMissingEnd2;
+    procedure TestCompleteBlock_ProgamBeginMissingEnd3;
     procedure TestCompleteBlockClassStart;
     procedure TestCompleteBlockBegin;
     procedure TestCompleteBlockProcBegin; // todo
@@ -54,6 +56,10 @@ type
     procedure TestCompleteBlockTry_OpenIf_AtEnd; // issue 28048
     procedure TestCompleteBlockAsm;
     procedure TestCompleteBlockIf;
+    procedure TestCompleteBlockIfExpr;
+    procedure TestCompleteBlockCaseExpr;
+    procedure TestCompleteBlockTryExpr;
+    procedure TestCompleteBlock_TypeOf;
   end;
 
 implementation
@@ -216,6 +222,32 @@ begin
   'program '+DefUnitName+';',
   'begin',
   '  |',
+  'end.'
+  ]));
+end;
+
+procedure TTestCodetoolsCompleteBlock.TestCompleteBlock_ProgamBeginMissingEnd2;
+begin
+  CompleteBlock(LinesToStr([
+  'program '+DefUnitName+';',
+  'begin',
+  '  |']),
+  LinesToStr([
+  'program '+DefUnitName+';',
+  'begin',
+  '  |',
+  'end.'
+  ]));
+end;
+
+procedure TTestCodetoolsCompleteBlock.TestCompleteBlock_ProgamBeginMissingEnd3;
+begin
+  CompleteBlock(LinesToStr([
+  'program '+DefUnitName+';',
+  'begin|']),
+  LinesToStr([
+  'program '+DefUnitName+';',
+  'begin|',
   'end.'
   ]));
 end;
@@ -504,6 +536,95 @@ begin
                    +'  finally'+LineEnding
                    +'  end;'+LineEnding
                    +'end.');
+end;
+
+procedure TTestCodetoolsCompleteBlock.TestCompleteBlockIfExpr;
+begin
+  // if-expression in brackets
+  CompleteBlock('begin'+LineEnding
+               +'  DoIt(if a then b else c);'+LineEnding
+               +'  if a then begin|'+LineEnding
+               +'end.',
+                'begin'+LineEnding
+               +'  DoIt(if a then b else c);'+LineEnding
+               +'  if a then begin|'+LineEnding
+               +'  end;'+LineEnding
+               +'end.');
+  CompleteBlock('begin'+LineEnding
+               +'  x:=[if a then b else c];'+LineEnding
+               +'  if a then begin|'+LineEnding
+               +'end.',
+                'begin'+LineEnding
+               +'  x:=[if a then b else c];'+LineEnding
+               +'  if a then begin|'+LineEnding
+               +'  end;'+LineEnding
+               +'end.');
+end;
+
+procedure TTestCodetoolsCompleteBlock.TestCompleteBlockCaseExpr;
+begin
+  // case-expression in brackets
+  CompleteBlock('begin'+LineEnding
+               +'  DoIt(case a of 1: b; else c end);'+LineEnding
+               +'  if a then begin|'+LineEnding
+               +'end.',
+                'begin'+LineEnding
+               +'  DoIt(case a of 1: b; else c end);'+LineEnding
+               +'  if a then begin|'+LineEnding
+               +'  end;'+LineEnding
+               +'end.');
+  // case-expression without semicolons, with if-expression
+  CompleteBlock('begin'+LineEnding
+               +'  x:=case a of 1: b else if c then d else e end;'+LineEnding
+               +'  if a then begin|'+LineEnding
+               +'end.',
+                'begin'+LineEnding
+               +'  x:=case a of 1: b else if c then d else e end;'+LineEnding
+               +'  if a then begin|'+LineEnding
+               +'  end;'+LineEnding
+               +'end.');
+end;
+
+procedure TTestCodetoolsCompleteBlock.TestCompleteBlockTryExpr;
+begin
+  // try-except-expression in brackets
+  CompleteBlock('begin'+LineEnding
+               +'  DoIt(try a except on E: T do b; else c end);'+LineEnding
+               +'  if a then begin|'+LineEnding
+               +'end.',
+                'begin'+LineEnding
+               +'  DoIt(try a except on E: T do b; else c end);'+LineEnding
+               +'  if a then begin|'+LineEnding
+               +'  end;'+LineEnding
+               +'end.');
+  // try-except-expression with if-expression
+  CompleteBlock('begin'+LineEnding
+               +'  x:=try a except if c then d else e end;'+LineEnding
+               +'  if a then begin|'+LineEnding
+               +'end.',
+                'begin'+LineEnding
+               +'  x:=try a except if c then d else e end;'+LineEnding
+               +'  if a then begin|'+LineEnding
+               +'  end;'+LineEnding
+               +'end.');
+end;
+
+procedure TTestCodetoolsCompleteBlock.TestCompleteBlock_TypeOf;
+begin
+  // type of operator in statements
+  CompleteBlock('{$mode objfpc}'+LineEnding
+               +'begin'+LineEnding
+               +'  x:=SizeOf(type of b);'+LineEnding
+               +'  type of c(i):=7;'+LineEnding
+               +'  if a then begin|'+LineEnding
+               +'end.',
+                '{$mode objfpc}'+LineEnding
+               +'begin'+LineEnding
+               +'  x:=SizeOf(type of b);'+LineEnding
+               +'  type of c(i):=7;'+LineEnding
+               +'  if a then begin|'+LineEnding
+               +'  end;'+LineEnding
+               +'end.');
 end;
 
 initialization

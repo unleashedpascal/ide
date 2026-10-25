@@ -28,6 +28,7 @@ type
     destructor Destroy; override;
     procedure PushEditor; override;
     procedure PopEditor; override;
+    procedure UpdateEditor; override;
   public
     property Editor: TBasePackageEditor read FPackageEditor write SetPackageEditor;
   end;
@@ -94,6 +95,12 @@ procedure TEditablePackage.PopEditor;
 begin
   if Assigned(EditorMem) then
     EditorMem.LazPackage:=Self;
+end;
+
+procedure TEditablePackage.UpdateEditor;
+begin
+  if Assigned(Editor) then
+    Editor.UpdateAll(True);
 end;
 
 { TBasePackageEditor }

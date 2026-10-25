@@ -28,7 +28,6 @@ unit Grids;
 
 {$mode objfpc}{$H+}
 {$modeswitch nestedprocvars}
-{$define NewCols}
 
 interface
 
@@ -124,9 +123,7 @@ type
     goScrollToLastRow,   // Allow scrolling to last row (so that last row can be TopRow)
     goEditorParentColor, // Set editor's ParentColor to True
     goEditorParentFont,  // Set editor's ParentFont to True
-    goCopyWithoutTrailingLinebreak,  // Copy to clipboard without trailing linebreak
-    goFixedColClick,     // Issue OnClick if clicked on FixedCol area
-    goFixedRowClick      // Issue OnClick if clicked on FixedRow area
+    goCopyWithoutTrailingLinebreak  // Copy to clipboard without trailing linebreak
   );
   TGridOptions2 = set of TGridOption2;
 
@@ -797,6 +794,8 @@ type
     FFadeUnfocusedSelection: boolean;
     FFocusRectVisible: boolean;
     FCols,FRows: TIntegerList;
+    FRowSizesValid: Boolean; // see UpdateCachedSizes
+    FRowSizesGeneration: Cardinal;
     FsaveOptions: TSaveOptions;
     FScrollBars: TScrollStyle;
     FSelectActive: Boolean;
@@ -964,6 +963,7 @@ type
     procedure ChangeCursor(ACursor: TCursor; ASaveCurrentCursor: Boolean = true);
     function TitleFontIsStored: Boolean;
     procedure TryScrollTo(aCol,aRow: Integer; ClearColOff, ClearRowOff: Boolean);
+    procedure InvalidateRowSizes;
     procedure UpdateCachedSizes;
     procedure UpdateSBVisibility;
     procedure UpdateSizes;
@@ -2454,6 +2454,7 @@ begin
     if (OldC=0) and FGridPropBackup.ValidData then begin
       NewRowCount := FGridPropBackup.RowCount;
       FFixedRows := Min(FGridPropBackup.FixedRowCount, NewRowCount);
+      InvalidateRowSizes;
       FFixedCols := Min(FGridPropBackup.FixedColCount, ACount);
     end;
     CheckFixedCount(ACount, NewRowCount, FFixedCols, FFixedRows);
@@ -2803,6 +2804,7 @@ begin
 
   FFixedRows:=AValue;
   FTopLeft.y:=AValue;
+  InvalidateRowSizes; // FGCache.FixedHeight changed
 
   if not (csLoading in ComponentState) then
     doTopleftChange(true);
@@ -2997,6 +2999,7 @@ begin
     bigger := NewSize > OldSize;
 
     FRows[ARow]:=AValue;
+    InvalidateRowSizes;
 
     if not (csLoading in ComponentState) and HandleAllocated then begin
       if FUpdateCount=0 then begin
@@ -3082,6 +3085,7 @@ begin
         FTopLeft.Y:=FFixedRows;
         AddDel(FRows, NewCount);
         FGCache.AccumHeight.Count:=NewCount;
+        InvalidateRowSizes;
       end;
     end;
     UpdateCachedSizes;
@@ -3095,6 +3099,7 @@ begin
   end else begin
     AddDel(FRows, NewValue);
     FGCache.AccumHeight.Count:=NewValue;
+    InvalidateRowSizes;
     OldCount:=ColCount;
     if (OldValue=0)and(NewValue>=0) then begin
       FTopleft.Y:=FFixedRows;
@@ -3168,6 +3173,7 @@ begin
     if not Columns.Enabled then
       Target.FCols.Assign(FCols);
     Target.FRows.Assign(FRows);
+    Target.InvalidateRowSizes;
 
     // Options
     Target.Options := Options;
@@ -3211,6 +3217,7 @@ begin
         NewColCount := FGridPropBackup.ColCount;
         FFixedCols := Min(FGridPropBackup.FixedColCount, NewColCount);
         FFixedRows := Min(FGridPropBackup.FixedRowCount, AValue);
+        InvalidateRowSizes;
         FTopLeft.X := FFixedCols;
         FTopLeft.Y := FFixedRows;
         // ignore backedup value of rowcount because
@@ -3270,6 +3277,7 @@ begin
 
     for i:=0 to RowCount-1 do
       FRows[i] := -1;
+    InvalidateRowSizes;
     VisualChange;
 
     if EditorMode then
@@ -5215,10 +5223,19 @@ begin
   Invalidate;
 end;
 
+procedure TCustomGrid.InvalidateRowSizes;
+begin
+  // called whenever a row height, the row count or the fixed rows changed:
+  // UpdateCachedSizes will rebuild FGCache.AccumHeight[] on its next call
+  FRowSizesValid := False;
+  inc(FRowSizesGeneration);
+end;
+
 procedure TCustomGrid.UpdateCachedSizes;
 var
   i: Integer;
   TLChanged: Boolean;
+  Generation: Cardinal;
 begin
   if AutoFillColumns then
     InternalAutoFillColumns;
@@ -5233,13 +5250,25 @@ begin
       FGCache.FixedWidth:=FGCache.GridWidth;
   end;
 
-  FGCache.Gridheight:=0;
-  FGCache.FixedHeight:=0;
-  for i:=0 to RowCount-1 do begin
-    FGCache.AccumHeight[i]:=FGCache.Gridheight;
-    FGCache.Gridheight:=FGCache.Gridheight+GetRowHeights(i);
-    if i<FixedRows then
-      FGCache.FixedHeight:=FGCache.GridHeight;
+  // AccumHeight[]/GridHeight/FixedHeight only depend on the row heights, the
+  // row count and FixedRows - not on the scrolling position: rebuild them
+  // after InvalidateRowSizes only, since VisualChange (i.e. every scroll
+  // step) calls this method, and the loop is O(RowCount)
+  if not FRowSizesValid then begin
+    // set before the loop to bound the recursion if GetRowHeights() below
+    // reenters; the generation tells afterwards whether that happened, i.e.
+    // whether this rebuild is stale and has to run again
+    Generation := FRowSizesGeneration;
+    FRowSizesValid := True;
+    FGCache.Gridheight:=0;
+    FGCache.FixedHeight:=0;
+    for i:=0 to RowCount-1 do begin
+      FGCache.AccumHeight[i]:=FGCache.Gridheight;
+      FGCache.Gridheight:=FGCache.Gridheight+GetRowHeights(i);
+      if i<FixedRows then
+        FGCache.FixedHeight:=FGCache.GridHeight;
+    end;
+    FRowSizesValid := Generation = FRowSizesGeneration;
   end;
 
   FGCache.ClientRect := ClientRect;
@@ -6537,77 +6566,44 @@ end;
 
 function TCustomGrid.MouseToGridZone(X, Y: Integer): TGridZone;
 var
-  aBorderWidth, FlippedX: Integer;
+  aBorderWidth: Integer;
   aCol, aRow: Longint;
-  XMaybeOverFixedCols, YMaybeOverFixedRows: Boolean;
 begin
-  {$ifdef dbgGrid}
-  debugln(['TCustomGrid.MouseToGridZone: X=',X,', Y=',Y,', FGCache.FixedWidth=',FGCache.FixedWidth,', FGCache.FixedHeight=',FGCache.FixedHeight]);
-  {$endif}
-  aBorderWidth:=GetBorderWidth;
-  FlippedX:=FlipX(X);
-  XMaybeOverFixedCols:=(FlippedX<FGCache.FixedWidth+aBorderWidth);
-  YMaybeOverFixedRows:=(Y<FGCache.FixedHeight+aBorderWidth);
-
-  //Always give the same result if a grid is fixed.
-  if FixedGrid then begin
-    if AllowOutBoundEvents then
-      Result := gzFixedCells
-    else begin
-      if XMaybeOverFixedCols and YMaybeOverFixedRows then
-        Result := gzFixedCells
-      else begin // check if we're outside the grid
-        MouseToCell(X,Y,aCol,aRow);
-      if (aRow<0) or (aCol<0)  then
-        Result := gzInvalid
-      else
-        Result := gzFixedCells;
-      end;
-    end;
-    Exit;
-  end;
-
-  if XMaybeOverFixedCols then begin
-    // in fixedwidth zone: either a fixedcol or a fixedcell
-    if YMaybeOverFixedRows then
+  aBorderWidth := GetBorderWidth;
+  if FlipX(X)<FGCache.FixedWidth+aBorderWidth then begin
+    // in fixedwidth zone
+    if Y<FGcache.FixedHeight+aBorderWidth then
       Result:= gzFixedCells
     else begin
-      if AllowOutboundEvents then
-        Result := gzFixedCols
-      else begin
-        OffSetToColRow(False, True, Y, aRow, aCol);
-        if (aRow<0) then
-          Result := gzInvalid
-        else
-          Result := gzFixedCols;
-      end;
-    end;
-  end // XMaybeOverFixedCols
-  else begin  // Not in a fixedwidth zone
-    if YMaybeOverFixedRows then
-    begin
-      // maybe in fixedheight zone: either a fixedrow or a fixedcell or outside the gridcells
-      if AllowOutboundEvents then
-        Result := gzFixedRows
-      else begin
-        OffSetToColRow(True, True, X, aCol, aRow);
-        if (aCol<0) then
-          Result := gzInvalid
-        else
-          Result := gzFixedRows;
-      end;
-    end
-    else begin // must be over a normal cell or outside the gridcells
-      MouseToCell(x, y, aCol, aRow);
-      if (aCol<0) or (aRow<0) then
-        result := gzInvalid
+      OffsetToColRow(False, True, Y, aRow, aCol);
+      if (aRow<0) or (RowCount<=FixedRows) then
+        Result := gzInvalid
       else
-        result := gzNormal;
+        Result := gzFixedRows;
     end;
-  end;
-  {$ifdef dbgGrid}
-  debugln(['TCustomGrid.MouseToGridZone: Result=',Dbgs(Result)]);
-  {$endif}
+  end
+  else if Y<FGCache.FixedHeight+aBorderWidth then begin
+    // if fixedheight zone
+    if FlipX(X)<FGCache.FixedWidth+aBorderWidth then
+      Result:=gzFixedCells
+    else begin
+      OffsetToColRow(True, True, X, aCol, aRow);
+      if (aCol<0) or (ColCount<=FixedCols) then
+        Result := gzInvalid
+      else
+        Result := gzFixedCols;
+    end;
+  end
+  else if not FixedGrid then begin
+    // in normal cell zone (though, might be outbounds)
+    MouseToCell(x, y, aCol, aRow);
+    if (aCol<0) or (aRow<0) then
+      result := gzInvalid
+    else
+      result := gzNormal;
+  end
+  else
+    result := gzInvalid;
 end;
 
 function TCustomGrid.CellToGridZone(aCol, aRow: Integer): TGridZone;
@@ -6619,16 +6615,17 @@ begin
     if aRow<FFixedRows then
       Result:= gzFixedCells
     else
-      Result:= gzFixedCols
+      Result:= gzFixedRows
   else
   if (aRow<FFixedRows) then
     if aCol<FFixedCols then
       Result:= gzFixedCells
     else
-      Result:= gzFixedRows
+      Result:= gzFixedCols
   else
     Result := gzNormal;
 end;
+
 
 procedure TCustomGrid.DoOPExchangeColRow(IsColumn: Boolean; index, WithIndex: Integer);
 var
@@ -6644,8 +6641,10 @@ begin
   // exchanges column widths or row heights
   if IsColumn then
     FCols.Exchange(index, WithIndex)
-  else
+  else begin
     FRows.Exchange(index, WithIndex);
+    InvalidateRowSizes;
+  end;
   ColRowExchanged(IsColumn, index, WithIndex);
   VisualChange;
 
@@ -6714,6 +6713,7 @@ begin
     FGCache.AccumHeight.Insert(Index, -1);
     if Index<FixedRows then
       inc(FFixedRows);
+    InvalidateRowSizes;
   end;
   ColRowInserted(IsColumn, index);
   VisualChange;
@@ -6764,8 +6764,10 @@ begin
   // move grids content
   if IsColumn then
     FCols.Move(FromIndex, ToIndex)
-  else
+  else begin
     FRows.Move(FromIndex, ToIndex);
+    InvalidateRowSizes;
+  end;
   ColRowMoved(IsColumn, FromIndex, ToIndex);
 
   if not IsColumn or not Columns.Enabled then
@@ -6848,6 +6850,7 @@ procedure TCustomGrid.DoOPDeleteColRow(IsColumn: Boolean; index: Integer);
     end;
     FRows.Delete(Index);
     FGCache.AccumHeight.Delete(Index);
+    InvalidateRowSizes;
     ColRowDeleted(False,Index);
     FixPosition(False, Index);
 
@@ -6938,40 +6941,35 @@ begin
 
     gzFixedCols:
       begin
-        if (goRowSizing in Options) and (FCursorState=gcsRowHeightChanging) then begin
-          fGridState:= gsRowSizing;
+        if (goColSizing in Options) and (FCursorState=gcsColWidthChanging) then begin
+          fGridState:= gsColSizing;
           FGCache.OldMaxTopLeft := FGCache.MaxTopLeft;
         end
         else begin
-          // RowMoving or Clicking
-          if fGridState<>gsRowMoving then begin
-            fGridState:=gsRowMoving;
+          // ColMoving or Clicking
+          if fGridState<>gsColMoving then begin
+            fGridState:=gsColMoving;
             ResetLastMove;
           end;
 
           if ((goHeaderPushedLook in Options) and
               (FGCache.HotGridZone in FHeaderPushZones)) then
             DoPushCell;
-          if (goFixedColClick in Options2) then
-            FIgnoreClick := False;
         end;
       end;
 
     gzFixedRows:
-      begin
-        if (goColSizing in Options) and (FCursorState=gcsColWidthChanging) then
-          fGridState:= gsColSizing
-        else begin
-          // ColMoving or Clicking
-          fGridState:=gsColMoving;
-          ResetLastMove;
-          if ((goHeaderPushedLook in Options) and
-              (FGCache.HotGridZone in FHeaderPushZones)) then
-            DoPushCell;
-          if (goFixedRowClick in Options2) then
-            FIgnoreClick := False;
-        end;
+      if (goRowSizing in Options) and (FCursorState=gcsRowHeightChanging) then
+        fGridState:= gsRowSizing
+      else begin
+        // RowMoving or Clicking
+        fGridState:=gsRowMoving;
+        ResetLastMove;
+        if ((goHeaderPushedLook in Options) and
+            (FGCache.HotGridZone in FHeaderPushZones)) then
+          DoPushCell;
       end;
+
     gzNormal:
       begin
         LockEditor;
@@ -7507,6 +7505,7 @@ begin
       for i := FRows.Count - 1 downto 0 do
         if FRows[i]>=0 then
           FRows[i] := Round(FRows[i] * AYProportion);
+      InvalidateRowSizes;
 
       for i := FCols.Count - 1 downto 0 do
         if FCols[i]>=0 then
@@ -7518,8 +7517,10 @@ begin
         FRealizedDefColWidth := 0;
       if DefaultRowHeightIsStored then
         DefaultRowHeight := Round(DefaultRowHeight * AYProportion)
-      else
+      else begin
         FRealizedDefRowHeight := 0;
+        InvalidateRowSizes;
+      end;
     finally
       EndUpdate;
     end;
@@ -7955,11 +7956,11 @@ begin
   Gz:=MouseToGridZone(Mouse.x, Mouse.y);
   Result:=MouseToCell(Mouse);
   if gz<>gzNormal then begin
-    if (gz=gzFixedCols)or(gz=gzFixedCells) then begin
+    if (gz=gzFixedRows)or(gz=gzFixedCells) then begin
       Result.x:= fTopLeft.x-1;
       if Result.x<FFixedCols then Result.x:=FFixedCols;
     end;
-    if (gz=gzFixedRows)or(gz=gzFixedCells) then begin
+    if (gz=gzFixedCols)or(gz=gzFixedCells) then begin
       Result.y:=fTopleft.y-1;
       if Result.y<fFixedRows then Result.y:=FFixedRows;
     end;
@@ -8799,6 +8800,7 @@ procedure TCustomGrid.FontChanged(Sender: TObject);
 begin
   FRealizedDefRowHeight := 0;
   FRealizedDefColWidth := 0;
+  InvalidateRowSizes; // the default row height is computed from the font
   if csCustomPaint in ControlState then
     Canvas.Font := Font
   else begin
@@ -9250,15 +9252,9 @@ end;
 
 function TCustomGrid.GridColumnFromColumnIndex(ColumnIndex: Integer): Integer;
 begin
-  {$ifdef NewCols}
   result := ColumnIndex + FirstGridColumn;
   if Result>ColCount-1 then
     Result := -1;
-  {$else}
-  result := Columns.VisibleIndex(ColumnIndex);
-  if result>=0 then
-    result := result + FixedCols;
-  {$endif}
 end;
 
 procedure TCustomGrid.GridMouseWheel(Shift: TShiftState; Delta: Integer);
@@ -10373,6 +10369,7 @@ begin
   FFixedRows:=0;
   FRows.Count:=0;
   FGCache.TlRowOff := 0;
+  InvalidateRowSizes;
   Result:=True;
 end;
 
@@ -12853,10 +12850,8 @@ function TGridColumn.GetWidth: Integer;
 var
   tmpGrid: TCustomGrid;
 begin
-  {$ifdef newcols}
   if not Visible then
     exit(0);
-  {$endif}
   if FWidth=nil then
     result := GetDefaultWidth
   else
@@ -13339,19 +13334,8 @@ begin
 end;
 
 function TGridColumns.GetVisibleCount: Integer;
-{$ifNdef newcols}
-var
-  i: Integer;
-{$endif}
 begin
-  {$ifdef newcols}
   result := Count;
-  {$else}
-  result := 0;
-  for i:=0 to Count-1 do
-    if Items[i].Visible then
-      inc(result);
-  {$endif}
 end;
 
 function TGridColumns.GetOwner: TPersistent;
@@ -13471,29 +13455,11 @@ begin
 end;
 
 function TGridColumns.RealIndex(Index: Integer): Integer;
-{$ifNdef NewCols}
-var
-  i: Integer;
-{$endif}
 begin
-  {$ifdef NewCols}
   if Index>Count-1 then
     result := -1
   else
     result := Index;
-  {$else}
-  result := -1;
-  if Index>=0 then
-    for i:=0 to Count-1 do begin
-      if Items[i].Visible then begin
-        Dec(index);
-        if Index<0 then begin
-          result := i;
-          exit;
-        end;
-      end;
-    end;
-  {$endif}
 end;
 
 function TGridColumns.IndexOf(Column: TGridColumn): Integer;

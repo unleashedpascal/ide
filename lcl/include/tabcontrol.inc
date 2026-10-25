@@ -233,6 +233,12 @@ begin
   //RegisterWSComponent(TNoteBookStringsTabControl, TWSPageControl);
 end;
 
+constructor TNoteBookStringsTabControl.Create(TheOwner: TComponent);
+begin
+  inherited Create(TheOwner);
+  ControlStyle := ControlStyle + [csAutoSizeIgnoreByParent];
+end;
+
 { TTabControlNoteBookStrings }
 
 procedure TTabControlNoteBookStrings.NBGetImageIndex(Sender: TObject;
@@ -662,11 +668,12 @@ end;
 
 procedure TTabControl.SetTabIndex(Value: Integer);
 begin
-  if csLoading in ComponentState then
-    FLoadedTabIndex := Max(0, Value)
-  else
   if Value >= 0 then
+  begin
     TTabControlStrings(FTabs).TabIndex:=Value;
+    if (csLoading in ComponentState) or (not HandleAllocated) then
+      FLoadedTabIndex := Value;
+  end;
 end;
 
 procedure TTabControl.UpdateTabImages;

@@ -395,6 +395,19 @@ begin
   Result:=ComparePointers(Policies1.Code,Policies2.Code);
 end;
 
+function Is_TypeOf_Operator(const Src: string; TypeEndPos: integer;
+  NestedComments: boolean): boolean;
+// true if the 'type' in front of TypeEndPos is followed by 'of',
+// i.e. the 'type of' operator of modeswitch TypeInquiry
+var
+  p, AtomStart: integer;
+begin
+  p:=TypeEndPos;
+  ReadRawNextPascalAtom(Src,p,AtomStart,NestedComments);
+  Result:=(AtomStart<=length(Src))
+    and (CompareIdentifiers('OF',@Src[AtomStart])=0);
+end;
+
 function CompareCodeWithFABPolicy(Key, Data: Pointer): integer;
 var
   Policies: TFABPolicies absolute Data;
@@ -752,6 +765,7 @@ var
   Block: PBlock;
   CommentStartPos: LongInt;
   CommentEndPos: LongInt;
+  i: Integer;
 begin
   p:=StartPos;
   if EndPos>length(Src) then EndPos:=length(Src)+1;
@@ -824,7 +838,11 @@ begin
       case UpChars[r[1]] of
       'A': // CA
         if CompareIdentifiers('CASE',r)=0 then begin
-          if Stack.TopType in bbtAllStatements then
+          if (Stack.TopType in bbtAllStatements)
+          or ((Stack.TopType=bbtDefinition) and (Stack.Top>0)
+            and (Stack.Stack[Stack.Top-1].Typ in [bbtConstSection,bbtVarSection]))
+          then
+            // case statement or case-expression, e.g. const c = case a of 1: 2 else 3 end;
             BeginBlock(bbtCase);
         end;
       'L': // CL
@@ -874,6 +892,16 @@ begin
           if Stack.TopType=bbtStatement then
             EndBlock;
           while Stack.TopType in [bbtFor,bbtForDo] do EndBlock;
+          if Stack.TopType=bbtIfElse then begin
+            // a nested if with else-part, e.g. an if-expression in the then-part:
+            //   if c then x := if a then 1 else 2 else y := 3
+            i:=Stack.Top-1;
+            while (i>=0) and (Stack.Stack[i].Typ in [bbtIf,bbtIfElse,bbtStatement]) do
+              dec(i);
+            if (i>=0) and (Stack.Stack[i].Typ=bbtIfThen) then
+              while Stack.Top>i do
+                EndBlock;
+          end;
           case Stack.TopType of
           bbtIfThen:
             begin
@@ -1116,7 +1144,8 @@ begin
             BeginBlock(bbtTry);
         end;
       'Y': // TY
-        if CompareIdentifiers('TYPE',r)=0 then begin
+        if (CompareIdentifiers('TYPE',r)=0)
+        and not Is_TypeOf_Operator(Src,p,NestedComments) then begin
           if Stack.TopType<>bbtDefinition then
             StartIdentifierSection(bbtTypeSection);
         end;
@@ -1657,7 +1686,8 @@ begin
   'T':
     case UpChars[r[1]] of
     'Y': // TY
-      if CompareIdentifiers('TYPE',r)=0 then begin
+      if (CompareIdentifiers('TYPE',r)=0)
+      and not Is_TypeOf_Operator(Source,p,NestedComments) then begin
         EndIdentifierSectionAndProc;
         if StackTopType=bbtProcedure then
           BeginBlock(bbtTypeSection);

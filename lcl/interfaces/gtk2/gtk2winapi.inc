@@ -1400,6 +1400,7 @@ begin
         DebugLn(['TGtk2WidgetSet.CreateFontIndirectEx Creating default font']);
         {$ENDIF}
         GdiObject := CreateDefaultFont;
+        CachedFont := FontCache.FindADescriptor(GdiObject^.GDIFontObject);
         exit;
       end;
 
@@ -1886,20 +1887,6 @@ end;
   are misleading. Marc tested with resource profiler under win XP.
  ------------------------------------------------------------------------------}
 function TGtk2WidgetSet.DeleteObject(GDIObject: HGDIOBJ): Boolean;
-
-  procedure RaiseInvalidGDIObject;
-  begin
-    {$ifdef TraceGdiCalls}
-    DebugLn();
-    DebugLn('TGtk2WidgetSet.DeleteObject: TraceCall for invalid object: ');
-    DumpBackTrace(PgdiObject(GdiObject)^.StackAddrs);
-    DebugLn();
-    DebugLn('Exception will follow:');
-    DebugLn();
-    {$endif}
-    RaiseGDBException('TGtk2WidgetSet.DeleteObject invalid GdiObject='+dbgs(GdiObject));
-  end;
-
 var
   GDIObjectExists: boolean;
 begin
@@ -1921,9 +1908,7 @@ begin
   GDIObjectExists := FGDIObjects.Contains({%H-}PGdiObject(GDIObject));
   Result := GDIObjectExists;
   if not GDIObjectExists then
-  begin
-    RaiseInvalidGDIObject;
-  end;
+    Exit;
 
   Result := ReleaseGDIObject({%H-}PGdiObject(GDIObject));
 end;
@@ -3843,11 +3828,24 @@ var
 
   procedure DoTextOut(CurStr: Pchar; CurCount: Integer);
   var
-    ScrX, CharLen, i: LongInt;
+    ScrX, ScrY, CharLen, i: LongInt;
+    Escapement: LongInt;
+    Advance: Int64;
+    CosA, SinA: Double;
   begin
     if Dx <> nil then
     begin
       ScrX := X;
+      ScrY := Y;
+      Escapement := DevCtx.GetFont^.LogFont.lfEscapement;
+      Advance := 0;
+      CosA := 1;
+      SinA := 0;
+      if Escapement <> 0 then
+      begin
+        CosA := Cos(Escapement * Pi / 1800);
+        SinA := Sin(Escapement * Pi / 1800);
+      end;
       while CurCount > 0 do
       begin
         CharLen := 0;
@@ -3856,8 +3854,15 @@ var
           CharLen := CharLen + UTF8CodepointSize(CurStr + CharLen);
           inc(i);
         until (CharLen >= CurCount) or ((Dx+i)^ <> 0);
-        DevCtx.DrawTextWithColors(CurStr, CharLen, ScrX, Y, Foreground, Background);
-        inc(ScrX, Dx^);
+        DevCtx.DrawTextWithColors(CurStr, CharLen, ScrX, ScrY, Foreground, Background);
+        if Escapement = 0 then
+          inc(ScrX, Dx^)
+        else
+        begin
+          inc(Advance, Dx^);
+          ScrX := X + Round(Advance * CosA);
+          ScrY := Y - Round(Advance * SinA);
+        end;
         inc(Dx, i);
         inc(CurStr, CharLen);
         dec(CurCount, CharLen);
@@ -3987,34 +3992,33 @@ end;
 function TGtk2WidgetSet.FillRgn(DC: HDC; RegionHnd: HRGN; hbr: HBRUSH): Bool;
 var
   GtkDC: Integer;
-  OldRgn: PGdkRegion;
   DevCtx: TGtkDeviceContext absolute DC;
   ARect: TRect;
   CRect : TGDKRectangle;
-  hasClipping: Boolean;
+  TmpRgn: HRGN;
+  TransP: TPoint;
 begin
-
   Result := IsValidDC(DC) and IsValidGDIObject(hbr) and IsValidGDIObject(RegionHnd);
   if not Result then Exit;
   GtkDC := SaveDC(DC);
-  if (DevCtx.ClipRegion <> nil) and (DevCtx.ClipRegion^.GDIRegionObject <> nil) then
-    OldRgn := gdk_region_copy(DevCtx.ClipRegion^.GDIRegionObject)
-  else
-    OldRgn := nil;
-  hasClipping := Assigned(OldRgn);
+  if DevCtx.HasTransf then
+  begin
+    TransP := DevCtx.TransfPointIndirect(Point(0, 0));
+    TmpRgn := CreateRegionCopy(RegionHnd);
+    gdk_region_offset({%H-}PGDIObject(TmpRgn)^.GDIRegionObject, TransP.X, TransP.Y);
+  end else
+    TmpRgn := RegionHnd;
   try
-    if SelectClipRGN(DC, RegionHnd) <> ERROR then
+    if SelectClipRGN(DC, TmpRgn) <> ERROR then
     begin
       gdk_region_get_clipbox({%H-}PGDIObject(RegionHnd)^.GDIRegionObject, @CRect);
       ARect := RectFromGdkRect(CRect);
       DevCtx.FillRect(ARect, hbr, True);
-      // revert clip (whatever it is - null or valid region)
-      SelectClipRGN(DC, {%H-}HRGN(OldRgn));
       Result := True;
     end;
   finally
-    if hasClipping then
-      gdk_region_destroy(OldRgn);
+    if TmpRgn <> RegionHnd then
+      DeleteObject(TmpRgn);
     RestoreDC(DC, GtkDC);
   end;
 end;
@@ -4258,13 +4262,12 @@ begin
     exit;
   end;
 
-  gdk_screen_get_monitor_geometry(AScreen, AMonitorIdx, @AMonitorRect);
-  AWmm := gdk_screen_get_monitor_width_mm(AScreen, AMonitorIdx);
-  AHmm := gdk_screen_get_monitor_height_mm(AScreen, AMonitorIdx);
-
   case dpiType of
     MDT_RAW_DPI:
     begin
+      gdk_screen_get_monitor_geometry(AScreen, AMonitorIdx, @AMonitorRect);
+      AWmm := gdk_screen_get_monitor_width_mm(AScreen, AMonitorIdx);
+      AHmm := gdk_screen_get_monitor_height_mm(AScreen, AMonitorIdx);
       if AWmm > 0 then
         dpiX := Round(AMonitorRect.width * 25.4 / AWmm)
       else
@@ -4276,21 +4279,8 @@ begin
     end;
     MDT_EFFECTIVE_DPI, MDT_ANGULAR_DPI:
     begin
-      if AFallback > 96 then
-      begin
-        dpiX := AFallback;
-        dpiY := AFallback;
-      end else
-      begin
-        if AWmm > 0 then
-          dpiX := Round(AMonitorRect.width * 25.4 / AWmm)
-        else
-          dpiX := AFallback;
-        if AHmm > 0 then
-          dpiY := Round(AMonitorRect.height * 25.4 / AHmm)
-        else
-          dpiY := AFallback;
-      end;
+      dpiX := AFallback;
+      dpiY := AFallback;
     end;
   end;
 end;
@@ -4539,10 +4529,13 @@ begin
     or (DevCtx.PaintRectangle.Bottom<>0) then
       lpRect^ := DevCtx.PaintRectangle
     else
-    begin
-      gdk_window_get_size(DevCtx.Drawable, @X, @Y);
-      lpRect^ := Rect(0,0,X,Y);
-    end;
+      if DevCtx.Drawable <> nil then
+      begin
+        X := 0;
+        Y := 0;
+        gdk_window_get_size(DevCtx.Drawable, @X, @Y);
+        lpRect^ := Rect(0,0,X,Y);
+      end;
     Result := SIMPLEREGION;
   end
   else
@@ -8338,7 +8331,11 @@ begin
   MouseCaptureWidget := nil;
 
   if Widget = nil then
-    exit;
+  begin
+    // we need only `Down`, issue #42651
+    LastMouse.Down := False;
+    Exit;
+  end;
 
   CaptureWidget := GetDefaultMouseCaptureWidget(Widget);
   if CaptureWidget = nil then begin
@@ -9492,6 +9489,8 @@ var
   ShapeRegion: PGdkRegion;
   LCLObject: TObject;
 begin
+  if (hRgn <> 0) and not IsValidGDIObject(hRgn) then
+    Exit(0);
   // For normal widgets we should use GetFixedWidget,
   // but for TForm we should apply the region in the raw hWnd
   LCLObject := GetLCLObject({%H-}PGtkWidget(hWnd));
@@ -9520,6 +9519,8 @@ begin
   gdk_window_shape_combine_region(Window, ShapeRegion, 0, 0);
   if bRedraw then
     gdk_window_invalidate_region(Window, ShapeRegion, True);
+  if hRgn <> 0 then
+    DeleteObject(hRgn);
   Result := 1;
 end;
 

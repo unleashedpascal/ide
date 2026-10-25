@@ -16,6 +16,7 @@
 **/*.lps
 **/*.compiled
 **/*.or
+**/*.log
 !**/Makefile.compiled
 /docs/chm/**/*.chm
 /docs/chm/**/*.xct
@@ -28,6 +29,7 @@
 /lazarus
 /lazarus.old*
 /lazbuild
+/lazbuild.old*
 /startlazarus
 ide/revision.inc
 /config

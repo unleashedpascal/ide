@@ -31,6 +31,11 @@ EnableISX=true
 #define CurrentYear GetDateTimeString('yyyy','','')
 #define AppAuthor "Lazarus Team"
 #define AppURL "https://www.lazarus-ide.org/"
+#if FPCTargetOS=="win32"
+#define bitness " (32 bit)"
+#else
+#define bitness ""
+#endif
 
 [Setup]
 AllowNoIcons=yes
@@ -38,7 +43,7 @@ AppName={#AppName}
 ; AddId: registry/uninstall info: Max 127 char
 AppId={code:GetAppId}
 AppVersion={#AppVersion}
-AppVerName={#AppName} {#AppVersion}
+AppVerName={#AppName} {#AppVersion}{#bitness}
 AppPublisher={#AppAuthor}
 AppPublisherURL={#AppURL}
 AppSupportURL={#AppURL}
@@ -187,7 +192,7 @@ Source: {#CHMHELPFILES}\*.*; DestDir: {app}\docs\chm; Components: installhelp; F
 
 [INI]
 Filename: {app}\Lazarus Home Page.url; Section: InternetShortcut; Key: URL; String: https://www.lazarus-ide.org/
-Filename: {app}\Lazarus Forums.url; Section: InternetShortcut; Key: URL; String: http://www.lazarus.freepascal.org/index.php?action=forum
+Filename: {app}\Lazarus Forums.url; Section: InternetShortcut; Key: URL; String: https://www.lazarus-ide.org/index.php?action=forum
 Filename: {app}\Lazarus Wiki Help.url; Section: InternetShortcut; Key: URL; String: http://wiki.lazarus.freepascal.org/
 
 [Icons]
@@ -413,10 +418,15 @@ begin
         if not WizardSilent() then
 		if Pos( ' ', folder ) > 0 then
 		begin
-			MsgBox(SaveCustomMessage('FolderHasSpaces', 'Selected folder contains spaces, please select a folder without spaces in it.'),
-                   mbInformation, MB_OK );
-			Result := false;
-			exit;
+			Result := MsgBox(Format(SaveCustomMessage('FolderHasSpacesWarn',
+			                        'Selected folder contains spaces, some tools needed by Lazarus may not work. '+
+			                        '%0:sPlease select a different folder without spaces in it. %0:s%0:s' +
+			                        '"No" to keep the selection and continue at your own risk.'), [#13#10]
+			                       ),
+			                       mbError, MB_YESNO+MB_DEFBUTTON1) = IDNo;
+
+			if not Result then
+  			exit;
 		end;
 
 		FolderEmpty := IsDirEmpty(folder);
@@ -429,6 +439,9 @@ begin
 // THEN we should ask, if the uninstalled (todo uninstall cfg file) should be restored?
 		UpdateUninstallInfo;
 
+        if IsSecondaryCheckBoxChecked and (not IsSecondaryUpdate) and (wpAskConfDir.Values[0] = '') then
+          wpAskConfDir.Values[0] := AddBackslash(folder) + 'conf';
+          
         if FolderEmpty then
           exit;
 

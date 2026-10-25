@@ -490,11 +490,6 @@ msgstr "Kodo suskleidimo medis"
 msgid "Code folding (current)"
 msgstr ""
 
-#: lazarusidestrconsts.dlgaddhiattrcustom
-#, object-pascal-format
-msgid "Custom %d"
-msgstr ""
-
 #: lazarusidestrconsts.dlgaddhiattrdefault
 msgid "Default Text"
 msgstr "Numatytasis tekstas"
@@ -649,11 +644,6 @@ msgstr "Pakeista eilutė"
 msgid "Mouse link"
 msgstr "Pelės saitas"
 
-#: lazarusidestrconsts.dlgaddhiattrnestedbracket
-#, object-pascal-format
-msgid "Nested bracket %d"
-msgstr ""
-
 #: lazarusidestrconsts.dlgaddhiattroutlinelevelcolor
 #, object-pascal-format
 msgid "Level %s"
@@ -795,6 +785,15 @@ msgstr "Susietatasis derinimo darbalaukis"
 #: lazarusidestrconsts.dlgassociateddebugdesktophint
 msgid "If you select the desktop, the associated debug desktop will be selected as well."
 msgstr "Parinkus darbalaukį taip pat bus parinktas ir susietasis derinimo darbalaukis."
+
+#: lazarusidestrconsts.dlgassociateddesigndesktop
+#, object-pascal-format
+msgid "Associated design desktop for \"%s\""
+msgstr ""
+
+#: lazarusidestrconsts.dlgassociateddesigndesktophint
+msgid "If you select the desktop, the associated design desktop will be selected as well."
+msgstr ""
 
 #: lazarusidestrconsts.dlgautocreateforms
 msgid "Auto-create forms:"
@@ -1095,6 +1094,10 @@ msgstr "Kad forma veiktų gali reikėti paketo. Pastarąjį įdiegti automatišk
 msgid "Choose code template file (*.dci)"
 msgstr "Rinkitės kodo šablono failą (*.dci)"
 
+#: lazarusidestrconsts.dlgclass
+msgid "Class:"
+msgstr ""
+
 #: lazarusidestrconsts.dlgclosebuttonsnotebook
 msgid "Show close buttons in notebook"
 msgstr "Rengyklės kortelėse rodyti „Užverti“ mygtukus"
@@ -1388,8 +1391,33 @@ msgstr "Konfigurasija ir tikslas"
 msgid "Config files"
 msgstr "Nustatymų failai"
 
+#: lazarusidestrconsts.dlgconsolegroup
+msgid "Console"
+msgstr ""
+
+#: lazarusidestrconsts.dlgconsoleidewindow
+msgid "IDE internal window"
+msgstr ""
+
+#: lazarusidestrconsts.dlgconsolemodeide
+msgid "Internal IDE console"
+msgstr ""
+
+#: lazarusidestrconsts.dlgconsolemodeos
+msgid "OS console"
+msgstr ""
+
 #: lazarusidestrconsts.dlgconsolesizenotsupported
 msgid "Current debugger does not support this."
+msgstr ""
+
+#: lazarusidestrconsts.dlgconsoleunknown
+#, object-pascal-format
+msgid "Unknown console \"%s\""
+msgstr ""
+
+#: lazarusidestrconsts.dlgconsoleuseidedefault
+msgid "-- Use IDE default console --"
 msgstr ""
 
 #: lazarusidestrconsts.dlgcootherdebugginginfo
@@ -1587,6 +1615,10 @@ msgstr ""
 #: lazarusidestrconsts.dlgdeltemplate
 msgid "Delete template "
 msgstr "Pašalinti šabloną"
+
+#: lazarusidestrconsts.dlgdesigndesktop
+msgid "design"
+msgstr ""
 
 #: lazarusidestrconsts.dlgdesktopbuttons
 msgid "Buttons - "
@@ -1891,6 +1923,7 @@ msgid "Backup"
 msgstr "Atsarginė kopija"
 
 #: lazarusidestrconsts.dlgenvfiles
+msgctxt "lazarusidestrconsts.dlgenvfiles"
 msgid "Files"
 msgstr "Failai"
 
@@ -2268,6 +2301,120 @@ msgstr "While/Do"
 msgid "With/Do"
 msgstr "With/Do"
 
+#: lazarusidestrconsts.dlgfoldsqlaltertable
+msgid "Alter Table"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlbegin
+msgid "Begin"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlcreatedb
+msgid "Create Database"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlcreateprocedure
+msgid "Create Procedure"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlcreatetable
+msgid "Create Table"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqldelete
+#, fuzzy
+msgctxt "lazarusidestrconsts.dlgfoldsqldelete"
+msgid "Delete"
+msgstr "Pašalinti"
+
+#: lazarusidestrconsts.dlgfoldsqldropdb
+msgid "Drop Database"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqldroptable
+msgid "Drop Table"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlfrom
+msgid "From"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlgroup
+#, fuzzy
+msgctxt "lazarusidestrconsts.dlgfoldsqlgroup"
+msgid "Group"
+msgstr "Grupė"
+
+#: lazarusidestrconsts.dlgfoldsqlhaving
+msgid "Having"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlinsert
+#, fuzzy
+msgctxt "lazarusidestrconsts.dlgfoldsqlinsert"
+msgid "Insert"
+msgstr "Insert"
+
+#: lazarusidestrconsts.dlgfoldsqlinsertselect
+msgid "Insert-Select"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlinto
+msgid "Into"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqljoin
+msgid "Join"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqljoinon
+msgid "Join-On"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqllimit
+msgid "Limit"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlorder
+#, fuzzy
+msgctxt "lazarusidestrconsts.dlgfoldsqlorder"
+msgid "Order"
+msgstr "Eilė"
+
+#: lazarusidestrconsts.dlgfoldsqlselect
+#, fuzzy
+msgctxt "lazarusidestrconsts.dlgfoldsqlselect"
+msgid "Select"
+msgstr "Žymėjimas"
+
+#: lazarusidestrconsts.dlgfoldsqlset
+msgid "Set"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlsubselect
+msgid "Sub-Select"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlupdate
+#, fuzzy
+msgctxt "lazarusidestrconsts.dlgfoldsqlupdate"
+msgid "Update"
+msgstr "Atnaujinimas"
+
+#: lazarusidestrconsts.dlgfoldsqlupdateselect
+msgid "Update-Select"
+msgstr ""
+
+#: lazarusidestrconsts.dlgfoldsqlvalues
+#, fuzzy
+msgctxt "lazarusidestrconsts.dlgfoldsqlvalues"
+msgid "Values"
+msgstr "Vertės"
+
+#: lazarusidestrconsts.dlgfoldsqlwhere
+msgid "Where"
+msgstr ""
+
 #: lazarusidestrconsts.dlgfoldxmlcdata
 msgid "CData"
 msgstr "CData"
@@ -2498,6 +2645,16 @@ msgstr "Kai programa vykdoma, tai IKA bus slepiamas."
 msgid "Hide tab in single page windows"
 msgstr "Slėpti kortelę, jei langas su vienu lapu"
 
+#: lazarusidestrconsts.dlghighlightbothsidesofcursorleft
+msgctxt "lazarusidestrconsts.dlghighlightbothsidesofcursorleft"
+msgid "On both sides (left first)"
+msgstr ""
+
+#: lazarusidestrconsts.dlghighlightbothsidesofcursorright
+msgctxt "lazarusidestrconsts.dlghighlightbothsidesofcursorright"
+msgid "On both sides (right first)"
+msgstr ""
+
 #: lazarusidestrconsts.dlghighlightcolor
 msgid "Highlight Color"
 msgstr "Paryškinimo spalva"
@@ -2509,13 +2666,13 @@ msgstr "Paryškinto šrifto spalva"
 #: lazarusidestrconsts.dlghighlightleftofcursor
 #, fuzzy
 #| msgid "Left Of Cursor"
-msgid "Left Of Caret"
+msgid "Left of Caret"
 msgstr "Žymeklio kairėje"
 
 #: lazarusidestrconsts.dlghighlightrightofcursor
 #, fuzzy
 #| msgid "Right Of Cursor"
-msgid "Right Of Caret"
+msgid "Right of Caret"
 msgstr "Žymeklio dešinėje"
 
 #: lazarusidestrconsts.dlghintsparametersendernotused
@@ -2662,7 +2819,7 @@ msgstr "Įterptas mišros būseno „$IFDEF“ mazgas"
 #| "Please confirm the desktop name:\n"
 msgid ""
 "A desktop with the same name already exists.\n"
-"Please confirm the desktop name:"
+"Please confirm or change the desktop name:"
 msgstr ""
 "Egzistuoja darbalaukis tokiu pat pavadinimu.\n"
 "Patvirkinte darbalaukio pavadinimą:\n"
@@ -3074,17 +3231,13 @@ msgstr "Skaitliuko riba"
 msgid "Max line length:"
 msgstr "Maksimalus eilutės ilgis:"
 
-#: lazarusidestrconsts.dlgmaxrecentfiles
-msgid "Max recent files"
-msgstr "Maksimalus atvertų failų sąrašo ilgis"
+#: lazarusidestrconsts.dlgmaxrecentcount
+msgid "Max count of recent items"
+msgstr ""
 
 #: lazarusidestrconsts.dlgmaxrecenthint
 msgid "Value 0 means unlimited."
 msgstr ""
-
-#: lazarusidestrconsts.dlgmaxrecentprojs
-msgid "Max recent project files"
-msgstr "Maksimalus atvertų projektų sąrašo ilgis"
 
 #: lazarusidestrconsts.dlgmixmethodsandproperties
 msgid "Mix methods and properties"
@@ -3518,6 +3671,10 @@ msgstr "Rengyklės kortelės"
 msgid "Naming"
 msgstr "Pavadinimų suteikimas"
 
+#: lazarusidestrconsts.dlgnewdebuggerbackend
+msgid "New debugger backend"
+msgstr ""
+
 #: lazarusidestrconsts.dlgnewdesktop
 msgid "New desktop ..."
 msgstr "Naujas darbalaukis…"
@@ -3835,6 +3992,10 @@ msgstr ""
 msgid "Generic highlight in procedure names (implementation)"
 msgstr ""
 
+#: lazarusidestrconsts.dlgpasresolvecompilermodeswitcheswithcodetools
+msgid "Resolve compiler mode switches with CodeTools"
+msgstr ""
+
 #: lazarusidestrconsts.dlgpassoptslinker
 msgid "Pass options to linker with \"-k\", delimiter is space"
 msgstr "Perduoti parinktis saistyklei naudojant „-k“ (atskirta tarpais)"
@@ -3871,6 +4032,10 @@ msgstr "Nuolatinis žymeklis"
 
 #: lazarusidestrconsts.dlgpersistentcursornoblink
 msgid "Caret in unfocused editor does not blink"
+msgstr ""
+
+#: lazarusidestrconsts.dlgpleasechoosethedebuggerbackend
+msgid "Please choose the debugger backend to add."
 msgstr ""
 
 #: lazarusidestrconsts.dlgpoansiutf8
@@ -3991,7 +4156,9 @@ msgid "Session"
 msgstr "Sesija"
 
 #: lazarusidestrconsts.dlgpotitle
-msgid "Title:"
+#, fuzzy
+#| msgid "Title:"
+msgid "Title"
 msgstr "Antraštė:"
 
 #: lazarusidestrconsts.dlgpouiaccess
@@ -4068,6 +4235,36 @@ msgstr "Pritraukti prie tinklelio taškų"
 #, object-pascal-format
 msgid "Really delete desktop \"%s\"?"
 msgstr "Ar tikrai šalinti darbalaukį „%s“?"
+
+#: lazarusidestrconsts.dlgrecent
+msgid "Recent"
+msgstr ""
+
+#: lazarusidestrconsts.dlgrecentfilescaption
+#, fuzzy
+msgctxt "lazarusidestrconsts.dlgrecentfilescaption"
+msgid "Files"
+msgstr "Failai"
+
+#: lazarusidestrconsts.dlgrecentfilesheader
+msgid "Recent Files:"
+msgstr ""
+
+#: lazarusidestrconsts.dlgrecentpackagescaption
+msgid "Packages"
+msgstr ""
+
+#: lazarusidestrconsts.dlgrecentpackagesheader
+msgid "Recent Packages:"
+msgstr ""
+
+#: lazarusidestrconsts.dlgrecentprojectscaption
+msgid "Projects"
+msgstr ""
+
+#: lazarusidestrconsts.dlgrecentprojectsheader
+msgid "Recent Projects:"
+msgstr ""
 
 #: lazarusidestrconsts.dlgredirappend
 msgid "To file (append)"
@@ -4459,6 +4656,10 @@ msgstr "Rodyti užuominas"
 msgid "Showing Windows"
 msgstr "Rodomi langai"
 
+#: lazarusidestrconsts.dlgshowinopencoolbarbutton
+msgid "Show in \"Open\" drop-down toolbar button"
+msgstr ""
+
 #: lazarusidestrconsts.dlgshowlinenumbers
 msgctxt "lazarusidestrconsts.dlgshowlinenumbers"
 msgid "Show line numbers"
@@ -4528,6 +4729,10 @@ msgstr "Tarpo simbolis"
 #: lazarusidestrconsts.dlgspbhints
 msgid "Hints for main speed buttons (open, save, ...)"
 msgstr "Sufleriai pagrindiniams spartos mygtukams („Atverti“, „Įrašyti“, …)"
+
+#: lazarusidestrconsts.dlgsqlexthighlightgroup
+msgid "Extended SQL Highlight Options"
+msgstr ""
 
 #: lazarusidestrconsts.dlgsrcedcolorlabelinthesourceareonlyco
 msgid "Label in the source are only colored if the colon \":\" is placed immediately after the label."
@@ -4653,6 +4858,14 @@ msgstr "Perjungti į derinimo darbalaukį"
 msgctxt "lazarusidestrconsts.dlgtoggledebugdesktopbtnhint"
 msgid "Toggle as debug desktop"
 msgstr "Perjungti į derinimo darbalaukį"
+
+#: lazarusidestrconsts.dlgtoggledesigndesktopbtncaption
+msgid "Toggle as design desktop"
+msgstr ""
+
+#: lazarusidestrconsts.dlgtoggledesigndesktopbtnhint
+msgid "Activate this desktop while the form designer is shown (Toggle Form/Unit)"
+msgstr ""
 
 #: lazarusidestrconsts.dlgtopinfohint
 msgid "Current Class/Proc Hint"
@@ -4986,10 +5199,6 @@ msgstr "Parinktis: pritraukti prie orientavimo linijų"
 msgid "Z-order"
 msgstr "Z eilė"
 
-#: lazarusidestrconsts.gldhighlightbothsidesofcursor
-msgid "On Both Sides"
-msgstr "Abiejose pusėse"
-
 #: lazarusidestrconsts.initdlgdebugchangepath
 msgid "Change path"
 msgstr ""
@@ -5227,7 +5436,9 @@ msgid "New class name:"
 msgstr "Naujos klasės pavadinimas:"
 
 #: lazarusidestrconsts.lisa2pnewfile
-msgid "New File"
+#, fuzzy
+#| msgid "New File"
+msgid "New file ..."
 msgstr "Naujas failas"
 
 #: lazarusidestrconsts.lisa2pnopackagefoundfordependencypleasechooseanexisting
@@ -5351,6 +5562,10 @@ msgstr "Pamiršti pakeitimus?"
 #: lazarusidestrconsts.lisabortallloading
 msgid "Abort all loading"
 msgstr "Nutraukti visą įkėlimo procesą"
+
+#: lazarusidestrconsts.lisabortifanycompilerpathorexecut
+msgid "Abort if any compiler path or execute-before/after command is missing in the IDE trust whitelist."
+msgstr ""
 
 #: lazarusidestrconsts.lisabortloadingproject
 msgid "Abort loading project"
@@ -5531,6 +5746,10 @@ msgstr "Paketą įdėti į projektą"
 msgid "Add parameter brackets"
 msgstr "Pridėti parametro skliaustelius"
 
+#: lazarusidestrconsts.lisaddpathtotrustedexe
+msgid "Add path to trusted executable"
+msgstr ""
+
 #: lazarusidestrconsts.lisaddthefollowingfiles
 msgid "Add the following files:"
 msgstr ""
@@ -5658,13 +5877,6 @@ msgstr "Visi faile „%s“%sdaryti keitimai bus prarasti ir failas bus atvertas
 #: lazarusidestrconsts.lisalpha
 msgid "Alpha"
 msgstr "Raidinis"
-
-#: lazarusidestrconsts.lisalreadycontainsthehe
-#, object-pascal-format
-msgid ""
-"%s already contains the help:\n"
-"%s"
-msgstr ""
 
 #: lazarusidestrconsts.lisalternativekey
 msgid "Alternative key"
@@ -6133,10 +6345,22 @@ msgstr "Daryti naująjį projektą"
 msgid "Build number"
 msgstr "Darymo numeris"
 
+#: lazarusidestrconsts.lisbuildreleasepackagesstorecompi
+msgid "Build release packages. Store compiler checksum instead of date in package.compiled files. Ignore session and environment options."
+msgstr ""
+
 #: lazarusidestrconsts.lisbuildstage
 msgctxt "lazarusidestrconsts.lisbuildstage"
 msgid "Build"
 msgstr "Daryti"
+
+#: lazarusidestrconsts.lisbuildtheminimalidewithdefaults
+msgid "Build the minimal IDE with defaults."
+msgstr ""
+
+#: lazarusidestrconsts.lisbuildthereleaseidesameasminima
+msgid "Build the release IDE. Same as minimal plus a fixed set of extra packages."
+msgstr ""
 
 #: lazarusidestrconsts.lisbusy
 msgid "Busy"
@@ -6398,10 +6622,6 @@ msgstr "(Filtras)"
 msgid "Follow cursor"
 msgstr "Sekti žymeklį"
 
-#: lazarusidestrconsts.lisceisarootcontrol
-msgid "Is a root control"
-msgstr "Tai šakninis valdiklis"
-
 #: lazarusidestrconsts.liscelongparamlistcount
 msgid "Parameters count treated as \"many\""
 msgstr "Parametrų kiekis traktuojamas kaip „daugybė“"
@@ -6494,6 +6714,7 @@ msgid "Other"
 msgstr "Kiti"
 
 #: lazarusidestrconsts.lisceoupdate
+msgctxt "lazarusidestrconsts.lisceoupdate"
 msgid "Update"
 msgstr "Atnaujinimas"
 
@@ -6669,10 +6890,6 @@ msgstr "„%4:s“ viduje „%1:s“ koordinatė „%0:s“ pakeista iš „%2:d
 msgid "Change Encoding"
 msgstr "Keisti koduotę"
 
-#: lazarusidestrconsts.lischangefile
-msgid "Change file"
-msgstr "Keisti failą"
-
 #: lazarusidestrconsts.lischangemethodvisibilityto
 #, object-pascal-format
 msgid "Change method visibility to \"%s\""
@@ -6711,6 +6928,10 @@ msgstr "Ar pakito failas diske spręsti pagal pakitusį jo turinį, o ne datą"
 msgid "Check if the next token in source is an \"end\" and if not return \"LineEnding + end; + LineEnding\"."
 msgstr "Tikrina ar tolimesnė leksema yra „end“, jei ne tai grąžina „LineEnding + end; + LineEnding“."
 
+#: lazarusidestrconsts.lischeckingfiles
+msgid "Checking ..."
+msgstr ""
+
 #: lazarusidestrconsts.lischeckoptions
 msgid "Check options"
 msgstr "Tikrinimo parinktys"
@@ -6743,10 +6964,6 @@ msgstr "Nurodykite kitokį pavadinimą"
 msgid "Choose a file with CodeTools templates"
 msgstr "Parinkite „CodeTools“ šablonų failą"
 
-#: lazarusidestrconsts.lischooseafpdoclink
-msgid "Choose a FPDoc link"
-msgstr "Nurodykite FPDoc saitą"
-
 #: lazarusidestrconsts.lischooseakey
 msgid "Choose a key ..."
 msgstr "Nurodykite klavišą…"
@@ -6754,10 +6971,6 @@ msgstr "Nurodykite klavišą…"
 #: lazarusidestrconsts.lischooseanameforthecomponent
 msgid "Choose a name for the component"
 msgstr "Komponentei parinkite pavadinimą"
-
-#: lazarusidestrconsts.lischooseanexamplefile
-msgid "Choose an example file"
-msgstr "Parinkite pavyzdžio failą"
 
 #: lazarusidestrconsts.lischooseanfpcmessagefile
 msgid "Choose an FPC message file"
@@ -7088,102 +7301,17 @@ msgstr "Kodo generavimo nuostatos"
 msgid "Add path"
 msgstr "Pridėti kelią"
 
-#: lazarusidestrconsts.liscodehelpbrowseexamplebutton
-msgctxt "lazarusidestrconsts.liscodehelpbrowseexamplebutton"
-msgid "Browse"
-msgstr "Naršyti"
-
-#: lazarusidestrconsts.liscodehelpconfirmreplace
-msgid "Confirm replace"
-msgstr "Patvirtinimas pakeičiant"
-
-#: lazarusidestrconsts.liscodehelpcreatebutton
-msgid "Create help item"
-msgstr "Kurti žinyno elementą"
-
 #: lazarusidestrconsts.liscodehelpdeletepathbutton
 msgid "Remove path"
 msgstr "Pašalinti kelią"
 
 #: lazarusidestrconsts.liscodehelpdescrtag
-msgctxt "lazarusidestrconsts.liscodehelpdescrtag"
 msgid "Description"
-msgstr "Aprašymas"
-
-#: lazarusidestrconsts.liscodehelperrorstag
-msgctxt "lazarusidestrconsts.liscodehelperrorstag"
-msgid "Errors"
-msgstr "Klaidos"
-
-#: lazarusidestrconsts.liscodehelpexampletag
-msgid "Example"
-msgstr "Pavyzdys"
+msgstr ""
 
 #: lazarusidestrconsts.liscodehelpgroupbox
 msgid "FPDoc settings"
 msgstr "„FPDoc“ nuostatos"
-
-#: lazarusidestrconsts.liscodehelphintboldformat
-msgid "Insert bold formatting tag"
-msgstr "Įterpti pusjuodžio formatavimo gairę"
-
-#: lazarusidestrconsts.liscodehelphintinsertcodetag
-msgid "Insert code formatting tag"
-msgstr "Įterpti kodo formatavimo gairę"
-
-#: lazarusidestrconsts.liscodehelphintitalicformat
-msgid "Insert italic formatting tag"
-msgstr "Įterpti kursyvo formatavimo gairę"
-
-#: lazarusidestrconsts.liscodehelphintremarktag
-msgid "Insert remark formatting tag"
-msgstr "Įterpti pastabos formatavimo gairę"
-
-#: lazarusidestrconsts.liscodehelphintunderlineformat
-msgid "Insert underline formatting tag"
-msgstr "Įterpti pabraukimo formatavimo gairę"
-
-#: lazarusidestrconsts.liscodehelphintvartag
-msgid "Insert var formatting tag"
-msgstr "Įterpti kintamojo formatavimo gairę"
-
-#: lazarusidestrconsts.liscodehelpinherited
-msgctxt "lazarusidestrconsts.liscodehelpinherited"
-msgid "Inherited"
-msgstr "Paveldėta"
-
-#: lazarusidestrconsts.liscodehelpinsertalink
-msgid "Insert a link ..."
-msgstr "Įterpti nuorodą…"
-
-#: lazarusidestrconsts.liscodehelpinsertparagraphformattingtag
-msgid "Insert paragraph formatting tag"
-msgstr "Įterpti paragrafo formatavimo gairę"
-
-#: lazarusidestrconsts.liscodehelpmainformcaption
-msgctxt "lazarusidestrconsts.liscodehelpmainformcaption"
-msgid "FPDoc Editor"
-msgstr "FPDoc rengyklė"
-
-#: lazarusidestrconsts.liscodehelpnoinheriteddescriptionfound
-msgid "(no inherited description found)"
-msgstr "(paveldėtas aprašymas nerastas)"
-
-#: lazarusidestrconsts.liscodehelpnotagcaption
-msgid "<NONE>"
-msgstr "<JOKS>"
-
-#: lazarusidestrconsts.liscodehelpseealsotag
-msgid "See also"
-msgstr "Taip pat žiūrėkite"
-
-#: lazarusidestrconsts.liscodehelpshortdescriptionof
-msgid "Short description of"
-msgstr "Trumpas aprašymas"
-
-#: lazarusidestrconsts.liscodehelpshorttag
-msgid "Short"
-msgstr "Santrumpa"
 
 #: lazarusidestrconsts.liscodeobignoreconstinfuncs
 msgctxt "lazarusidestrconsts.liscodeobignoreconstinfuncs"
@@ -8529,10 +8657,6 @@ msgstr ""
 msgid "Create function"
 msgstr "Kurti funkciją"
 
-#: lazarusidestrconsts.liscreatehelpnode
-msgid "Create Help node"
-msgstr "Kurti žinyno mazgą"
-
 #: lazarusidestrconsts.liscreateit
 msgid "Create it"
 msgstr "Kurti"
@@ -8763,6 +8887,10 @@ msgstr ""
 
 #: lazarusidestrconsts.lisdebugdialogconfirmdelwatches
 msgid "Confirm to delete all Watches"
+msgstr ""
+
+#: lazarusidestrconsts.lisdebugdialogshowwatcheshint
+msgid "Show hint for watches/locals (with same delay as source hint)"
 msgstr ""
 
 #: lazarusidestrconsts.lisdebugger
@@ -9258,11 +9386,6 @@ msgctxt "lazarusidestrconsts.lisdlgimport"
 msgid "Import ..."
 msgstr "Importuoti…"
 
-#: lazarusidestrconsts.lisdlgopen
-msgctxt "lazarusidestrconsts.lisdlgopen"
-msgid "Open ..."
-msgstr "Atverti…"
-
 #: lazarusidestrconsts.lisdoesnotexists
 #, object-pascal-format
 msgid "%s does not exist: %s"
@@ -9301,6 +9424,10 @@ msgstr "Šiam projektui nerodyti šio dialogo"
 #: lazarusidestrconsts.lisdonotshowthismessageagain
 msgid "Do not show this message again"
 msgstr "Daugiau neberodyti šio pranešimo"
+
+#: lazarusidestrconsts.lisdonottrustcompiler
+msgid "Do not trust"
+msgstr ""
 
 #: lazarusidestrconsts.lisdonotwriteupdatedprojectinfoafterbuild
 msgid "Do not write updated project info file after build. If not specified, build number will be incremented if configured."
@@ -9484,10 +9611,6 @@ msgstr "Redaguoti papildomą žinyną pranešimams"
 msgid "Edit build modes"
 msgstr ""
 
-#: lazarusidestrconsts.liseditcontexthelp
-msgid "Edit context help"
-msgstr "Keisti kontekstinį žinyną"
-
 #: lazarusidestrconsts.liseditfpcmessagehelp
 msgid "Edit FPC Message Help ..."
 msgstr ""
@@ -9546,19 +9669,24 @@ msgid "Macros"
 msgstr "Makrokomandos"
 
 #: lazarusidestrconsts.lisedtexttoolparameters
-msgid "Parameters:"
+#, fuzzy
+#| msgid "Parameters:"
+msgctxt "lazarusidestrconsts.lisedtexttoolparameters"
+msgid "Parameters"
 msgstr "Parametrai:"
 
-#: lazarusidestrconsts.lisedtexttoolprogramfilename
-msgid "Program Filename:"
-msgstr "Programos failo pavadinimas:"
+#: lazarusidestrconsts.lisedtexttoolprogramexecutable
+msgid "Program Executable"
+msgstr ""
 
 #: lazarusidestrconsts.lisedtexttooltitleandfilenamerequired
 msgid "Title and Filename required"
 msgstr "Reikia pavadinimo ir failo pavadinimo"
 
 #: lazarusidestrconsts.lisedtexttoolworkingdirectory
-msgid "Working Directory:"
+#, fuzzy
+#| msgid "Working Directory:"
+msgid "Working Directory"
 msgstr "Darbinis aplankas:"
 
 #: lazarusidestrconsts.liselevatethemessageprioritytoalwaysshowitbydefaultit
@@ -9812,15 +9940,6 @@ msgstr "Įvyko klaida analizuojant lfm komponentės srautą."
 msgid "Error reading package list from file%s%s%s%s"
 msgstr "Įvyko klaida įkeliant paketų sąrašą iš failo%s%s%s%s"
 
-#: lazarusidestrconsts.liserrorreadingxml
-msgid "Error reading XML"
-msgstr "Klaida skaitant XML"
-
-#: lazarusidestrconsts.liserrorreadingxmlfile
-#, object-pascal-format
-msgid "Error reading xml file \"%s\"%s%s"
-msgstr "Įvyko klaida skaitant XML failą „%s“%s%s"
-
 #: lazarusidestrconsts.liserrors
 msgctxt "lazarusidestrconsts.liserrors"
 msgid "Errors"
@@ -9835,6 +9954,11 @@ msgstr ", Klaidos: %s"
 msgid "Error saving form"
 msgstr "Įrašant formą įvyko klaida"
 
+#: lazarusidestrconsts.liserrorscount
+#, object-pascal-format
+msgid "Errors: %s"
+msgstr ""
+
 #: lazarusidestrconsts.liserrorsettingthenameofacomponentto
 #, object-pascal-format
 msgid "Error setting the name of a component %s to %s"
@@ -9843,7 +9967,7 @@ msgstr "Įvyko klaida komponentei „%s“ suteikiant pavadinimą „%s“"
 #: lazarusidestrconsts.liserrorwritingfile
 #, object-pascal-format
 msgid "Error writing file \"%s\""
-msgstr "Rašant į failą „%s“ įvyko klaida"
+msgstr ""
 
 #: lazarusidestrconsts.liserrorwritingpackagelisttofile
 #, object-pascal-format
@@ -9859,11 +9983,6 @@ msgstr "Numeris kas kelintoje eilutėje"
 #: lazarusidestrconsts.lisexamplefile
 msgid "Example file:"
 msgstr "Pavyzdžio failas:"
-
-#: lazarusidestrconsts.lisexamplesidentifiertmyenumenumunitnameidentifierpac
-#, object-pascal-format
-msgid "Examples:%sIdentifier%sTMyEnum.Enum%sUnitname.Identifier%s#PackageName.UnitName.Identifier"
-msgstr "Pavyzdžiai:%sIdentifikatorius%sTManoEnum.Enum%sModulioPavadinimas.Identifikatorius%s#PaketoPavadinimas.ModulioPavadinimas.Identifikatorius"
 
 #: lazarusidestrconsts.lisexclude
 msgid "Exclude"
@@ -10324,13 +10443,13 @@ msgstr "&Pirmasis testas"
 msgid "Fix LFM file"
 msgstr "LFM failo taisa"
 
-#: lazarusidestrconsts.lisfocusatcompilation
-msgid "Focus at compilation"
-msgstr ""
-
 #: lazarusidestrconsts.lisfocushint
 msgid "Focus hint"
 msgstr "Fokusuoti užuominą"
+
+#: lazarusidestrconsts.lisfocuswindow
+msgid "Focus window"
+msgstr ""
 
 #: lazarusidestrconsts.lisforcerenaming
 msgid "Force renaming"
@@ -10391,15 +10510,6 @@ msgctxt "lazarusidestrconsts.lisfpdoceditor"
 msgid "FPDoc Editor"
 msgstr "FPDoc rengyklė"
 
-#: lazarusidestrconsts.lisfpdocerrorwriting
-#, object-pascal-format
-msgid "Error writing \"%s\"%s%s"
-msgstr "Rašant „%s“ įvyko klaida%s%s"
-
-#: lazarusidestrconsts.lisfpdocfpdocsyntaxerror
-msgid "FPDoc syntax error"
-msgstr "FPDoc sintaksės klaida"
-
 #: lazarusidestrconsts.lisfpdocpackagename
 msgid "FPDoc package name:"
 msgstr "FPDoc paketo pavadinimas:"
@@ -10407,11 +10517,6 @@ msgstr "FPDoc paketo pavadinimas:"
 #: lazarusidestrconsts.lisfpdocpackagenamedefaultisprojectfilename
 msgid "FPDoc package name. Default is project file name."
 msgstr "FPDoc paketo pavadinimas. Numatyta naudoti projekto failo pavadinimą."
-
-#: lazarusidestrconsts.lisfpdocthereisasyntaxerrorinthefpdocelement
-#, object-pascal-format
-msgid "There is a syntax error in the fpdoc element \"%s\":%s%s"
-msgstr "FPDoc elemente „%s“ yra sintaksės klaida:%s%s"
 
 #: lazarusidestrconsts.lisfppkgcompilerproblem
 msgid "there is a problem with the Free Pascal compiler executable, "
@@ -10669,6 +10774,7 @@ msgstr ""
 "A copy of the GNU General Public License is available on the World Wide Web at <http://www.gnu.org/copyleft/gpl.html>. You can also obtain it by writing to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.\n"
 
 #: lazarusidestrconsts.lisgroup
+msgctxt "lazarusidestrconsts.lisgroup"
 msgid "Group"
 msgstr "Grupė"
 
@@ -10698,10 +10804,6 @@ msgstr ""
 msgid "Width"
 msgstr ""
 
-#: lazarusidestrconsts.lishashelp
-msgid "Has Help"
-msgstr "Turi žinyną"
-
 #: lazarusidestrconsts.lisheadercolors
 msgid "Header colors"
 msgstr "Antraštės spalvos"
@@ -10709,10 +10811,6 @@ msgstr "Antraštės spalvos"
 #: lazarusidestrconsts.lisheadercommentforclass
 msgid "Header comment for class"
 msgstr "Antraštinis komentaras klasei"
-
-#: lazarusidestrconsts.lishelpentries
-msgid "Help entries"
-msgstr "Žinyno įrašai"
 
 #: lazarusidestrconsts.lishelpselectordialog
 msgid "Help selector"
@@ -10747,6 +10845,11 @@ msgstr "Slėpti paiešką"
 msgctxt "lazarusidestrconsts.lishidewindow"
 msgid "Hide window"
 msgstr "Slėpti langą"
+
+#: lazarusidestrconsts.lishidewithpackageoptioniffpcfullversion
+#, object-pascal-format
+msgid "Hide with package option IF FPC_FULLVERSION>=%s THEN CustomOptions+=' -vm%s'"
+msgstr ""
 
 #: lazarusidestrconsts.lishidewithpackageoptionvm
 #, object-pascal-format
@@ -10867,10 +10970,6 @@ msgstr "IKA pagrindiniame modulyje rūpinsis „Application.Scaled“ (aukšta r
 #: lazarusidestrconsts.lisidemaintainsthetitleinmainunit
 msgid "The IDE maintains the title in main unit."
 msgstr "IKA rūpinasi antrašte pagrindiniame modulyje."
-
-#: lazarusidestrconsts.lisidentifier
-msgid "identifier"
-msgstr "Identifikatorius"
 
 #: lazarusidestrconsts.lisidentifierbeginswith
 msgid "Identifier begins with ..."
@@ -11224,10 +11323,6 @@ msgstr "Įterpti makrokomandą"
 msgid "Insert name of current procedure."
 msgstr "Įterpti dabartinės procedūros pavadinimą."
 
-#: lazarusidestrconsts.lisinsertprintshorttag2
-msgid "Insert printshort tag"
-msgstr "Įterpti žymą „printshort“"
-
 #: lazarusidestrconsts.lisinsertprocedurehead
 msgid "insert procedure head"
 msgstr "Įterpti procedūros antraštę"
@@ -11247,10 +11342,6 @@ msgstr "Įterpti laiką"
 #: lazarusidestrconsts.lisinserttimeoptionalformatstring
 msgid "Insert time. Optional: format string."
 msgstr "Įterpti laiką. Papildomai: formato tekstas."
-
-#: lazarusidestrconsts.lisinserturltag
-msgid "Insert url tag"
-msgstr "Įterpti URL žymą"
 
 #: lazarusidestrconsts.lisinsession
 msgid "In session"
@@ -11298,10 +11389,6 @@ msgstr "Interaktyvus"
 #, object-pascal-format
 msgid "internal error: %s"
 msgstr "vidinė klaida: %s"
-
-#: lazarusidestrconsts.lisinvaliddeclaration
-msgid "Invalid Declaration"
-msgstr ""
 
 #: lazarusidestrconsts.lisinvaliddelete
 msgid "Invalid delete"
@@ -11432,6 +11519,30 @@ msgstr "Šokti į procedūros „%s“ poziciją"
 #, object-pascal-format
 msgid "%s KB"
 msgstr "%s KB"
+
+#: lazarusidestrconsts.liskecbreakignoreoff
+msgid "Unset Ignore all Breakpoints"
+msgstr ""
+
+#: lazarusidestrconsts.liskecbreakignoreon
+msgid "Set Ignore all Breakpoints"
+msgstr ""
+
+#: lazarusidestrconsts.liskecbreakignoretoggle
+msgid "Toggle Ignore all Breakpoints"
+msgstr ""
+
+#: lazarusidestrconsts.liskecexceptignoreoff
+msgid "Unset Ignore all Exceptions"
+msgstr ""
+
+#: lazarusidestrconsts.liskecexceptignoreon
+msgid "Set Ignore all Exceptions"
+msgstr ""
+
+#: lazarusidestrconsts.liskecexceptignoretoggle
+msgid "Toggle Ignore all Exceptions"
+msgstr ""
 
 #: lazarusidestrconsts.liskeep2
 msgid "Keep"
@@ -12036,32 +12147,6 @@ msgstr "Naujinti dialoge „Apie Lazarus“ pateikiamą informaciją apie laidą
 msgid "Package distributed with Lazarus"
 msgstr ""
 
-#: lazarusidestrconsts.lisldaddlinktoinherited
-msgid "Add link to inherited"
-msgstr "Pridėti nuorodą į paveldą"
-
-#: lazarusidestrconsts.lisldcopyfrominherited
-msgid "Copy from inherited"
-msgstr "Kopijuoti iš paveldo"
-
-#: lazarusidestrconsts.lislddoesnothaveanyvalidfpdocpathunabletocreatethefpdo
-#, object-pascal-format
-msgid "%s does not have any valid FPDoc path.%sUnable to create the fpdoc file for %s"
-msgstr "Šiame „%s“ nėra tinkamo FPDoc kelio.%sNeina sukurti „%s“ skirto „fpdoc“ failo."
-
-#: lazarusidestrconsts.lisldmoveentriestoinherited
-msgid "Move entries to inherited"
-msgstr "Įrašus perkelti į paveldą"
-
-#: lazarusidestrconsts.lisldnovalidfpdocpath
-msgid "No valid FPDoc path"
-msgstr "Reikia FPDoc kelio"
-
-#: lazarusidestrconsts.lisldtheunitisnotownedbeanypackageorprojectpleaseaddthe
-#, object-pascal-format
-msgid "The unit %s is not owned be any package or project.%sPlease add the unit to a package or project.%sUnable to create the fpdoc file."
-msgstr "Modulis %s nepriklauso jokiam paketui ar projektui.%sPriskirkite modulį paketui ar projektui.%sNeina sukurti FPDoc failo."
-
 #: lazarusidestrconsts.lisleft
 msgctxt "lazarusidestrconsts.lisleft"
 msgid "Left"
@@ -12168,17 +12253,9 @@ msgstr "kelias iki bibliotekos"
 msgid "A Free Pascal shared library (.dll under Windows, .so under Linux, .dylib under macOS)."
 msgstr "„Free Pascal“ bendroji biblioteka („Linux“ sistemoje - „.so“, „Windows“ - „.dll“, „MacOS X“ - „.dylib“)"
 
-#: lazarusidestrconsts.lislink
-msgid "Link:"
-msgstr "Saitas:"
-
 #: lazarusidestrconsts.lislinkeroptions
 msgid "linker options"
 msgstr "saistyklės parinktys"
-
-#: lazarusidestrconsts.lislinktarget
-msgid "Link target"
-msgstr "Saito paskirtis"
 
 #: lazarusidestrconsts.lislistofallcasevalues
 msgid "list of all case values"
@@ -12210,7 +12287,7 @@ msgid "Maximize compatibility of project files (LPI and LPS)"
 msgstr ""
 
 #: lazarusidestrconsts.lislpicompatibilitymodecheckboxhint
-msgid "Check this if you want to open your project in legacy (2.0 and older) Lazarus versions."
+msgid "Check this if you want to open your project in legacy (2.2 - 4.8) Lazarus versions."
 msgstr ""
 
 #: lazarusidestrconsts.lislpkcompatibilitymodecheckbox
@@ -12218,7 +12295,7 @@ msgid "Maximize compatibility of package file (LPK)"
 msgstr ""
 
 #: lazarusidestrconsts.lislpkcompatibilitymodecheckboxhint
-msgid "Check this if you want to open your package in legacy (2.0 and older) Lazarus versions."
+msgid "Check this if you want to open your package in legacy (2.2 - 4.8) Lazarus versions."
 msgstr ""
 
 #: lazarusidestrconsts.lislpkhasvanishedondiskusingasalternative
@@ -12467,7 +12544,9 @@ msgid "Configure Custom Components ..."
 msgstr "Derinti naudotojo komponentes…"
 
 #: lazarusidestrconsts.lismenuconfigexternaltools
-msgid "Configure External Tools ..."
+#, fuzzy
+#| msgid "Configure External Tools ..."
+msgid "Configure &External Tools ..."
 msgstr "Derinti išorės įrankius…"
 
 #: lazarusidestrconsts.lismenuconfigurebuildlazarus
@@ -13461,6 +13540,10 @@ msgctxt "lazarusidestrconsts.lismenuprojectrun"
 msgid "&Run"
 msgstr "&Startuoti"
 
+#: lazarusidestrconsts.lismenupublishpackage
+msgid "Publish Package ..."
+msgstr ""
+
 #: lazarusidestrconsts.lismenupublishproject
 msgid "Publish Project ..."
 msgstr "Skelbti projektą…"
@@ -13569,6 +13652,7 @@ msgid "&Search"
 msgstr "Pa&ieška"
 
 #: lazarusidestrconsts.lismenuselect
+msgctxt "lazarusidestrconsts.lismenuselect"
 msgid "Select"
 msgstr "Žymėjimas"
 
@@ -14363,10 +14447,6 @@ msgstr ""
 msgid "no hints"
 msgstr "be užuominų"
 
-#: lazarusidestrconsts.lisnoidewindowselected
-msgid "No IDE window selected"
-msgstr "IKA langas nepažymėtas"
-
 #: lazarusidestrconsts.lisnolfmfile
 msgid "No LFM file"
 msgstr "LFM failo nėra"
@@ -14394,10 +14474,6 @@ msgstr "(Nėra parinkta)"
 #: lazarusidestrconsts.lisnonewfilefound
 msgid "No new file found"
 msgstr ""
-
-#: lazarusidestrconsts.lisnonodeselected
-msgid "no node selected"
-msgstr "mazgas nepažymėtas"
 
 #: lazarusidestrconsts.lisnopascalfile
 msgid "No Pascal file"
@@ -14647,6 +14723,25 @@ msgstr "Atverti"
 msgid "Open as XML file"
 msgstr "Įkelti kaip XML failą"
 
+#: lazarusidestrconsts.lisopenautomatically
+msgid "Open automatically"
+msgstr ""
+
+#: lazarusidestrconsts.lisopenautonever
+#, fuzzy
+msgctxt "lazarusidestrconsts.lisopenautonever"
+msgid "Never"
+msgstr "Niekada"
+
+#: lazarusidestrconsts.lisopenautoonlywhenerrorsoccur
+msgctxt "lazarusidestrconsts.lisopenautoonlywhenerrorsoccur"
+msgid "Only when errors occur"
+msgstr ""
+
+#: lazarusidestrconsts.lisopenautowhencompiling
+msgid "When getting messages"
+msgstr ""
+
 #: lazarusidestrconsts.lisopencontexthelpinbrowser
 msgid "Open context help in the browser"
 msgstr ""
@@ -14756,10 +14851,6 @@ msgstr "Atverti modulį"
 #: lazarusidestrconsts.lisopenurl
 msgid "Open URL"
 msgstr "Atverti adresą"
-
-#: lazarusidestrconsts.lisopenxml
-msgid "Open XML"
-msgstr "Atverti XML"
 
 #: lazarusidestrconsts.lisoptions
 msgctxt "lazarusidestrconsts.lisoptions"
@@ -14876,10 +14967,6 @@ msgstr "Paketo pirminio kodo aplankai"
 msgid "packages=%s/%s units=%s/%s identifiers=%s/%s lines=%s bytes=%s"
 msgstr "paketai=%s/%s moduliui=%s/%s identifikatoriai=%s/%s eilutės=%s baitai=%s"
 
-#: lazarusidestrconsts.lispackageunit
-msgid "package unit"
-msgstr "paketo modulis"
-
 #: lazarusidestrconsts.lispage
 msgctxt "lazarusidestrconsts.lispage"
 msgid "Page"
@@ -14898,6 +14985,11 @@ msgstr "Toks lapo pavadinimas „%s“ jau yra. Lapas nepridėtas."
 msgctxt "lazarusidestrconsts.lispanic"
 msgid "Panic"
 msgstr "Panika"
+
+#: lazarusidestrconsts.lisparameters
+msgctxt "lazarusidestrconsts.lisparameters"
+msgid "Parameters:"
+msgstr ""
 
 #: lazarusidestrconsts.lisparsed
 msgid ", parsed "
@@ -14928,9 +15020,9 @@ msgstr "Įdėti iš iškarpinės."
 msgid "Pastel Colors"
 msgstr "Pastelinės spalvos"
 
-#: lazarusidestrconsts.lispath
-msgid "Path"
-msgstr "Kelias"
+#: lazarusidestrconsts.lispathalreadyexists
+msgid "The path already exists."
+msgstr ""
 
 #: lazarusidestrconsts.lispatheditbrowse
 msgctxt "lazarusidestrconsts.lispatheditbrowse"
@@ -15456,7 +15548,9 @@ msgid "Show directory hierarchy"
 msgstr "Rodyti aplanko hierarchiją"
 
 #: lazarusidestrconsts.lispeshowmissingfiles
-msgid "Show Missing Files"
+#, fuzzy
+#| msgid "Show Missing Files"
+msgid "Show Missing Files ..."
 msgstr "Rodyti kokių failų trūksta"
 
 #: lazarusidestrconsts.lispeshowpropspanel
@@ -15898,6 +15992,14 @@ msgstr "Neišsaugotas paketas"
 msgid "Use unit"
 msgstr "Naudoti modulį"
 
+#: lazarusidestrconsts.lispkgmangvirtualunit
+msgid "Virtual unit"
+msgstr ""
+
+#: lazarusidestrconsts.lispkgmangvirtualunithint
+msgid "Package has only a unit's name. The unit itself is found elsewhere."
+msgstr ""
+
 #: lazarusidestrconsts.lispkgmangwarningthefilebelongstothecurrentproject
 #, object-pascal-format
 msgid "Warning: The file \"%s\"%sbelongs to the current project."
@@ -16004,10 +16106,6 @@ msgstr "Ištaisykite klaidą, rodomą pranešimų lange. Pranešimų langas įpr
 #: lazarusidestrconsts.lispleaseopenaunitbeforerun
 msgid "Please open a unit before run."
 msgstr "Prieš startuojant atverkite modulį."
-
-#: lazarusidestrconsts.lispleaseplacetheeditorcaretonanidentifierifthisisane
-msgid "Please place the editor caret on an identifier. If this is a new unit, please save the file first."
-msgstr ""
 
 #: lazarusidestrconsts.lispleaseselectsomecodetoextractanewproceduremethod
 msgid "Please select some code to extract a new procedure/method."
@@ -16182,7 +16280,7 @@ msgid "Minimum Version (optional):"
 msgstr "Minimali versija (nebūtina):"
 
 #: lazarusidestrconsts.lisprojaddnewfpmakerequirement
-msgid "New FPMake Requirement"
+msgid "New FPMake requirement ..."
 msgstr ""
 
 #: lazarusidestrconsts.lisprojaddnewrequirement
@@ -16339,10 +16437,6 @@ msgstr "%0:s%0:s Failo „%1:s“ eilutėje %2:d"
 msgid "%0:s%0:s In file '%1:s' at line %2:d:%0:s%3:s"
 msgstr "%0:s%0:s Failo „%1:s“ eilutėje %2:d:%0:s%3:s"
 
-#: lazarusidestrconsts.lisprojectunit
-msgid "project unit"
-msgstr "projekto modulis"
-
 #: lazarusidestrconsts.lisprojectwizard
 msgid "Project Wizard"
 msgstr "Projekto vediklis"
@@ -16494,6 +16588,14 @@ msgstr "Atverti pas&kiausiąjį projektą"
 #: lazarusidestrconsts.lispwviewexampleprojects
 msgid "View &Example Projects"
 msgstr "Rodyti pavy&zdžių projektus"
+
+#: lazarusidestrconsts.lisquerycompilerfortargets
+msgid "Query installed compiler for available targets"
+msgstr ""
+
+#: lazarusidestrconsts.lisquerycompilerfortargetshint
+msgid "List only the targets, processors and controllers the configured compiler actually supports"
+msgstr ""
 
 #: lazarusidestrconsts.lisquickcheckfppkgconfigurationatstart
 msgid "Quick check Fppkg configuration at start"
@@ -16674,9 +16776,9 @@ msgstr ""
 msgid "Reopen project"
 msgstr "Projektą atverti iš naujo"
 
-#: lazarusidestrconsts.lisreopenwithanotherencoding
-msgid "Reopen with another encoding"
-msgstr "Atveri iš naujo kitoje koduotėje"
+#: lazarusidestrconsts.lisreopenwithnewencoding
+msgid "Reopen with new encoding"
+msgstr ""
 
 #: lazarusidestrconsts.lisrepeat
 msgctxt "lazarusidestrconsts.lisrepeat"
@@ -17077,6 +17179,10 @@ msgstr "Rodomą pranešimą įrašyti failan…"
 msgid "Save "
 msgstr "Įrašyti "
 
+#: lazarusidestrconsts.lissavewithnewencoding
+msgid "Save with new encoding"
+msgstr ""
+
 #: lazarusidestrconsts.lissavingfileasloosescharactersatlinecolumn
 #, object-pascal-format
 msgid "Saving file \"%s\" as \"%s\" looses characters at line %s, column %s."
@@ -17260,10 +17366,6 @@ msgstr "Šitai nustačius kompiliatoriaus pranešimai bus verčiami į kitą kal
 msgid "(Set up default indentation)"
 msgstr "(Nustatyti numatytą lygiavimą)"
 
-#: lazarusidestrconsts.lisshort
-msgid "Short:"
-msgstr "Trumpai:"
-
 #: lazarusidestrconsts.lisshortnopath
 msgid "Short, no path"
 msgstr "Trumpas, be kelio"
@@ -17281,24 +17383,6 @@ msgstr "Rodyti"
 #, object-pascal-format
 msgid "Show abstract methods of \"%s\""
 msgstr "Rodyti „%s“ abstrakčius metodus"
-
-#: lazarusidestrconsts.lisshowautomatically
-msgid "Show automatically"
-msgstr ""
-
-#: lazarusidestrconsts.lisshowautonever
-#, fuzzy
-msgctxt "lazarusidestrconsts.lisshowautonever"
-msgid "Never"
-msgstr "Niekada"
-
-#: lazarusidestrconsts.lisshowautoonlywhenerrorsoccur
-msgid "Only when errors occur"
-msgstr ""
-
-#: lazarusidestrconsts.lisshowautowhencompiling
-msgid "When compiling"
-msgstr ""
 
 #: lazarusidestrconsts.lisshowcomponenttreeinobjectinspector
 msgid "Show component tree"
@@ -17620,6 +17704,14 @@ msgstr "Keliai iki pirminio kodo"
 msgid "Space equally"
 msgstr "Vienodais tarpais tarp elementu"
 
+#: lazarusidestrconsts.lissqlhighlighterdialect
+msgid "Override dialect for SQL highlighter"
+msgstr ""
+
+#: lazarusidestrconsts.lissqlhighlightopts
+msgid "SQL highlight"
+msgstr ""
+
 #: lazarusidestrconsts.lisssearching
 msgid "Searching"
 msgstr "Ieškoma"
@@ -17794,6 +17886,10 @@ msgstr "%s kortelės"
 #: lazarusidestrconsts.listarget
 msgid "Target:"
 msgstr "Paskirtis:"
+
+#: lazarusidestrconsts.listargetcontroller
+msgid "Target controller"
+msgstr ""
 
 #: lazarusidestrconsts.listargetfilenameemptyuseunitoutputdirectory
 msgid "Target file name: (-o, empty = use unit output directory)"
@@ -18147,6 +18243,21 @@ msgstr "Paketas „%s“ nėra skirtas konstravimo režimui. Jo negalima diegti 
 msgid "The package \"%s\" is used by"
 msgstr ""
 
+#: lazarusidestrconsts.listhepackagewantstorunthecommand
+#, object-pascal-format
+msgid "The package \"%s\" wants to run the command:%s%s%sBuilding with a custom command can run arbitrary programs.%sDo you want to trust and run this command?"
+msgstr ""
+
+#: lazarusidestrconsts.listhepackagewantstousethecompiler
+#, object-pascal-format
+msgid "The package \"%s\" wants to use the compiler:%s%s%sThis is not the default compiler configured in the IDE. Opening a package with a custom compiler can run arbitrary programs.%sDo you want to trust and use this compiler?"
+msgstr ""
+
+#: lazarusidestrconsts.listhepackagewantstousethecompilerbuild
+#, object-pascal-format
+msgid "The package \"%s\" wants to use the compiler:%s%s%sThis is not the default compiler configured in the IDE. Building with a custom compiler can run arbitrary programs.%sDo you want to trust and use this compiler?"
+msgstr ""
+
 #: lazarusidestrconsts.listhepathofmakeisnotcorrect
 #, object-pascal-format
 msgid "The path of \"make\" is not correct: \"%s\""
@@ -18208,6 +18319,21 @@ msgstr "Prieš darymą projektas turi būti įrašytas%sAplinkos parinktyse pari
 
 #: lazarusidestrconsts.listheprojectusesfpcresourceswhichrequireatleast
 msgid "The project uses FPC resources which require at least FPC 2.4"
+msgstr ""
+
+#: lazarusidestrconsts.listheprojectwantstorunthecommand
+#, object-pascal-format
+msgid "The project \"%s\" wants to run the command:%s%s%sBuilding with a custom command can run arbitrary programs.%sDo you want to trust and run this command?"
+msgstr ""
+
+#: lazarusidestrconsts.listheprojectwantstousethecompiler
+#, object-pascal-format
+msgid "The project \"%s\" wants to use the compiler:%s%s%sThis is not the default compiler configured in the IDE. Opening a project with a custom compiler can run arbitrary programs.%sDo you want to trust and use this compiler?"
+msgstr ""
+
+#: lazarusidestrconsts.listheprojectwantstousethecompilerbuild
+#, object-pascal-format
+msgid "The project \"%s\" wants to use the compiler:%s%s%sThis is not the default compiler configured in the IDE. Building with a custom compiler can run arbitrary programs.%sDo you want to trust and use this compiler?"
 msgstr ""
 
 #: lazarusidestrconsts.listheprojectwritesthedebugsymbolstoanexternalfilethe
@@ -18371,12 +18497,6 @@ msgstr "Modulio pavadinimas yra šis"
 msgid "The unit filename \"%s\" is not lowercase.%sThe Free Pascal compiler does not search for all cases. It is recommended to use lowercase filename.%sRename file lowercase?"
 msgstr "Failo pavadinime „%s“ yra ne vien tik mažosios raidės.%s„Free Pascal“ kompiliatorius atsižvelgia į raidžių dydį, todėl patartina failo pavadinime naudoti vien tik mažąsias raides.%sFailą pervadinti mažosiomis raidėmis?"
 
-#: lazarusidestrconsts.listheunitispartofthefpcsourcesbutthecorrespondingfpd
-#, object-pascal-format, fuzzy
-#| msgid "The unit %s is part of the FPC sources, but the corresponding fpdoc xml file was not found.%sEither you have not yet added the fpcdocs directory to the search path or the unit is not yet documented.%sThe fpdoc files for the FPC sources can be downloaded from: %s%sPlease add the directory in the fpdoc editor options.%sIn order to create a new file the directory must be writable."
-msgid "The unit %s is part of the FPC sources but the corresponding fpdoc xml file was not found.%sEither you have not yet added the fpcdocs directory to the search path or the unit is not yet documented.%sThe fpdoc files for the FPC sources can be downloaded from: %s%sPlease add the directory in the fpdoc editor options.%sIn order to create a new file the directory must be writable."
-msgstr "Modulis „%s“ yra FPC pirminio kodo dalis, tačiau nepavyko rasti jam priklausančio FPDoc „.xml“ failo.%sTo priežastis - paieškos kelyje nėra nurodyto FPDoc failų aplanko, arba tiesiog šiam moduliui nėra sukurta dokumentacija.%sFPC pirminiam kodui skirtus FPDoc failus galima atsisiųsti iš: %s%sKelią reikia įdėti į FPDoc rengyklės parinktis.%sĮ aplanką turi būti leidžiama rašyti tam, kad būtų įmanoma suskurti failą."
-
 #: lazarusidestrconsts.listheunitisusedbyotherfilesupdatereferencesautomatic
 #, object-pascal-format
 msgid "The unit %s is used by other files.%sUpdate references automatically?"
@@ -18458,10 +18578,6 @@ msgstr "&Antraštė"
 msgid "Show the custom IDE title before the IDE's name and other info in the title. Example: project1 - Lazarus."
 msgstr "Antraštė programų juostoje, pavyzdžiui, bus tokia: projektas1.lpi - Lazarus"
 
-#: lazarusidestrconsts.listitleleaveemptyfordefault
-msgid "Title (leave empty for default)"
-msgstr "Antraštė (palikus tuščią - bus naudojama numatytoji)"
-
 #: lazarusidestrconsts.listofpcpath
 msgid "Path:"
 msgstr "Failas:"
@@ -18477,10 +18593,6 @@ msgstr "Įrankio antraštė: nepavyko"
 #: lazarusidestrconsts.listoolheaderrunning
 msgid "Tool Header: Running"
 msgstr "Įrankio antraštė: vykdoma"
-
-#: lazarusidestrconsts.listoolheaderscrolledup
-msgid "Tool Header: Scrolled up"
-msgstr "Įrankio antraštė: paslinktas viršun"
 
 #: lazarusidestrconsts.listoolheadersuccess
 msgid "Tool Header: Success"
@@ -18537,6 +18649,34 @@ msgstr "Viso lapų: %s"
 #: lazarusidestrconsts.listreeneedsrefresh
 msgid "Tree needs refresh"
 msgstr "Medį būtina naujinti"
+
+#: lazarusidestrconsts.listrustcommandcaption
+msgid "Trust build command?"
+msgstr ""
+
+#: lazarusidestrconsts.listrustcompileralways
+msgid "Trust always"
+msgstr ""
+
+#: lazarusidestrconsts.listrustcompilercaption
+msgid "Trust project compiler?"
+msgstr ""
+
+#: lazarusidestrconsts.listrustcompilerthistime
+msgid "Trust until project closes"
+msgstr ""
+
+#: lazarusidestrconsts.listrustedcommands
+msgid "Trusted commands"
+msgstr ""
+
+#: lazarusidestrconsts.listrustedcompilers
+msgid "Trusted compilers"
+msgstr ""
+
+#: lazarusidestrconsts.listrustpkgcompilercaption
+msgid "Trust package compiler?"
+msgstr ""
 
 #: lazarusidestrconsts.listwomovedfileswillhavethesamefilenamein
 #, object-pascal-format
@@ -19193,6 +19333,10 @@ msgstr "„Boolean“ vertėms naudoti žymimąjį langelį"
 msgid "Use comments in custom options"
 msgstr "Papildytose parinktyse naudoti komentarus"
 
+#: lazarusidestrconsts.lisusedefaultcompiler
+msgid "Use default compiler"
+msgstr ""
+
 #: lazarusidestrconsts.lisusedesigntimepackages
 msgid "Use design time packages"
 msgstr "Naudoti konstravimui skirtus paketus"
@@ -19290,6 +19434,7 @@ msgid "Value: "
 msgstr "Vertė: "
 
 #: lazarusidestrconsts.lisvalues
+msgctxt "lazarusidestrconsts.lisvalues"
 msgid "Values"
 msgstr "Vertės"
 
@@ -19437,6 +19582,10 @@ msgstr "Darbinis aplankas darant"
 msgid "Working directory for run"
 msgstr "Darbinis aplankas startuojant"
 
+#: lazarusidestrconsts.liswraplongmessagelinesotherwisetheyareclippedandahi
+msgid "Wrap long message lines into several rows. Otherwise they are clipped and a hint shows the full text."
+msgstr ""
+
 #: lazarusidestrconsts.liswriteconfiginsteadofcommandlineparameters
 msgid "Write config instead of command line parameters"
 msgstr ""
@@ -19488,6 +19637,7 @@ msgid "Source Editor"
 msgstr "Pirminio kodo rengyklė"
 
 #: lazarusidestrconsts.lrsplddeleteselected
+msgctxt "lazarusidestrconsts.lrsplddeleteselected"
 msgid "Delete selected"
 msgstr "Šalinti pažymėtus"
 
@@ -19663,6 +19813,38 @@ msgstr ""
 msgid "Use current line number color (gutter: number)"
 msgstr ""
 
+#: lazarusidestrconsts.optedcompletebackspacebehaviour
+msgid "Backspace behaviour"
+msgstr ""
+
+#: lazarusidestrconsts.optedcompletecancelifcaretatstart
+msgid "Cancel, if caret at start"
+msgstr ""
+
+#: lazarusidestrconsts.optedcompletecancelifcaretatstartsingl
+msgid "Cancel, if caret at start (single press, not on repeat key)"
+msgstr ""
+
+#: lazarusidestrconsts.optedcompletecancelifcompletionwasjust
+msgid "Cancel, if completion was just opened"
+msgstr ""
+
+#: lazarusidestrconsts.optedcompletecancelifcompletionwasjust2
+msgid "Cancel, if completion was just opened, and caret at start"
+msgstr ""
+
+#: lazarusidestrconsts.optedcompletecancelifjustopenedorcaret
+msgid "Cancel, if just opened, or caret at start (not on repeat key)"
+msgstr ""
+
+#: lazarusidestrconsts.optedcompletecancelifopenedbydot
+msgid "Cancel, if opened by dot"
+msgstr ""
+
+#: lazarusidestrconsts.optedcompleteonlydeletepreviouschar
+msgid "Only delete previous char"
+msgstr ""
+
 #: lazarusidestrconsts.podaddpackageunittousessection
 msgid "Add package unit to uses section"
 msgstr "Paketo modulį įtraukti į naudojamų modulių sąrašą"
@@ -19822,10 +20004,6 @@ msgstr "Tipas"
 #: lazarusidestrconsts.rsrevision
 msgid "&Revision:"
 msgstr "&Poversijis:"
-
-#: lazarusidestrconsts.rsselectaninheritedentry
-msgid "Select an inherited entry"
-msgstr "Pažymėti paveldėtą įrašą"
 
 #: lazarusidestrconsts.rsshowabspath
 msgid "Absolute path"
@@ -21421,38 +21599,6 @@ msgstr "Komandos klavišų keitimas"
 msgid "Continue with next mouse up action"
 msgstr "Tęsti kitu pelės mygtuko atleidimo veiksmu"
 
-#: lazarusidestrconsts.synffoldcomments
-msgid "Fold comments"
-msgstr "Suskleisti komentarus"
-
-#: lazarusidestrconsts.synffoldcommentsinselection
-msgid "Fold comments in selection"
-msgstr "Suskleisti pažymėtus komentarus"
-
-#: lazarusidestrconsts.synffoldinactiveifdef
-msgid "Fold inactive Ifdef"
-msgstr "Suskleisti neaktyvius „IFDEF“"
-
-#: lazarusidestrconsts.synffoldinactiveifdefexcludemixedstate
-msgid "Fold inactive Ifdef (exclude mixed state)"
-msgstr "Suskleisti neaktyvius „IFDEF“ (neleisti mišrios būsenos)"
-
-#: lazarusidestrconsts.synffoldinactiveifdefinselection
-msgid "Fold inactive Ifdef in selection"
-msgstr "Pažymėjime suskleisti neaktyvius „IFDEF“ "
-
-#: lazarusidestrconsts.synffoldinactiveifdefinselectionexcludemixedstate
-msgid "Fold inactive Ifdef in selection (exclude mixed state)"
-msgstr "Pažymėjime suskleisti neaktyvius „IFDEF“ (neleisti mišrios būsenos)"
-
-#: lazarusidestrconsts.synfhidecomments
-msgid "Hide comments"
-msgstr "Slėpti komentarus"
-
-#: lazarusidestrconsts.synfhidecommentsinselection
-msgid "Hide comments in selection"
-msgstr "Slėpti pažymėtus komentarus"
-
 #: lazarusidestrconsts.synfmatchactionbuttonofmousedown
 msgid "Match action button of mouse down"
 msgstr "Sutampa pelės paspaudimo veiksmo mygtukas"
@@ -21472,47 +21618,6 @@ msgstr "Sutampa pelės paspaudimo veiksmo pozicija"
 #: lazarusidestrconsts.synfsearchallactionofmousedown
 msgid "Search all action of mouse down"
 msgstr "Ieškoti visų pelės mygtuko paspaudimo veiksmų"
-
-#: lazarusidestrconsts.synfunfoldactiveifdef
-msgid "Unfold active Ifdef"
-msgstr "Išskleisti aktyvus „IFDEF“"
-
-#: lazarusidestrconsts.synfunfoldactiveifdefinselection
-msgid "Unfold active Ifdef in selection"
-msgstr "Pažymėjime išskleisti aktyvius „IFDEF“"
-
-#: lazarusidestrconsts.synfunfoldall
-msgctxt "lazarusidestrconsts.synfunfoldall"
-msgid "Unfold all"
-msgstr "Visus išskleisti"
-
-#: lazarusidestrconsts.synfunfoldallifdef
-msgid "Unfold all Ifdef"
-msgstr "Išskleisti visus „IFDEF“"
-
-#: lazarusidestrconsts.synfunfoldallifdefinselection
-msgid "Unfold all Ifdef in selection"
-msgstr "Pažymėjime išskleisti visus „IFDEF“"
-
-#: lazarusidestrconsts.synfunfoldallinselection
-msgid "Unfold all in selection"
-msgstr "Išskleisti viską kas pažymėta"
-
-#: lazarusidestrconsts.synfunfoldcomments
-msgid "Unfold comments"
-msgstr "Išskleisti komentarus"
-
-#: lazarusidestrconsts.synfunfoldcommentsinselection
-msgid "Unfold comments in selection"
-msgstr "Išskleisti pažymėtus komentarus"
-
-#: lazarusidestrconsts.synfunfoldinactiveifdef
-msgid "Unfold inactive Ifdef"
-msgstr "Išskleisti neaktyvius „IFDEF“"
-
-#: lazarusidestrconsts.synfunfoldinactiveifdefinselection
-msgid "Unfold inactive Ifdef in selection"
-msgstr "Pažymėjime išskleisti neaktyvius „IFDEF“"
 
 #: lazarusidestrconsts.synspelloptmousewheelchangestabs
 msgid "Mouse-wheel changes tabs"

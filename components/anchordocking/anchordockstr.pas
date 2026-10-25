@@ -45,9 +45,12 @@ resourcestring
   adrsEmptyName = 'Empty name: ';
   adrsDuplicateName = 'Duplicate name: ';
   adrsDragThreshold = 'Drag threshold';
+  adrsDragDelay = 'Drag delay';
   adrsGeneralDockingOptions = 'General docking options';
   adrsAmountOfPixelTheMouseHasToDragBeforeDragStarts = 'Amount of pixel the '
     +'mouse has to drag before drag starts';
+  adrsAmountOfMillisecondsBeforeDragStarts = 'Amount of milliseconds the '
+      +'left mouse button should be kept pressed before drag starts';
   adrsHeaderAlignTop = 'Header align top';
   adrsMoveHeaderToTopWhenWidthHeight100HeaderAlignTop = 'Move header to top '
     +'when (Width/Height)*100<=HeaderAlignTop';

@@ -41,9 +41,10 @@ uses
   Types, Classes, Math, SysUtils, Variants, TypInfo,
   // LCL
   LCLType, LResources, LCLIntf, LMessages, InterfaceBase,
-  Forms, Controls, Graphics, Dialogs, ExtCtrls, Menus, ClipBrd,
+  Forms, Controls, Graphics, Dialogs, ExtCtrls, Menus, ClipBrd, ImgList,
   // LazUtils
   GraphType, GraphMath, LazFileUtils, LazFileCache, LazLoggerBase, LazUtilities,
+  ProjResConvert,
   // BuildIntf
   ProjectIntf, ComponentReg,
   // IDEIntf
@@ -54,7 +55,7 @@ uses
   LazarusIDEStrConsts, EnvGuiOptions, EditorOptions, SourceEditor,
   // Designer
   AlignCompsDlg, SizeCompsDlg, ScaleCompsDlg, DesignerProcs, CustomFormEditor,
-  AskCompNameDlg, ControlSelection, ChangeClassDialog, ImgList;
+  AskCompNameDlg, ControlSelection, ChangeClassDialog;
 
 type
   TDesigner = class;
@@ -709,7 +710,6 @@ begin
   if FForm is INonControlDesigner then begin
     LNonControlDesigner := FForm as INonControlDesigner;
     FLookupRoot := LNonControlDesigner.LookupRoot;
-
     // this can trigger events:
     Mediator := LNonControlDesigner.Mediator;
   end
@@ -719,6 +719,11 @@ begin
     FLookupRoot := FForm;
 
   Selection := AControlSelection;
+  {$IFDEF VerboseDesigner}
+  debugln(['TDesigner.Create End, FLookupRoot=', FLookupRoot]);
+  for i := 0 to FLookupRoot.ComponentCount-1 do
+    debugln(['TDesigner.Create Comp', i, '=', FLookupRoot.Components[i]]);
+  {$ENDIF}
 end;
 
 procedure TDesigner.AddComponent(
@@ -3996,7 +4001,6 @@ begin
       s.IgnoreHidden := IgnoreHidden;
       s.IgnoreNonVisual := not ShowNonVisualComponents;
       s.Search(FLookupRoot);
-      s.Mediator := Mediator;
       Result := s.Best;
     finally
       s.Free;
@@ -4118,6 +4122,7 @@ var
   MultiCompsAreSelected: boolean;
   OneControlSelected: Boolean;
   SelectionVisible: Boolean;
+  IsLCLRoot: Boolean;
   SrcFile: TLazProjectFile;
   UnitIsVirtual, DesignerCanCopy, HasChangeParentCandidates,
     HasAncestorComponent: Boolean;
@@ -4174,6 +4179,11 @@ begin
   DesignerMenuSize.Enabled := CompsAreSelected and not OnlyNonVisualsAreSelected;
   DesignerMenuReset.Enabled := HasAncestorComponent;
 
+  // anchor editor, tab order and z-order only work for LCL forms and frames
+  IsLCLRoot := (FLookupRoot is TCustomForm) or (FLookupRoot is TCustomFrame);
+  DesignerMenuAnchorEditor.Visible := IsLCLRoot;
+  DesignerMenuTabOrder.Visible := IsLCLRoot;
+  DesignerMenuSectionZOrder.Visible := IsLCLRoot;
   DesignerMenuSectionZOrder.Enabled := CompsAreSelected and not OnlyNonVisualsAreSelected;
     DesignerMenuOrderMoveToFront.Enabled := OneControlSelected and not OnlyNonVisualsAreSelected;
     DesignerMenuOrderMoveToBack.Enabled := OneControlSelected and not OnlyNonVisualsAreSelected;

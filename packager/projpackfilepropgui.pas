@@ -32,9 +32,9 @@ unit ProjPackFilePropGui;
 interface
 
 uses
-  Classes, SysUtils,
+  Classes, SysUtils, System.UITypes,
   // LCL
-  LResources, Forms, Controls, StdCtrls, ComCtrls, Dialogs,
+  LResources, Forms, Controls, Graphics, StdCtrls, ComCtrls, Dialogs,
   // LazControls
   TreeFilterEdit,
   // LazUtils
@@ -68,8 +68,9 @@ type
     ImageIndexConflict: integer;
     ImageIndexAvailableOnline: integer;
     // file properties
-    AddToUsesPkgSectionCheckBox: TCheckBox;
     CallRegisterProcCheckBox: TCheckBox;
+    AddToUsesPkgSectionCheckBox: TCheckBox;
+    VirtualUnitLabel: TLabel;
     RegisteredPluginsGroupBox: TGroupBox;
     RegisteredListBox: TListBox;
     DisableI18NForLFMCheckBox: TCheckBox;  // I18N
@@ -89,6 +90,7 @@ type
     function GetDependencyImageIndex(aDep: TPkgDependencyID): Integer;
     procedure SetAddToUsesCB(State: TMultiBool);
     procedure SetCallRegisterProcCB(State: TMultiBool);
+    procedure SetVirtualUnit;
     procedure SetRegisteredPluginsGB(aPlugins: TStringList);
     procedure SetMinMaxVisibility;
     procedure SetMinMaxValues(aDep: TPkgDependencyID);
@@ -211,7 +213,8 @@ begin
   if aPackageGui then
   begin
     // file properties (not used for project files)
-    // ---------------
+    // --------------------------------------------
+    // Register unit
     CallRegisterProcCheckBox := TCheckBox.Create(fOwner);
     CallRegisterProcCheckBox.Parent := fOwner;
     CallRegisterProcCheckBox.Left := 6;
@@ -222,11 +225,11 @@ begin
     CallRegisterProcCheckBox.Caption := lisPckEditRegisterUnit;
     CallRegisterProcCheckBox.Hint := Format(lisPckEditCallRegisterProcedureOfSelectedUnit, ['"', '"']);
 
+    // Use unit
     AddToUsesPkgSectionCheckBox := TCheckBox.Create(fOwner);
     AddToUsesPkgSectionCheckBox.Parent := fOwner;
     AddToUsesPkgSectionCheckBox.AnchorSideLeft.Control := CallRegisterProcCheckBox;
     AddToUsesPkgSectionCheckBox.AnchorSideLeft.Side := asrBottom;
-    AddToUsesPkgSectionCheckBox.Left := 195;
     AddToUsesPkgSectionCheckBox.Top := 0;
     AddToUsesPkgSectionCheckBox.Width := 222;
     AddToUsesPkgSectionCheckBox.BorderSpacing.Left := 10;
@@ -235,12 +238,41 @@ begin
     AddToUsesPkgSectionCheckBox.Caption := lisPkgMangUseUnit;
     AddToUsesPkgSectionCheckBox.Hint := lisPkgMangAddUnitToUsesClause;
 
+    // Virtual unit
+    VirtualUnitLabel := TLabel.Create(fOwner);
+    VirtualUnitLabel.Parent := fOwner;
+    VirtualUnitLabel.AnchorSideTop.Control := AddToUsesPkgSectionCheckBox;
+    VirtualUnitLabel.AnchorSideTop.Side := asrCenter;
+    VirtualUnitLabel.AnchorSideLeft.Control := AddToUsesPkgSectionCheckBox;
+    VirtualUnitLabel.AnchorSideLeft.Side := asrBottom;
+    VirtualUnitLabel.Top := 0;
+    VirtualUnitLabel.BorderSpacing.Left := 40;
+    VirtualUnitLabel.ShowHint := True;
+    VirtualUnitLabel.AutoSize := True;
+    VirtualUnitLabel.Font.Style := [fsBold,fsItalic];
+    VirtualUnitLabel.Caption := lisPkgMangVirtualUnit;
+    VirtualUnitLabel.Hint := lisPkgMangVirtualUnitHint;
+
+    // I18N
+    DisableI18NForLFMCheckBox := TCheckBox.Create(fOwner);
+    DisableI18NForLFMCheckBox.Parent := fOwner;
+    DisableI18NForLFMCheckBox.AnchorSideLeft.Control := AddToUsesPkgSectionCheckBox;
+    DisableI18NForLFMCheckBox.AnchorSideLeft.Side := asrBottom;
+    DisableI18NForLFMCheckBox.AnchorSideTop.Control := AddToUsesPkgSectionCheckBox;
+    DisableI18NForLFMCheckBox.Top := 0;
+    DisableI18NForLFMCheckBox.Width := 208;
+    DisableI18NForLFMCheckBox.BorderSpacing.Left := 10;
+    DisableI18NForLFMCheckBox.ShowHint := True;
+    DisableI18NForLFMCheckBox.TabOrder := 8;
+    DisableI18NForLFMCheckBox.Caption := lisPckDisableI18NOfLfm;
+    DisableI18NForLFMCheckBox.Hint := lisPckWhenTheFormIsSavedTheIDECanStoreAllTTranslateString;
+
+    // Registered plugins
     RegisteredPluginsGroupBox := TGroupBox.Create(fOwner);
     RegisteredPluginsGroupBox.Parent := fOwner;
     RegisteredPluginsGroupBox.Left := 3;
     RegisteredPluginsGroupBox.Height := 165;
-    RegisteredPluginsGroupBox.Top := 27; // Too early to set final top according
-                                         // to screen PPI
+    RegisteredPluginsGroupBox.Top := 27; // Too early to set final top according to screen PPI
     RegisteredPluginsGroupBox.Width := 452;
     RegisteredPluginsGroupBox.Align := alBottom;
     RegisteredPluginsGroupBox.Anchors := [akTop, akLeft, akRight, akBottom];
@@ -255,21 +287,6 @@ begin
     RegisteredListBox.Style := lbOwnerDrawFixed;
     RegisteredListBox.TabOrder := 0;
     RegisteredListBox.ItemHeight := ComponentPaletteImageHeight;
-
-    // I18N
-    DisableI18NForLFMCheckBox := TCheckBox.Create(fOwner);
-    DisableI18NForLFMCheckBox.Parent := fOwner;
-    DisableI18NForLFMCheckBox.AnchorSideLeft.Control := AddToUsesPkgSectionCheckBox;
-    DisableI18NForLFMCheckBox.AnchorSideLeft.Side := asrBottom;
-    DisableI18NForLFMCheckBox.AnchorSideTop.Control := AddToUsesPkgSectionCheckBox;
-    DisableI18NForLFMCheckBox.Left := 423;
-    DisableI18NForLFMCheckBox.Top := 0;
-    DisableI18NForLFMCheckBox.Width := 208;
-    DisableI18NForLFMCheckBox.BorderSpacing.Left := 10;
-    DisableI18NForLFMCheckBox.ShowHint := True;
-    DisableI18NForLFMCheckBox.TabOrder := 8;
-    DisableI18NForLFMCheckBox.Caption := lisPckDisableI18NOfLfm;
-    DisableI18NForLFMCheckBox.Hint := lisPckWhenTheFormIsSavedTheIDECanStoreAllTTranslateString;
   end;
 
   // dependency properties
@@ -314,10 +331,9 @@ begin
 
   // anchor edit controls to the right edge of the longest check box caption
   if Length(UseMinVersionCheckBox.Caption) > Length(UseMaxVersionCheckBox.Caption) then
-    MinVersionEdit.AnchorSideLeft.Control := UseMinVersionCheckBox
+    MinVersionEdit.AnchorToNeighbour(akLeft,6,UseMinVersionCheckBox)
   else
-    MinVersionEdit.AnchorSideLeft.Control := UseMaxVersionCheckBox;
-  MinVersionEdit.AnchorSideLeft.Side := asrRight;
+    MinVersionEdit.AnchorToNeighbour(akLeft,6,UseMaxVersionCheckBox);
 
   ApplyDependencyButton := TButton.Create(fOwner);
   ApplyDependencyButton.Parent := fOwner;
@@ -408,6 +424,11 @@ begin
   CallRegisterProcCheckBox.Enabled := ControlEnabled;
 end;
 
+procedure TProjPackFilePropGui.SetVirtualUnit;
+begin
+  VirtualUnitLabel.Visible := ControlVisible;
+end;
+
 procedure TProjPackFilePropGui.SetRegisteredPluginsGB(aPlugins: TStringList);
 begin
   RegisteredPluginsGroupBox.Visible := ControlVisible;
@@ -418,12 +439,15 @@ begin
 end;
 
 procedure TProjPackFilePropGui.SetMinMaxVisibility;
+var
+  Vis: Boolean;
 begin
-  UseMinVersionCheckBox.Visible := ControlVisible;
-  MinVersionEdit.Visible := ControlVisible;
-  UseMaxVersionCheckBox.Visible := ControlVisible;
-  MaxVersionEdit.Visible := ControlVisible;
-  ApplyDependencyButton.Visible := ControlVisible;
+  Vis:=ControlVisible;
+  UseMinVersionCheckBox.Visible := Vis;
+  MinVersionEdit.Visible := Vis;
+  UseMaxVersionCheckBox.Visible := Vis;
+  MaxVersionEdit.Visible := Vis;
+  ApplyDependencyButton.Visible := Vis;
 end;
 
 procedure TProjPackFilePropGui.SetMinMaxValues(aDep: TPkgDependencyID);

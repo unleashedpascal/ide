@@ -439,6 +439,11 @@ begin
   begin
     FWidget.LastCaretPos := FPos;
     FPos := Value;
+    if FWidget is TQtCustomControl then
+      TQtCustomControl(FWidget).IMCaretPos := Point(Value.x, Value.y)
+    else
+    if (FWidget is TQtViewPort) and (FWidget.getOwner is TQtCustomControl) then
+      TQtCustomControl(FWidget.getOwner).IMCaretPos := Point(Value.x, Value.y);
     FTimer.Enabled := False;
     FVisibleState := FWidget.Context = 0;
     {$note remove complete property RespondToFocus after testing}
@@ -559,8 +564,8 @@ begin
       FPos.Y := 0;
     R.Left := FPos.x;
     R.Top := FPos.y;
-    R.Right := R.Left + FWidth + 2;
-    R.Bottom := R.Top + FHeight + 2;
+    R.Right := R.Left + FWidth;
+    R.Bottom := R.Top + FHeight;
     if (FWidget.Context = 0) then
     begin
       if not EqualRect(FOldRect, R) then

@@ -1,0 +1,22 @@
+{ This file was automatically created by Lazarus. Do not edit!
+  This source is only used to compile and install the package.
+ }
+
+unit IdeHelpUtils;
+
+{$warn 5023 off : no warning about unused units}
+interface
+
+uses
+  CodeHelp, IdeHelpUtilStrings, SrcEditHintFrm, FPDocHints, FPDocSelectInherited, 
+  FPDocSelectLink, IDEContextHelpEdit, IDEWindowHelp, FPDocEditWindow, LazarusPackageIntf;
+
+implementation
+
+procedure Register;
+begin
+end;
+
+initialization
+  RegisterPackage('IdeHelpUtils', @Register);
+end.

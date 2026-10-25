@@ -28,7 +28,7 @@
     command line parameters and working directory.
     
     The options saved in a TRunParamsOptions are stored in the project info file
-    (.lpi) together with the rest of the project.
+    (.lpi) together with the rest of the project or in session file (.lps).
     
     The dialog will be activated by main.pp with the function
     ShowRunParamsOptsDlg (see below) when the user clicks on the
@@ -57,24 +57,28 @@ uses
   BaseIDEIntf, ProjectIntf, MacroIntf,
   // IdeIntf
   IdeIntfStrConsts, IDEDialogs, IDEImagesIntf, IDEWindowIntf,
+  IdeDebuggerConsolePlugInIntf,
   // IdeProject
   RunParamOptions,
   // IdeUtils
   InputHistory,
   // IdeConfig
   EnvironmentOpts, RecentListProcs, MiscOptions,
+  // IdeDebugger
+  BaseDebugManager, IdeDebuggerOpts,
   // IDE
-  SysVarUserOverrideDlg, LazarusIDEStrConsts
-  {$IFnDef LCLNoGui}, BaseDebugManager {$ENDIF} ;
+  SysVarUserOverrideDlg, LazarusIDEStrConsts;
 
 type
   { TRunParamsOptsDlg - the form of the run parameters options dialog }
 
   TRunParamsOptsDlg = class(TForm)
     ButtonPanel: TButtonPanel;
+    cbConsole: TComboBox;
     cbRedirStdIn: TComboBox;
     cbRedirStdOut: TComboBox;
     cbRedirStdErr: TComboBox;
+    rgConsole: TRadioGroup;
     lbStdIn: TLabel;
     lbStdOut: TLabel;
     lbStdErr: TLabel;
@@ -131,10 +135,10 @@ type
     WorkingDirectoryBtn: TButton;
     WorkingDirectoryComboBox: TComboBox;
     WorkingDirectoryGroupBox: TGroupBox;
+    procedure rgConsoleSelectionChanged(Sender: TObject);
     procedure cbRedirStdInChange(Sender: TObject);
     procedure DeleteModeButtonClick(Sender: TObject);
     procedure EnvVarsPageResize(Sender: TObject);
-    procedure FormActivate(Sender: TObject);
     procedure FormClose(Sender: TObject; var {%H-}CloseAction: TCloseAction);
     procedure FormCreate(Sender: TObject);
     procedure ModesComboBoxChange(Sender: TObject);
@@ -156,6 +160,14 @@ type
     fOptions: TRunParamsOptions;
     fSaveToOptions: TRunParamsOptions;
     fLastSelectedMode: TRunParamsOptionsMode;
+    (* The id of the mode's console when it is one this IDE has no item for.
+       Held so that displaying such a mode and leaving it alone writes the same
+       id back, rather than replacing it with whatever the list happens to
+       offer. *)
+    fUnlistedConsoleId: String;
+    procedure LoadConsoleId(const AConsoleId: String);
+    function  SelectedConsoleId: String;
+    function  SelectedConsoleMode: TRunParamsConsoleMode;
     procedure SetupNotebook;
     procedure SetupLocalPage;
     procedure SetupEnvironmentPage;
@@ -189,6 +201,12 @@ const
   hlLaunchingApplication = 'LaunchingApplication';
   hlCmdLineParameters = 'CommandLineParameters';
   hlWorkingDirectory = 'WorkingDirectory';
+
+  (* Index 0 of cbConsole is always "use the IDE default";
+     Only ids are written to the project -- the captions are display names.
+     Mapping happens via  DebuggerOptions.ConsoleWindowPlugIns, which holds the info in the same order  *)
+  DEFAULT_CONSOLE_IDX = 0;
+  INTERN_CONSOLE_CNT = 1; // number of internal indexes used (currently 1 for the default)
 
 function ShowRunParamsOptsDlg(RunParamsOptions: TRunParamsOptions;
   HistoryLists: THistoryLists): TModalResult;
@@ -248,16 +266,90 @@ begin
   ModesComboBoxChange(ModesComboBox);
 end;
 
+procedure TRunParamsOptsDlg.LoadConsoleId(const AConsoleId: String);
+var
+  i, ListedCount: Integer;
+begin
+  ListedCount := 1 + DebuggerOptions.ConsoleWindowPlugIns.Count;
+  // Discard any unlisted item left over from the mode shown before this one.
+  while cbConsole.Items.Count > ListedCount do
+    cbConsole.Items.Delete(cbConsole.Items.Count - 1);
+  fUnlistedConsoleId := '';
+
+  if AConsoleId = RunParamsConsoleIdDefault then begin
+    cbConsole.ItemIndex := DEFAULT_CONSOLE_IDX;
+    cbConsole.Visible := DebuggerOptions.ConsoleWindowPlugIns.Count > 1;
+    exit;
+  end;
+
+  i := DebuggerOptions.ConsoleWindowPlugIns.IndexOfId(AConsoleId);
+  if i >= 0 then begin
+    cbConsole.ItemIndex := INTERN_CONSOLE_CNT + i;
+    cbConsole.Visible := DebuggerOptions.ConsoleWindowPlugIns.Count > 1;
+    exit;
+  end;
+
+  (* A console this IDE has no item for: written by a build with a terminal
+     registered that this one does not have, or by one that has since been
+     removed. Shown by id rather than quietly replaced, so that opening the
+     dialog and pressing OK does not rewrite the project. *)
+  cbConsole.Items.Add(Format(dlgConsoleUnknown, [AConsoleId]));
+  cbConsole.ItemIndex := cbConsole.Items.Count - 1;
+  fUnlistedConsoleId := AConsoleId;
+  cbConsole.Visible := True;
+end;
+
+function TRunParamsOptsDlg.SelectedConsoleId: String;
+var
+  i: Integer;
+begin
+  i := cbConsole.ItemIndex;
+  if i = DEFAULT_CONSOLE_IDX then
+    Result := RunParamsConsoleIdDefault
+  else
+  if (i >= INTERN_CONSOLE_CNT) and (i - INTERN_CONSOLE_CNT < DebuggerOptions.ConsoleWindowPlugIns.Count) then
+    Result := DebuggerOptions.ConsoleWindowPlugIns.Ids[i - INTERN_CONSOLE_CNT]
+  else
+    Result := fUnlistedConsoleId;
+end;
+
+function TRunParamsOptsDlg.SelectedConsoleMode: TRunParamsConsoleMode;
+begin
+  if rgConsole.ItemIndex = ord(rpcmIdeConsole) then
+    Result := rpcmIdeConsole
+  else
+    Result := rpcmOsConsole;
+end;
+
+procedure TRunParamsOptsDlg.rgConsoleSelectionChanged(Sender: TObject);
+var
+  RedirectsApply: Boolean;
+begin
+  cbConsole.Enabled := (rgConsole.Enabled and (SelectedConsoleMode = rpcmIdeConsole)) or
+                       (dfStdInOutCaptureDefault in DebugBoss.DebuggerClass.SupportedFeatures);
+
+  RedirectsApply := not DebugBoss.ConsoleIsCaptured(SelectedConsoleMode);
+  cbRedirStdIn.Enabled   := RedirectsApply;
+  cbRedirStdOut.Enabled  := RedirectsApply;
+  cbRedirStdErr.Enabled  := RedirectsApply;
+  FileNameStdIn.Enabled  := RedirectsApply;
+  FileNameStdOut.Enabled := RedirectsApply;
+  FileNameStdErr.Enabled := RedirectsApply;
+  lbStdIn.Enabled        := RedirectsApply;
+  lbStdOut.Enabled       := RedirectsApply;
+  lbStdErr.Enabled       := RedirectsApply;
+  cbRedirStdInChange(Sender);
+end;
+
 procedure TRunParamsOptsDlg.cbRedirStdInChange(Sender: TObject);
 begin
-{$IFnDef LCLNoGui}
   RedirectWarnLabel.Visible :=
+    cbRedirStdIn.Enabled and
     ( (cbRedirStdIn.ItemIndex <> 0) or
       (cbRedirStdOut.ItemIndex <> 0) or
       (cbRedirStdErr.ItemIndex <> 0)
     ) and
     not (dfStdInOutRedirect in DebugBoss.DebuggerClass.SupportedFeatures);
-{$ENDIF}
 end;
 
 destructor TRunParamsOptsDlg.Destroy;
@@ -313,17 +405,17 @@ end;
 
 procedure TRunParamsOptsDlg.UseConsolePosCheckBoxChange(Sender: TObject);
 begin
-{$IFnDef LCLNoGui}
   ConsoleSizeWarnLabel.Visible :=
     ( UseConsolePosCheckBox.Checked or
       UseConsoleSizeCheckBox.Checked or
       UseConsoleBufferCheckBox.Checked
     ) and
     not (dfConsoleWinPos in DebugBoss.DebuggerClass.SupportedFeatures);
-{$ENDIF}
 end;
 
 procedure TRunParamsOptsDlg.SetupLocalPage;
+var
+  i: Integer;
 begin
   HostApplicationGroupBox.Caption   := dlgHostApplication;
   HostApplicationBrowseBtn.Caption  := '...';
@@ -342,6 +434,20 @@ begin
   UseConsoleSizeCheckBox.Caption   := dlgUseConsoleSize;
   UseConsoleBufferCheckBox.Caption := dlgUseConsoleBuffer;
   ConsoleSizeWarnLabel.Caption := dlgConsoleSizeNotSupported;
+
+  rgConsole.Caption := dlgConsoleGroup;
+  rgConsole.Items[ord(rpcmOsConsole)]  := dlgConsoleModeOs;
+  rgConsole.Items[ord(rpcmIdeConsole)] := dlgConsoleModeIde;
+  rgConsole.ItemIndex := ord(rpcmOsConsole);
+
+  (* Index 0 defers to the IDE-wide setting on
+     Tools > Options > Debugger > Debug Console Window. *)
+  cbConsole.Items.Add(dlgConsoleUseIdeDefault);
+  for i := 0 to DebuggerOptions.ConsoleWindowPlugIns.Count - 1 do
+    cbConsole.Items.Add(DebuggerOptions.ConsoleWindowPlugIns.DisplayName[i]);
+  cbConsole.ItemIndex := DEFAULT_CONSOLE_IDX;
+  cbConsole.Visible := DebuggerOptions.ConsoleWindowPlugIns.Count > 1;
+  rgConsole.Enabled := dfStdInOutCapture in DebugBoss.DebuggerClass.SupportedFeatures;
 
   cbRedirStdIn.Items.Add (dlgRedirOff);
   cbRedirStdIn.Items.Add (dlgRedirInput);
@@ -515,16 +621,6 @@ begin
   UserOverridesListView.Column[1].Width := UserOverridesListView.Column[0].Width;
 end;
 
-procedure TRunParamsOptsDlg.FormActivate(Sender: TObject);
-var
-  delta: Integer;
-begin
-  delta := WorkingDirectoryGroupbox.Top + WorkingDirectoryGroupbox.Height + 
-    WorkingDirectoryGroupbox.BorderSpacing.Around - Notebook.ClientHeight;
-  ClientHeight := Notebook.Top + Notebook.Height + delta + 
-    2*ButtonPanel.BorderSpacing.Around + ButtonPanel.Height;
-end;
-
 procedure TRunParamsOptsDlg.FormClose(Sender: TObject;
   var CloseAction: TCloseAction);
 begin
@@ -644,6 +740,10 @@ begin
   FileNameStdIn.Text  := AMode.FileNameStdIn;
   FileNameStdOut.Text := AMode.FileNameStdOut;
   FileNameStdErr.Text := AMode.FileNameStdErr;
+
+  rgConsole.ItemIndex := ord(AMode.ConsoleMode);
+  LoadConsoleId(AMode.IdeDbgConsoleId);
+  rgConsoleSelectionChanged(rgConsole);
 
   // environment
   FillSystemVariablesListView;
@@ -781,6 +881,9 @@ begin
   AMode.FileNameStdIn  := FileNameStdIn.Text;
   AMode.FileNameStdOut := FileNameStdOut.Text;
   AMode.FileNameStdErr := FileNameStdErr.Text;
+
+  AMode.ConsoleMode := SelectedConsoleMode;
+  AMode.IdeDbgConsoleId   := SelectedConsoleId;
 
   // history list: WorkingDirectoryComboBox
   SaveComboHistory(WorkingDirectoryComboBox,hlWorkingDirectory,rltFile);

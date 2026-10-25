@@ -55,15 +55,25 @@ GDIObj := {%H-}PGDIObject(BitImage.Handle);
   end;
 end;
 
-procedure Gtk2_ItemCheckedChanged(renderer: PGtkCellRendererToggle; PathStr: Pgchar; WidgetInfo: PWidgetInfo);cdecl;
+procedure Gtk2_ItemCheckedChanged({%H-}renderer: PGtkCellRendererToggle; PathStr: Pgchar; WidgetInfo: PWidgetInfo);cdecl;
 var
   LV: TLVHack;
   Index: Integer;
   ListItem: TLVItemHack;
-  ARect: TGdkRectangle;
-  R: TRect;
-  x, y, cellw, cellh: gint;
+  AEvent: PGdkEvent;
+  SkipToggle: Boolean;
 begin
+  AEvent := gtk_get_current_event;
+  if AEvent <> nil then
+  begin
+    SkipToggle := (AEvent^._type = GDK_KEY_PRESS) and
+      ((AEvent^.key.keyval = GDK_KEY_Return) or
+       (AEvent^.key.keyval = GDK_KEY_KP_Enter) or
+       (AEvent^.key.keyval = GDK_KEY_ISO_Enter));
+    gdk_event_free(AEvent);
+    if SkipToggle then
+      Exit;
+  end;
   LV := TLVHack(WidgetInfo^.LCLObject);
   Index := StrToInt(PathStr);
   ListItem := TLVItemHack(LV.Items.Item[Index]);
@@ -73,14 +83,7 @@ begin
     if Assigned(LV.OnItemChecked) then
       LV.OnItemChecked(TListView(WidgetInfo^.LCLObject), LV.Items.Item[Index]);
 
-    // we must update renderer row, otherwise visually it looks different
-    // if we change toggle state by keyboard (eg. pressing Space key)
-    R := ListItem.DisplayRect(drBounds);
-    ARect := GdkRectFromRect(R);
-    gtk_cell_renderer_get_size(PGtkCellRenderer(renderer),
-      WidgetInfo^.CoreWidget, @ARect, @x,@y, @cellw, @cellh);
-    with R do
-      gtk_widget_queue_draw_area(WidgetInfo^.CoreWidget, Left, Top, cellW, cellH);
+    gtk_widget_queue_draw(WidgetInfo^.CoreWidget);
   end;
 end;
 
@@ -798,6 +801,72 @@ begin
     Result := nil;
 end;
 
+procedure Gtk2WSLV_HeaderApplyFont(AWidget: PGtkWidget; ADesc: PPangoFontDescription);
+var
+  AChildren, AItem: PGList;
+  ANew: PPangoFontDescription;
+  AStyle: PGtkStyle;
+begin
+  if AWidget = nil then
+    Exit;
+  if GTK_IS_LABEL(AWidget) then
+  begin
+    ANew := pango_font_description_copy(ADesc);
+    AStyle := gtk_widget_get_style(AWidget);
+    if (AStyle <> nil) and (AStyle^.font_desc <> nil) then
+      pango_font_description_set_weight(ANew,
+        pango_font_description_get_weight(AStyle^.font_desc));
+    gtk_widget_modify_font(AWidget, ANew);
+    pango_font_description_free(ANew);
+  end;
+  if GTK_IS_CONTAINER(AWidget) then
+  begin
+    AChildren := gtk_container_get_children(PGtkContainer(AWidget));
+    AItem := AChildren;
+    while AItem <> nil do
+    begin
+      Gtk2WSLV_HeaderApplyFont(PGtkWidget(AItem^.data), ADesc);
+      AItem := AItem^.next;
+    end;
+    g_list_free(AChildren);
+  end;
+end;
+
+procedure Gtk2WSLV_UpdateHeaderFonts(AMainView: PGtkWidget; AFont: TFont);
+var
+  ADesc: PPangoFontDescription;
+  i: Integer;
+  ACol: PGtkTreeViewColumn;
+begin
+  if not GTK_IS_TREE_VIEW(AMainView) then
+    Exit;
+  if (AFont = nil) or (AFont.Reference.Handle = 0) then
+    Exit;
+  ADesc := pango_layout_get_font_description(
+    {%H-}PGDIObject(AFont.Reference.Handle)^.GDIFontObject);
+  if ADesc = nil then
+    Exit;
+  i := 0;
+  ACol := gtk_tree_view_get_column(PGtkTreeView(AMainView), i);
+  while ACol <> nil do
+  begin
+    if ACol^.button <> nil then
+      Gtk2WSLV_HeaderApplyFont(ACol^.button, ADesc);
+    Inc(i);
+    ACol := gtk_tree_view_get_column(PGtkTreeView(AMainView), i);
+  end;
+end;
+
+procedure Gtk2WSLV_HeaderRealizeCB(AWidget: PGtkWidget; AData: gpointer); cdecl;
+var
+  AInfo: PWidgetInfo;
+begin
+  AInfo := PWidgetInfo(AData);
+  if (AInfo = nil) or (AInfo^.LCLObject = nil) then
+    Exit;
+  Gtk2WSLV_UpdateHeaderFonts(AWidget, TControl(AInfo^.LCLObject).Font);
+end;
+
 class procedure TGtk2WSCustomListView.SetListCallbacks(const AScrollWidget: PGtkWidget;
   const Widgets: PTVWidgets; const AWidgetInfo: PWidgetInfo);
 begin
@@ -814,6 +883,8 @@ begin
       gtk_tree_selection_set_select_function(Widgets^.TreeSelection,TGtkTreeSelectionFunc(@Gtk2WSLV_ItemSelected), gpointer(AWidgetInfo),nil);
     SignalConnect(PGtkWidget(Widgets^.TreeSelection), 'changed',           @Gtk2_ItemSelectionChanged,    AWidgetInfo);
     SignalConnect(PGtkWidget(Widgets^.MainView),      'toggle-cursor-row', @Gtk2_ItemFocusChanged,        AWidgetInfo);
+    g_signal_connect_after(PGtkObject(Widgets^.MainView), 'realize',
+      TGCallback(@Gtk2WSLV_HeaderRealizeCB), AWidgetInfo);
   end
   else
   if GTK_IS_ICON_VIEW(Widgets^.MainView) then
@@ -2241,6 +2312,7 @@ class procedure TGtk2WSCustomListView.SetFont(const AWinControl: TWinControl;
   const AFont: TFont);
 var
   Widget: PGtkWidget;
+  Widgets: PTVWidgets;
 begin
   if not WSCheckHandleAllocated(AWinControl, 'SetFont') then
     Exit;
@@ -2251,6 +2323,8 @@ begin
                               [GTK_STATE_NORMAL,GTK_STATE_ACTIVE,
                                GTK_STATE_PRELIGHT,GTK_STATE_SELECTED,
                                GTK_STYLE_TEXT]);
+  GetCommonTreeViewWidgets({%H-}PGtkWidget(AWinControl.Handle), Widgets);
+  Gtk2WSLV_UpdateHeaderFonts(Widgets^.MainView, AFont);
 end;
 
 class procedure TGtk2WSCustomListView.SetHotTrackStyles(const ALV: TCustomListView;

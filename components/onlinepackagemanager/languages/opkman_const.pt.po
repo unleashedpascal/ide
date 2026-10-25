@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.9\n"
+"X-Generator: Poedit 3.10\n"
 
 #: opkman_const.rsaddrepositorypackagefrm_bcancel_caption
 msgctxt "opkman_const.rsaddrepositorypackagefrm_bcancel_caption"
@@ -1332,6 +1332,10 @@ msgctxt "opkman_const.rsmainfrm_vsttext_version"
 msgid "Version"
 msgstr "Versão"
 
+#: opkman_const.rsmainfrm_vsttext_versionerror
+msgid "(Version error)"
+msgstr "(erro de versão)"
+
 #: opkman_const.rsmenulazaruspackagemanager
 msgid "Online Package Manager ..."
 msgstr "Gestor de pacotes em linha..."
@@ -1353,6 +1357,21 @@ msgstr "Transferir bibliotecas OpenSSL"
 #: opkman_const.rsopensslfrm_chpermanent_caption
 msgid "Do not ask this question again"
 msgstr "Não perguntar novamente"
+
+#: opkman_const.rsopensslfrm_error1
+#, object-pascal-format
+msgid "Cannot download the OpenSSL libraries from \"%s\". Error message:"
+msgstr ""
+
+#: opkman_const.rsopensslfrm_error2
+#, object-pascal-format
+msgid "Cannot unzip the OpenSSL libraries \"%s\". Error message:"
+msgstr ""
+
+#: opkman_const.rsopensslfrm_error3
+#, object-pascal-format
+msgid "The OpenSSL libraries were extracted to \"%s\", but they cannot be loaded."
+msgstr ""
 
 #: opkman_const.rsopensslfrm_lbmessage1_caption
 msgid "In order to work properly, OPM needs the OpenSSL libraries."
@@ -1990,8 +2009,8 @@ msgid "Repository details"
 msgstr "Detalhes do repositório"
 
 #: opkman_const.rsrepositorydetailsfrm_edaddress_hint
-msgid "Enter the repository address (e.g.: \"http://localhost/packages/\")"
-msgstr "Insira o endereço do repositório (e.g.: \"http://localhost/packages/\")"
+msgid "Enter the repository address (e.g.: \"https://example-repo.tld/packages/\")"
+msgstr "Insira o endereço do repositório (e.g.: \"https://example-repo.tld/packages/\")"
 
 #: opkman_const.rsrepositorydetailsfrm_edname_hint
 msgid "Enter the repository name"

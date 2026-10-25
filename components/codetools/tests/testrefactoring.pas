@@ -17,7 +17,7 @@ uses
   LazLoggerBase, LazFileUtils,
   // CodeTools
   CodeToolManager, CodeCache, CodeTree, CustomCodeTool, LinkScanner,
-  CTUnitGraph, BasicCodeTools, FindDeclarationTool, ChangeDeclarationTool,
+  CTUnitGraph, BasicCodeTools, FindDeclarationTool, ChangeDeclarationTool, StdCodeTools,
   // (project)
   TestFindDeclaration, TestGlobals;
 
@@ -45,10 +45,17 @@ type
   protected
     procedure TestRenameAlsoLFM(const RedUnitIntf, Form1IntfSrc, NewIdentifier,
       LFMSrc: string; const ExpLFMLines: array of string); virtual;
+    procedure TestPossibleInitForVar(const Expected: array of string); virtual;
   published
     procedure TestExplodeWith;
 
     procedure TestIdentifierHasKeywords;
+
+    procedure TestPossibleInitsForVarLongint;
+    procedure TestPossibleInitsForVarString;
+    procedure TestPossibleInitsForVarDynArray;
+    procedure TestPossibleInitsForVarAnonymousArray;
+    procedure TestPossibleInitsForVarEnum;
 
     procedure TestRenameVarReferences;
     procedure TestRenameProcReferences;
@@ -479,6 +486,97 @@ begin
   end;
 end;
 
+procedure TTestRefactoring.TestPossibleInitForVar(const Expected: array of string);
+var
+  aMarker: TFDMarker;
+  aLine, aCol, i: integer;
+  Statements: TStrings;
+  InsertPositions: TObjectList;
+  ok: Boolean;
+  s: String;
+  p: SizeInt;
+  InsertPosDesc: TInsertStatementPosDescription;
+begin
+  ParseSimpleMarkers(Code);
+  aMarker:=FindMarker('Check','#');
+  if aMarker=nil then
+    Fail('Marker #Check missing');
+  Code.AbsoluteToLineCol(aMarker.NameStartPos,aLine,aCol);
+  Statements:=nil;
+  InsertPositions:=nil;
+  try
+    if not CodeToolBoss.GetPossibleInitsForVariable(Code,aCol,aLine,Statements,InsertPositions) then
+    begin
+      writeln(Code.Source);
+      Fail('GetPossibleInitsForVariable failed at '+Code.AbsoluteToLineColStr(aMarker.CleanPos));
+    end;
+    if Statements=nil then begin
+      writeln(Code.Source);
+      Fail('GetPossibleInitsForVariable Statements=nil at '+Code.AbsoluteToLineColStr(aMarker.CleanPos));
+    end;
+    if InsertPositions=nil then begin
+      writeln(Code.Source);
+      Fail('GetPossibleInitsForVariable InsertPositions=nil at '+Code.AbsoluteToLineColStr(aMarker.CleanPos));
+    end;
+    if InsertPositions.Count<>1 then begin
+      writeln(Code.Source);
+      Fail('GetPossibleInitsForVariable InsertPositions.Count='+dbgs(InsertPositions.Count)+'<>1 at '+Code.AbsoluteToLineColStr(aMarker.CleanPos));
+    end;
+
+    ok:=true;
+    for i:=0 to length(Expected)-1 do begin
+      if Statements.Count<=i then begin
+        writeln('Error: Missing init: "',Expected[i],'"');
+        ok:=false;
+      end else begin
+        p:=Pos('|',Expected[i]);
+        if p<1 then begin
+          writeln('Error: Expected="',Expected[i],'" is missing the pipe separator, e.g. "1,2|bird"');
+          ok:=false;
+        end else begin
+          s:=copy(Expected[i],p+1);
+          if s<>Statements[i] then begin
+            writeln('Error: Statements['+IntToStr(i)+']="'+Statements[i]+'", expected "'+s+'"');
+            ok:=false;
+          end;
+          s:=LeftStr(Expected[i],p-1);
+          p:=Pos(',',s);
+          if p<1 then begin
+            writeln('Error: Expected="',Expected[i],'" is missing the comma separator, e.g. "1,2|bird"');
+            ok:=false;
+          end else begin
+            if not TryStrToInt(copy(s,1,p-1),aLine) then begin
+              writeln('Error: Expected="',Expected[i],'" line is not a number, e.g. "1,2|bird"');
+              ok:=false;
+            end;
+            if not TryStrToInt(copy(s,p+1),aCol) then begin
+              writeln('Error: Expected="',Expected[i],'" column is not a number, e.g. "1,2|bird"');
+              ok:=false;
+            end;
+            InsertPosDesc:=TInsertStatementPosDescription(InsertPositions[0]);
+            if (InsertPosDesc.CodeXYPos.Y<>aLine) or (InsertPosDesc.CodeXYPos.X<>aCol) then begin
+              writeln('Error: Expected="',Expected[i],'", but got position '+IntToStr(InsertPosDesc.CodeXYPos.Y)+','+IntToStr(InsertPosDesc.CodeXYPos.X));
+              ok:=false;
+            end;
+          end;
+        end;
+      end;
+    end;
+    for i:=length(Expected) to Statements.Count-1 do begin
+      writeln('Error: Unexpected statement: "',Statements[i],'"');
+      ok:=false;
+    end;
+
+    if not ok then begin
+      writeln(Code.Source);
+      Fail('mismatch');
+    end;
+  finally
+    Statements.Free;
+    InsertPositions.Free;
+  end;
+end;
+
 procedure TTestRefactoring.TestExplodeWith;
 type
   TWithBlock = record
@@ -604,6 +702,63 @@ begin
   t('a.&b',cmFPC,'a.&b');
   t('a.Type',cmFPC,'a.&Type');
   t('End.Type',cmFPC,'&End.&Type');
+end;
+
+procedure TTestRefactoring.TestPossibleInitsForVarLongint;
+begin
+  StartProgram;
+  Add([
+  'var Cow: longint;',
+  'begin',
+  '  if Cow{#Check}=3 then ;',
+  'end.']);
+  TestPossibleInitForVar(['6,6|Cow:=0;']);
+end;
+
+procedure TTestRefactoring.TestPossibleInitsForVarString;
+begin
+  StartProgram;
+  Add([
+  'var Cow: string;',
+  'begin',
+  '  if Cow{#Check}=''a'' then ;',
+  'end.']);
+  TestPossibleInitForVar(['6,6|Cow:='''';']);
+end;
+
+procedure TTestRefactoring.TestPossibleInitsForVarDynArray;
+begin
+  StartProgram;
+  Add([
+  'type TBools = array of boolean;',
+  'var Cow: TBools;',
+  'begin',
+  '  if Cow{#Check}=nil then ;',
+  'end.']);
+  TestPossibleInitForVar(['7,6|Cow:=nil;']);
+end;
+
+procedure TTestRefactoring.TestPossibleInitsForVarAnonymousArray;
+begin
+  StartProgram;
+  Add([
+  'var Cow: array of boolean;',
+  'begin',
+  '  if Cow{#Check}=nil then ;',
+  'end.']);
+  TestPossibleInitForVar(['6,6|Cow:=nil;']);
+end;
+
+procedure TTestRefactoring.TestPossibleInitsForVarEnum;
+begin
+  StartProgram;
+  Add([
+  'type TCol = (red, green, blue);',
+  'var Cow: TCol;',
+  'begin',
+  '  if Cow{#Check}=nil then ;',
+  'end.']);
+  TestPossibleInitForVar(['7,6|Cow:=red;','7,6|Cow:=green;','7,6|Cow:=blue;']);
 end;
 
 procedure TTestRefactoring.TestRenameVarReferences;

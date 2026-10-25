@@ -115,7 +115,7 @@ end;
 
 class function TMiniMapConfigFrame.SupportedOptionsClass: TAbstractIDEOptionsClass;
 begin
-  Result:=IDEEditorGroups.GetByIndex(GroupEnvironment)^.GroupClass;
+  Result:=IDEEditorGroups.GetByIndex(GroupEditor)^.GroupClass;
 end;
 
 end.

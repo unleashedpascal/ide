@@ -24,7 +24,7 @@ interface
 
 uses
   Types, Classes, SysUtils,
-  LCLType, LCLProc,
+  LCLType,
   MacOSAll, CocoaAll,
   CocoaPrivate, CocoaWSService, Cocoa_Extra, CocoaUtils,
   CocoaCursor, CocoaCustomControl, CocoaTextEdits,
@@ -337,7 +337,7 @@ begin
              handled := NSApplication(NSApp).sendAction_to_from(objcselector('paste:'), atarget, asender);
       'x': if msk = NSCommandKeyMask then
              handled := NSApplication(NSApp).sendAction_to_from(objcselector('cut:'), atarget, asender);
-      'z': if msk = NSCommandKeyMask then
+      'z', 'Z': if msk = NSCommandKeyMask then
       begin
         undoManager := atarget.undoManager;
         if Assigned(undoManager) and undoManager.canUndo then
@@ -345,7 +345,7 @@ begin
           handled := true;
           undoManager.undo;
         end;
-      end;
+      end
       else if msk = (NSCommandKeyMask or NSShiftKeyMask) then
       begin
         undoManager := atarget.undoManager;
@@ -1035,12 +1035,12 @@ end;
 
 function TCocoaWindow.makeFirstResponderFromLCL(aResponder: NSResponder): ObjCBOOL;
 begin
+  cancelPreviousPerformRequestsWithTarget(Self);
   if makeFirstResponderCount=0 then begin
     // not in makeFirstResponder processing, call makeFirstResponder directly
     Result:= makeFirstResponder( aResponder );
   end else begin
     // otherwise, delay processing after makeFirstResponder
-    aResponder.retain;
     performSelector_withObject_afterDelay( ObjCSelector('DoMakeFirstResponder:'), aResponder, 0 );
     Result:= true;
   end;
@@ -1049,7 +1049,6 @@ end;
 procedure TCocoaWindow.DoMakeFirstResponder(aResponder: NSResponder);
 begin
   makeFirstResponder( aResponder );
-  aResponder.release;
 end;
 
 function TCocoaWindow.window_willUseFullScreenPresentationOptions(

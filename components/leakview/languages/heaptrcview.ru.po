@@ -1,20 +1,38 @@
 msgid ""
 msgstr ""
-"Content-Type: text/plain; charset=UTF-8\n"
 "Project-Id-Version: \n"
 "POT-Creation-Date: \n"
 "PO-Revision-Date: \n"
 "Last-Translator: Maxim Ganetsky <maxkill@mail.ru>\n"
 "Language-Team: \n"
-"MIME-Version: 1.0\n"
-"Content-Transfer-Encoding: 8bit\n"
 "Language: ru\n"
-"X-Generator: Poedit 1.7.7\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.6\n"
+
+#: heaptrcview.brkfailedtoopenfile
+msgid "Failed to open file"
+msgstr "Невозможно открыть файл"
+
+#: heaptrcview.brkfailedtoopens
+#, object-pascal-format
+msgid "Failed to open \"%s\"."
+msgstr "Невозможно открыть \"%s\"."
+
+#: heaptrcview.brkfailedtoopensjumptocurren
+#, object-pascal-format
+msgid "Failed to open \"%s\". Jump to appropriate line in current editor instead?"
+msgstr "Невозможно открыть \"%s\". Перейти к соответствующей строке в текущем редакторе исходного кода?"
 
 #: heaptrcview.rsdtimes
 #, object-pascal-format
 msgid " (%d times)"
 msgstr " (%d раз)"
+
+#: heaptrcview.rserrormacroexpanding
+msgid "Failed to expand macros."
+msgstr "Невозможно раскрыть макросы."
 
 #: heaptrcview.rserrorparse
 msgid "Error while parsing trace file"
@@ -57,13 +75,8 @@ msgid "Select file with trace log"
 msgstr "Выберите файл стека вызовов"
 
 #: heaptrcview.slbltrace
-msgid ".trc file"
-msgstr "Файл .trc"
-
-#: heaptrcview.stacklineformat
-#, object-pascal-format
-msgid "%s"
-msgstr "%s"
+msgid "Trace file"
+msgstr "Файл стека вызовов"
 
 #: heaptrcview.stacklineformatwithfile
 #, object-pascal-format

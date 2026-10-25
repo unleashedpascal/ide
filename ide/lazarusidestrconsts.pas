@@ -79,7 +79,6 @@ resourcestring
   lisKey = 'Key';
   lisValue = 'Value';
   lisVariable = 'Variable';
-  lisPath = 'Path';
   lisId = 'ID';
   lisPage = 'Page';
   lisPackage = 'Package';
@@ -135,6 +134,7 @@ resourcestring
 
   // command line help
   lisThisHelpMessage = 'This help message.';
+  lisParameters = 'Parameters:';
   lisPrimaryConfigDirectoryWhereLazarusStoresItsConfig = 'Primary config '+
     'directory where Lazarus stores its config files. Default is "%s".';
   lisLazarusOptionsProjectFilename = 'lazarus [options] <project-filename>';
@@ -453,7 +453,6 @@ resourcestring
   lisMiscLookRunning = 'Running';
   lisMiscLookSuccess = 'Success';
   lisMiscLookFailed = 'Failed';
-  lisMiscLookAutoHeader = 'Auto header';
   lisMiscLookHint = 'Hint';
   lisMiscLookNote = 'Note';
   lisMiscLookWarning = 'Warning';
@@ -490,6 +489,7 @@ resourcestring
   lisMenuResaveFormsWithI18n = 'Resave forms with enabled i18n';
   lisMenuPublishProject = 'Publish Project ...';
   lisPublishProject = 'Publish Project';
+  lisMenuPublishPackage = 'Publish Package ...';
   lisMenuProjectInspector = 'Project Inspector';
   lisProject3 = 'project';
   lisKMRemoveActiveFileFromProject = 'Remove Active File from Project';
@@ -537,7 +537,12 @@ resourcestring
   lisMenuEvaluate = 'E&valuate/Modify ...';
   lisMenuAddWatch = 'Add &Watch ...';
   lisMenuAddBreakpoint = 'Add &Breakpoint';
-
+  liskecBreakIgnoreToggle =   'Toggle Ignore all Breakpoints';
+  liskecBreakIgnoreOn =       'Set Ignore all Breakpoints';
+  liskecBreakIgnoreOff =      'Unset Ignore all Breakpoints';
+  liskecExceptIgnoreToggle =  'Toggle Ignore all Exceptions';
+  liskecExceptIgnoreOn =      'Set Ignore all Exceptions';
+  liskecExceptIgnoreOff =     'Unset Ignore all Exceptions';
   lisMenuNewPackage = 'New Package ...';
   lisMenuOpenPackage = 'Open Loaded Package ...';
   lisMenuOpenRecentPkg = 'Open Recent Package';
@@ -547,7 +552,7 @@ resourcestring
   lisKMConfigureCustomComponents = 'Configure Custom Components';
   lisMenuConfigCustomComps = 'Configure Custom Components ...';
 
-  lisMenuConfigExternalTools = 'Configure External Tools ...';
+  lisMenuConfigExternalTools = 'Configure &External Tools ...';
   lisMenuQuickSyntaxCheck = 'Quick Syntax Check';
   lisMenuQuickSyntaxCheckOk = 'Quick syntax check OK';
   lisMenuGuessUnclosedBlock = 'Guess Unclosed Block';
@@ -584,6 +589,7 @@ resourcestring
   lisToolStoppedWithExitStatusUseContextMenuToGetMoreInfo = 'tool stopped with '
     +'ExitCode 0 and ExitStatus %s. Use context menu to get more information.';
   lisErrors2 = ', Errors: %s';
+  lisErrorsCount = 'Errors: %s';
   lisWarnings = ', Warnings: %s';
   lisHints = ', Hints: %s';
   lisInternalError = 'internal error: %s';
@@ -1251,7 +1257,7 @@ resourcestring
   lisFilesNotInASCIINorUTF8Encoding = 'Files not in ASCII nor UTF-8 encoding';
   podAddPackageUnitToUsesSection = 'Add package unit to uses section';
   lisLPKCompatibilityModeCheckBox = 'Maximize compatibility of package file (LPK)';
-  lisLPKCompatibilityModeCheckBoxHint = 'Check this if you want to open your package in legacy (2.0 and older) Lazarus versions.';
+  lisLPKCompatibilityModeCheckBoxHint = 'Check this if you want to open your package in legacy (2.2 - 4.8) Lazarus versions.';
   lisCodeBrowser = 'Code Browser';
 
   // IDE General options
@@ -1297,11 +1303,14 @@ resourcestring
   dlgResetActiveDesktopBtnHint = 'Restore window layout of active desktop';
   dlgToggleDebugDesktopBtnCaption = 'Toggle as debug desktop';
   dlgToggleDebugDesktopBtnHint = 'Toggle as debug desktop';
+  dlgToggleDesignDesktopBtnCaption = 'Toggle as design desktop';
+  dlgToggleDesignDesktopBtnHint = 'Activate this desktop while the form designer is shown (Toggle Form/Unit)';
   dlgDesktopName = 'Desktop name';
   dlgOverwriteDesktop = 'Desktop with the name "%s" was found.'+sLineBreak+'Should the old desktop be overwritten?';
   dlgDebugDesktop = 'debug';
+  dlgDesignDesktop = 'design';
   dlgActiveDesktop = 'active';
-  dlgImportDesktopExists = 'A desktop with the same name already exists.'+sLineBreak+'Please confirm the desktop name:';
+  dlgImportDesktopExists = 'A desktop with the same name already exists.'+sLineBreak+'Please confirm or change the desktop name:';
   dlgDesktopsImported = '%d desktop(s) successfully imported from "%s"';
   dlgDesktopsExported = '%d desktop(s) successfully exported to "%s"';
   lisExportSelected = 'Export selected';
@@ -1312,6 +1321,8 @@ resourcestring
   dlgAutoSaveActiveDesktopHint = 'Save active desktop on IDE close'+sLineBreak+'Save debug desktop on IDE close and debug end';
   dlgAssociatedDebugDesktop = 'Associated debug desktop for "%s"';
   dlgAssociatedDebugDesktopHint = 'If you select the desktop, the associated debug desktop will be selected as well.';
+  dlgAssociatedDesignDesktop = 'Associated design desktop for "%s"';
+  dlgAssociatedDesignDesktopHint = 'If you select the desktop, the associated design desktop will be selected as well.';
 
   // Window options
   dlgShowingWindows = 'Showing Windows';
@@ -1341,15 +1352,18 @@ resourcestring
   lisShowIcons = 'Show Icons';
   dlgAnIconForErrorWarningHintIsShown = 'An icon for error/warning/hint is shown '
     +'in front of a message. The same icon shows in source editor gutter in any case.';
-  lisFocusAtCompilation = 'Focus at compilation';
+  lisFocusWindow = 'Focus window';
   lisAlwaysDrawSelectedItemsFocused = 'Always draw selected items focused';
   lisDrawTheSelectionFocusedEvenIfTheMessagesWindowHasN = 'Draw the selection '
     +'focused even if the Messages window has no focus. Use this if your '
     +'theme has a hardly visible unfocused drawing.';
-  lisShowAutomatically = 'Show automatically';
-  lisShowAutoWhenCompiling = 'When compiling';
-  lisShowAutoOnlyWhenErrorsOccur = 'Only when errors occur';
-  lisShowAutoNever = 'Never';
+  lisWrapLongMessageLinesOtherwiseTheyAreClippedAndAHi = 'Wrap long message '
+    +'lines into several rows. Otherwise they are clipped and a hint shows the '
+    +'full text.';
+  lisOpenAutomatically = 'Open automatically';
+  lisOpenAutoWhenCompiling = 'When getting messages';
+  lisOpenAutoOnlyWhenErrorsOccur = 'Only when errors occur';
+  lisOpenAutoNever = 'Never';
   lisMustBeOpenedManually = 'Must be opened manually from View -> Messages.';
   lisEditorColors = 'Editor Colors';
   lisPastelColors = 'Pastel Colors';
@@ -1369,9 +1383,19 @@ resourcestring
   dlgMaxCntr = 'Maximum counter';
   dlgEdBSubDir = 'Sub directory';
   dlgEnvOtherFiles = 'Other Files';
-  dlgMaxRecentFiles = 'Max recent files';
-  dlgMaxRecentProjs = 'Max recent project files';
+  dlgRecent = 'Recent';
+  dlgMaxRecentCount = 'Max count of recent items';
+  dlgRecentFilesCaption = 'Files';
+  dlgRecentProjectsCaption = 'Projects';
+  dlgRecentPackagesCaption = 'Packages';
   dlgMaxRecentHint = 'Value 0 means unlimited.';
+  dlgShowInOpenCoolbarButton = 'Show in "Open" drop-down toolbar button';
+  // Headers for the drop-down list of the "Open" toolbar button. Packages may
+  // display favorites in this list, so need to clarify that these are recent items.
+  dlgRecentProjectsHeader = 'Recent Projects:';
+  dlgRecentPackagesHeader = 'Recent Packages:';
+  dlgRecentFilesHeader = 'Recent Files:';
+
   dlgLazarusDir = 'Lazarus directory (default for all projects)';
   lisLazarusDirHint = 'Lazarus sources. This path is relative to primary config directory (%s).';
   dlgFpcExecutable = 'Compiler executable (e.g. %s)';
@@ -1382,6 +1406,11 @@ resourcestring
   lisSetThisToTranslateTheCompilerMessagesToAnotherLang = 'Set this to '
     +'translate the compiler messages to another language (i.e. not English). '
     +'For example: German: $(FPCSrcDir)/compiler/msg/errordu.msg.';
+
+  dlgNewDebuggerBackend = 'New debugger backend';
+  dlgPleaseChooseTheDebuggerBackend = 'Please choose the debugger backend to '
+    +'add.';
+  dlgClass = 'Class:';
 
   dlgDebugType = 'Debugger type and path';
   dlgTestPrjDir = 'Directory for building test projects';
@@ -1458,7 +1487,6 @@ resourcestring
   lisToolHeaderRunning = 'Tool Header: Running';
   lisToolHeaderSuccess = 'Tool Header: Success';
   lisToolHeaderFailed = 'Tool Header: Failed';
-  lisToolHeaderScrolledUp = 'Tool Header: Scrolled up';
   dlgSubPropColor = 'SubProperties';
   dlgReferenceColor = 'Reference';
   lisAllBuildModes = '<All build modes>';
@@ -1525,10 +1553,6 @@ resourcestring
     +' start';
 
   lisConfirmReplace = 'Confirm Replace';
-  lisAlreadyContainsTheHe = '%s already contains the help:'+LineEnding+'%s';
-  lisInvalidDeclaration = 'Invalid Declaration';
-  lisPleasePlaceTheEditorCaretOnAnIdentifierIfThisIsANe = 'Please place the editor caret on an '
-    +'identifier. If this is a new unit, please save the file first.';
 
   // open-dialog filters
   dlgFilterAll = 'All files';
@@ -1887,9 +1911,10 @@ resourcestring
   dlgKeyLink = '(Edit Key)';
   dlgBracketHighlight = 'Bracket highlight';
   dlgNoBracketHighlight = 'No Highlight';
-  dlgHighlightLeftOfCursor = 'Left Of Caret';
-  dlgHighlightRightOfCursor = 'Right Of Caret';
-  gldHighlightBothSidesOfCursor = 'On Both Sides';
+  dlgHighlightLeftOfCursor = 'Left of Caret';
+  dlgHighlightRightOfCursor = 'Right of Caret';
+  dlgHighlightBothSidesOfCursorLeft = 'On both sides (left first)';
+  dlgHighlightBothSidesOfCursorRight = 'On both sides (right first)';
   dlgTrimSpaceTypeCaption = 'Trim spaces style';
   dlgTrimSpaceTypeLeaveLine = 'Leave line';
   dlgTrimSpaceTypeEditLine = 'Line Edited';
@@ -2003,6 +2028,7 @@ resourcestring
   dlgMarkupGroup = 'Highlight all occurrences of Word under Caret';
   dlgBracketMatchGroup = 'Matching bracket and quote pairs';
   dlgPasExtHighlightGroup = 'Extended Pascal Highlight Options';
+  dlgSqlExtHighlightGroup = 'Extended SQL Highlight Options';
   dlgPasParamTypes = 'Types and values in declarations and params';
   dlgPasKeywordsMatches = 'Matching Keywords';
   dlgPasKeywordsMarkup = 'Markup (on caret)';
@@ -2012,6 +2038,7 @@ resourcestring
   dlgMarkupOutlineWarnNoColor = 'Warning: There are no colors configured for the selected language';
   dlgPasExtKeywords = 'Highlight flow control statements (break, continue, exit) as keywords';
   dlgPasCaseLabelForOtherwise = 'Color otherwise/else as case-label';
+  dlgPasResolveCompilerModeSwitchesWithCodeTools = 'Resolve compiler mode switches with CodeTools';
   dlgPasDeclaredTypeAttrMode = 'Extent of type-highlight in declarations';
   dlgPasDeclaredTypeValueMode = 'Extent of initial-value-highlight in declarations';
   dlgPasGenericParamAttrMode = 'Extent of highlight in Generic-Constraint and Specialize-param';
@@ -2052,6 +2079,7 @@ resourcestring
   dlgIncludeIdentifiersContainingPrefix = 'Include identifiers containing prefix';
   lisAutomaticFeatures = 'Completion and Hints';
   lisPascalHighlightOpts = 'Pascal highlight';
+  lisSqlHighlightOpts = 'SQL highlight';
   lisAutoMarkup = 'Pairs/Matches and Structure';
   dlgUseIconsInCompletionBox = 'Icons in code completion box';
   dlgIncludeWordsToIdentCompl = 'Include words';
@@ -2225,8 +2253,6 @@ resourcestring
   dlgIfDefNodeInactive            = 'Inactive $IFDEF node';
   dlgIfDefNodeActive              = 'Active $IFDEF node';
   dlgIfDefNodeTmpActive           = 'Included mixed state $IFDEF node';
-  dlgAddHiAttrCustom              = 'Custom %d';
-  dlgAddHiAttrNestedBracket       = 'Nested bracket %d';
 
   dlgAddHiAttrGroupDefault  = 'Global';
   dlgAddHiAttrGroupText     = 'Text';
@@ -2441,6 +2467,9 @@ resourcestring
   dlgLevel4Opt = '4 (-O3 + aggressive optimizations, beware)';
   dlgTargetOS = 'Target OS';
   dlgTargetCPUFamily = 'Target CPU family';
+  lisTargetController = 'Target controller';
+  lisQueryCompilerForTargets = 'Query installed compiler for available targets';
+  lisQueryCompilerForTargetsHint = 'List only the targets, processors and controllers the configured compiler actually supports';
   dlgCOInfoForGDB = 'Debugger info';
   dlgCOOtherDebuggingInfo = 'Other debugging info';
   dlgCOGDB = 'Generate info for the debugger (slower / increases exe-size)';
@@ -2519,6 +2548,35 @@ resourcestring
   lisDebugger = 'Debugger';
 
   lisToFPCPath = 'Path:';
+  lisTrustCompilerCaption = 'Trust project compiler?';
+  lisTheProjectWantsToUseTheCompiler = 'The project "%s" wants to use the compiler:%s%s%s'
+    +'This is not the default compiler configured in the IDE. Opening a project with a custom '
+    +'compiler can run arbitrary programs.%sDo you want to trust and use this compiler?';
+  lisTrustPkgCompilerCaption = 'Trust package compiler?';
+  lisThePackageWantsToUseTheCompiler = 'The package "%s" wants to use the compiler:%s%s%s'
+    +'This is not the default compiler configured in the IDE. Opening a package with a custom '
+    +'compiler can run arbitrary programs.%sDo you want to trust and use this compiler?';
+  lisTrustCompilerThisTime = 'Trust until project closes';
+  lisTrustCompilerAlways = 'Trust always';
+  lisDoNotTrustCompiler = 'Do not trust';
+  lisUseDefaultCompiler = 'Use default compiler';
+  lisTrustedCompilers = 'Trusted compilers';
+  lisTrustedCommands = 'Trusted commands';
+  lisAddPathToTrustedExe = 'Add path to trusted executable';
+  lisPathAlreadyExists = 'The path already exists.';
+  lisTheProjectWantsToUseTheCompilerBuild = 'The project "%s" wants to use the compiler:%s%s%s'
+    +'This is not the default compiler configured in the IDE. Building with a custom '
+    +'compiler can run arbitrary programs.%sDo you want to trust and use this compiler?';
+  lisThePackageWantsToUseTheCompilerBuild = 'The package "%s" wants to use the compiler:%s%s%s'
+    +'This is not the default compiler configured in the IDE. Building with a custom '
+    +'compiler can run arbitrary programs.%sDo you want to trust and use this compiler?';
+  lisTrustCommandCaption = 'Trust build command?';
+  lisTheProjectWantsToRunTheCommand = 'The project "%s" wants to run the command:%s%s%s'
+    +'Building with a custom command can run arbitrary programs.%sDo you want to trust '
+    +'and run this command?';
+  lisThePackageWantsToRunTheCommand = 'The package "%s" wants to run the command:%s%s%s'
+    +'Building with a custom command can run arbitrary programs.%sDo you want to trust '
+    +'and run this command?';
   lisCOSkipCallingCompiler = 'Skip calling compiler';
   lisCOAmbiguousAdditionalCompilerConfigFile = 'Ambiguous additional compiler config file';
   lisCOWarningTheAdditionalCompilerConfigFileHasTheSameNa = 'Warning: The '
@@ -2713,7 +2771,7 @@ resourcestring
 
   dlgPOSaveSession = 'Session';
   dlgApplicationSettings = 'Application settings';
-  dlgPOTitle = 'Title:';
+  dlgPOTitle = 'Title';
   lisHint = 'Hint';
   lisNote = 'Note';
   dlgPOUseLCLScaling = 'Use LCL scaling (Hi-DPI)';
@@ -2785,7 +2843,7 @@ resourcestring
   lisUpdateApplicationScaledStatement = 'Update Application.Scaled statement in main unit';
   lisIdeMaintainsScaledInMainUnit = 'The IDE maintains Application.Scaled (Hi-DPI) in main unit.';
   lisLPICompatibilityModeCheckBox = 'Maximize compatibility of project files (LPI and LPS)';
-  lisLPICompatibilityModeCheckBoxHint = 'Check this if you want to open your project in legacy (2.0 and older) Lazarus versions.';
+  lisLPICompatibilityModeCheckBoxHint = 'Check this if you want to open your project in legacy (2.2 - 4.8) Lazarus versions.';
   lisProjectIsRunnable = 'Project is runnable';
   lisProjectIsRunnableHint = 'Generates a binary executable which can be run.';
   lisUseDesignTimePackages = 'Use design time packages';
@@ -2801,6 +2859,7 @@ resourcestring
   lisFPCResources = 'FPC resources (.res)';
   lisDelphiCompatibleResources = 'Delphi compatible resources. Recommended.';
   lisStorePathDelimitersAndAs = 'Store path delimiters \ and / as';
+  lisSQLHighlighterDialect = 'Override dialect for SQL highlighter';
   lisDoNotChange = 'Do not change';
   lisChangeToUnix = 'Change to Unix /';
   lisChangeToWindows = 'Change to Windows \';
@@ -2837,6 +2896,12 @@ resourcestring
   dlgRedirInputEnd  = 'From file (at EOF)';
 
   dlgRedirStdNotSupported = 'Current debugger does not support redirection.';
+  dlgConsoleGroup = 'Console';
+  dlgConsoleModeOs = 'OS console';
+  dlgConsoleModeIde = 'Internal IDE console';
+  dlgConsoleUseIdeDefault = '-- Use IDE default console --';
+  dlgConsoleIdeWindow = 'IDE internal window';
+  dlgConsoleUnknown = 'Unknown console "%s"';
   dlgRunOSystemVariables = 'System variables';
   dlgRunOUserOverrides = 'User overrides';
   dlgIncludeSystemVariables = 'Include system variables';
@@ -2967,12 +3032,13 @@ resourcestring
   uemBookmarkNUnSet = 'Bookmark &%s';
   uemBookmarkNSet   = 'Bookmark &%s: %s';
   lisChangeEncoding = 'Change Encoding';
-  lisChangeFile = 'Change file';
-  lisEncodingOfFileOnDiskIsNewEncodingIs = 'Encoding of file "%s"%son disk is %s. New encoding is %s.';
-  lisReopenWithAnotherEncoding = 'Reopen with another encoding';
+  lisEncodingOfFileOnDiskIsNewEncodingIs = 'Encoding of file "%s"'
+    +'%son disk is %s. New encoding is %s.';
+  lisSaveWithNewEncoding = 'Save with new encoding';
+  lisReopenWithNewEncoding = 'Reopen with new encoding';
   lisAbandonChanges = 'Abandon changes?';
-  lisAllYourModificationsToWillBeLostAndTheFileReopened = 'All your modifications '
-    +'to "%s"%swill be lost and the file reopened.';
+  lisAllYourModificationsToWillBeLostAndTheFileReopened = 'All your modifications to "%s"'
+    +'%swill be lost and the file reopened.';
   lisOpenLfm = 'Open %s';
   lisUtf8WithBOM = 'UTF-8 with BOM';
   uemToggleBookmark = '&Toggle Bookmark';
@@ -3653,11 +3719,6 @@ resourcestring
 
   // codetools defines
   lisErrorWritingFile = 'Error writing file "%s"';
-  lisFPDocErrorWriting = 'Error writing "%s"%s%s';
-  lisFPDocFPDocSyntaxError = 'FPDoc syntax error';
-  lisFPDocThereIsASyntaxErrorInTheFpdocElement = 'There is a syntax error in '
-    +'the fpdoc element "%s":%s%s';
-  lisChooseAnExampleFile = 'Choose an example file';
   lisStopDebugging2 = 'Stop debugging?';
   lisStopCurrentDebuggingAndRebuildProject = 'Stop current debugging and rebuild project?';
   lisErrorWritingPackageListToFile = 'Error writing package list to file%s%s%s%s';
@@ -4049,21 +4110,6 @@ resourcestring
   lisProjAddTheProjectHasAlreadyADependency = 'The project has already a '
     +'dependency for the package "%s".';
   lisProjAddPackageNotFound = 'Package not found';
-  lisLDTheUnitIsNotOwnedBeAnyPackageOrProjectPleaseAddThe = 'The unit %s is '
-    +'not owned be any package or project.%sPlease add the unit to a package '
-    +'or project.%sUnable to create the fpdoc file.';
-  lisLDNoValidFPDocPath = 'No valid FPDoc path';
-  lisTheUnitIsPartOfTheFPCSourcesButTheCorrespondingFpd = 'The unit %s is part'
-    +' of the FPC sources but the corresponding fpdoc xml file was not found.'
-    +'%sEither you have not yet added the fpcdocs directory to the search path or the '
-    +'unit is not yet documented.%sThe fpdoc files for the FPC sources can be'
-    +' downloaded from: %s%sPlease add the directory in the '
-    +'fpdoc editor options.%sIn order to create a new file the directory must '
-    +'be writable.';
-  lisLDDoesNotHaveAnyValidFPDocPathUnableToCreateTheFpdo = '%s does not have '
-    +'any valid FPDoc path.%sUnable to create the fpdoc file for %s';
-  lisErrorReadingXML = 'Error reading XML';
-  lisErrorReadingXmlFile = 'Error reading xml file "%s"%s%s';
   lisPkgThisFileIsNotInAnyLoadedPackage = 'This file is not in any loaded package.';
   lisProjAddTheDependencyWasNotFound = 'The dependency "%s" was not found.%sPlease choose an existing package.';
   lisProjAddInvalidVersion = 'Invalid version';
@@ -4079,7 +4125,7 @@ resourcestring
   lisProjAddTheUnitNameAlreadyExistsInTheSelection = 'The unit name "%s" '
     +'already exists in the selection%swith file: "%s".';
   lisProjAddNewRequirement = 'New Requirement';
-  lisProjAddNewFPMakeRequirement = 'New FPMake Requirement';
+  lisProjAddNewFPMakeRequirement = 'New FPMake requirement ...';
   lisProjAddEditorFile = 'Add Editor Files';
   lisProjAddPackageName = 'Package Name:';
   lisProjAddPackageType = 'Package Type:';
@@ -4204,9 +4250,9 @@ resourcestring
 
   // edit external tools
   lisEdtExtToolEditTool = 'Edit Tool';
-  lisEdtExtToolProgramfilename = 'Program Filename:';
-  lisEdtExtToolParameters = 'Parameters:';
-  lisEdtExtToolWorkingDirectory = 'Working Directory:';
+  lisEdtExtToolProgramExecutable = 'Program Executable';
+  lisEdtExtToolParameters = 'Parameters';
+  lisEdtExtToolWorkingDirectory = 'Working Directory';
   lisShowConsole = 'Show console';
   lisOnlyAvailableOnWindowsRunToolInANewConsole = 'Only available on Windows. '
     +'Run tool in a new console.';
@@ -4493,7 +4539,7 @@ resourcestring
   lisA2PTheClassNameExistsAlreadyInPackageFile = 'The class name "%s" exists already in'
     +'%sPackage %s'
     +'%sFile: "%s"';
-  lisA2PNewFile = 'New File';
+  lisA2PNewFile = 'New file ...';
   lisA2PAddFiles = 'Add Files';
   lisA2PAncestorType = 'Ancestor type';
   lisA2PShowAll = 'Show all';
@@ -4548,7 +4594,7 @@ resourcestring
   lisPckEditReAddFile = 'Re-Add file';
   lisPESortFiles = 'Sort Files Permanently';
   lisPEFixFilesCase = 'Fix Files Case';
-  lisPEShowMissingFiles = 'Show Missing Files';
+  lisPEShowMissingFiles = 'Show Missing Files ...';
   lisPckEditRemoveDependency = 'Remove dependency';
   lisPckEditMoveDependencyUp = 'Move dependency up';
   lisPckEditMoveDependencyDown = 'Move dependency down';
@@ -4616,6 +4662,8 @@ resourcestring
     +'po file. For this you must enable I18N for this package, provide a po '
     +'output directory and leave this option unchecked.';
   lisPkgMangUseUnit = 'Use unit';
+  lisPkgMangVirtualUnit = 'Virtual unit';
+  lisPkgMangVirtualUnitHint = 'Package has only a unit''s name. The unit itself is found elsewhere.';
   lisPckEditMinimumVersion = 'Minimum Version:';
   lisPckEditMaximumVersion = 'Maximum Version:';
   lisPckEditApplyChanges = 'Apply changes';
@@ -5117,15 +5165,7 @@ resourcestring
   lisCEOModeSource = 'Source';
 
   lisFPDocEditor = 'FPDoc Editor';
-  lisCodeHelpMainFormCaption = 'FPDoc Editor';
-  lisCodeHelpNoTagCaption = '<NONE>';
-  lisCodeHelpnoinheriteddescriptionfound = '(no inherited description found)';
-  lisCodeHelpShortdescriptionOf = 'Short description of';
-  lisCodeHelpInherited = 'Inherited';
-  lisCodeHelpShortTag = 'Short';
   lisCodeHelpDescrTag = 'Description';
-  lisCodeHelpErrorsTag = 'Errors';
-  lisCodeHelpSeeAlsoTag = 'See also';
   lisCodeHelpAddPathButton = 'Add path';
   lisSearchPaths2 = 'Search paths';
   lisFPDocPackageName = 'FPDoc package name:';
@@ -5140,23 +5180,7 @@ resourcestring
   lisSelectedMessageInMessagesWindow = 'Selected message in messages window:';
   lisAdditions = 'Additions';
   lisCreateNewAddition = 'Create new addition';
-  lisCodeHelpConfirmreplace = 'Confirm replace';
   lisCodeHelpGroupBox = 'FPDoc settings';
-  lisCodeHelpHintBoldFormat = 'Insert bold formatting tag';
-  lisCodeHelpHintItalicFormat = 'Insert italic formatting tag';
-  lisCodeHelpHintUnderlineFormat = 'Insert underline formatting tag';
-  lisCodeHelpHintInsertCodeTag = 'Insert code formatting tag';
-  lisCodeHelpHintRemarkTag = 'Insert remark formatting tag';
-  lisCodeHelpHintVarTag = 'Insert var formatting tag';
-  lisCodeHelpCreateButton = 'Create help item';
-  lisOpenXML = 'Open XML';
-  lisCodeHelpInsertALink = 'Insert a link ...';
-  lisCodeHelpInsertParagraphFormattingTag = 'Insert paragraph formatting tag';
-  lisCodeHelpExampleTag = 'Example';
-  lisCodeHelpBrowseExampleButton = 'Browse';
-  lisLDMoveEntriesToInherited = 'Move entries to inherited';
-  lisLDCopyFromInherited = 'Copy from inherited';
-  lisLDAddLinkToInherited = 'Add link to inherited';
   lisEnableMacros = 'Enable Macros';
   lisCTSelectCodeMacro = 'Select Code Macro';
   lisPDProgress = 'Progress';
@@ -5207,6 +5231,7 @@ resourcestring
   lisDebugDialogConfirmDelBreaks = 'Confirm to delete all Breakpoints';
   lisDebugDialogConfirmDelBreaksFile = 'Confirm to delete Breakpoints in same file';
   lisDebugDialogConfirmDelHistory = 'Confirm to clear History';
+  lisDebugDialogShowWatchesHint = 'Show hint for watches/locals (with same delay as source hint)';
 
   lisDebugOptionsFrmResetDebuggerOnEachRun = 'Reset Debugger after each run';
   lisDebugOptionsFrmAutoCloseAsm = 'Automatically close the assembler window, after source not found';
@@ -5348,25 +5373,10 @@ resourcestring
   lisGutterPartVisible = 'Visible';
   lisGutterPartWidth = 'Width';
   lisGutterPartMargin = 'Margin';
-  lisLink = 'Link:';
-  lisShort = 'Short:';
-  lisInsertUrlTag = 'Insert url tag';
-  lisInsertPrintshortTag2 = 'Insert printshort tag';
   lisTheUnitSearchPathOfContainsTheSourceDirectoryOfPac = 'The unit search '
     +'path of "%s" contains the source directory "%s" of package %s';
   lisMissingIdentifiers = 'Missing identifiers';
-  lisChooseAFPDocLink = 'Choose a FPDoc link';
-  lisLinkTarget = 'Link target';
-  lisExamplesIdentifierTMyEnumEnumUnitnameIdentifierPac = 'Examples:'
-    +'%sIdentifier'
-    +'%sTMyEnum.Enum'
-    +'%sUnitname.Identifier'
-    +'%s#PackageName.UnitName.Identifier';
-  lisTitleLeaveEmptyForDefault = 'Title (leave empty for default)';
-  lisPackageUnit = 'package unit';
   lisPackage2 = 'package %s';
-  lisIdentifier = 'identifier';
-  lisProjectUnit = 'project unit';
   lisSyntaxMode = 'Syntax mode';
   lisUseAnsistrings = 'Use Ansistrings';
   lisDoNotShowThisDialogForThisProject = 'Do not show this dialog for this project';
@@ -5377,6 +5387,8 @@ resourcestring
     +'unit was compiled again.';
   lisApplyBuildFlagsBToDependenciesToo = 'Apply build flags (-B) to dependencies too.';
   lisDoNotCompileDependencies = 'Do not compile dependencies.';
+  lisAbortIfAnyCompilerPathOrExecut = 'Abort if any compiler path or execute-'
+    +'before/after command is missing in the IDE trust whitelist.';
   lisAddPackageSToListOfInstalledPackagesCombineWithBui = 'Add package(s) to the '
     +'list of installed packages (combine with --build-ide to rebuild IDE).';
   lisAddTheReleasePackagesToTheListOfInstalledPackages = 'Add the release '
@@ -5387,7 +5399,12 @@ resourcestring
   lisBuildIDEWithPackages = 'Build IDE with packages. Optional compiler options '+
     'will be passed after the options from used build mode and can be specified here or '+
     'with the --opt option.';
+  lisBuildTheMinimalIDEWithDefaults = 'Build the minimal IDE with defaults.';
+  lisBuildTheReleaseIDESameAsMinima = 'Build the release IDE. Same as minimal '
+    +'plus a fixed set of extra packages.';
   lisShowVersionAndExit = 'Show version and exit.';
+  lisBuildReleasePackagesStoreCompi = 'Build release packages. Store compiler '
+    +'checksum instead of date in package.compiled files. Ignore session and environment options.';
   lisBeLessVerboseCanBeGivenMultipleTimes = 'Be less verbose. Can be given '
     +'multiple times.';
   lisPassingQuietTwoTimesWillP = 'Passing --quiet two times will pass -vw-n-h-'
@@ -5408,7 +5425,6 @@ resourcestring
   lisProjectChangedOnDisk = 'Project changed on disk';
   lisTheProjectInformationFileHasChangedOnDisk = 'The project information file "%s"%shas changed on disk.';
   lisReopenProject = 'Reopen project';
-  rsSelectAnInheritedEntry = 'Select an inherited entry';
 
   // New console application dialog (CustomApplicationOptionsForm.pas)
   lisApplicationClassName = '&Application class name';
@@ -5419,17 +5435,8 @@ resourcestring
   lisConstructorCode = 'Constructor code';
   lisDestructorCode = 'Destructor code';
   lisCheckOptions = 'Check options';
+  lisCheckingFiles = 'Checking ...';
   lisNewConsoleApplication = 'New console application';
-
-  // Edit context help dialog (IDEContextHelpEdit.pas)
-  lisHelpEntries = 'Help entries';
-  lisCEIsARootControl = 'Is a root control';
-  lisHasHelp = 'Has Help';
-  lisCreateHelpNode = 'Create Help node';
-  lisDlgOpen = 'Open ...';
-  lisEditContextHelp = 'Edit context help';
-  lisNoNodeSelected = 'no node selected';
-  lisNoIDEWindowSelected = 'No IDE window selected';
 
   // Messages Editor dialog (MsgViewEditor.pas)
   lisAddNewSet = 'Add new set';
@@ -5701,27 +5708,6 @@ resourcestring
   lisAllParametersOfThisFunctionAreAlreadySetAtThisCall = 'All parameters of '
     +'this function are already set at this call. Nothing to add.';
   lisIDECompileAndRestart = 'The IDE will be recompiled and restarted during installation/uninstallation of packages.';
-
-  synfUnfoldAllInSelection                          = 'Unfold all in selection';
-  synfUnfoldCommentsInSelection                     = 'Unfold comments in selection';
-  synfFoldCommentsInSelection                       = 'Fold comments in selection';
-  synfHideCommentsInSelection                       = 'Hide comments in selection';
-  synfUnfoldAllIfdefInSelection                     = 'Unfold all Ifdef in selection';
-  synfUnfoldActiveIfdefInSelection                  = 'Unfold active Ifdef in selection';
-  synfUnfoldInactiveIfdefInSelection                = 'Unfold inactive Ifdef in selection';
-  synfFoldInactiveIfdefInSelection                  = 'Fold inactive Ifdef in selection';
-  synfFoldInactiveIfdefInSelectionExcludeMixedState = 'Fold inactive Ifdef in selection ('
-    +'exclude mixed state)';
-
-  synfUnfoldAll                           = 'Unfold all';
-  synfUnfoldComments                      = 'Unfold comments';
-  synfFoldComments                        = 'Fold comments';
-  synfHideComments                        = 'Hide comments';
-  synfUnfoldAllIfdef                      = 'Unfold all Ifdef';
-  synfUnfoldActiveIfdef                   = 'Unfold active Ifdef';
-  synfUnfoldInactiveIfdef                 = 'Unfold inactive Ifdef';
-  synfFoldInactiveIfdef                   = 'Fold inactive Ifdef';
-  synfFoldInactiveIfdefExcludeMixedState  = 'Fold inactive Ifdef (exclude mixed state)';
 
   lisCanNotCompileProject = 'Cannot compile project';
   lisTheProjectHasNoMainSourceFile = 'The project has no main source file.';
@@ -6100,6 +6086,8 @@ resourcestring
   lisChangeMethodVisibilityTo = 'Change method visibility to "%s"';
   lisHideWithProjectOptionVm = 'Hide with project option (-vm%s)';
   lisHideWithPackageOptionVm = 'Hide with package option (-vm%s)';
+  lisHideWithPackageOptionIfFPCFullVersion = 'Hide with package option IF '
+    +'FPC_FULLVERSION>=%s THEN CustomOptions+='' -vm%s''';
   lisRemoveLocalVariable3 = 'Remove local variable "%s"';
   lisShowAbstractMethodsOf = 'Show abstract methods of "%s"';
   lisCopyMoveFileToDirectory = 'Copy/Move File to Directory';
@@ -6332,6 +6320,42 @@ resourcestring
   lisInstallRootCopyAll = 'Copy all';
   lisInstallRootContinue = 'Continue';
   lisInstallRootContinueIn = 'Continue (%d...)';
+  dlgFoldSqlSelect = 'Select';
+  dlgFoldSqlSubSelect = 'Sub-Select';
+  dlgFoldSqlUpdateSelect = 'Update-Select';
+  dlgFoldSqlInsertSelect = 'Insert-Select';
+  dlgFoldSqlFrom = 'From';
+  dlgFoldSqlJoin = 'Join';
+  dlgFoldSqlJoinOn = 'Join-On';
+  dlgFoldSqlWhere = 'Where';
+  dlgFoldSqlGroup = 'Group';
+  dlgFoldSqlHaving = 'Having';
+  dlgFoldSqlOrder = 'Order';
+  dlgFoldSqlLimit = 'Limit';
+  dlgFoldSqlInto = 'Into';
+  dlgFoldSqlSet = 'Set';
+  dlgFoldSqlValues = 'Values';
+  dlgFoldSqlCreateTable = 'Create Table';
+  dlgFoldSqlAlterTable = 'Alter Table';
+  dlgFoldSqlDropTable = 'Drop Table';
+  dlgFoldSqlCreateDb = 'Create Database';
+  dlgFoldSqlDropDb = 'Drop Database';
+  dlgFoldSqlCreateProcedure = 'Create Procedure';
+  dlgFoldSqlBegin = 'Begin';
+  dlgFoldSqlUpdate = 'Update';
+  dlgFoldSqlInsert = 'Insert';
+  dlgFoldSqlDelete = 'Delete';
+  optEdCompleteBackspaceBehaviour = 'Backspace behaviour';
+  optEdCompleteOnlyDeletePreviousChar = 'Only delete previous char';
+  optEdCompleteCancelIfCompletionWasJust = 'Cancel, if completion was just opened';
+  optEdCompleteCancelIfCompletionWasJust2 = 'Cancel, if completion was just opened, and caret at '
+    +'start';
+  optEdCompleteCancelIfCaretAtStart = 'Cancel, if caret at start';
+  optEdCompleteCancelIfCaretAtStartSingl = 'Cancel, if caret at start (single press, not on '
+    +'repeat key)';
+  optEdCompleteCancelIfJustOpenedOrCaret = 'Cancel, if just opened, or caret at start (not on '
+    +'repeat key)';
+  optEdCompleteCancelIfOpenedByDot = 'Cancel, if opened by dot';
 
 implementation
 

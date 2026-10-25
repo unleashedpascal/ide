@@ -1389,7 +1389,6 @@ begin
       ARoot:='ProjectGroup/';
       XMLConfig.SetValue(ARoot+'FileVersion',PGFileVersion);
       ATargetsPath := ARoot+'Targets/';
-      XMLConfig.SetListItemCount(ATargetsPath, TargetCount, False);
       ACount:=0;
       For i:=0 to TargetCount-1 do
       begin
@@ -1544,6 +1543,7 @@ begin
     Params.Add('-B');
   if aBuildMode<>'' then
     Params.Add('--build-mode='+aBuildMode);
+  Params.Add('--mistrust'); // invoke only whitelisted tools
   Params.Add(Filename);
 
   Tool:=ExternalToolList.Add(ToolTitle);
@@ -1749,9 +1749,9 @@ begin
         Path:='ProjectOptions/';
         ALPIFileVersion := xml.GetValue(Path+'Version/Value',0);
         CompatibilityMode := xml.GetValue(Path+'General/Flags/CompatibilityMode/Value', pfCompatibilityMode in DefaultProjectFlags);
-        IsPartOfProjectDefValue := (ALPIFileVersion>=13) and not CompatibilityMode;
 
         Path:='ProjectOptions/Units/';
+        IsPartOfProjectDefValue := xml.GetValue(Path+'IsPartOfProject', False);
         LegacyList:=(ALPIFileVersion<=11) or xml.IsLegacyList(Path);
         Cnt:=xml.GetListItemCount(Path, 'Unit', LegacyList);
         for i := 0 to Cnt - 1 do begin
@@ -1827,7 +1827,6 @@ var
   aMode: TPGBuildMode;
 begin
   aPath := aPath+'BuildModes/';
-  XMLConfig.SetListItemCount('Mode', BuildModeCount, False);
   for i:=0 to BuildModeCount-1 do begin
     SubPath:=aPath+XMLConfig.GetListItemXPath('Mode', i, False, True)+'/';
     aMode:=BuildModes[i];

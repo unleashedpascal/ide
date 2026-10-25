@@ -86,6 +86,10 @@ type
     procedure TestCaseExpression;
     procedure TestTryExpression;
     procedure TestMatchExpression;
+    procedure TestStatementExpression_If;
+    procedure TestStatementExpression_Case;
+    procedure TestStatementExpression_Try;
+    procedure TestStatementExpression_Const;
     procedure TestBreakKeyword;
     procedure TestModifierAttributesForProcedure;
     procedure TestModifierAttributesForProperty;
@@ -3355,35 +3359,52 @@ begin
 end;
 
 procedure TTestHighlighterPas.TestContextForTypeHelper;
-  procedure DoChecks;
+  procedure DoChecksHelperOn(AWithFold: Boolean = false);
   begin
-    CheckTokensForLine('not a helper',  2,
+    CheckTokensForLine('a helper',  3,
       [ tkIdentifier, tkSpace, tkSymbol, tkSpace,
-        tkKey {type}, tkSpace, tkIdentifier {helper}, tkSpace, tkKey {for}, tkSpace, tkIdentifier, tkSymbol
+        tkKey {type}, tkSpace, tkKey {helper}, tkSpace, tkKey {for}, tkSpace, tkIdentifier, tkSpace, tkKey, tkSymbol
       ]);
-    AssertEquals('not a helper / no fold', 0, PasHighLighter.FoldOpenCount(2));
+    AssertEquals('a helper / no fold', 0, PasHighLighter.FoldOpenCount(3));
 
-    CheckTokensForLine('helper',  5,
+    CheckTokensForLine('helper',  4,
       [ tkIdentifier, tkSpace, tkSymbol, tkSpace,
         tkKey {type}, tkSpace, tkKey {helper}, tkSpace, tkKey {for}, tkSpace, tkIdentifier
       ]);
-    CheckTokensForLine('procedure in helper',  6,
+    CheckTokensForLine('procedure in helper',  5,
       [ tkKey, tkSpace, tkIdentifier + FAttrProcName,  tkSymbol, tkSpace, tkModifier,  tkSymbol ]);
-    CheckTokensForLine('uniq type',  8,
+    if AWithFold then
+      AssertEquals('helper type / fold', 1, PasHighLighter.FoldOpenCount(4));
+
+    CheckTokensForLine('uniq type',  7,
       [ tkIdentifier, tkSpace, tkSymbol, tkSpace,
         tkKey {type}, tkSpace, tkIdentifier, tkSymbol
       ]);
-    AssertEquals('uniq type / no fold', 0, PasHighLighter.FoldOpenCount(8));
+    AssertEquals('uniq type / no fold', 0, PasHighLighter.FoldOpenCount(7));
 
-    CheckTokensForLine('not a helper, switched off',  11,
+    CheckTokensForLine('helper',  9,
       [ tkIdentifier, tkSpace, tkSymbol, tkSpace,
-        tkKey {type}, tkSpace, tkIdentifier {helper}, tkSpace, tkKey {for}, tkSpace, tkIdentifier, tkSymbol
+        tkKey {type}, tkSpace, tkKey {helper}, tkSpace, tkKey {for}, tkSpace, tkIdentifier
       ]);
-    AssertEquals('not a helper, switched off / no fold', 0, PasHighLighter.FoldOpenCount(11));
-
-    CheckTokensForLine('class section',  14,
+    CheckTokensForLine('class section',  10,
       [ tkKey ]);
-    CheckTokensForLine('NOT class section',  18,
+
+  end;
+  procedure DoChecksHelperOff;
+  begin
+    CheckTokensForLine('not a helper',  3,
+      [ tkIdentifier, tkSpace, tkSymbol, tkSpace,
+        tkKey {type}, tkSpace, tkIdentifier {helper}, tkSpace, tkKey {for}, tkSpace, tkIdentifier, tkSpace, tkKey, tkSymbol
+      ]);
+    AssertEquals('not a helper / no fold', 0, PasHighLighter.FoldOpenCount(3));
+
+    CheckTokensForLine('uniq type',  7,
+      [ tkIdentifier, tkSpace, tkSymbol, tkSpace,
+        tkKey {type}, tkSpace, tkIdentifier, tkSymbol
+      ]);
+    AssertEquals('uniq type / no fold', 0, PasHighLighter.FoldOpenCount(7));
+
+    CheckTokensForLine('NOT class section',  10,
       [ tkIdentifier ]);
   end;
 
@@ -3399,36 +3420,54 @@ begin
 
     ReCreateEdit;
     EnableFolds(AFolds);
+
     SetLines
-      ([ 'Unit A; {$mode objfpc} interface',
-         'type',
-         'helper = type helper for helper;',
-         'type',
+      ([ 'Unit A; {$mode objfpc} interface {$modeswitch typehelpers-}',
          '{$modeswitch typehelpers}',
-         'helper = type helper for helper',
+         'type',
+
+         'helper = type helper for helper end;',  // 3: single line
+         'helper = type helper for helper',   // 4:
            'procedure Foo; static;',
           'end;',
-         'helper = type integer;',
+         'helper = type integer;',  // 7:
          'type',
-         '{$modeswitch typehelpers-}',
-         'helper = type helper for helper;',
-         '{$modeswitch typehelpers}',
-         'helper = type helper for helper',
+         'helper = type helper for helper',  // 9:
          'protected',
          'end;',
-         '{$modeswitch typehelpers-}',
-         'helper = type helper for helper',
-         'protected',
-         '{$modeswitch typehelpers}',
          ''
       ]);
 
-    DoChecks;
-    SynEdit.TestTypeText(1, 2, ' ');
-    DoChecks; // modeswitch on rescan
-
+    DoChecksHelperOn(cfbtClass in AFolds);
     PasHighLighter.FoldConfig[ord(cfbtClass)].Enabled := False;
-    DoChecks;
+    DoChecksHelperOn;
+
+    SynEdit.TestTypeText(2, 2, ' ');
+    DoChecksHelperOff; // modeswitch off rescan
+
+
+    PasHighLighter.FoldConfig[ord(cfbtClass)].Enabled := True;
+    SetLines
+      ([ 'Unit A; {$mode objfpc} interface {$modeswitch typehelpers}',
+         '{$modeswitch typehelpers-}',
+         'type',
+
+         'helper = type helper for helper end;',  // 3: single line
+         'helper = type helper for helper',   // 4:
+           'procedure Foo; static;',
+          'end;',
+         'helper = type integer;',  // 7:
+         'type',
+         'helper = type helper for helper',  // 9:
+         'protected',
+         'end;',
+         ''
+      ]);
+
+    DoChecksHelperOff;
+    SynEdit.TestTypeText(2, 2, ' ');
+    DoChecksHelperOn(True); // modeswitch on rescan
+
   end;
 end;
 
@@ -3959,51 +3998,7 @@ begin
   AssertEquals('begin fold end',  9, PasHighLighter.FoldEndLine(2, 0));
   {%endregion}
 
-  {%region try expression: the fallback is the tail, no "end"}
-  SetLines
-    ([ '{$mode unleashed}',                                              // 0
-       'function T(const s: string): string;',                           // 1
-       'begin',                                                          // 2
-       '  var r := try risky except on e: Exception do ''c'' else ''e'';', // 3
-       '  Result := try risky except ''f'';',                            // 4
-       'end;',                                                           // 5
-       ''
-    ]);
-
-  PopPushBaseName('try expression, single line');
-  CheckTokensForLine('filter form', 3,
-    [_, tkKey, _, tkIdentifier, _, tkSymbol, _, tkKey, _, tkIdentifier, _,
-     tkKey, _, tkKey, _, tkIdentifier, TK_Colon, _, tkIdentifier, _, tkKey,
-     _, tkString, _, tkKey, _, tkString, TK_Semi]);
-  CheckTokensForLine('else-less form', 4,
-    [_, tkIdentifier, _, tkSymbol, _, tkKey, _, tkIdentifier, _, tkKey, _,
-     tkString, TK_Semi]);
-  // neither try expression owns the "end;": it belongs to begin/function
-  AssertEquals('begin fold end',    5, PasHighLighter.FoldEndLine(2, 0));
-  AssertEquals('function fold end', 5, PasHighLighter.FoldEndLine(1, 0));
-  {%endregion}
-
-  {%region multi-line try expression: try..except..else fold spans}
-  SetLines
-    ([ '{$mode unleashed}',                     // 0
-       'function T(const s: string): string;',  // 1
-       'begin',                                 // 2
-       '  Result := try risky',                 // 3
-       '    except',                            // 4
-       '      on e: Exception do ''c''',        // 5
-       '      else ''e'';',                     // 6
-       'end;',                                  // 7
-       ''
-    ]);
-
-  PopPushBaseName('try expression, multi line');
-  CheckTokensForLine('catch-all else', 6, [_, tkKey, _, tkString, TK_Semi]);
-  AssertEquals('try-part fold end',   4, PasHighLighter.FoldEndLine(3, 0));
-  AssertEquals('except fold end',     6, PasHighLighter.FoldEndLine(4, 0));
-  AssertEquals('begin fold end',      7, PasHighLighter.FoldEndLine(2, 0));
-  AssertEquals('function fold end',   7, PasHighLighter.FoldEndLine(1, 0));
   PopBaseName;
-  {%endregion}
 end;
 
 procedure TTestHighlighterPas.TestMatchExpression;
@@ -4172,6 +4167,125 @@ begin
   AssertEquals('begin fold end',    8, PasHighLighter.FoldEndLine(2, 0));
   PopBaseName;
   {%endregion}
+end;
+
+procedure TTestHighlighterPas.TestStatementExpression_If;
+begin
+  ReCreateEdit;
+  EnableFolds([cfbtBeginEnd..cfbtNone], []);
+  SetLines
+    ([ 'program a;',
+       'begin',
+         'x := foo(if a then 1 else 2,',  // 2
+           'if b then 3 else 4);',
+         'if c then',                     // 4
+         'begin',
+         'end;',
+       'end.',
+       ''
+    ]);
+
+  // if, then (close+open), else (close+open), and closed by "," / ")"
+  AssertEquals('if-expr closed by comma', 3, PasHighLighter.FoldNodeInfo[2].CountEx([sfaClose], 0));
+  AssertEquals('if-expr closed by bracket', 3, PasHighLighter.FoldNodeInfo[3].CountEx([sfaClose], 0));
+
+  CheckTokensForLine('x := foo(if a then 1 else 2,', 2,
+    [tkIdentifier, tkSpace, TK_Assign, tkSpace, tkIdentifier, TK_Bracket, tkKey, tkSpace, tkIdentifier, tkSpace,
+     tkKey, tkSpace, tkNumber, tkSpace, tkKey, tkSpace, tkNumber, TK_Comma]);
+
+  AssertEquals('Len begin', 6, PasHighLighter.FoldLineLength(1, 0));
+  AssertEquals('Len begin after if', 1, PasHighLighter.FoldLineLength(5, 0));
+end;
+
+procedure TTestHighlighterPas.TestStatementExpression_Case;
+begin
+  ReCreateEdit;
+  EnableFolds([cfbtBeginEnd..cfbtNone], []);
+  PasHighLighter.CaseLabelAttriMatchesElseOtherwise := True;
+  SetLines
+    ([ 'program a;',
+       'begin',
+         'x := case b of',                 // 2
+           '1: foo;',
+           '2, 3: if c then 1 else 2;',    // 4
+           'else bar',
+         'end;',                           // 6
+         'case b of',
+           '1: foo;',
+         'end;',                           // 9
+       'end.',
+       ''
+    ]);
+
+  AssertEquals('Len begin', 9, PasHighLighter.FoldLineLength(1, 0));
+  AssertEquals('Len case-expr', 4, PasHighLighter.FoldLineLength(2, 0));
+  AssertEquals('Len case', 2, PasHighLighter.FoldLineLength(7, 0));
+
+  CheckTokensForLine('x := case b of', 2,
+    [tkIdentifier, tkSpace, TK_Assign, tkSpace, tkKey, tkSpace, tkIdentifier, tkSpace, tkKey]);
+  CheckTokensForLine('1: foo;', 3, [tkNumber+FCaseLabelAttri, TK_Colon, tkSpace, tkIdentifier, TK_Semi]);
+  CheckTokensForLine('2, 3: if c then 1 else 2;', 4,
+    [tkNumber+FCaseLabelAttri, TK_Comma, tkSpace, tkNumber+FCaseLabelAttri, TK_Colon, tkSpace,
+     tkKey, tkSpace, tkIdentifier, tkSpace, tkKey, tkSpace, tkNumber, tkSpace, tkKey, tkSpace, tkNumber, TK_Semi]);
+  CheckTokensForLine('else bar', 5, [tkKey+FCaseLabelAttri, tkSpace, tkIdentifier]);
+  CheckTokensForLine('end;', 6, [tkKey, TK_Semi]);
+  CheckTokensForLine('1: foo;', 8, [tkNumber+FCaseLabelAttri, TK_Colon, tkSpace, tkIdentifier, TK_Semi]);
+end;
+
+procedure TTestHighlighterPas.TestStatementExpression_Try;
+begin
+  ReCreateEdit;
+  EnableFolds([cfbtBeginEnd..cfbtNone], []);
+  SetLines
+    ([ 'program a;',
+       'begin',
+         'x := foo(try',                   // 2
+           'bar(1)',
+         'except',                         // 4
+           'on E: Exception do 0;',
+           'else 1',
+         'end, case b of',                 // 7
+           '1: 2;',
+           'else 3 end);',
+         'case b of',                      // 10
+           '1: foo;',
+         'end;',
+       'end.',
+       ''
+    ]);
+
+  AssertEquals('Len begin', 12, PasHighLighter.FoldLineLength(1, 0));
+  // line 7 "end, case" opens a new fold => the try/except folds end one line earlier
+  AssertEquals('Len try-expr', 4, PasHighLighter.FoldLineLength(2, 0));
+  AssertEquals('Len except-expr', 2, PasHighLighter.FoldLineLength(4, 0));
+  AssertEquals('Len case-expr', 2, PasHighLighter.FoldLineLength(7, 0));
+  AssertEquals('Len case', 2, PasHighLighter.FoldLineLength(10, 0));
+
+  CheckTokensForLine('1: 2;', 8, [tkNumber+FCaseLabelAttri, TK_Colon, tkSpace, tkNumber, TK_Semi]);
+  CheckTokensForLine('1: foo;', 11, [tkNumber+FCaseLabelAttri, TK_Colon, tkSpace, tkIdentifier, TK_Semi]);
+end;
+
+procedure TTestHighlighterPas.TestStatementExpression_Const;
+begin
+  ReCreateEdit;
+  EnableFolds([cfbtBeginEnd..cfbtNone], []);
+  SetLines
+    ([ 'unit a; interface',
+       'const',
+         'c1 = if d then 1 else 2;',
+         'c2 = case d of 1: 2; else 3 end;',
+       'type',
+         'TFoo = class',                   // 5
+         'const',
+           'c3 = case d of 1: 2; else 3 end;',
+           'procedure Bar;',
+         'end;',                           // 9
+       'implementation',
+       'end.',
+       ''
+    ]);
+
+  AssertEquals('Len class', 4, PasHighLighter.FoldLineLength(5, 0));
 end;
 
 procedure TTestHighlighterPas.TestBreakKeyword;

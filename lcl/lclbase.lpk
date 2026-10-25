@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="5">
+  <Package Version="6">
     <Name Value="LCLBase"/>
     <Type Value="RunAndDesignTime"/>
     <BuildMethod Value="Both"/>
@@ -13,7 +13,10 @@
         <UnitOutputDirectory Value="units/$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
       <Conditionals Value="if SrcOS&lt;>&apos;win&apos; then
-  UnitPath := &apos;nonwin32&apos;;"/>
+  UnitPath := &apos;nonwin32&apos;;
+
+if GetProjValue(&apos;FPC_FULLVERSION&apos;)>30300 then
+  CustomOptions+=&apos; -vm6060&apos;; // case statement does not handle all possible cases"/>
       <Other>
         <Verbosity>
           <ShowNotes Value="False"/>
@@ -26,7 +29,7 @@
 "/>
     <License Value="modified LGPL-2
 "/>
-    <Version Major="4" Minor="99"/>
+    <Version Major="5" Minor="99"/>
     <Files>
       <Item>
         <Filename Value="LAYOUT.txt"/>

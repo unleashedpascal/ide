@@ -94,7 +94,7 @@ procedure LCLIntfRenderer_ColumnCellDataFunc(tree_column: PGtkTreeViewColumn;
 procedure LCLIntfRenderer_GtkCellLayoutDataFunc(cell_layout: PGtkCellLayout; cell: PGtkCellRenderer; tree_model: PGtkTreeModel; iter: PGtkTreeIter; data: gpointer); cdecl;
 
 implementation
-uses gtk3widgets, gtk3int;
+uses gtk3widgets, gtk3int, gtk3objects;
 
 type
   TCustomListViewAccess = class(TCustomListView);
@@ -187,8 +187,7 @@ begin
   {here we cheat cell renderer to paint eg. height 1 }
   aligned_area^.height := gint(MeasureItemStruct.itemHeight);
   cell_area^.height := gint(MeasureItemStruct.itemHeight);
-  DebugLn('**** Cell_Area ',dbgs(RectFromGdkRect(cell_area^)),' Aligned_Area ',dbgs(RectFromGdkRect(aligned_area^)));
-
+  // DebugLn('**** Cell_Area ',dbgs(RectFromGdkRect(cell_area^)),' Aligned_Area ',dbgs(RectFromGdkRect(aligned_area^)));
 end;
 
 function GTK_IS_CELL_RENDERER_TEXT(cell: PGtkCellRenderer): Boolean;
@@ -663,6 +662,13 @@ var
   Lw: TGtk3Widget;
   AParentWidget: PGtkWidget;
   AParentFlags: TGtkStateFlags;
+  AMenuItemCtx: PGtkStyleContext;
+  AFgRGBA, ABgRGBA, AMenuBgRGBA: TGdkRGBA;
+  ASelBg, ASelFg: TColor;
+  AOldHighlight, AOldHighlightText: DWORD;
+  AOldBrushColor: TColor;
+  ASysBrush: TGtk3Brush;
+  ASwapColors: Boolean;
 begin
   // DebugLn('*** LCLIntfCellRenderer_Render widget=',dbgHex(PtrUInt(Widget)), ' HWND=',dbgs(HwndFromGtkWidget(Widget)));
   {DebugLn(['LCLIntfCellRenderer_Render cell=',dbgs(cell),
@@ -713,6 +719,13 @@ begin
 
   if ColumnIndex > -1 then // listview
   begin
+    if AWinControl = nil then
+    begin
+      Lw := TGtk3Widget(g_object_get_data(PGObject(cell), 'lclwidget'));
+      if Assigned(Lw) and (Lw.LCLObject is TWinControl) then
+        AWinControl := TWinControl(Lw.LCLObject);
+    end;
+    if AWinControl = nil then exit;
     // DebugLn('Paint 1 ', dbgsName(AWinControl));
     AreaRect := Bounds(background_area^.x, background_area^.y,
                      background_area^.Width, background_area^.Height);
@@ -853,6 +866,51 @@ begin
   end;
 
   // DebugLn('Paint 4 listbox or combobox  ** ', dbgsName(AWinControl));
+
+  ASwapColors := False;
+  ASysBrush := nil;
+  AOldBrushColor := clNone;
+  AOldHighlight := 0;
+  AOldHighlightText := 0;
+  if (Widget^.parent <> nil) and Gtk3IsMenuItem(Widget^.parent) then
+  begin
+    AMenuItemCtx := Widget^.parent^.get_style_context;
+    if AMenuItemCtx <> nil then
+    begin
+      FillChar(AFgRGBA, SizeOf(AFgRGBA), 0);
+      FillChar(ABgRGBA, SizeOf(ABgRGBA), 0);
+      gtk_style_context_get_color(AMenuItemCtx, [GTK_STATE_FLAG_PRELIGHT], @AFgRGBA);
+      AMenuItemCtx^.get_background_color([GTK_STATE_FLAG_PRELIGHT], @ABgRGBA);
+      AMenuBgRGBA := TColortoTGdkRGBA(TColor(SysColorMap[COLOR_MENU]));
+      if (Widget^.parent^.parent <> nil) and
+        (Widget^.parent^.parent^.get_style_context <> nil) then
+      begin
+        Widget^.parent^.parent^.get_style_context^.get_background_color(GTK_STATE_FLAG_NORMAL, @AMenuBgRGBA);
+        if AMenuBgRGBA.alpha <= 0 then
+          AMenuBgRGBA := TColortoTGdkRGBA(TColor(SysColorMap[COLOR_MENU]));
+      end;
+      if AFgRGBA.alpha > 0 then
+      begin
+        ASelBg := CompositeRGBAOverBg(ABgRGBA, AMenuBgRGBA);
+        ASelFg := CompositeRGBAOverBg(AFgRGBA, TColortoTGdkRGBA(ASelBg));
+        ASwapColors := True;
+      end;
+    end;
+  end;
+  if ASwapColors then
+  begin
+    AOldHighlight := SysColorMap[COLOR_HIGHLIGHT];
+    AOldHighlightText := SysColorMap[COLOR_HIGHLIGHTTEXT];
+    SysColorMap[COLOR_HIGHLIGHT] := DWORD(ASelBg);
+    SysColorMap[COLOR_HIGHLIGHTTEXT] := DWORD(ASelFg);
+    ASysBrush := TGtk3Brush(Gtk3WidgetSet.GetSysColorBrush(COLOR_HIGHLIGHT));
+    if Assigned(ASysBrush) then
+    begin
+      AOldBrushColor := ASysBrush.Color;
+      ASysBrush.SetSharedColor(ASelBg);
+    end;
+  end;
+
   Msg.Msg:=LM_DrawListItem;
   New(Msg.DrawListItemStruct);
   try
@@ -871,6 +929,13 @@ begin
     TGtk3Widget(AWinControl.Handle).DeliverMessage(Msg);
     GTK3WidgetSet.ReleaseDC(AWinControl.Handle,Msg.DrawListItemStruct^.DC);
   finally
+    if ASwapColors then
+    begin
+      SysColorMap[COLOR_HIGHLIGHT] := AOldHighlight;
+      SysColorMap[COLOR_HIGHLIGHTTEXT] := AOldHighlightText;
+      if Assigned(ASysBrush) then
+        ASysBrush.SetSharedColor(AOldBrushColor);
+    end;
     Dispose(Msg.DrawListItemStruct);
   end;
 
@@ -932,14 +997,14 @@ const
   CR_NAME = 'LCLIntfCellRenderer';
   crType: TGType = 0;
   crInfo: TGTypeInfo = (
-    class_size: SizeOf(TLCLIntfCellRenderer) + 1024;
+    class_size: SizeOf(TLCLIntfCellRendererClass);
     base_init: nil; // TGBaseInitFunc;
     base_finalize: nil; // TGBaseFinalizeFunc;
     class_init: TGClassInitFunc(@LCLIntfCellRenderer_ClassInit);
     class_finalize: nil; // @LCLIntfCellRenderer_ClassFinalize; // nil; // TGClassFinalizeFunc;
     class_data: nil;
-    instance_size: SizeOf(TLCLIntfCellRenderer) + 1024;
-    n_preallocs: SizeOf(TLCLIntfCellRenderer) + 1024;
+    instance_size: SizeOf(TLCLIntfCellRenderer);
+    n_preallocs: 0;
     instance_init: nil; // TGInstanceInitFunc;
     value_table: nil;
   );
@@ -972,6 +1037,8 @@ var
   Value: TGValue;
 begin
   if not Gtk3IsObject(cell) then
+    exit;
+  if not Assigned(Data) then
     exit;
 
   ListItem := nil;

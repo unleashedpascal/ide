@@ -39,7 +39,7 @@ uses
   FpDebugDebuggerUtils, FpDebugDebuggerWorkThreads, FpDebugDebuggerBase,
   LazDebuggerIntf, LazDebuggerIntfExcludedRoutines, LazDebuggerIntfExceptions,
   // FpDebug
-  {$ifdef windows} FpDbgWinClasses,  {$endif windows}
+  {$if (defined(windows) and (defined(CPUx86_64) or defined(CPUi386)))}   FpDbgWinClasses,  FpDbgCpuX86, {$endif}
   {$IFDEF FPDEBUG_THREAD_CHECK} FpDbgCommon, {$ENDIF}
   FpDbgClasses, FpDbgInfo, FpErrorMessages, FpPascalBuilder, FpdMemoryTools,
   FpPascalParser, FPDbgController, FpDbgDwarfDataClasses, FpDbgDwarfFreePascal,
@@ -366,7 +366,9 @@ type
     function GetClassInstanceName(AnAddr: TDBGPtr): string;
     procedure DoReadAnsiString;
     function ReadAnsiString(AnAddr: TDbgPtr): string;
-    function CheckCondition(AnExpression: String; AnErrorResult: Boolean): Boolean;
+    function DoFindIntrinsic(AnExpression: TFpPascalExpression; AStart: PChar; ALen: Integer
+      ): TFpPascalExpressionPartIntrinsicBase;
+    function CheckCondition(AnExpression: String; AnErrorResult: Boolean; AnAtException: Boolean = False): Boolean;
     procedure HandleSoftwareException(out AnExceptionLocation: TDBGLocationRec; var continue: boolean);
     // HandleBreakError: Default handler for range-check etc
     procedure HandleBreakError(var continue: boolean);
@@ -425,6 +427,7 @@ type
     procedure DoState(const OldState: TDBGState); override;
     function GetIsIdle: Boolean; override;
     function GetCommands: TDBGCommands; override;
+    function GetTargetWidth: Byte; override;
 
   protected
     // Helper vars to run in debug-thread
@@ -456,6 +459,7 @@ type
     destructor Destroy; override;
     procedure LockCommandProcessing; override;
     procedure UnLockCommandProcessing; override;
+    function IsKernelDebugBreak(ALocation: TDBGLocationRec): Boolean;
     function GetLocationRec(AnAddress: TDBGPtr=0; AnAddrOffset: Integer = 0): TDBGLocationRec;
     function GetLocation: TDBGLocationRec; override;
 
@@ -607,8 +611,6 @@ type
     procedure ThreadLogExpression;
     procedure ThreadLogCallStack;
   protected
-    procedure DoLogExpression(const AnExpression: String); override;
-    procedure DoLogCallStack(const Limit: Integer); override;
     procedure DoStateChange(const AOldState: TDBGState); override;
     procedure DoPropertiesChanged(AChanged: TDbgBpChangeIndicators); override;
     procedure DoChanged; override;
@@ -617,6 +619,8 @@ type
     property  Validity: TValidState write SetValid;
   public
     destructor Destroy; override;
+    procedure DoLogExpression(const AnExpression: String); override;
+    procedure DoLogCallStack(const Limit: Integer); override;
   end;
 
   { TFPBreakpoints }
@@ -675,6 +679,7 @@ type
     constructor Create(AFpDebugDebugger: TFpDebugDebugger);
     destructor Destroy; override;
     procedure Execute; override;
+    procedure StopWait;
   end;
 
 
@@ -1649,16 +1654,27 @@ var
 begin
   while not terminated do
   begin
-    res := FFpDebugDebugger.FDbgController.CurrentProcess.CheckForConsoleOutput(100);
+    res := FFpDebugDebugger.FDbgController.CurrentProcess.CheckForConsoleOutput(250);
     if res<0 then
       Terminate
     else if res>0 then
     begin
       RTLeventResetEvent(FHasConsoleOutputQueued);
       Application.QueueAsyncCall(@DoHasConsoleOutput, PtrInt(FFpDebugDebugger));
+      if Terminated then
+        break;
       RTLeventWaitFor(FHasConsoleOutputQueued);
     end;
   end;
+end;
+
+procedure TFpWaitForConsoleOutputThread.StopWait;
+begin
+  inherited Terminate;
+  if (FFpDebugDebugger.FDbgController <> nil) and
+     (FFpDebugDebugger.FDbgController.CurrentProcess <> nil)
+  then
+    FFpDebugDebugger.FDbgController.CurrentProcess.StopCheckingForConsoleOutput;
 end;
 
 { TFpDbgMemReader }
@@ -2258,11 +2274,14 @@ var
     AnEntry.TargetName := '';
     AnEntry.TargetFile := '';
     AnEntry.TargetLine := 0;
-    if AnInfo.InstrType = itJump then begin
+    if AnInfo.InstrType in [itJump, itJumpAbs] then begin
       AnEntry.IsJump := True;
-      {$PUSH}{$R-}{$Q-}
-      AnEntry.TargetAddr := ALineAddr + AnInfo.InstrTargetOffs;
-      {$POP}
+      if AnInfo.InstrType = itJump then
+        {$PUSH}{$R-}{$Q-}
+        AnEntry.TargetAddr := ALineAddr + AnInfo.InstrTargetOffs
+        {$POP}
+      else
+        AnEntry.TargetAddr := AnInfo.InstrTargetOffs;
       Sym := TFpDebugDebugger(Debugger).FDbgController.CurrentProcess.FindProcSymbol(AnEntry.TargetAddr);
       if Sym <> nil then begin
         AnEntry.TargetName := Sym.Name;
@@ -2343,7 +2362,7 @@ begin
 
          tmpPointer := TDBGPtr(@CodeBin[bufOffset]) + TDBGPtr(sz) - TDBGPtr(bytesDisassembled);
          p := pointer(tmpPointer);
-         ADisassembler.ReverseDisassemble(p, ADump, AStatement); // give statement before pointer p, pointer p points to decoded instruction on return
+         ADisassembler.ReverseDisassemble(p, ADump, AStatement, AnInfo); // give statement before pointer p, pointer p points to decoded instruction on return
          prevInstructionSize := tmpPointer - PtrUInt(p);
          bytesDisassembled := bytesDisassembled + prevInstructionSize;
          DebugLn(DBG_VERBOSE, format('Disassembled: [%.8X:  %s] %s',[tmpAddr, ADump, Astatement]));
@@ -3327,7 +3346,7 @@ begin
     FBreakPoints[bplSehW32Finally].SetBreak;
   end
   {$ENDIF}
-  {$IFDEF WIN64}
+  {$IF DEFined(WIN64) and defined(cpux86_64)}
   else
   (* ***** Win64 SEH ***** *)
   // bplFpcSpecific
@@ -3590,7 +3609,7 @@ begin
     begin
     AThread := TFpWaitForConsoleOutputThread(FConsoleOutputThread);
     FConsoleOutputThread := nil;
-    AThread.Terminate;
+    AThread.StopWait;
     AThread.DoHasConsoleOutput(0);
     AThread.WaitFor;
     sleep(50);
@@ -3947,10 +3966,32 @@ begin
   result := FCacheFileName;
 end;
 
-function TFpDebugDebugger.CheckCondition(AnExpression: String; AnErrorResult: Boolean): Boolean;
+function TFpDebugDebugger.DoFindIntrinsic(AnExpression: TFpPascalExpression; AStart: PChar;
+  ALen: Integer): TFpPascalExpressionPartIntrinsicBase;
+begin
+  Result := nil;
+  if (ALen = 1) and (strlicomp(AStart, pchar('e'), 1) = 0) then
+    Result := TFpPascalExpressionPartIntrinsicExceptObject.Create(AnExpression.SharedData,
+      AStart, AStart+ALen,
+      DbgController.CurrentProcess,
+      ExceptionState = esStoppedAtRaise
+    )
+  else
+  if (ALen = 3) and (strlicomp(AStart, pchar('i2o'), 3) = 0) and
+     (DbgController.CurrentProcess.Disassembler is TX86AsmDecoder)
+  then
+    Result := TFpPascalExpressionPartIntrinsicIntfToObj.Create(AnExpression.SharedData,
+      AStart, AStart+ALen,
+      TX86AsmDecoder(DbgController.CurrentProcess.Disassembler)
+    );
+end;
+
+function TFpDebugDebugger.CheckCondition(AnExpression: String; AnErrorResult: Boolean;
+  AnAtException: Boolean): Boolean;
 var
   ExprContext: TFpDbgSymbolScope;
   PasExpr: TFpPascalExpression;
+  st: TExceptStepState;
 begin
   Result := AnErrorResult; // the empty expression
   if AnExpression = '' then
@@ -3961,10 +4002,13 @@ begin
     exit;
 
   PasExpr := nil;
+  st :=  FExceptionStepper.FState;
+  if AnAtException then
+    FExceptionStepper.FState := esStoppedAtRaise;
   try
     PasExpr := TFpPascalExpression.Create(AnExpression, ExprContext, True);
     PasExpr.IntrinsicPrefix := TFpDebugDebuggerProperties(GetProperties).IntrinsicPrefix;
-    // TODO: extra intrinsics / OnGetIntrinsic
+    PasExpr.OnFindIntrinsc := @DoFindIntrinsic;
     PasExpr.Parse;
     PasExpr.ResultValue; // trigger full validation
 
@@ -3973,6 +4017,7 @@ begin
     else
       Result := AnErrorResult
   finally
+    FExceptionStepper.FState := st;
     PasExpr.Free;
     ExprContext.ReleaseReference;
   end;
@@ -4032,7 +4077,7 @@ begin
   ExceptItem := Exceptions.Find(ExceptionClass);
   if (ExceptItem <> nil) then begin
     expr := Trim(ExceptItem.Expression);
-    if (expr = '') or CheckCondition(expr, False) then begin
+    if (expr = '') or CheckCondition(expr, False, True) then begin
       ExceptItem.DoExceptionHit(continue, NeedInternalPause, Self);
       if continue and NeedInternalPause then begin
         EnterPause(AnExceptionLocation, True);
@@ -4207,12 +4252,12 @@ procedure TFpDebugDebugger.FDbgControllerHitBreakpointEvent(
 var
   ABreakPoint: TDBGBreakPoint;
   ALocationAddr: TDBGLocationRec;
-  Context: TFpDbgSymbolScope;
-  PasExpr: TFpPascalExpression;
   Opts: TFpInt3DebugBreakOptions;
-  NeedInternalPause: Boolean;
+  NeedInternalPause, IsDBrk: Boolean;
+  b: Integer;
 begin
     // If a user single steps to an excepiton handler, do not open the dialog (there is no continue possible)
+  ALocationAddr.Address := 0;
   try
     (* FExceptionStepper.BreakpointHit may call EnterPause, and with that set a location.
        In that case the EnterPause in the finally block will detect the state, and do nothing.
@@ -4247,9 +4292,33 @@ begin
     else
     if (AnEventType = deHardCodedBreakpoint) and (FDbgController.CurrentThread <> nil) then begin
       &continue:=true;
-      Opts := TFpDebugDebuggerProperties(GetProperties).HandleDebugBreakInstruction;
-      if not (dboIgnoreAll in Opts) then
-        &continue:=False;
+      if  (not BreakPoints.IgnoreAll) then begin
+        Opts := TFpDebugDebuggerProperties(GetProperties).HandleDebugBreakInstruction;
+        IsDBrk := False;
+        if (not (dboIgnoreAll in Opts)) and
+           (Opts * [dboIgnoreNtdllDebugBreak, dboIgnoreInt3, dboIgnoreInt_3] <> [])
+        then begin
+          ALocationAddr := GetLocation;
+          IsDBrk := IsKernelDebugBreak(ALocationAddr);
+        end;
+        b := 1;
+        {$if (defined(windows) and (defined(CPUx86_64) or defined(CPUi386)))}
+        if (Opts * [dboIgnoreInt3, dboIgnoreInt_3] <> []) then
+        if (DbgController.CurrentProcess <> nil) and
+           (DbgController.CurrentProcess.BreakTargetHandler is TBreakPointx86Handler)
+        then
+          b := TBreakPointx86Handler(DbgController.CurrentProcess.BreakTargetHandler).LastHardcodedSize;
+        {$endif}
+
+        &continue :=
+          ( dboIgnoreAll in Opts ) or
+          ( (dboIgnoreNtdllDebugBreak in Opts) and IsDBrk ) or
+          ( (not IsDBrk) and (
+            ( (dboIgnoreInt3 in Opts)  and (b = 1) ) or
+            ( (dboIgnoreInt_3 in Opts) and (b = 2) )
+          ) );
+      end;
+
       if  continue then
         exit;
     end
@@ -4270,7 +4339,8 @@ begin
       if FPauseForEvent then
         &continue := False; // Only continue, if ALL events did say to continue
 
-      ALocationAddr := GetLocation;
+      if ALocationAddr.Address = 0 then
+        ALocationAddr := GetLocation;
       if ALocationAddr.SrcLine = 0 then
         ALocationAddr.SrcLine := -2; // Prevent stack search for caller with source. Breakpoint hit should be at frame 0
 
@@ -4317,6 +4387,9 @@ var
   end;
 
 begin
+  if State in [dsIdle, dsStop] then
+    SetState(dsInit);
+
   // This will trigger setting the breakpoints,
   // may also trigger the evaluation of the callstack or disassembler.
   FSendingEvents := True; // Let DoStateChange know that the debugger is paused
@@ -4325,8 +4398,10 @@ begin
 
   FExceptionStepper.DoProcessLoaded;
 
-  if assigned(OnConsoleOutput) then
+  if assigned(OnConsoleOutput) then begin
     FConsoleOutputThread := TFpWaitForConsoleOutputThread.Create(self);
+    FDbgController.CurrentProcess.SetCheckingForConsoleOutputThread(FConsoleOutputThread);
+  end;
 
   case FStartupCommand of
     dcRunTo: begin
@@ -4385,7 +4460,7 @@ begin
   FMirroredExcludedRoutines.Update;
 
   if (ACommand in [dcRun, dcStepOver, dcStepInto, dcStepOut, dcStepTo, dcRunTo, dcJumpto,
-      dcStepOverInstr, dcStepIntoInstr, dcAttach]) and
+      dcStepOverInstr, dcStepIntoInstr, dcAttach, dcAttachToTargetStarter]) and
      not assigned(FDbgController.MainProcess)
   then
   begin
@@ -4394,10 +4469,24 @@ begin
     except
       assert(False, 'TFpDebugDebugger.RequestCommand: DoDbgStopped failed');
     end;
+
     FDbgController.ExecutableFilename:=FileName;
     AConsoleTty:=TFpDebugDebuggerProperties(GetProperties).ConsoleTty;
     FDbgController.ConsoleTty:=AConsoleTty;
+    {$ifdef windows}
+    (* Windows has three outcomes, not two: inherit the parent process's console
+       (diomDefault), get a console of its own (ForceNewConsoleWin), or be
+       captured. Capture must therefore be requested explicitly -- keying it on
+       "ConsoleTty is empty", which is always true here, captured every launch
+       and destroyed the inherit case. Until a stream is set to
+       diomCaptureInternal this stays False and the backend behaves as before. *)
+    FDbgController.RedirectConsoleOutput :=
+      (TargetIoStdInMode  = diomCaptureInternal) or
+      (TargetIoStdOutMode = diomCaptureInternal) or
+      (TargetIoStdErrMode = diomCaptureInternal);
+    {$else}
     FDbgController.RedirectConsoleOutput:=AConsoleTty='';
+    {$endif windows}
     FDbgController.Params.Clear;
     if Arguments<>'' then
       CommandToList(Arguments, FDbgController.Params);
@@ -4408,7 +4497,7 @@ begin
     {$endif windows}
 
     FDbgController.AttachToPid := 0;
-    if ACommand = dcAttach then begin
+    if ACommand in [dcAttach, dcAttachToTargetStarter] then begin
       FDbgController.AttachToPid := StrToIntDef(String(AParams[0].VAnsiString), 0);
       Result := FDbgController.AttachToPid <> 0;
       if not Result then begin
@@ -4418,9 +4507,11 @@ begin
     end;
 
     // Check if CreateDbgProcess returns a valid TDbgProcess
-//    if ACommand <> dcAttach then begin
+//    if not (ACommand in [dcAttach, dcAttachToTargetStarter]) then begin
     FDbgController.CreateCurrentProcess;
     if Assigned(FDbgController.CurrentProcess) then begin
+      FDbgController.CurrentProcess.PreAttach := ACommand = dcAttachToTargetStarter;
+
       FDbgController.CurrentProcess.Config.UseConsoleWinPos    := FUseConsoleWinPos;
       FDbgController.CurrentProcess.Config.UseConsoleWinSize   := FUseConsoleWinSize;
       FDbgController.CurrentProcess.Config.UseConsoleWinBuffer := FUseConsoleWinBuffer;
@@ -4428,12 +4519,25 @@ begin
       FDbgController.CurrentProcess.Config.ConsoleWinSize   := FConsoleWinSize;
       FDbgController.CurrentProcess.Config.ConsoleWinBuffer := FConsoleWinBuffer;
 
-      FDbgController.CurrentProcess.Config.StdInRedirFile      := FileNameStdIn;
-      FDbgController.CurrentProcess.Config.FileOverwriteStdIn  := FileOverwriteStdIn;
-      FDbgController.CurrentProcess.Config.StdOutRedirFile     := FileNameStdOut;
-      FDbgController.CurrentProcess.Config.FileOverwriteStdOut := FileOverwriteStdOut;
-      FDbgController.CurrentProcess.Config.StdErrRedirFile     := FileNameStdErr;
-      FDbgController.CurrentProcess.Config.FileOverwriteStdErr := FileOverwriteStdErr;
+      (* A file name only reaches the backend for the two file modes. The
+         capture branch in the backend is skipped whenever a redirection file is
+         set, so a stale name left over from an earlier run must not be passed
+         on when the stream is no longer going to a file. *)
+      if TargetIoStdInMode in [diomRedirectFileOverwrite, diomRedirectFileAppend] then
+        FDbgController.CurrentProcess.Config.StdInRedirFile  := TargetIoStdInFileName
+      else
+        FDbgController.CurrentProcess.Config.StdInRedirFile  := '';
+      if TargetIoStdOutMode in [diomRedirectFileOverwrite, diomRedirectFileAppend] then
+        FDbgController.CurrentProcess.Config.StdOutRedirFile := TargetIoStdOutFileName
+      else
+        FDbgController.CurrentProcess.Config.StdOutRedirFile := '';
+      if TargetIoStdErrMode in [diomRedirectFileOverwrite, diomRedirectFileAppend] then
+        FDbgController.CurrentProcess.Config.StdErrRedirFile := TargetIoStdErrFileName
+      else
+        FDbgController.CurrentProcess.Config.StdErrRedirFile := '';
+      FDbgController.CurrentProcess.Config.FileOverwriteStdIn  := TargetIoStdInMode  = diomRedirectFileOverwrite;
+      FDbgController.CurrentProcess.Config.FileOverwriteStdOut := TargetIoStdOutMode = diomRedirectFileOverwrite;
+      FDbgController.CurrentProcess.Config.FileOverwriteStdErr := TargetIoStdErrMode = diomRedirectFileOverwrite;
 
       FDbgController.CurrentProcess.Config.BreakpointSearchMaxLines := TFpDebugDebuggerProperties(GetProperties).BreakpointSearchMaxLines;
       FDbgController.CurrentProcess.Config.IntrinsicPrefix := TFpDebugDebuggerProperties(GetProperties).IntrinsicPrefix;
@@ -4475,7 +4579,10 @@ begin
       FStartuRunToFile := AnsiString(AParams[0].VAnsiString);
       FStartuRunToLine := AParams[1].VInteger;
     end;
-    StartDebugLoop(dsInit);
+    if ACommand = dcAttachToTargetStarter then
+      StartDebugLoop(State) // don't change state / don't trigger breakpoints, or loading line info
+    else
+      StartDebugLoop(dsInit);
     exit;
   end;
 
@@ -4809,7 +4916,12 @@ end;
 
 procedure TFpDebugDebugger.DoAddBreakFuncLib;
 begin
-  FCacheBreakpoint := FDbgController.CurrentProcess.AddBreak(FCacheFileName, FCacheBoolean, FCacheLib, True);
+  (* Link tables only: these are the debugger's own breakpoints on RTL and
+     kernel entry points, by linker name. A user routine can carry the same
+     source level name, and must not capture them.
+     NOTE: the direct path in AddBreak() does not ask for ignore-case, so the
+     two routes to the same call differ. Kept as it was. *)
+  FCacheBreakpoint := FDbgController.CurrentProcess.AddBreak(FCacheFileName, FCacheBoolean, FCacheLib, [psfLinkTableSym, psfIgnoreCase]);
 end;
 
 procedure TFpDebugDebugger.DoAddBreakLocation;
@@ -4864,7 +4976,8 @@ function TFpDebugDebugger.AddBreak(const AFuncName: String; ALib: TDbgLibrary;
 begin
   // Shortcut, if in debug-thread / do not use Self.F*
   if ThreadID = FWorkerThreadId then
-    exit(FDbgController.CurrentProcess.AddBreak(AFuncName, AnEnabled, ALib));
+    // Link tables only - see DoAddBreakFuncLib
+    exit(FDbgController.CurrentProcess.AddBreak(AFuncName, AnEnabled, ALib, [psfLinkTableSym]));
 
   FCacheFileName:=AFuncName;
   FCacheLib:=ALib;
@@ -5096,8 +5209,7 @@ begin
   result.SrcFullName:='';
   result.SrcLine:=0;
 
-  if Assigned(FDbgController.CurrentProcess) then
-    begin
+  if Assigned(FDbgController.CurrentProcess) then begin
     if AnAddress=0 then
       result.Address := FDbgController.DefaultContext.Address // DefaultContext has the InstrPtr cached
       //result.Address := FDbgController.CurrentThread.GetInstructionPointerRegisterValue
@@ -5121,7 +5233,12 @@ begin
     if assigned(symproc) then
       result.FuncName:=symproc.Name;
     sym.ReleaseReference;
+
+    if IsKernelDebugBreak(Result) then begin
+      Result.SrcLine    := -3;
+      Result.StackIndex := 1;
     end;
+  end;
 end;
 
 function TFpDebugDebugger.GetLocation: TDBGLocationRec;
@@ -5258,6 +5375,17 @@ begin
     Result := Result - [dcContinueLastStep];
 end;
 
+function TFpDebugDebugger.GetTargetWidth: Byte;
+begin
+  if (DbgController <> nil) and (DbgController.CurrentProcess <> nil) then
+  case DbgController.CurrentProcess.Mode of
+    dm32: Result := 32;
+    dm64: Result := 64;
+  end
+  else
+    Result := inherited GetTargetWidth;
+end;
+
 procedure TFpDebugDebugger.LockCommandProcessing;
 begin
   //inherited LockCommandProcessing;
@@ -5270,14 +5398,35 @@ begin
 //  FWorkQueue.Unlock;
 end;
 
+function TFpDebugDebugger.IsKernelDebugBreak(ALocation: TDBGLocationRec): Boolean;
+var
+  s: String;
+begin
+  Result := False;
+  {$IFDEF windows}
+  if (ALocation.SrcLine <= 0) and
+     ( (DbgController.Event = deHardCodedBreakpoint) or
+       ( (DbgController.CurrentThread <> nil) and (DbgController.CurrentThread.PausedAtHardcodeBreakPoint) )
+     )
+  then begin
+    s := LowerCase(ALocation.FuncName);
+       // ":" from TFpSymbolInfo.FindProcSymbol NamePreFix
+    Result :=
+         (s = 'kernelbase:debugbreak') or
+         (s = 'ntdll:debugbreak')
+         ;
+  end;
+  {$ENDIF}
+end;
+
 class function TFpDebugDebugger.GetSupportedCommands: TDBGCommands;
 begin
   Result:=[dcRun, dcStop, dcStepIntoInstr, dcStepOverInstr, dcStepOver,
            dcStepTo, dcContinueLastStep,
            dcRunTo, dcPause, dcStepOut, dcStepInto, dcEvaluate, dcModify,
            dcSendConsoleInput
-           {$IFDEF windows} , dcAttach, dcDetach {$ENDIF}
-           {$IFDEF linux} , dcAttach, dcDetach {$ENDIF}
+           {$IFDEF windows} , dcAttach, dcAttachToTargetStarter, dcDetach {$ENDIF}
+           {$IFDEF linux} , dcAttach, dcAttachToTargetStarter, dcDetach {$ENDIF}
           ];
 end;
 
@@ -5291,23 +5440,27 @@ end;
 
 class function TFpDebugDebugger.SupportedFeatures: TDBGFeatures;
 begin
-  {$IF (defined(windows) or defined(linux)) and
-       (defined(CPU386) or defined(CPUI386) or defined(CPUX86_64) or defined(CPUX64))
-  }
-  Result := [dfEvalFunctionCalls, dfThreadSuspension];
-    {$IFDEF windows}
-    Result := Result + [dfConsoleWinPos];
-    {$ENDIF}
-    if DBG_PROCESS_HAS_REDIRECT then
-      Result := Result + [dfStdInOutRedirect];
-  {$ELSE}
-    {$IF (defined(linux)) and
-         (defined(CPUAARCH64))
-    }
-    result := [];
+  Result := [];
+  {$IF ( (defined(windows) or defined(linux)) ) }
+    {$IF ( (defined(CPU386) or defined(CPUI386) or defined(CPUX86_64) or defined(CPUX64)) ) }
+    Result := [dfEvalFunctionCalls, dfThreadSuspension];
+      {$IFDEF linux}
+      Result := Result + [dfAttachToExecStarter, dfStdInOutCaptureDefault];
+      {$ENDIF}
+      {$IFDEF windows}
+      Result := Result + [dfConsoleWinPos, dfStdInOutCapture];
+      {$ENDIF}
+      if DBG_PROCESS_HAS_REDIRECT then
+        Result := Result + [dfStdInOutRedirect];
     {$ELSE}
-    Result := [dfNotSuitableForOsArch];
+      {$IF (defined(CPUAARCH64)) }
+        Result := [];
+      {$ELSE}
+        Result := [dfNotSuitableForOsArch];
+      {$ENDIF}
     {$ENDIF}
+  {$ELSE}
+    Result := [dfNotSuitableForOsArch];
   {$ENDIF}
 end;
 

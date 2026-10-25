@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.9\n"
+"X-Generator: Poedit 3.10\n"
 
 #: dockedstrconsts.sallowsizingcaption
 msgid "Allow size changing"
@@ -133,6 +133,10 @@ msgstr "Factor do cursor do rato para a propriedade BorderSpacing"
 #: dockedstrconsts.smouseborderfactorhint
 msgid "Mouse cursor factor is used to set small values of BorderSpacing property more precisely"
 msgstr "O factor do cursor do rato é utilizado para definir valores pequenos da propriedade BorderSpacing com maior precisão"
+
+#: dockedstrconsts.snoanchorsforcomponent
+msgid "No anchors for this component"
+msgstr "Sem âncoras para este componente"
 
 #: dockedstrconsts.sresizercolorcaption
 msgid "Resizer Color"

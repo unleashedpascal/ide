@@ -1391,6 +1391,7 @@ begin
   TargetCPU := aXMLConfig.GetValue(p+'TargetCPU/Value', '');
   TargetOS := aXMLConfig.GetValue(p+'TargetOS/Value', '');
   Subtarget := aXMLConfig.GetValue(p+'Subtarget/Value', '');
+  Controller := aXMLConfig.GetValue(p+'Controller/Value', '');
   OptimizationLevel := aXMLConfig.GetValue(p+'Optimizations/OptimizationLevel/Value', 1);
   VariablesInRegisters := aXMLConfig.GetValue(p+'Optimizations/VariablesInRegisters/Value', false);
   UncertainOptimizations := aXMLConfig.GetValue(p+'Optimizations/UncertainOptimizations/Value', false);
@@ -1465,6 +1466,7 @@ begin
 
   ReadListOfMessageFlags(p+'CompilerMessages/IgnoredMessages',cfvHide);
   ReadListOfMessageFlags(p+'CompilerMessages/NonIgnoredMessages',cfvShow);
+  TranslateMessages := aXMLConfig.GetValue(p+'TranslateMessages/Value', false);
 
   { Other }
   p:=Path+'Other/';
@@ -1612,6 +1614,7 @@ begin
   aXMLConfig.SetDeleteValue(p+'TargetCPU/Value', TargetCPU,'');
   aXMLConfig.SetDeleteValue(p+'TargetOS/Value', TargetOS,'');
   aXMLConfig.SetDeleteValue(p+'Subtarget/Value', Subtarget,'');
+  aXMLConfig.SetDeleteValue(p+'Controller/Value', Controller,'');
   aXMLConfig.SetDeleteValue(p+'Optimizations/OptimizationLevel/Value', OptimizationLevel,1);
   aXMLConfig.SetDeleteValue(p+'Optimizations/VariablesInRegisters/Value', VariablesInRegisters,false);
   aXMLConfig.SetDeleteValue(p+'Optimizations/UncertainOptimizations/Value', UncertainOptimizations,false);
@@ -1662,6 +1665,7 @@ begin
 
   WriteListOfMessageFlags(p+'CompilerMessages/IgnoredMessages',cfvHide);
   WriteListOfMessageFlags(p+'CompilerMessages/NonIgnoredMessages',cfvShow);
+  aXMLConfig.SetDeleteValue(p+'TranslateMessages/Value', TranslateMessages,false);
 
   { Other }
   p:=Path+'Other/';
@@ -2436,6 +2440,10 @@ begin
   if TargetProcessor<>'' then
     Result.Add('-Cp'+UpperCase(TargetProcessor));
 
+  { Controller (embedded MCU) }
+  if Controller<>'' then
+    Result.Add('-Wp'+Controller);
+
   { --------------- Parsing Tab ------------------- }
 
   { Assembler reading style  -Ratt = AT&T    -Rintel = Intel  -Rdefault (or no option) = default }
@@ -2641,7 +2649,8 @@ begin
         if FFPCMsgFile<>nil then
           FPCMsgFilePool.UnloadFile(FFPCMsgFile);
         FFPCMsgFile:=CurFPCMsgFile;
-      end else
+      end
+      else if CurFPCMsgFile<>nil then
         FPCMsgFilePool.UnloadFile(CurFPCMsgFile);
     end;
     t := IDEMessageFlags.GetMsgIdList(',',cfvHide,FFPCMsgFile);
@@ -2985,6 +2994,7 @@ begin
   fTargetCPU := CompOpts.fTargetCPU;
   fTargetProc := CompOpts.fTargetProc;
   FSubtarget := CompOpts.FSubtarget;
+  FController := CompOpts.FController;
   fOptLevel := CompOpts.fOptLevel;
   fVarsInReg := CompOpts.fVarsInReg;
   fUncertainOpt := CompOpts.fUncertainOpt;
@@ -3138,6 +3148,7 @@ begin
   if Done(Tool.AddDiff('TargetCPU',fTargetCPU,CompOpts.fTargetCPU)) then exit;
   if Done(Tool.AddDiff('TargetProc',fTargetProc,CompOpts.fTargetProc)) then exit;
   if Done(Tool.AddDiff('Subtarget',FSubtarget,CompOpts.FSubtarget)) then exit;
+  if Done(Tool.AddDiff('Controller',FController,CompOpts.FController)) then exit;
   if Done(Tool.AddDiff('OptLevel',fOptLevel,CompOpts.fOptLevel)) then exit;
   if Done(Tool.AddDiff('VarsInReg',fVarsInReg,CompOpts.fVarsInReg)) then exit;
   if Done(Tool.AddDiff('UncertainOpt',fUncertainOpt,CompOpts.fUncertainOpt)) then exit;

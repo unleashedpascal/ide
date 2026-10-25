@@ -142,8 +142,9 @@ type
     procedure RecogniseMethodReferenceType;
 
     procedure RecogniseFileType;
-    procedure RecogniseOptionalSemicolon;
+    function RecogniseOptionalSemicolon: boolean;
     procedure RecogniseOptionalSemicolonBefore(aTokenType: TTokenType);
+    function RecogniseOptionalToken(aTokenType: TTokenType): boolean;
     procedure RecogniseOrdIdent;
     procedure RecogniseOrdinalType;
     procedure RecognisePointerType;
@@ -193,8 +194,8 @@ type
     procedure RecogniseSimpleStmnt;
 
     procedure RecogniseCaseLabel;
-    procedure RecogniseCaseSelector;
-    procedure RecogniseCaseStmnt;
+    procedure RecogniseCaseSelector(pbInExpression:boolean=false);
+    procedure RecogniseCaseStmnt(pbInExpression:boolean=false);
     procedure RecogniseForStmnt;
     procedure RecogniseIfStmnt;
     procedure RecogniseIfExpr;
@@ -205,6 +206,9 @@ type
     procedure RecogniseTryStatement;
     procedure RecogniseExceptionHandlerBlock;
     procedure RecogniseExceptionHandler;
+    procedure RecogniseTryExpr;
+    procedure RecogniseExceptionHandlerBlockExpr;
+    procedure RecogniseExceptionHandlerExpr;
     procedure RecogniseRaise;
 
     procedure RecogniseInline;
@@ -1346,6 +1350,15 @@ begin
       // should be id
       while true do   //Unit1.Id1.id2
       begin
+        if lcToken.TokenType = ttTypeOf then
+        begin
+          inc(liTokenIndex);
+          if liTokenIndex >= fcTokenList.Count then
+            exit;
+          lcToken:=fcTokenList.SolidToken(liTokenIndex);
+          if lcToken = nil then
+            exit;
+        end;
         if (lcToken.WordType <> wtBuiltInType) and (not IsIdentifierToken(lcToken, idAny)) and (not (lcToken.TokenType in CONST_GENERIC_TOKENS)) then
           break;
         lcToken:=fcTokenList.SolidToken(liTokenIndex+1);
@@ -1354,6 +1367,8 @@ begin
         if lcToken.TokenType=ttDot then
         begin
           inc(liTokenIndex,2);
+          if liTokenIndex >= fcTokenList.Count then
+            exit;
           lcToken := fcTokenList.SolidToken(liTokenIndex);
           if lcToken = nil then
             exit;
@@ -1373,6 +1388,8 @@ begin
         break;
     end;
     inc(liTokenIndex);
+    if liTokenIndex >= fcTokenList.Count then
+      exit;
     lbMustBeCommaOrGreaterThan:=not lbMustBeCommaOrGreaterThan;
   end; // while
 end;
@@ -1394,6 +1411,8 @@ var
       Recognise(ttConst);
       lbHasConst := True;
     end;
+    if fcTokenList.FirstSolidTokenType = ttTypeOf then
+      Recognise(ttTypeOf);
     if lbHasConst = False then //can be a expresion like    h: specialize TNames<[Blaise,Pascal]>;
     begin
       lbisGenericType:=(fcTokenList.FirstSolidTokenType=ttIdentifier) and (fcTokenList.SolidTokenType(2)=ttLessThan); //is generic type
@@ -1838,6 +1857,8 @@ begin
         RecogniseProcedureType;
       ttVariant, ttOleVariant:
         RecogniseVariantType; {VariantTypes}
+      ttTypeOf:
+        RecogniseExpr(True)
       else
         CheckNilInstance(lc2, fcRoot.LastLeaf);
 
@@ -2367,12 +2388,25 @@ begin
 end;
 
 procedure TBuildParseTree.RecogniseFieldDecl;
+var
+  lbOnlyType: boolean;
 begin
   // FieldDecl -> IdentList ':' Type
   PushNode(nFieldDeclaration);
 
-  RecogniseIdentList(False);
-  Recognise(ttColon);
+  lbOnlyType := false;
+  if (fcTokenList.FirstSolidTokenType = ttContains) and (not (fcTokenList.SolidTokenType(2) in [ttComma,ttColon])) then
+  begin
+    Recognise(ttContains);
+    RecogniseOptionalToken(ttAlias);
+    lbOnlyType := (not (fcTokenList.SolidTokenType(2) in [ttComma,ttColon]));
+  end;
+
+  if not lbOnlyType then
+  begin
+    RecogniseIdentList(False);
+    Recognise(ttColon);
+  end;
   RecogniseType;
 
   RecogniseHintDirectives;
@@ -2478,9 +2512,17 @@ begin
   end;
 end;
 
-procedure TBuildParseTree.RecogniseOptionalSemicolon;
+function TBuildParseTree.RecogniseOptionalToken(aTokenType: TTokenType): boolean;
 begin
-  if fcTokenList.FirstSolidTokenType=ttSemicolon then
+  Result := fcTokenList.FirstSolidTokenType = aTokenType;
+  if Result then
+    Recognise(aTokenType);
+end;
+
+function TBuildParseTree.RecogniseOptionalSemicolon: boolean;
+begin
+  Result := fcTokenList.FirstSolidTokenType = ttSemicolon;
+  if Result then
     Recognise(ttSemiColon);
 end;
 
@@ -2677,6 +2719,7 @@ const
 var
   lc: TSourceToken;
   lct: TTokenType;
+  lbOnlyType: boolean;
 
   procedure RecogniseExternal;
   begin
@@ -2703,8 +2746,16 @@ begin
   // [( exppubl | external )] [ hints ]
 
   PushNode(nVarDecl);
+  lbOnlyType := False;
+  if (fcTokenList.FirstSolidTokenType = ttContains) and (not (fcTokenList.SolidTokenType(2) in [ttComma,ttColon])) then
+  begin
+    Recognise(ttContains);
+    RecogniseOptionalToken(ttAlias);
+    lbOnlyType := (not (fcTokenList.SolidTokenType(2) in [ttComma,ttColon]));
+  end;
 
-  RecogniseIdentList(False,aVarType);
+  if not lbOnlyType then
+    RecogniseIdentList(False,aVarType);
   // delphi interfered type   var a=27
   if (aVarType=vtInline) and (fcTokenList.FirstSolidTokenType=ttSemiColon) then
   begin
@@ -2722,7 +2773,8 @@ begin
   end
   else
   begin
-    Recognise(ttColon);
+    if not lbOnlyType then
+      Recognise(ttColon);
     RecogniseType;
   end;
 
@@ -2871,6 +2923,7 @@ begin
   else if lc.TokenType = wPlus then
     Recognise(wPlus);
  }
+
   RecogniseTerm;
   while fcTokenList.FirstSolidTokenType in AddOperators do
   begin
@@ -2985,10 +3038,23 @@ begin
   begin
     RecogniseIfExpr;
   end
+  else if (lt = ttCase) then
+  begin
+    RecogniseCaseStmnt(true);  // case in expression  x:= case z of ...
+  end
+  else if (lt = ttTry) then
+  begin
+    RecogniseTryExpr;  // try in expression x:= try aaaa except bbb; ...
+  end
   else if (lt = ttNot) then
   begin
     Recognise(ttNot);
     RecogniseFactor;
+  end
+  else if lt = ttTypeOf then
+  begin
+    Recognise(ttTypeOf);
+    RecogniseExpr(True);
   end
   else if lt in PossiblyUnarySymbolOperators then
   begin
@@ -3475,6 +3541,8 @@ begin
 }
 
   lt := fcTokenList.FirstSolidTokenType;
+  if lt = ttTypeOf then
+    Recognise(ttTypeOf);
   if lt = ttOpenBracket then
   begin
     RecogniseBracketedStatement;
@@ -3751,7 +3819,7 @@ begin
   end;
 end;
 
-procedure TBuildParseTree.RecogniseCaseStmnt;
+procedure TBuildParseTree.RecogniseCaseStmnt(pbInExpression:boolean);
 begin
   // CaseStmt -> CASE Expression OF CaseSelector/';'... [ELSE / OTHERWISE Statement] [';'] END
   PushNode(nCaseStatement);
@@ -3765,25 +3833,36 @@ begin
   Recognise(ttOf);
 
   while not (fcTokenList.FirstSolidTokenType in [ttElse, ttOtherwise, ttEnd]) do
-    RecogniseCaseSelector;
+    RecogniseCaseSelector(pbInExpression);
 
   if fcTokenList.FirstSolidTokenType in [ttElse, ttOtherwise] then
   begin
     PushNode(nElseCase);
     Recognise(fcTokenList.FirstSolidTokenType);
-    RecogniseStatementList([ttEnd]);
+    if pbInExpression then
+    begin
+      RecogniseExpr(true);
+      RecogniseOptionalSemicolonBefore(ttEnd);
+    end
+    else
+      RecogniseStatementList([ttEnd]);
     PopNode;
   end;
 
-  if fcTokenList.FirstSolidTokenType = ttSemicolon then
-    Recognise(ttSemicolon);
-
-  Recognise(ttEnd);
+  if pbInExpression then
+  begin
+    Recognise(ttEnd);
+  end
+  else
+  begin
+    RecogniseOptionalSemicolon;
+    Recognise(ttEnd);
+  end;
 
   PopNode;
 end;
 
-procedure TBuildParseTree.RecogniseCaseSelector;
+procedure TBuildParseTree.RecogniseCaseSelector(pbInExpression:boolean);
 begin
   // CaseSelector -> CaseLabel/','... ':' Statement ';'
 
@@ -3804,7 +3883,10 @@ begin
   { semicolon is optional in the last case before the else }
   if not (fcTokenList.FirstSolidTokenType in [ttElse, ttEnd, ttOtherwise]) then
   begin
-    RecogniseStatement;
+    if pbInExpression then
+      RecogniseExpr(true)
+    else
+      RecogniseStatement;
 
     if fcTokenList.FirstSolidTokenType = ttSemicolon then
       Recognise(ttSemicolon);
@@ -4104,6 +4186,122 @@ begin
 
   RecogniseNotSolidTokens;
 end;
+
+procedure TBuildParseTree.RecogniseTryExpr;
+var
+  lt: TTokenType;
+begin
+  {
+    try expression
+    s:= try expr1 except expr2; end;
+    s:= try expr1 except on a:TType expr2; on b:TType2:expr3 [else expr4; ] end];
+  }
+
+  PushNode(nTryAndHandlerBlock);
+
+  PushNode(nTryBlock);
+
+  ChangeFirstSolidTokenType(ttMultiWordOperator);
+  Recognise(ttMultiWordOperator);
+  RecogniseExpr(True);
+
+  PopNode;
+
+  lt := fcTokenList.FirstSolidTokenType;
+  if lt = ttExcept then
+  begin
+    PushNode(nExceptBlock);
+    ChangeFirstSolidTokenType(ttMultiWordOperator);
+    Recognise(ttMultiWordOperator);
+    PushNode(nExceptionHandlers);
+    if fcTokenList.FirstSolidTokenType = ttOn then
+    begin
+      RecogniseExceptionHandlerBlockExpr;
+      RecogniseOptionalSemicolon;
+      if fcTokenList.FirstSolidTokenType = ttEnd then
+      begin
+        ChangeFirstSolidTokenType(ttMultiWordOperator);
+        Recognise(ttMultiWordOperator);
+      end
+      else
+        Recognise(ttEnd);  //error: expected end;
+    end
+    else
+    begin
+      PushNode(nOnExceptionHandler);
+      RecogniseExpr(True);
+      RecogniseOptionalSemicolon;
+      if fcTokenList.FirstSolidTokenType = ttEnd then
+      begin
+        ChangeFirstSolidTokenType(ttMultiWordOperator);
+        Recognise(ttMultiWordOperator);
+      end
+      else
+        Recognise(ttEnd);  //error: expected end;
+      PopNode;
+    end;
+    PopNode;
+    PopNode;
+  end
+  else
+    RaiseParseError(lisMsgExpectedExcept, fcTokenList.FirstSolidToken);
+  PopNode;
+end;
+
+procedure TBuildParseTree.RecogniseExceptionHandlerBlockExpr;
+begin
+  while fcTokenList.FirstSolidTokenType = ttOn do
+  begin
+    RecogniseExceptionHandlerExpr;
+  end;
+  if fcTokenList.FirstSolidTokenType = ttElse then
+  begin
+    PushNode(nOnExceptionHandler);
+    ChangeFirstSolidTokenType(ttMultiWordOperator);
+    Recognise(ttMultiWordOperator);
+    RecogniseExpr(True);
+    PopNode;
+  end
+  else if fcTokenList.FirstSolidTokenType = ttEnd then
+  begin
+    ChangeFirstSolidTokenType(ttMultiWordOperator);
+    Recognise(ttMultiWordOperator)
+  end
+  else
+    RaiseParseError(lisMsgExpectedElseOrEnd, fcTokenList.FirstSolidToken);
+end;
+
+procedure TBuildParseTree.RecogniseExceptionHandlerExpr;
+begin
+  {
+    ExceptionSpecifier
+        -> 'on' [ident ':'] ExceptType 'do' Statement
+        -> 'else' Statement
+  }
+  PushNode(nOnExceptionHandler);
+  //Recognise(ttOn);
+  ChangeFirstSolidTokenType(ttMultiWordOperator);
+  Recognise(ttMultiWordOperator);
+  if fcTokenList.SolidTokenType(2) = ttColon then
+  begin
+    RecogniseIdentifier(False, idAllowDirectives);
+    Recognise(ttColon);
+  end;
+  RecogniseDottedName;
+  if fcTokenList.FirstSolidTokenType = ttDo then
+  begin
+    ChangeFirstSolidTokenType(ttMultiWordOperator);
+    Recognise(ttMultiWordOperator);
+  end
+  else
+    Recognise(ttDo);  // error: do expected
+  { special case - empty statement block, go straight on to the else }
+  if fcTokenList.FirstSolidTokenType <> ttElse then
+    RecogniseExpr(True);
+  RecogniseOptionalSemicolon;
+  PopNode;
+end;
+
 
 procedure TBuildParseTree.RecogniseProcedureDeclSection;
 var
@@ -5678,6 +5876,8 @@ begin
   }
   else if lc.TokenType = ttOpenBracket then
     RecogniseEnumeratedType
+  else if lc.TokenType = ttTypeOf then
+    RecogniseExpr(True)
   else
   begin
     { type can be prefixed with a unit name, e.g. Classes.TList;
@@ -6266,7 +6466,9 @@ procedure TBuildParseTree.RecogniseActualParam;
 const
   EXPR_TYPES = [ttNumber, ttIdentifier, ttQuotedLiteralString,
     ttPlus, ttMinus, ttOpenBracket, ttOpenSquareBracket, ttNot, ttInherited,
-    ttIf   {start of ternary operator}
+    ttIf,   {start of ternary operator}
+    ttCase, {case block as expression.}
+    ttTry   {try .. except  block as expression.}
     ];
 var
   lc: TSourceToken;

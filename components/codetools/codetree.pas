@@ -149,6 +149,8 @@ const
   ctnSpecializeType     = 94; // parent = ctnSpecialize
   ctnSpecializeParams   = 95; // list of ctnSpecializeParam, parent = ctnSpecialize
   ctnSpecializeParam    = 96; // parent = ctnSpecializeParams
+  ctnTypeOf             = 97; // type of <operand>
+  ctnRecordComposition  = 98; // 'contains ...', parent: class section or ctnRecordVariant, child: ctnVarDefinition (named), type (unnamed) or ctnIdentifier (alias)
 
   ctnBeginBlock         =100;
   ctnAsmBlock           =101;
@@ -209,10 +211,10 @@ const
       ctnProcedureType,ctnReferenceTo,
       ctnSetType,ctnRangeType,ctnEnumerationType,
       ctnLabel,ctnTypeType,ctnFileType,ctnPointerType,
-      ctnClassOfType,ctnVariantType,
-      ctnTypeOfExpr,ctnFutureType];
+      ctnClassOfType,ctnVariantType,ctnTypeOf,ctnTypeOfExpr,ctnFutureType];
   AllPascalTypeParts = AllPascalTypes
-     +[ctnEnumIdentifier,ctnConstant,ctnRecordCase,ctnRecordVariant];
+     +[ctnEnumIdentifier,ctnConstant,ctnRecordCase,ctnRecordVariant,
+       ctnRecordComposition];
   AllProcTypes = [ctnProcedureType,ctnReferenceTo];
   AllPascalStatements = [ctnBeginBlock,ctnWithStatement,ctnWithVariable,
                          ctnOnBlock,ctnOnIdentifier,ctnOnStatement,
@@ -232,7 +234,8 @@ const
   ctnsHasDefaultValue     = 1 shl 4;
   ctnsHasStrictSpecifier  = 1 shl 5;
   ctnsIsExternal          = 1 shl 6;
-  ctnsAnonymousEmbed      = 1 shl 7; // ctnVarDefinition carrier for `embed TName;` (composablerecords)
+  ctnsRecordCompositionAlias = 1 shl 7; // ctnRecordComposition: 'contains alias <field>'
+  ctnsAnonymousEmbed      = 1 shl 8; // ctnVarDefinition carrier for `embed TName;` (composablerecords)
 
   ClassSectionNodeType: array[TPascalClassSection] of TCodeTreeNodeDesc = (
     ctnClassPrivate,
@@ -240,7 +243,9 @@ const
     ctnClassPublic,
     ctnClassPublished
     );
-
+  AllClassObjectsArray: array of word = (ctnClass,ctnObject,ctnRecordType,
+                     ctnObjCClass,ctnObjCCategory,ctnCPPClass,
+                     ctnClassHelper,ctnRecordHelper,ctnTypeHelper);
 
 type
   // Procedure Specifiers
@@ -551,6 +556,8 @@ begin
   ctnSpecializeType: Result:='Specialize Typename';
   ctnSpecializeParams: Result:='Specialize Parameterlist';
   ctnSpecializeParam: Result:='Specialize Parameter';
+  ctnTypeOf: Result:='Type Of';
+  ctnRecordComposition: Result:='Record Composition';
   ctnGenericType: Result:='Generic Type';
   ctnGenericName: Result:='Generic Type Name';
   ctnGenericParams: Result:='Generic Type Params';

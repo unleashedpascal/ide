@@ -357,7 +357,10 @@ begin
   try
     // setup external tool
     EnvironmentOverrides.Values['LCL_PLATFORM']:=LCLPlatformDirNames[Profile.TargetPlatform];
-    EnvironmentOverrides.Values['LANG']:= 'en_US';
+    // Note: the codeset must be given, otherwise the tool runs with an ASCII
+    // codepage and every filename needs an iconv conversion, which can deadlock
+    // in a forked child (see TProcess.Execute calling ChDir after fpfork).
+    EnvironmentOverrides.Values['LANG']:= 'en_US.UTF-8';
     s:=EnvironmentOptions.GetParsedCompilerFilename;
     if s<>'' then
       EnvironmentOverrides.Values['PP']:=s;
@@ -504,15 +507,19 @@ var
   s, MakeExe, LazbuildExe, StarterFilename: String;
   Tool: TAbstractExternalTool;
   EnvironmentOverrides: TStringList;
+  LazProf: TBuildLazarusProfile;
 begin
   Result:=mrCancel;
+  LazProf:=MiscellaneousOptions.BuildLazProfiles.Current;
 
   EnvironmentOverrides:=TStringList.Create;
   try
-    EnvironmentOverrides.Values['LANG']:= 'en_US';
+    // Note: see MakeLazarus why the codeset must be given
+    EnvironmentOverrides.Values['LANG']:= 'en_US.UTF-8';
     s:=EnvironmentOptions.GetParsedCompilerFilename;
     if s<>'' then
       EnvironmentOverrides.Values['PP']:=s;
+    EnvironmentOverrides.Values['LCL_PLATFORM']:=LCLPlatformDirNames[LazProf.TargetPlatform];
 
     MakeExe:=SearchMakeExe(true);
     fWorkingDir:=EnvironmentOptions.GetParsedLazarusDirectory;
@@ -549,8 +556,7 @@ begin
     Tool:=ExternalToolList.Add('make lazbuild');
     Tool.Reference(Self,ClassName);
     try
-      Tool.Data:=TIDEExternalToolData.Create(IDEToolCompileIDE,'make lazbuild',
-        MakeExe);
+      Tool.Data:=TIDEExternalToolData.Create(IDEToolCompileIDE,'make lazbuild',MakeExe);
       Tool.FreeData:=true;
       Tool.Process.Executable:=MakeExe;
       Tool.Process.Parameters.Add('lazbuild');
@@ -568,16 +574,16 @@ begin
 
     // build the IDE using lazbuild
     LazbuildExe:=AppendPathDelim(fWorkingDir)+'lazbuild'+GetExeExt;
-    Tool:=ExternalToolList.Add('lazbuild --useride=');
+    Tool:=ExternalToolList.Add('lazbuild --build-ide');
     Tool.Reference(Self,ClassName);
     try
-      Tool.Data:=TIDEExternalToolData.Create(IDEToolCompileIDE,'lazbuild --user-ide=',
-        MakeExe);
+      Tool.Data:=TIDEExternalToolData.Create(IDEToolCompileIDE,'lazbuild --build-ide',LazbuildExe);
       Tool.FreeData:=true;
       Tool.Process.Executable:=LazbuildExe;
-      Tool.Process.Parameters.Add('--build-ide=');
+      Tool.Process.Parameters.Add('--build-ide');
       Tool.Process.Parameters.Add('--lazarusdir=.');
       Tool.Process.Parameters.Add('--pcp='+GetPrimaryConfigPath);
+      // lazbuild will fetch all other settings like lcl widgettype and target os from env xml
       Tool.AddParsers(SubToolFPC);
       Tool.AddParsers(SubToolMake);
       Tool.Process.CurrentDirectory:=fWorkingDir;
@@ -599,8 +605,7 @@ begin
       Tool:=ExternalToolList.Add('make starter');
       Tool.Reference(Self,ClassName);
       try
-        Tool.Data:=TIDEExternalToolData.Create(IDEToolCompileIDE,'make starter',
-          MakeExe);
+        Tool.Data:=TIDEExternalToolData.Create(IDEToolCompileIDE,'make starter',MakeExe);
         Tool.FreeData:=true;
         Tool.Process.Executable:=MakeExe;
         Tool.Process.Parameters.Add('starter');

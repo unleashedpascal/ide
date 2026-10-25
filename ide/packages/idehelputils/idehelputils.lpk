@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="6">
+    <CompatibilityMode Value="False"/>
+    <PathDelim Value="\"/>
+    <Name Value="IdeHelpUtils"/>
+    <Type Value="RunAndDesignTime"/>
+    <Author Value="Lazarus Team"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Description Value="-- This package is part of the IDE --
+This package does not guarantee any particular interface/API. Files are maintained for the use by the IDE.
+
+Files in this package are for the main configuration of the IDE."/>
+    <License Value="GPLv2"/>
+    <Version Major="1"/>
+    <Files>
+      <Item>
+        <Filename Value="codehelp.pas"/>
+        <UnitName Value="CodeHelp"/>
+      </Item>
+      <Item>
+        <Filename Value="idehelputilstrings.pas"/>
+        <UnitName Value="IdeHelpUtilStrings"/>
+      </Item>
+      <Item>
+        <Filename Value="srcedithintfrm.pas"/>
+        <UnitName Value="SrcEditHintFrm"/>
+      </Item>
+      <Item>
+        <Filename Value="fpdochints.pas"/>
+        <UnitName Value="FPDocHints"/>
+      </Item>
+      <Item>
+        <Filename Value="fpdocselectinherited.pas"/>
+        <UnitName Value="FPDocSelectInherited"/>
+      </Item>
+      <Item>
+        <Filename Value="fpdocselectlink.pas"/>
+        <UnitName Value="FPDocSelectLink"/>
+      </Item>
+      <Item>
+        <Filename Value="idecontexthelpedit.pas"/>
+        <UnitName Value="IDEContextHelpEdit"/>
+      </Item>
+      <Item>
+        <Filename Value="idewindowhelp.pas"/>
+        <UnitName Value="IDEWindowHelp"/>
+      </Item>
+      <Item>
+        <Filename Value="fpdoceditwindow.pas"/>
+        <UnitName Value="FPDocEditWindow"/>
+      </Item>
+    </Files>
+    <i18n>
+      <EnableI18N Value="True"/>
+      <OutDir Value="languages"/>
+    </i18n>
+    <RequiredPkgs>
+      <Item>
+        <PackageName Value="IdePackager"/>
+      </Item>
+      <Item>
+        <PackageName Value="SynEdit"/>
+      </Item>
+      <Item>
+        <PackageName Value="IDEIntf"/>
+      </Item>
+      <Item>
+        <PackageName Value="LCLBase"/>
+      </Item>
+      <Item>
+        <PackageName Value="IdeConfig"/>
+      </Item>
+      <Item>
+        <PackageName Value="FCL"/>
+      </Item>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+      <UseFileFilters Value="True"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>

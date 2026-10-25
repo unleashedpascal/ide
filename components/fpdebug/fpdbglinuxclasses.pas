@@ -95,7 +95,7 @@ type
   private
     FPostponedSignals: TFpDbgLinuxSignalQueue;
     FStatus: cint;
-    FProcessStarted: boolean;
+    FProcessStarted, FDoneFirstWait: boolean;
     FProcProcess: TProcessWithRedirect;
     FIsTerminating: boolean;
     FMasterPtyFd: cint;
@@ -1140,7 +1140,9 @@ begin
   end;
 
   if (AThread <> nil) and TDbgLinuxThread(AThread).FIsPaused then  // in case of deInternal, it may not be paused and can be ignored
-  if HasInsertedBreakInstructionAtLocation(AThread.GetInstructionPointerRegisterValue) then begin
+  if HasInsertedBreakInstructionAtLocation(AThread.GetInstructionPointerRegisterValue) and
+     (not AThread.PausedAtHardcodeBreakPoint) // IP was not decremented, so we are already past the int3 (but could be on the next)
+  then begin
     TempRemoveBreakInstructionCode(AThread.GetInstructionPointerRegisterValue);
     TDbgLinuxThread(AThread).FIsSteppingBreakPoint := True;
     fpseterrno(0);
@@ -1197,6 +1199,7 @@ end;
 function TDbgLinuxProcess.WaitForDebugEvent(out ProcessIdentifier, ThreadIdentifier: THandle): boolean;
 var
   PID: THandle;
+  e: longint;
 begin
   ThreadIdentifier:=-1;
   ProcessIdentifier:=-1;
@@ -1213,14 +1216,20 @@ begin
   RestoreTempBreakInstructionCodes; // should only happen after single step, so all threads should be paused
 
   result := PID<>-1;
-  if not result then
-    DebugLn(DBG_WARNINGS, 'Failed to wait for debug event. Errcode: %d', [fpgeterrno])
+  if not result then begin
+    e := fpgeterrno;
+    if e = ESysECHILD then
+      FIsTerminating := True; // process is gone
+
+    DebugLn(DBG_WARNINGS, 'Failed to wait for debug event. Errcode: %d', [e]);
+  end
   else
     begin
     ThreadIdentifier := PID;
     FCurrentThreadId := PID;
 
-    if not FProcessStarted and (PID <> ProcessID) then
+    // Check if a new thread was announced before the start/attach event
+    if (not FProcessStarted) and (PID <> ProcessID) and (not wifexited(FStatus)) then
       DebugLn(DBG_WARNINGS, 'ThreadID of main thread does not match the ProcessID');
 
     ProcessIdentifier := ProcessID;
@@ -1228,6 +1237,12 @@ begin
     debugln(FPDBG_LINUX, ['##### GOT EVENT FOR ',pid, ' st ', FStatus]);
     {$ENDIF}
     end;
+
+  if not FDoneFirstWait then begin
+    if fpPTrace(PTRACE_SETOPTIONS, ProcessID, nil,  Pointer( PTRACE_O_TRACECLONE or PTRACE_O_TRACEEXEC) ) <> 0 then
+      writeln('Failed to set set trace options. Errcode: '+inttostr(fpgeterrno));
+    FDoneFirstWait := True;
+  end;
 end;
 
 function TDbgLinuxProcess.AnalyseDebugEvent(AThread: TDbgThread): TFPDEvent;
@@ -1299,7 +1314,7 @@ begin
       Exit;
       end;
 
-    if (not FProcessStarted) and (wstopsig(FStatus) <> SIGTRAP) then begin
+    if (not FProcessStarted) and (not PreAttach) and (wstopsig(FStatus) <> SIGTRAP) then begin
       // attached, should be SigStop, but may be out of order
       debugln(DBG_VERBOSE, ['Attached ', wstopsig(FStatus)]);
       result := deCreateProcess;
@@ -1312,13 +1327,16 @@ begin
     case wstopsig(FStatus) of
       SIGTRAP:
         begin
-        if not FProcessStarted then
-          begin
+        if (not FProcessStarted) and (
+           (not PreAttach) or
+           (((FStatus >> 16) and $FF) = PTRACE_EVENT_EXEC)
+        )
+        then begin
           result := deCreateProcess;
+          PreAttach := false;
+          //if FProcessStarted then //SetFileName
           FProcessStarted:=true;
-          if fpPTrace(PTRACE_SETOPTIONS, ProcessID, nil,  Pointer( PTRACE_O_TRACECLONE) ) <> 0 then
-            writeln('Failed to set set trace options. Errcode: '+inttostr(fpgeterrno));
-          end
+        end
         else
 // TODO: check it is not a real breakpoint
 // or end of single step

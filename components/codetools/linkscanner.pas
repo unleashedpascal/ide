@@ -240,7 +240,6 @@ type
     cmsLock,               { `lock` block: wraps a statement in Enter/try/finally/LeaveCriticalSection }
     cmsAsyncAwait,         { `async` spawns work on a worker thread returning a `future of T`; `await` joins it }
 
-    // not yet in FPC, supported by pas2js:
     cmsExternalClass,      { pas2js: allow  class external [pkgname] name [symbol] }
     cmsIgnoreAttributes,   { pas2js: ignore attributes }
     cmsOmitRTTI,           { pas2js: treat class section 'published' as 'public' and typeinfo does not work on symbols declared with this switch }
@@ -249,7 +248,10 @@ type
     cmsAutoProperties,     { accessor-less property synthesizes a backing field }
     cmsParallelFor,        { `for parallel` worker-pool loop, WorkerIndex/WorkerCount in the body }
     cmsOutVar,             { `var x` declares an inline variable at an out-argument, `_` discards it }
-    cmsPrepostIncDec       { PreInc/PostInc/PreDec/PostDec value-returning inc/dec }
+    cmsPrepostIncDec,      { PreInc/PostInc/PreDec/PostDec value-returning inc/dec }
+    cmsReorderedoperators, { allow "not in" and "is not" operators}
+    cmsTypeInquiry,        { allow "type of" operator }
+    cmsRecordComposition   { allow "contains" in records }
     );
   TCompilerModeSwitches = set of TCompilerModeSwitch;
 const
@@ -264,7 +266,8 @@ const
      cmsOut,cmsDefault_para,cmsDuplicate_names,cmsHintdirective,
      cmsProperty,cmsDefault_inline,cmsExcept,cmsAdvancedRecords,
      cmsPrefixedAttributes,cmsArrayOperators,cmsUnderscoreIsSeparator,
-     cmsFunctionReferences,cmsAnonymousFunctions,cmsImplicitGenerics],
+     cmsFunctionReferences,cmsAnonymousFunctions,cmsImplicitGenerics,
+     cmsStatementExpressions,cmsReorderedoperators],
     // cmDELPHIUNICODE
     [cmsClass,cmsObjpas,cmsResult,cmsString_pchar,
      cmsPointer_2_procedure,cmsAutoderef,cmsTp_procvar,cmsInitfinal,
@@ -272,13 +275,14 @@ const
      cmsProperty,cmsDefault_inline,cmsExcept,cmsAdvancedRecords,
      cmsSystemcodepage,cmsDefault_unicodestring,
      cmsPrefixedAttributes,cmsArrayOperators,cmsUnderscoreIsSeparator,
-     cmsFunctionReferences,cmsAnonymousFunctions,cmsImplicitGenerics],
+     cmsFunctionReferences,cmsAnonymousFunctions,cmsImplicitGenerics,
+     cmsStatementExpressions,cmsReorderedoperators],
     // cmTP
     [cmsTp_procvar,cmsDuplicate_names],
     // cmOBJFPC
     [cmsClass,cmsObjpas,cmsResult,cmsString_pchar,cmsNested_comment,
      cmsRepeat_forward,cmsCvar_support,cmsInitfinal,cmsOut,cmsDefault_para,
-     cmsHintdirective,cmsProperty,cmsDefault_inline,cmsExcept],
+     cmsHintdirective,cmsProperty,cmsDefault_inline,cmsExcept,cmsTypeInquiry],
     // cmMacPas
     [cmsCvar_support,cmsMac_procvar,cmsNestedProcVars,
      cmsNonLocalGoto,cmsISOLike_unary_minus,cmsDefault_inline],
@@ -289,7 +293,7 @@ const
     [cmsTp_procvar,cmsDuplicate_names,cmsNestedProcVars,cmsNonLocalGoto,
      cmsISOLike_unary_minus,cmsISOlike_IO,
      cmsISOLike_Program_Para,
-     cmsISOLike_Mod],
+     cmsISOLike_Mod,cmsTypeInquiry],
     // cmUnleashed - superset of OBJFPC with all modern features
     [cmsClass,cmsObjpas,cmsResult,cmsString_pchar,cmsNested_comment,
      cmsRepeat_forward,cmsCvar_support,cmsInitfinal,cmsOut,cmsDefault_para,
@@ -299,7 +303,7 @@ const
      cmsStatementExpressions,cmsArrayEquality,cmsInlineVars,cmsTuples,
      cmsComposableRecords,cmsMultiLineStrings,cmsStaticSection,cmsInlineStatic,
      cmsThreadStatic,cmsInterpolatedStrings,cmsLock,cmsAsyncAwait,cmsAutoProperties,
-     cmsParallelFor,cmsOutVar,cmsPrepostIncDec]
+     cmsParallelFor,cmsOutVar,cmsPrepostIncDec,cmsReorderedoperators]
     );
   cmAllModesWithGeneric = [cmDELPHI,cmDELPHIUNICODE,cmOBJFPC,cmUnleashed];
   Pas2jsFixedModeswitches = [cmsArray2dynarray,cmsArrayOperators,
@@ -371,7 +375,10 @@ const
     'AUTOPROPERTIES',
     'PARALLELFOR',
     'OUTVAR',
-    'PREPOSTINCDEC'
+    'PREPOSTINCDEC',
+    'REORDEREDOPERATORS',
+    'TYPEINQUIRY',
+    'RECORDCOMPOSITION'
     );
 
 type
@@ -2189,7 +2196,6 @@ begin
   CommentLevel:=0;
   FPascalCompiler:=pcFPC;
   CompilerMode:=cmFPC;
-  FNestedComments:=cmsNested_comment in DefaultCompilerModeSwitches[CompilerMode];
   IfLevel:=0;
   FSkippingDirectives:=lssdNone;
   FDirectivesStored:=StoreDirectives;
@@ -3665,24 +3671,27 @@ begin
       case ModeSwitch of
       cmsObjectiveC2: Include(Switches,cmsObjectiveC1);
       end;
-      if Enable then begin
-        FCompilerModeSwitches:=FCompilerModeSwitches+Switches;
-        case ModeSwitch of
-        cmsDefault_unicodestring:
-          begin
-            Values.Variables['FPC_UNICODESTRINGS'] := '1';
-            Values.Variables['UNICODE'] := '1';
+      if ScannedRange<lsrMainUsesSectionStart then begin // ModeSwitches are allowed/applied only before the main uses section
+        if Enable then begin
+          FCompilerModeSwitches:=FCompilerModeSwitches+Switches;
+          case ModeSwitch of
+          cmsDefault_unicodestring:
+            begin
+              Values.Variables['FPC_UNICODESTRINGS'] := '1';
+              Values.Variables['UNICODE'] := '1';
+            end;
+          end;
+        end else begin
+          FCompilerModeSwitches:=FCompilerModeSwitches-Switches;
+          case ModeSwitch of
+          cmsDefault_unicodestring:
+            begin
+              Values.Undefine('FPC_UNICODESTRINGS');
+              Values.Undefine('UNICODE');
+            end;
           end;
         end;
-      end else begin
-        FCompilerModeSwitches:=FCompilerModeSwitches-Switches;
-        case ModeSwitch of
-        cmsDefault_unicodestring:
-          begin
-            Values.Undefine('FPC_UNICODESTRINGS');
-            Values.Undefine('UNICODE');
-          end;
-        end;
+        FNestedComments:=cmsNested_comment in FCompilerModeSwitches; // need to refresh FNestedComments value
       end;
       exit;
     end;
@@ -4679,8 +4688,10 @@ begin
       {$ENDIF}
       if (LinkCount>0) and (FLinks[FLinkCount-1].Kind=slkSkipStart) then begin
         // remove unneeded SkipStart
+        // undo the '{'#3 inserted by AddSkipComment(true): the skip start link
+        // CleanedPos points AT the '{', so roll back one char further
         dec(FLinkCount);
-        CleanedLen:=FLinks[FLinkCount].CleanedPos;
+        CleanedLen:=FLinks[FLinkCount].CleanedPos-1;
         exit;
       end;
     end;
@@ -4773,7 +4784,7 @@ procedure TLinkScanner.SkipTillEndifElse(SkippingUntil: TLSSkippingDirective);
     end;
     if (lvl and 1=1) then begin
       if (p^ in [#10,#13]) then begin
-        // delphi 12 multiline string literal
+        // delphi multiline string literal
         while p^<>#0 do begin
           if (p^='''') and (p[1]='''') then begin
             i:=2;
@@ -4908,7 +4919,9 @@ var
   OldModeSwitches, EnabledModeSwitches,
     DisabledModeSwitches: TCompilerModeSwitches;
 begin
-  if FCompilerMode=AValue then exit;
+  // force SetCompilerMode - if {$MODE} is in the source code then all ModeSwitches have to be reassigned from the mode
+  // even if the implicit mode is the same and the compiler switches have been altered before
+  // if FCompilerMode=AValue then exit;
   Values.Undefine(CompilerModeVars[FCompilerMode]);
   FCompilerMode:=AValue;
   OldModeSwitches:=FCompilerModeSwitches;
@@ -5535,6 +5548,8 @@ var
 begin
   if (CleanStartPos<1) or (CleanStartPos>CleanEndPos)
   or (CleanEndPos>CleanedLen+1) or (UniqueSortedCodeList=nil) then exit;
+  if CleanStartPos>CleanedLen then
+    CleanStartPos:=CleanedLen; // e.g. inserting behind the last parsed char
   LinkIndex:=LinkIndexAtCleanPos(CleanStartPos);
   if LinkIndex<0 then exit;
   ACode:=FLinks[LinkIndex].Code;

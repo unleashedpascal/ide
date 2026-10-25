@@ -372,7 +372,11 @@ ifndef LAZARUS_INSTALL_DIR
 LAZARUS_INSTALL_DIR=$(INSTALL_PREFIX)/share/lazarus
 INSTALL_MAN_DIR=$(INSTALL_PREFIX)/share/man
 ifneq ($(findstring $(OS_TARGET),win32 win64),)
+ifdef INSTALL_PREFIX
+LAZARUS_INSTALL_DIR=$(INSTALL_PREFIX)
+else
 LAZARUS_INSTALL_DIR=C:\lazarus
+endif
 endif
 ifneq ($(findstring $(OS_TARGET),freebsd),)
 LAZARUS_INSTALL_DIR=$(INSTALL_PREFIX)/local/lazarus
@@ -3131,7 +3135,7 @@ makefiles: fpc_makefiles
 ifneq ($(wildcard fpcmake.loc),)
 include fpcmake.loc
 endif
-.PHONY: help registration tools lcl basecomponents bigidecomponents lazbuild ide idebig cleanlazbuildpkg cleanide bigide useride starter lhelp all clean purge distclean install
+.PHONY: help registration tools lazbuild ide idebig cleanlazbuildpkg cleanide bigide useride starter lhelp all clean purge distclean install
 help:
 	@$(ECHO)
 	@$(ECHO) " Main targets"
@@ -3148,18 +3152,16 @@ help:
 	@$(ECHO)
 	@$(ECHO) " Sub targets"
 	@$(ECHO) "   registration   build package FCL"
-	@$(ECHO) "   basecomponents build packages needed by the minimal IDE for the LCL_PLATFORM"
-	@$(ECHO) "   bigidecomponents build many extra packages for the LCL_PLATFORM, requires basecomponents"
-	@$(ECHO) "   tools          build LCL with nogui widgetset, lazres, svn2revisioninc, updatepofiles, lrstolfm"
-	@$(ECHO) "   lhelp          build lhelp, requires bigidecomponents"
-	@$(ECHO) "   starter        build startlazarus, requires basecomponents"
+	@$(ECHO) "   tools          build lazres, svn2revisioninc, updatepofiles, lrstolfm, lazdebugtargetstarter"
 	@$(ECHO) "   ide            build ide with minimum of packages"
+	@$(ECHO) "   starter        build startlazarus"
+	@$(ECHO) "   lhelp          build lhelp"
 	@$(ECHO)
 	@$(ECHO) " Flags:"
 	@$(ECHO) "   PP=/path/to/fpc        use another compiler"
 	@$(ECHO) "   USESVN2REVISIONINC=0   do not update ide/revision.inc"
 	@$(ECHO) "   INSTALL_PREFIX=/usr    used by 'install' as path prefix"
-	@$(ECHO) "   FPC_DIR=/usr/share/fpcsrc/3.0.4   used by fpcmake when regenerating Makefiles"
+	@$(ECHO) "   FPC_DIR=/usr/share/fpcsrc/3.3.1   used by fpcmake when regenerating Makefiles"
 	@$(ECHO) "   OPT='-vwnbq -gh'       append these options when calling the compiler"
 	@$(ECHO)
 	@$(ECHO) " Usage examples:"
@@ -3175,9 +3177,9 @@ help:
 	@$(ECHO) " Updating git and build an IDE with your last set of packages:"
 	@$(ECHO) "   make distclean"
 	@$(ECHO) "   git pull"
-	@$(ECHO) "   make clean lazbuild useride"
+	@$(ECHO) "   make clean all useride"
 	@$(ECHO)
-	@$(ECHO) " Clean up:"
+	@$(ECHO) " Clean up (beware, this action will irreversibly discard local source modifications):"
 	@$(ECHO) "   git restore ."
 	@$(ECHO) "   make distclean"
 	@$(ECHO)
@@ -3192,21 +3194,8 @@ help:
 	@exit
 registration:
 	$(MAKE) -C packager/registration
-lcl:
-	$(MAKE) -C components lclpackages
-	$(MAKE) -C lcl
-basecomponents:
-	$(MAKE) -C components idepackages
-	$(MAKE) -C ide/packages/ideconfig
-	$(MAKE) -C ide/packages/ideutils
-	$(MAKE) -C ide/packages/idepackager
-	$(MAKE) -C ide/packages/ideproject
-	$(MAKE) -C ide/packages/idedebugger
-bigidecomponents:
-	$(MAKE) -C components bigide
 tools:
-	$(MAKE) -C components/freetype
-	$(MAKE) -C lcl LCL_PLATFORM=nogui
+	$(LAZBUILDEXE) $(LAZBUILDOPTS) --pkg-release lcl/lclbase.lpk
 	$(MAKE) -C tools
 idemin:
 	$(LAZBUILDEXE) $(LAZBUILDOPTS) --build-ide-minimal --pkg-release
@@ -3218,7 +3207,7 @@ useride:
 ide:
 	$(MAKE) -C ide ide
 starter:
-	$(MAKE) -C ide starter
+	$(LAZBUILDEXE) $(LAZBUILDOPTS) --pkg-release --build-mode=release ide/startlazarus.lpi
 lazbuild: registration
 	$(MAKE) -C components/lazutils
 	$(MAKE) -C components/codetools
@@ -3230,11 +3219,11 @@ lazbuild: registration
 	$(MAKE) -C ide/packages/ideproject
 	$(MAKE) -C ide lazbuilder
 lhelp:
-	$(MAKE) -C components/chmhelp/lhelp
+	$(LAZBUILDEXE) $(LAZBUILDOPTS) --pkg-release --build-mode=release components/chmhelp/lhelp/lhelp.lpi
 all: lazbuild tools cleanlazbuildpkg idemin starter
 bigide: lazbuild tools cleanlazbuildpkg idebig starter lhelp
 cleanide:
-	$(MAKE) -C ide cleanide
+	$(MAKE) -C ide cleanlaz
 cleanlazbuildpkg:
 	$(MAKE) -C packager/registration clean
 	$(MAKE) -C components/lazutils clean
@@ -3247,27 +3236,16 @@ cleanlazbuildpkg:
 	$(MAKE) -C ide/packages/ideproject clean
 cleanlaz: cleanide
 	$(MAKE) -C packager/registration clean
-	$(MAKE) -C lcl cleanall
 	$(MAKE) -C components clean
-	$(MAKE) -C ide/packages/ideconfig clean
-	$(MAKE) -C ide/packages/ideutils clean
-	$(MAKE) -C ide/packages/idepackager clean
-	$(MAKE) -C ide/packages/ideproject clean
-	$(MAKE) -C ide/packages/idedebugger clean
+	$(DELTREE) lcl/units/*
 clean: cleanlaz
-	$(MAKE) -C . cleanlaz LCL_PLATFORM=nogui
 	$(MAKE) -C tools clean
 cleanbigide: clean
 purge:
 	$(MAKE) -C ide distclean
 	$(MAKE) -C packager/registration distclean
-	$(MAKE) -C lcl distclean
 	$(MAKE) -C components distclean
-	$(MAKE) -C ide/packages/ideconfig distclean
-	$(MAKE) -C ide/packages/ideutils distclean
-	$(MAKE) -C ide/packages/idepackager distclean
-	$(MAKE) -C ide/packages/ideproject distclean
-	$(MAKE) -C ide/packages/idedebugger distclean
+	$(DELTREE) lcl/units/*
 	$(MAKE) -C tools distclean
 cleanall: purge
 distclean: purge
@@ -3298,6 +3276,9 @@ else
 	ln -sf ../$(INSTALL_BASEDIR)/tools/lazres$(SRCEXEEXT) $(INSTALL_PREFIX)/bin/lazres$(SRCEXEEXT)
 	ln -sf ../$(INSTALL_BASEDIR)/tools/lrstolfm$(SRCEXEEXT) $(INSTALL_PREFIX)/bin/lrstolfm$(SRCEXEEXT)
 	ln -sf ../$(INSTALL_BASEDIR)/tools/updatepofiles$(SRCEXEEXT) $(INSTALL_PREFIX)/bin/updatepofiles$(SRCEXEEXT)
+ifeq ($(OS_TARGET),linux)
+	ln -sf ../$(INSTALL_BASEDIR)/tools/lazdebugtargetstarter $(INSTALL_PREFIX)/bin/lazdebugtargetstarter
+endif
 	$(MAKE) -C install/man install PREFIX=$(INSTALL_PREFIX) GINSTALL=$(GINSTALL)
 	$(INSTALL) install/lazarus.desktop $(INSTALL_PREFIX)/share/applications/lazarus.desktop
 	$(INSTALL) images/icons/lazarus128x128.png $(INSTALL_PREFIX)/share/pixmaps/lazarus.png

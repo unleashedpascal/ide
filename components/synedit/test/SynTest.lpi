@@ -4,6 +4,9 @@
     <Version Value="13"/>
     <PathDelim Value="\"/>
     <General>
+      <Flags>
+        <CompatibilityMode Value="False"/>
+      </Flags>
       <SessionStorage Value="InIDEConfig"/>
       <UseXPManifest Value="True"/>
     </General>
@@ -645,7 +648,7 @@
         <PackageName Value="FCL"/>
       </Item>
     </RequiredPackages>
-    <Units>
+    <Units IsPartOfProject="True">
       <Unit>
         <Filename Value="SynTest.lpr"/>
       </Unit>
@@ -744,6 +747,10 @@
       <Unit>
         <Filename Value="testhighlightsql.pas"/>
         <UnitName Value="TestHighlightSql"/>
+      </Unit>
+      <Unit>
+        <Filename Value="testlfmstreaming.pas"/>
+        <UnitName Value="TestLfmStreaming"/>
       </Unit>
     </Units>
   </ProjectOptions>

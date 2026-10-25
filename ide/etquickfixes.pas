@@ -62,7 +62,7 @@ uses
   CodeToolManager, CodeCache, CodeTree, CodeAtom, BasicCodeTools, KeywordFuncLists,
   // IdeIntf
   IDEExternToolIntf, IDEMsgIntf, LazIDEIntf, IDEDialogs, MenuIntf,
-  ProjectIntf, PackageIntf, CompOptsIntf,
+  ProjectIntf, PackageIntf, CompOptsIntf, MacroIntf,
   // IDE
   LazarusIDEStrConsts, etFPCMsgParser, AbstractsMethodsDlg, QFInitLocalVarDlg;
 
@@ -103,6 +103,8 @@ type
       out MissingUnitName, UsedByUnit: string): boolean;
     procedure CreateMenuItems(Fixes: TMsgQuickFixes); override;
     procedure QuickFix({%H-}Fixes: TMsgQuickFixes; Msg: TMessageLine); override;
+    class function HasMultiMarker: boolean; override;
+    function GetMultiMarkers(Msg: TMessageLine): TMsgMarkArray; override;
   end;
 
   { TQuickFixClassWithAbstractMethods
@@ -144,7 +146,7 @@ type
     function IsApplicable(Msg: TMessageLine; out ToolData: TIDEExternalToolData;
       out IDETool: TObject): boolean;
     procedure CreateMenuItems(Fixes: TMsgQuickFixes); override;
-    procedure QuickFix({%H-}Fixes: TMsgQuickFixes; Msg: TMessageLine); override;
+    procedure QuickFix(Fixes: TMsgQuickFixes; Msg: TMessageLine); override;
   end;
 
   { TQuickFix_HideWithCompilerDirective - hide with compiler directive $warn <id> off }
@@ -207,6 +209,8 @@ function GetMsgSrcPosOfIdentifier(Msg: TMessageLine; out Identifier: string;
 function GetMsgSrcPosOfThisIdentifier(Msg: TMessageLine; const Identifier: string;
   out Code: TCodeBuffer; out Tool: TCodeTool; out CleanPos: integer;
   out Node: TCodeTreeNode): boolean;
+function GetMsgSrcPosOfDottedIdentifier(Msg: TMessageLine;
+  const Identifier: string; out Marks: TMsgMarkArray): boolean;
 
 implementation
 
@@ -299,6 +303,146 @@ var
 begin
   Result:=GetMsgSrcPosOfIdentifier(Msg,CurIdentifier,Code,Tool,CleanPos,Node)
      and (CompareIdentifiers(PChar(CurIdentifier),PChar(Identifier))=0);
+end;
+
+function GetMsgSrcPosOfDottedIdentifier(Msg: TMessageLine;
+  const Identifier: string; out Marks: TMsgMarkArray): boolean;
+// For a dotted identifier like 'foo.Unit6' at the message position, returns the
+// source ranges of its tokens. A contiguous 'foo.Unit6' gives one range;
+// whitespace or comments between tokens (e.g. 'foo{c}. Unit6') split it into more.
+var
+  Code: TCodeBuffer;
+  Tool: TCodeTool;
+  CleanPos, IdentLen: integer;
+  Node: TCodeTreeNode;
+  Comp: array of string;
+  ChainStart: integer;
+  i: integer;
+  AtStart: boolean;
+  Runs: array of record StartClean, EndClean: integer; end;
+  PrevEnd: integer;
+  StartCodePos, EndCodePos: TCodePosition;
+
+  function SplitComponents: boolean;
+  var
+    StartP, p: integer;
+  begin
+    Result:=false;
+    Comp:=nil;
+    StartP:=1;
+    for p:=1 to IdentLen do
+      if Identifier[p]='.' then begin
+        if p=StartP then exit;
+        System.Insert(copy(Identifier,StartP,p-StartP),Comp,length(Comp));
+        StartP:=p+1;
+      end;
+    SetLength(Comp,length(Comp)+1);
+    Comp[high(Comp)]:=copy(Identifier,StartP,IdentLen-StartP+1);
+    Result:=true;
+  end;
+
+  procedure AddToken(aStart, aEnd: integer);
+  begin
+    // merge with the previous run if there is no gap (whitespace/comment) in between
+    if (length(Runs)=0) or (aStart<>PrevEnd) then begin
+      SetLength(Runs,length(Runs)+1);
+      Runs[high(Runs)].StartClean:=aStart;
+    end;
+    Runs[high(Runs)].EndClean:=aEnd;
+    PrevEnd:=aEnd;
+  end;
+
+  procedure OneMark(StartPos, EndPos: integer);
+  begin
+    if (not Tool.CleanPosToCodePos(StartPos,StartCodePos)) then exit;
+    if (not Tool.CleanPosToCodePos(EndPos,EndCodePos)) then exit;
+    if StartCodePos.Code<>EndCodePos.Code then exit;
+    SetLength(Marks,1);
+    Marks[0].Code:=Code;
+    Marks[0].StartPos:=StartCodePos.p;
+    Marks[0].EndPos:=EndCodePos.p;
+    Result:=true;
+  end;
+
+begin
+  Result:=false;
+  Marks:=nil;
+  if not IsValidIdent(Identifier,true,true) then exit;
+  if not GetMsgCodetoolPos(Msg,Code,Tool,CleanPos,Node) then exit;
+  IdentLen:=length(Identifier);
+  if not SplitComponents then exit;
+
+  // FPC gives the position of the start or the end of the identifier.
+  // Decide the direction and validate the anchor token.
+  AtStart:=(CleanPos>=1) and (CleanPos<=Tool.SrcLen) and IsIdentChar[Tool.Src[CleanPos]];
+  if AtStart then begin
+    // there is an identifier at the position: it must be the first token
+    if CompareIdentifiers(@Tool.Src[CleanPos],PChar(Identifier))<>0 then exit;
+    if (length(Comp)=1) or SameText(Identifier,copy(Tool.Src,CleanPos,IdentLen)) then
+    begin
+      // simple case, the identifier is the same in source
+      OneMark(CleanPos,CleanPos+IdentLen);
+      exit;
+    end;
+    ChainStart:=CleanPos;
+  end else begin
+    // the position is behind the identifier: the last token must be in front
+    Tool.MoveCursorToCleanPos(CleanPos);
+    if (CleanPos<=1) or (CleanPos-1>Tool.SrcLen)
+    or (not IsIdentChar[Tool.Src[CleanPos-1]]) then exit;
+
+    if (length(Comp)=1) or SameText(Identifier,copy(Tool.Src,CleanPos-IdentLen,IdentLen)) then
+    begin
+      // simple case, the identifier is the same in source
+      OneMark(CleanPos-IdentLen,CleanPos);
+      exit;
+    end;
+
+    Tool.MoveCursorToCleanPos(CleanPos);
+    Tool.ReadPriorAtom;
+    if Tool.CurPos.StartPos<1 then exit;
+    if CompareIdentifiers(@Tool.Src[Tool.CurPos.StartPos],PChar(Comp[high(Comp)]))<>0 then exit;
+    // walk backward over '.' identifier pairs to the first token
+    for i:=high(Comp)-1 downto 0 do begin
+      Tool.ReadPriorAtom;
+      if Tool.CurPos.Flag<>cafPoint then exit;
+      Tool.ReadPriorAtom;
+      if Tool.CurPos.StartPos<1 then exit;
+      if CompareIdentifiers(@Tool.Src[Tool.CurPos.StartPos],PChar(Comp[i]))<>0 then exit;
+    end;
+    ChainStart:=Tool.CurPos.StartPos;
+  end;
+
+  // read forward from the first token, validating the chain and collecting runs
+  // Beware: ampersand &, whitespace and comments
+  Runs:=nil;
+  PrevEnd:=0;
+  Tool.MoveCursorToCleanPos(ChainStart);
+  for i:=0 to high(Comp) do begin
+    Tool.ReadNextAtom;
+    if Tool.CurPos.StartPos>Tool.SrcLen then exit;
+    if CompareIdentifiers(@Tool.Src[Tool.CurPos.StartPos],PChar(Comp[i]))<>0 then exit;
+    AddToken(Tool.CurPos.StartPos,Tool.CurPos.EndPos);
+    if i<high(Comp) then begin
+      Tool.ReadNextAtom;
+      if Tool.CurPos.Flag<>cafPoint then exit;
+      AddToken(Tool.CurPos.StartPos,Tool.CurPos.EndPos);
+    end;
+  end;
+
+  // convert clean positions to 1-based indices into the code buffer's Source
+  SetLength(Marks,length(Runs));
+  for i:=0 to high(Runs) do begin
+    if (not Tool.CleanPosToCodePos(Runs[i].StartClean,StartCodePos))
+    or (not Tool.CleanPosToCodePos(Runs[i].EndClean,EndCodePos)) then begin
+      Marks:=nil;
+      exit;
+    end;
+    Marks[i].Code:=StartCodePos.Code;
+    Marks[i].StartPos:=StartCodePos.P;
+    Marks[i].EndPos:=EndCodePos.P;
+  end;
+  Result:=length(Marks)>0;
 end;
 
 { TQuickFixInheritedMethodIsHidden_AddModifier }
@@ -706,6 +850,34 @@ end;
 
 { TQuickFix_HideWithCompilerOption }
 
+function GetFPCFullVersionNumber: integer;
+// e.g. 30301 for FPC 3.3.1, 0 if unknown
+var
+  s: String;
+begin
+  Result:=0;
+  if IDEMacros=nil then exit;
+  s:='$(FPC_FULLVERSION)';
+  if not IDEMacros.SubstituteMacros(s) then exit;
+  Result:=StrToIntDef(s,0);
+end;
+
+function CreateHideMsgConditional(FPCFullVersion, MsgID: integer;
+  const aComment: string): string;
+// conditionals script statement to hide a message for new FPC versions
+begin
+  Result:=Format('if GetProjValue(''FPC_FULLVERSION'')>=%d then'+LineEnding
+                +'  CustomOptions+='' -vm%d'';',[FPCFullVersion,MsgID]);
+  if aComment<>'' then
+    Result:=Result+' // '+SpecialCharsToSpaces(aComment,true);
+end;
+
+function ConditionalsHideMsg(const Conditionals: string; MsgID: integer): boolean;
+// check if the conditionals script already adds -vm<MsgID>
+begin
+  Result:=Pos(Format('-vm%d''',[MsgID]),Conditionals)>0;
+end;
+
 function TQuickFix_HideWithCompilerOption.IsApplicable(Msg: TMessageLine; out
   ToolData: TIDEExternalToolData; out IDETool: TObject): boolean;
 begin
@@ -730,21 +902,32 @@ var
   s: String;
   ToolData: TIDEExternalToolData;
   CompOpts: TLazCompilerOptions;
+  FPCFullVersion: Integer;
 begin
   for i:=0 to Fixes.LineCount-1 do begin
     Msg:=Fixes.Lines[i];
     if not IsApplicable(Msg,ToolData,IDETool) then continue;
     if IDETool is TLazProject then begin
       CompOpts:=TLazProject(IDETool).LazCompilerOptions;
-      if CompOpts.MessageFlags[Msg.MsgID]=cfvHide then exit;
-      s:=Format(lisHideWithProjectOptionVm, [IntToStr(Msg.MsgID)])
+      if CompOpts.MessageFlags[Msg.MsgID]=cfvHide then continue;
+      s:=Format(lisHideWithProjectOptionVm, [IntToStr(Msg.MsgID)]);
+      Fixes.AddMenuItem(Self,Msg,s);
     end else if IDETool is TIDEPackage then begin
       CompOpts:=TIDEPackage(IDETool).LazCompilerOptions;
-      if CompOpts.MessageFlags[Msg.MsgID]=cfvHide then exit;
+      if CompOpts.MessageFlags[Msg.MsgID]=cfvHide then continue;
       s:=Format(lisHideWithPackageOptionVm, [IntToStr(Msg.MsgID)]);
+      Fixes.AddMenuItem(Self,Msg,s);
+      // hide it only for the current and newer FPC versions
+      // Note: only packages can use GetProjValue in their conditionals
+      FPCFullVersion:=GetFPCFullVersionNumber;
+      if (FPCFullVersion>0)
+      and not ConditionalsHideMsg(CompOpts.Conditionals,Msg.MsgID) then begin
+        s:=Format(lisHideWithPackageOptionIfFPCFullVersion,
+                  [IntToStr(FPCFullVersion),IntToStr(Msg.MsgID)]);
+        Fixes.AddMenuItem(Self,Msg,s,1);
+      end;
     end else
       continue;
-    Fixes.AddMenuItem(Self,Msg,s);
   end;
   inherited CreateMenuItems(Fixes);
 end;
@@ -756,8 +939,9 @@ var
   CompOpts: TLazCompilerOptions;
   Pkg: TIDEPackage;
   ToolData: TIDEExternalToolData;
-  i: Integer;
+  i, FPCFullVersion: Integer;
   CurMsg: TMessageLine;
+  s, Comment: String;
 begin
   if not IsApplicable(Msg,ToolData,IDETool) then exit;
   if IDETool is TLazProject then begin
@@ -769,7 +953,24 @@ begin
     Pkg:=PackageEditingInterface.FindPackageWithName(ToolData.ModuleName);
     if Pkg=nil then exit;
     CompOpts:=Pkg.LazCompilerOptions;
-    CompOpts.MessageFlags[Msg.MsgID]:=cfvHide;
+    if (Fixes.CurrentCommand<>nil) and (Fixes.CurrentCommand.Tag=1) then begin
+      // add to the conditionals script: hide it for the current and newer FPC
+      FPCFullVersion:=GetFPCFullVersionNumber;
+      if FPCFullVersion<=0 then begin
+        DebugLn(['TQuickFix_HideWithCompilerOption unknown FPC_FULLVERSION']);
+        exit;
+      end;
+      if ConditionalsHideMsg(CompOpts.Conditionals,Msg.MsgID) then exit;
+      Comment:=TIDEFPCParser.GetFPCMsgPattern(Msg);
+      if Comment='' then
+        Comment:=Msg.Msg;
+      s:=TrimRight(CompOpts.Conditionals);
+      if s<>'' then
+        s:=s+LineEnding;
+      CompOpts.Conditionals:=s
+        +CreateHideMsgConditional(FPCFullVersion,Msg.MsgID,Comment);
+    end else
+      CompOpts.MessageFlags[Msg.MsgID]:=cfvHide;
   end else
     exit;
   Msg.MarkFixed;
@@ -996,6 +1197,21 @@ begin
     exit;
   end;
   Result:=true;
+end;
+
+class function TQuickFixUnitNotFound_Remove.HasMultiMarker: boolean;
+begin
+  Result:=true;
+end;
+
+function TQuickFixUnitNotFound_Remove.GetMultiMarkers(Msg: TMessageLine
+  ): TMsgMarkArray;
+var
+  MissingUnitName, UsedByUnit: string;
+begin
+  Result:=nil;
+  if not IsApplicable(Msg,MissingUnitName,UsedByUnit) then exit;
+  GetMsgSrcPosOfDottedIdentifier(Msg,MissingUnitName,Result);
 end;
 
 procedure TQuickFixUnitNotFound_Remove.CreateMenuItems(Fixes: TMsgQuickFixes);

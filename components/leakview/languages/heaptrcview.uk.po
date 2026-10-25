@@ -13,10 +13,28 @@ msgstr ""
 "X-Generator: Lokalize 1.5\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
+#: heaptrcview.brkfailedtoopenfile
+msgid "Failed to open file"
+msgstr ""
+
+#: heaptrcview.brkfailedtoopens
+#, object-pascal-format
+msgid "Failed to open \"%s\"."
+msgstr ""
+
+#: heaptrcview.brkfailedtoopensjumptocurren
+#, object-pascal-format
+msgid "Failed to open \"%s\". Jump to appropriate line in current editor instead?"
+msgstr ""
+
 #: heaptrcview.rsdtimes
 #, object-pascal-format
 msgid " (%d times)"
 msgstr " (%d разів)"
+
+#: heaptrcview.rserrormacroexpanding
+msgid "Failed to expand macros."
+msgstr ""
 
 #: heaptrcview.rserrorparse
 msgid "Error while parsing trace file"
@@ -59,13 +77,10 @@ msgid "Select file with trace log"
 msgstr "Виберіть файл з журналом трасування"
 
 #: heaptrcview.slbltrace
-msgid ".trc file"
+#, fuzzy
+#| msgid ".trc file"
+msgid "Trace file"
 msgstr "файл .trc"
-
-#: heaptrcview.stacklineformat
-#, object-pascal-format
-msgid "%s"
-msgstr "%s"
 
 #: heaptrcview.stacklineformatwithfile
 #, object-pascal-format

@@ -100,7 +100,7 @@ var
 begin
   Result := False;
   if (AEvent <> nil) and
-     (AEvent^.type_ in [GDK_BUTTON_PRESS, GDK_2BUTTON_PRESS, GDK_3BUTTON_PRESS]) and
+     (AEvent^.type_ = GDK_BUTTON_PRESS) and
      (AEvent^.button = 1) then
   begin
     LCLSpinEditUpClicked(PGtkButton(AWidget), AData);
@@ -116,7 +116,7 @@ var
 begin
   Result := False;
   if (AEvent <> nil) and
-     (AEvent^.type_ in [GDK_BUTTON_PRESS, GDK_2BUTTON_PRESS, GDK_3BUTTON_PRESS]) and
+     (AEvent^.type_ = GDK_BUTTON_PRESS) and
      (AEvent^.button = 1) then
   begin
     LCLSpinEditDownClicked(PGtkButton(AWidget), AData);
@@ -368,7 +368,7 @@ begin
   ParentClass^.get_preferred_width(widget, min_width, nat_width);
 
   AControl := TGtk3Widget(HwndFromGtkWidget(widget));
-  if not Assigned(AControl) then Exit;
+  if not Assigned(AControl) or not Assigned(AControl.LCLObject) then Exit;
 
   LDesiredWidth := AControl.LCLWidth;
   if LDesiredWidth <= 0 then
@@ -420,7 +420,7 @@ begin
   end;
 
   AControl := TGtk3Widget(HwndFromGtkWidget(widget));
-  if not Assigned(AControl) then Exit;
+  if not Assigned(AControl) or not Assigned(AControl.LCLObject) then Exit;
 
   if not AControl.LCLObject.AutoSize then
   begin

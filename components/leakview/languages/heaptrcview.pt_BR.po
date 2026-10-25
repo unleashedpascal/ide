@@ -11,10 +11,28 @@ msgstr ""
 "Language: pt_BR\n"
 "X-Generator: Poedit 1.8.13\n"
 
+#: heaptrcview.brkfailedtoopenfile
+msgid "Failed to open file"
+msgstr ""
+
+#: heaptrcview.brkfailedtoopens
+#, object-pascal-format
+msgid "Failed to open \"%s\"."
+msgstr ""
+
+#: heaptrcview.brkfailedtoopensjumptocurren
+#, object-pascal-format
+msgid "Failed to open \"%s\". Jump to appropriate line in current editor instead?"
+msgstr ""
+
 #: heaptrcview.rsdtimes
 #, object-pascal-format
 msgid " (%d times)"
 msgstr " (%d vezes)"
+
+#: heaptrcview.rserrormacroexpanding
+msgid "Failed to expand macros."
+msgstr ""
 
 #: heaptrcview.rserrorparse
 msgid "Error while parsing trace file"
@@ -57,13 +75,10 @@ msgid "Select file with trace log"
 msgstr "Selecionar arquivo com log de rastreamento"
 
 #: heaptrcview.slbltrace
-msgid ".trc file"
+#, fuzzy
+#| msgid ".trc file"
+msgid "Trace file"
 msgstr "arquivo .trc"
-
-#: heaptrcview.stacklineformat
-#, object-pascal-format
-msgid "%s"
-msgstr "%s"
 
 #: heaptrcview.stacklineformatwithfile
 #, object-pascal-format

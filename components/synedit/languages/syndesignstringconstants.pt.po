@@ -9,7 +9,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.9\n"
+"X-Generator: Poedit 3.6\n"
 
 #: syndesignstringconstants.syndsbookmarks
 msgid "Bookmarks"
@@ -18,6 +18,10 @@ msgstr "Marcadores"
 #: syndesignstringconstants.syndschangemarker
 msgid "Change Marker"
 msgstr "Mudar marcador"
+
+#: syndesignstringconstants.syndsclearkeystrokes
+msgid "Clear KeyStrokes"
+msgstr "Limpar teclas premidas"
 
 #: syndesignstringconstants.syndscodefolding
 msgid "Code Folding"
@@ -30,6 +34,10 @@ msgstr "Números de linha"
 #: syndesignstringconstants.syndslineoverview
 msgid "Line Overview"
 msgstr "Visão geral da linha"
+
+#: syndesignstringconstants.syndsresetkeystrokes
+msgid "Reset KeyStrokes"
+msgstr "Repor teclas premidas"
 
 #: syndesignstringconstants.syndsresetmouseactions
 msgid "Reset mouse actions"

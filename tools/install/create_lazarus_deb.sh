@@ -214,6 +214,7 @@ strip tools/updatepofiles
 strip tools/lrstolfm
 # Note: svn2revisioninc supports git too
 strip tools/svn2revisioninc
+strip tools/lazdebugtargetstarter
 if [ -f components/chmhelp/lhelp/lhelp ]; then
   strip components/chmhelp/lhelp/lhelp
 fi
@@ -261,7 +262,7 @@ ln -s $LazDestDirInstalled/lazbuild $LazBuildDir/usr/bin/lazbuild
 
 # docs
 mkdir -p $LazBuildDir/usr/share/man/man1
-for exe in lazbuild lazarus-ide startlazarus lazres svn2revisioninc updatepofiles; do
+for exe in lazbuild lazarus-ide startlazarus lazres svn2revisioninc updatepofiles lazdebugtargetstarter; do
   cat $LazDestDir/install/man/man1/$exe.1 | gzip -n --best > $LazBuildDir/usr/share/man/man1/$exe.1.gz
 done
 

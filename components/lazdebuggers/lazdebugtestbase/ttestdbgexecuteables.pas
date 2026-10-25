@@ -1,3 +1,13 @@
+(* This file is part of the TestSuite for debuggers in Lazarus IDE
+
+  This file is licensed
+
+  modified LGPL-2 (version 2 or later version).
+
+  "modified" as documented for the LCL:
+  See the file COPYING.modifiedLGPL.txt, included in the Lazarus distribution,
+  for details about the license.
+*)
 unit TTestDbgExecuteables;
 
 {$mode objfpc}{$H+}
@@ -25,7 +35,9 @@ type
     FName: string;
     FEnabled: Boolean;
   public
-    procedure DoExceptionHit(var AContinue: Boolean; const AnExceptTargetInfo: IDbgTargetExceptionInfo);
+    procedure DoExceptionHit(var AContinue: Boolean; out ANeedInternalPause: boolean;
+      const AnExceptTargetInfo: IDbgTargetExceptionInfo);
+    function GetExpression: String;
     function GetEnabled: Boolean; deprecated 'use Hit';
     function GetName: String; deprecated 'use Hit';
     property Enabled: Boolean read FEnabled write FEnabled;
@@ -34,6 +46,7 @@ type
   { TTestDbgExceptions }
 
   TTestDbgExceptions = class(specialize TDbgExceptionHandlerListTemplate<TStringList>)
+    destructor Destroy; override;
     function Add(const S: string): TTestDbgException;
     function FindExceptionHandler(const AnExceptTargetInfo: IDbgTargetExceptionInfo): IDbgExceptionHandler;
     function Find(const AClassName: String): IDbgExceptionHandler; //deprecated'use Find(ExceptInfo)';
@@ -216,10 +229,16 @@ end;
 
 { TTestDbgException }
 
-procedure TTestDbgException.DoExceptionHit(var AContinue: Boolean;
-  const AnExceptTargetInfo: IDbgTargetExceptionInfo);
+procedure TTestDbgException.DoExceptionHit(var AContinue: Boolean; out
+  ANeedInternalPause: boolean; const AnExceptTargetInfo: IDbgTargetExceptionInfo);
 begin
   AContinue := not FEnabled;
+  ANeedInternalPause := False;
+end;
+
+function TTestDbgException.GetExpression: String;
+begin
+  Result := '';
 end;
 
 function TTestDbgException.GetEnabled: Boolean;
@@ -233,6 +252,15 @@ begin
 end;
 
 { TTestDbgExceptions }
+
+destructor TTestDbgExceptions.Destroy;
+begin
+  while Count>0 do begin
+    TTestDbgException(Objects[0]).Free;
+    Delete(0);
+  end;
+  inherited Destroy;
+end;
 
 function TTestDbgExceptions.Add(const S: string): TTestDbgException;
 begin

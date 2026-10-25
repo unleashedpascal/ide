@@ -1480,6 +1480,10 @@ msgctxt "opkman_const.rsmainfrm_vsttext_version"
 msgid "Version"
 msgstr "Versión"
 
+#: opkman_const.rsmainfrm_vsttext_versionerror
+msgid "(Version error)"
+msgstr ""
+
 #: opkman_const.rsmenulazaruspackagemanager
 msgid "Online Package Manager ..."
 msgstr ""
@@ -1502,6 +1506,21 @@ msgstr ""
 
 #: opkman_const.rsopensslfrm_chpermanent_caption
 msgid "Do not ask this question again"
+msgstr ""
+
+#: opkman_const.rsopensslfrm_error1
+#, object-pascal-format
+msgid "Cannot download the OpenSSL libraries from \"%s\". Error message:"
+msgstr ""
+
+#: opkman_const.rsopensslfrm_error2
+#, object-pascal-format
+msgid "Cannot unzip the OpenSSL libraries \"%s\". Error message:"
+msgstr ""
+
+#: opkman_const.rsopensslfrm_error3
+#, object-pascal-format
+msgid "The OpenSSL libraries were extracted to \"%s\", but they cannot be loaded."
 msgstr ""
 
 #: opkman_const.rsopensslfrm_lbmessage1_caption
@@ -2151,8 +2170,8 @@ msgid "Repository details"
 msgstr "Detalles del repositorio"
 
 #: opkman_const.rsrepositorydetailsfrm_edaddress_hint
-msgid "Enter the repository address (e.g.: \"http://localhost/packages/\")"
-msgstr "Ingrese la dirección del repositorio (ej.: \"http://localhost/packages/\")"
+msgid "Enter the repository address (e.g.: \"https://example-repo.tld/packages/\")"
+msgstr "Ingrese la dirección del repositorio (ej.: \"https://example-repo.tld/packages/\")"
 
 #: opkman_const.rsrepositorydetailsfrm_edname_hint
 msgid "Enter the repository name"

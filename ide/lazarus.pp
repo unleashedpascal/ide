@@ -177,15 +177,10 @@ begin
   begin
     try
       MainIDE.StartIDE;
-    except
-      Application.HandleException(MainIDE);
-    end;
-    {$IFDEF IDE_MEM_CHECK}CheckHeapWrtMemCnt('lazarus.pp: TMainIDE created');{$ENDIF}
-
-    try
+      {$IFDEF IDE_MEM_CHECK}CheckHeapWrtMemCnt('lazarus.pp: TMainIDE created');{$ENDIF}
       Application.Run;
     except
-      debugln('lazarus.pp - unhandled exception');
+      Application.HandleException(MainIDE);
       CleanUpPIDFile;
       Halt;
     end;
@@ -193,7 +188,7 @@ begin
   CleanUpPIDFile;
   FreeThenNil(SplashForm);
 
-  debugln('LAZARUS END - cleaning up ...');
+  debugln('Hint: (lazarus) LAZARUS END - cleaning up ...');
 
   // free the IDE, so everything is freed before the finalization sections
   MainIDE.Free;

@@ -1,7 +1,6 @@
 {
 Abstract:
-  Frame for environment options for main paths, like
-  Lazarus directory, compiler path.
+  Frame for environment options for file dialogs, trusted commands and etc.
 }
 unit Env_File_Filters;
 
@@ -14,9 +13,9 @@ uses
   // LazUtils
   LazFileUtils, LazConfigStorage,
   // LCL
-  LCLType, Grids, Dialogs, Controls, StdCtrls, Menus,
+  LCLType, Grids, Dialogs, Controls, StdCtrls, CheckLst, Menus, ExtCtrls, LCLStrConsts,
   // IdeIntf
-  IDEOptionsIntf, IDEOptEditorIntf, BaseIDEIntf, IDEDialogs,
+  IDEOptionsIntf, IDEOptEditorIntf, BaseIDEIntf, IDEDialogs, IdeIntfStrConsts,
   // IDE
   EnvironmentOpts, LazarusIDEStrConsts;
 
@@ -28,9 +27,21 @@ type
   { TFileFiltersOptionsFrame }
 
   TFileFiltersOptionsFrame = class(TAbstractIDEOptionsEditor)
+    pnlTrustedLists: TPanel;
+    pnlTrustedCompilers: TPanel;
+    pnlTrustedCommands: TPanel;
+    btnAddTrustedCompiler: TButton;
+    btnAddTrustedCommand: TButton;
+    btnDeleteTrustedCompiler: TButton;
+    btnDeleteTrustedCommand: TButton;
+    lstTrustedCommands: TListBox;
+    lstTrustedCompilers: TListBox;
+    Splitter1: TSplitter;
     edStarDirExcludes: TEdit;
     grdFileFilters: TStringGrid;
     lblStarDirExcludes: TLabel;
+    lblTrustedCompilers: TLabel;
+    lblTrustedCommands: TLabel;
     MenuItem1: TMenuItem;
     SetDefaultMenuItem: TMenuItem;
     pmGrid: TPopupMenu;
@@ -38,6 +49,11 @@ type
     pmiDelRow: TMenuItem;
     pmiInsRow: TMenuItem;
     lblFileDlgFilters: TLabel;
+    procedure AddNewTrustPath(AList: TStrings);
+    procedure btnAddTrustedCommandClick(Sender: TObject);
+    procedure btnAddTrustedCompilerClick(Sender: TObject);
+    procedure btnDeleteTrustedCompilerClick(Sender: TObject);
+    procedure btnDeleteTrustedCommandClick(Sender: TObject);
     procedure grdFileFiltersKeyDown(Sender: TObject; var Key: Word; {%H-}Shift: TShiftState);
     procedure pmiAddRowClick(Sender: TObject);
     procedure pmiDelRowClick(Sender: TObject);
@@ -247,6 +263,43 @@ end;
 
 { TFileFiltersOptionsFrame }
 
+procedure TFileFiltersOptionsFrame.AddNewTrustPath(AList: TStrings);
+var
+  APath, s: string;
+begin
+  APath := InputBox(lisAdd, lisAddPathToTrustedExe, '');
+  if APath = '' then exit;
+  // check existence
+  for s in AList do
+    if CompareFilenames(APath, s) = 0 then
+    begin
+      IDEMessageDialog(lisInformation, lisPathAlreadyExists, mtInformation, [mbOK]);
+      exit;
+    end;
+  // add in list
+  AList.Add(APath);
+end;
+
+procedure TFileFiltersOptionsFrame.btnAddTrustedCompilerClick(Sender: TObject);
+begin
+  AddNewTrustPath(lstTrustedCompilers.Items);
+end;
+
+procedure TFileFiltersOptionsFrame.btnDeleteTrustedCompilerClick(Sender: TObject);
+begin
+  lstTrustedCompilers.DeleteSelected;
+end;
+
+procedure TFileFiltersOptionsFrame.btnAddTrustedCommandClick(Sender: TObject);
+begin
+  AddNewTrustPath(lstTrustedCommands.Items);
+end;
+
+procedure TFileFiltersOptionsFrame.btnDeleteTrustedCommandClick(Sender: TObject);
+begin
+  lstTrustedCommands.DeleteSelected;
+end;
+
 procedure TFileFiltersOptionsFrame.grdFileFiltersKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
@@ -298,6 +351,14 @@ begin
   SetDefaultMenuItem.Caption := lisFileFiltersSetDefaults;
 
   lblStarDirExcludes.Caption:=lisExcludesForStars;
+
+  lblTrustedCompilers.Caption:=lisTrustedCompilers;
+  btnAddTrustedCompiler.Caption:=lisAdd;
+  btnDeleteTrustedCompiler.Caption:=lisRemove;
+
+  lblTrustedCommands.Caption:=lisTrustedCommands;
+  btnAddTrustedCommand.Caption:=lisAdd;
+  btnDeleteTrustedCommand.Caption:=lisRemove;
 end;
 
 procedure TFileFiltersOptionsFrame.ReadSettings(AOptions: TAbstractIDEOptions);
@@ -308,6 +369,9 @@ begin
   LoadGridFromFileDialogFilter(grdFileFilters,EnvironmentOptions.FileDialogFilter,false);
 
   edStarDirExcludes.Text:=EnvironmentOptions.StarDirectoryExcludes;
+
+  lstTrustedCompilers.Items.Assign(EnvironmentOptions.TrustedCompilers);
+  lstTrustedCommands.Items.Assign(EnvironmentOptions.TrustedCommands);
 end;
 
 procedure TFileFiltersOptionsFrame.WriteSettings(AOptions: TAbstractIDEOptions);
@@ -326,6 +390,9 @@ begin
   end;
 
   EnvironmentOptions.StarDirectoryExcludes:=edStarDirExcludes.Text;
+
+  EnvironmentOptions.TrustedCompilers.Assign(lstTrustedCompilers.Items);
+  EnvironmentOptions.TrustedCommands.Assign(lstTrustedCommands.Items);
 end;
 
 class function TFileFiltersOptionsFrame.SupportedOptionsClass: TAbstractIDEOptionsClass;

@@ -1387,6 +1387,10 @@ msgctxt "opkman_const.rsmainfrm_vsttext_version"
 msgid "Version"
 msgstr "Versiyon"
 
+#: opkman_const.rsmainfrm_vsttext_versionerror
+msgid "(Version error)"
+msgstr ""
+
 #: opkman_const.rsmenulazaruspackagemanager
 msgid "Online Package Manager ..."
 msgstr "Çevrimiçi Paket Yöneticisi...."
@@ -1408,6 +1412,21 @@ msgstr "OpenSSL kitaplıklarını indirin"
 #: opkman_const.rsopensslfrm_chpermanent_caption
 msgid "Do not ask this question again"
 msgstr "Bu soruyu bir daha sorma"
+
+#: opkman_const.rsopensslfrm_error1
+#, object-pascal-format
+msgid "Cannot download the OpenSSL libraries from \"%s\". Error message:"
+msgstr ""
+
+#: opkman_const.rsopensslfrm_error2
+#, object-pascal-format
+msgid "Cannot unzip the OpenSSL libraries \"%s\". Error message:"
+msgstr ""
+
+#: opkman_const.rsopensslfrm_error3
+#, object-pascal-format
+msgid "The OpenSSL libraries were extracted to \"%s\", but they cannot be loaded."
+msgstr ""
 
 #: opkman_const.rsopensslfrm_lbmessage1_caption
 #, fuzzy
@@ -2051,8 +2070,8 @@ msgstr "Depo detayları"
 
 #: opkman_const.rsrepositorydetailsfrm_edaddress_hint
 msgctxt "opkman_const.rsrepositorydetailsfrm_edaddress_hint"
-msgid "Enter the repository address (e.g.: \"http://localhost/packages/\")"
-msgstr "Depo adresini girin (örn.: \"http://localhost/packages/\")"
+msgid "Enter the repository address (e.g.: \"https://example-repo.tld/packages/\")"
+msgstr "Depo adresini girin (örn.: \"https://example-repo.tld/packages/\")"
 
 #: opkman_const.rsrepositorydetailsfrm_edname_hint
 msgctxt "opkman_const.rsrepositorydetailsfrm_edname_hint"

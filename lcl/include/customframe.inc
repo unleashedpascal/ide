@@ -228,10 +228,11 @@ end;
 
 procedure TCustomFrame.FixFrameFontsPPI(PPI: Integer);
 begin
+  if (not Application.Scaled) or (not Scaled) then exit;
+
   DisableAlign;
   try
-    if Application.Scaled and Scaled then
-      FixDesignFontsPPIWithChildren(PPI);
+    FixDesignFontsPPIWithChildren(PPI);
   finally
     EnableAlign;
   end;
@@ -255,7 +256,6 @@ constructor TFrame.Create(TheOwner: TComponent);
 begin
   FLCLVersion := lcl_version;
   inherited Create(TheOwner);
-  Name := '';  // added to fix issue #41999
 end;
 
 // included by forms.pp

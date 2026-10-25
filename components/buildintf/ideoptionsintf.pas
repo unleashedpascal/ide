@@ -179,6 +179,7 @@ const
       EdtOptionsPascal      = 502;
       EdtOptionsMarkup      = 503;
       EdtOptionsUserDefined = 504;
+      EdtOptionsSQL         = 505;
     EdtOptionsKeys        = 300;
     EdtOptionsMouse       = 400;
     EdtOptionsMouseAdv    = 401;
@@ -212,6 +213,7 @@ const
     DbgOptionsDispFormat         = 600;
     DbgOptionsValFormatter       = 700;
     DbgOptionsBackConverter      = 800;
+    DbgOptionsConsoleWindow      = 900;
 
   GroupHelp         = 500;
     HlpOptionsGeneral = 100;

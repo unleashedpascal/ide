@@ -49,7 +49,7 @@ type
 
   TMsgWndOptionsFrame = class(TAbstractIDEOptionsEditor)
     cbShowAutomatically: TComboBox;
-    lbShowAutomatically: TLabel;
+    lbOpenAutomatically: TLabel;
     lbWarning: TLabel;
     OptionsBevel: TDividerBevel;
     MWCtrlLeftActionComboBox: TComboBox;
@@ -57,11 +57,12 @@ type
     MsgColorListBox: TColorListBox;
     MsgColorGroupBox: TGroupBox;
     cbAlwaysDrawFocused: TCheckBox;
-    cbFocusAtCompilation: TCheckBox;
+    cbFocusWhenGettingMessages: TCheckBox;
     MWSetPastelColorsButton: TBitBtn;
     cbShowFPCLinesCompiled: TCheckBox;
     cbStayOnTop: TCheckBox;
     cbShowIcons: TCheckBox;
+    cbWordWrap: TCheckBox;
     lbMaxProcs: TLabel;
     MaxProcsSpinEdit: TSpinEdit;
     MWColorBox: TColorBox;
@@ -110,7 +111,6 @@ begin
   Items.Add(lisToolHeaderRunning);
   Items.Add(lisToolHeaderSuccess);
   Items.Add(lisToolHeaderFailed);
-  Items.Add(lisToolHeaderScrolledUp);
   Items.Add(dlfMouseSimpleTextSect);
 end;
 
@@ -135,12 +135,8 @@ begin
 end;
 
 procedure TMsgWndOptionsFrame.cbShowAutomaticallyChange(Sender: TObject);
-var
-  SA: TMsgWndShowAutomatically;
 begin
-  SA := TMsgWndShowAutomatically((Sender as TComboBox).ItemIndex);
-  cbFocusAtCompilation.Enabled := SA = mwsaCompiling;
-  lbWarning.Visible := SA = mwsaNever;
+  lbWarning.Visible := (Sender as TComboBox).ItemIndex = ord(mwsaNever);
 end;
 
 procedure TMsgWndOptionsFrame.MsgColorListBoxGetColors(Sender: TCustomColorListBox;
@@ -210,8 +206,7 @@ begin
   {MWColorListBox.Colors[mwBackground]:=aSynEdit.Color;
   MWColorListBox.Colors[mwRunning]:=aSynEdit.
   MWColorListBox.Colors[mwSuccess]:=aSynEdit.
-  MWColorListBox.Colors[mwFailed]:=aSynEdit.
-  MWColorListBox.Colors[mwAutoHeader]:=aSynEdit.}
+  MWColorListBox.Colors[mwFailed]:=aSynEdit.}
   MWColorBox.Selected := MWColorListBox.Selected;
 end;
 
@@ -221,7 +216,6 @@ begin
   MWColorListBox.Colors[ord(mwRunning)]   :=TColor($00CBF3FF); // harmonic pastel yellow
   MWColorListBox.Colors[ord(mwSuccess)]   :=TColor($00BEEFC3); // harmonic pastel green
   MWColorListBox.Colors[ord(mwFailed)]    :=TColor($00CCCBFF); // harmonic pastel rose
-  MWColorListBox.Colors[ord(mwAutoHeader)]:=TColor($00EEC3BD); // harmonic pastel blue
   MWColorBox.Selected := MWColorListBox.Selected;
 end;
 
@@ -233,6 +227,8 @@ begin
 end;
 
 constructor TMsgWndOptionsFrame.Create(AOwner: TComponent);
+var
+  e: TMsgWndShowAutomatically;
 begin
   inherited Create(AOwner);
   OptionsBevel.Caption := lisOptions;
@@ -252,14 +248,21 @@ begin
   cbShowFPCLinesCompiled.Hint := lisElevateTheMessagePriorityToAlwaysShowItByDefaultIt;
   cbShowIcons.Caption := lisShowIcons;
   cbShowIcons.Hint := dlgAnIconForErrorWarningHintIsShown;
+  cbWordWrap.Caption := dlgOptWordWrap;
+  cbWordWrap.Hint := lisWrapLongMessageLinesOtherwiseTheyAreClippedAndAHi;
   lbMaxProcs.Caption := Format(lisMaximumParallelProcesses0MeansDefault,
                                [IntToStr(DefaultMaxProcessCount)]);
-  lbShowAutomatically.Caption := lisShowAutomatically;
-  cbShowAutomatically.Items.Add(lisShowAutoWhenCompiling);
-  cbShowAutomatically.Items.Add(lisShowAutoOnlyWhenErrorsOccur);
-  cbShowAutomatically.Items.Add(lisShowAutoNever);
-  cbShowAutomatically.ItemIndex := 0;
-  cbFocusAtCompilation.Caption := lisFocusAtCompilation;
+  lbOpenAutomatically.Caption := lisOpenAutomatically;
+  for e in TMsgWndShowAutomatically do
+    case e of
+      mwsaDefault : cbShowAutomatically.Items.Add(lisOpenAutoWhenCompiling);
+      mwsaError   : cbShowAutomatically.Items.Add(lisOpenAutoOnlyWhenErrorsOccur);
+      mwsaNever   : cbShowAutomatically.Items.Add(lisOpenAutoNever);
+    else
+      raise Exception.Create('TMsgWndShowAutomatically element not have a resource string');
+    end;
+  cbShowAutomatically.ItemIndex := ord(mwsaDefault);
+  cbFocusWhenGettingMessages.Caption := lisFocusWindow;
   lbWarning.Caption := lisMustBeOpenedManually;
 end;
 
@@ -294,8 +297,9 @@ begin
     cbStayOnTop.Checked := MsgViewStayOnTop;
     cbShowIcons.Checked := ShowMessagesIcons;
     cbAlwaysDrawFocused.Checked := MsgViewAlwaysDrawFocused;
-    cbFocusAtCompilation.Checked := MsgViewFocus;
-    cbShowAutomatically.ItemIndex := Integer(MsgViewShowAutomatically);
+    cbWordWrap.Checked := MsgViewWordWrap;
+    cbFocusWhenGettingMessages.Checked := MsgViewFocus;
+    cbShowAutomatically.ItemIndex := ord(MsgViewShowAutomatically);
     cbShowAutomaticallyChange(cbShowAutomatically); // Update the warning.
   end;
   cbShowFPCLinesCompiled.Checked := EnvOpt.MsgViewShowFPCMsgLinesCompiled;
@@ -321,7 +325,8 @@ begin
     MsgViewStayOnTop := cbStayOnTop.Checked;
     ShowMessagesIcons := cbShowIcons.Checked;
     MsgViewAlwaysDrawFocused := cbAlwaysDrawFocused.Checked;
-    MsgViewFocus := cbFocusAtCompilation.Checked;
+    MsgViewWordWrap := cbWordWrap.Checked;
+    MsgViewFocus := cbFocusWhenGettingMessages.Checked;
     MsgViewShowAutomatically := TMsgWndShowAutomatically(cbShowAutomatically.ItemIndex);
   end;
   EnvOpt.MsgViewShowFPCMsgLinesCompiled := cbShowFPCLinesCompiled.Checked;
@@ -336,4 +341,5 @@ end;
 initialization
   RegisterIDEOptionsEditor(GroupEnvironment, TMsgWndOptionsFrame, EnvOptionsMessages);
 end.
+
 

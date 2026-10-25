@@ -401,7 +401,7 @@ begin
         end;
       end;
 
-    ctnTypeDefinition, ctnEnumerationType:
+    ctnTypeDefinition, ctnEnumerationType, ctnGenericType, ctnGenericParameter:
       begin
         if UseImages then
         begin
@@ -426,7 +426,12 @@ begin
         begin
           if Colors <> nil then
             AColor:=Colors.Color[ahaIdentComplWindowEntryType].Foreground;
-          s:='type';
+          if IdentItem.GetDesc =ctnGenericType then
+            s:='type<>'
+          else if IdentItem.GetDesc =ctnGenericParameter then
+            s:='<type>'
+          else
+            s:='type';
         end;
       end;
 
@@ -707,6 +712,8 @@ begin
               [phpWithoutClassName,phpWithoutName,phpWithVarModifiers,
                phpWithParameterNames,phpWithDefaultValues,phpWithResultType,
                phpWithOfObject,phpWithoutSemicolon]);
+            if IdentItem.Specialized.Used then
+              s:=IdentItem.Specialized.SubstituteGenericItems(s,'');
           except
             // ignore, show funciton name without header
           end;
@@ -717,14 +724,18 @@ begin
           s:=IdentItem.Tool.ExtractProperty(ItemNode,
             [phpWithoutName,phpWithVarModifiers,
              phpWithParameterNames,phpWithDefaultValues,phpWithResultType]);
+          if IdentItem.Specialized.Used then
+            s:=IdentItem.Specialized.SubstituteGenericItems(s,'');
         end;
 
       ctnVarDefinition:
         begin
           ANode:=IdentItem.Tool.FindTypeNodeOfDefinition(ItemNode);
-          if ANode<>nil then
-            s:=' : '+IdentItem.Tool.ExtractNode(ANode,[])
-          else begin
+          if ANode<>nil then begin
+            s:=' : '+IdentItem.Tool.ExtractNode(ANode,[]);
+            if IdentItem.Specialized.Used then
+              s:=IdentItem.Specialized.SubstituteGenericItems(s,'');
+          end else begin
             InlineType:=IdentItem.Tool.ExtractInlineVarInitType(ItemNode);
             if InlineType<>'' then
               s:=' : '+InlineType;
@@ -768,7 +779,11 @@ begin
             ctnRecordType:
               s:=s+'record';
             else
-              s:=s+IdentItem.Tool.ExtractNode(ANode,[]);
+              begin
+                s:=s+IdentItem.Tool.ExtractNode(ANode,[]);
+                if (ANode.Desc=ctnSpecialize) and IdentItem.Specialized.Used then
+                  s:=IdentItem.Specialized.SubstituteGenericItems(s,'');
+              end;
             end;
           end else
             s:=s+'?';

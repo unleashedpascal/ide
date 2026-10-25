@@ -95,10 +95,6 @@ const
     'MarkDown'
   ) deprecated 'Use IdeSyntaxHighlighters (to be removed in 4.99)';
 
-function GetSyntaxHighlighterCaption(h: TLazSyntaxHighlighter): string;     deprecated 'Use IdeSyntaxHighlighters (to be removed in 4.99)';
-function StrToLazSyntaxHighlighter(const s: String): TLazSyntaxHighlighter; deprecated 'Use IdeSyntaxHighlighters (to be removed in 4.99)';
-
-
 type
   TColorSchemeAttributeFeature =
     ( hafBackColor, hafForeColor, hafFrameColor, hafAlpha, hafPrior,
@@ -127,7 +123,6 @@ type
 
 
   IColorSchemeAttribute = interface ['{2572547D-217A-4A83-A910-0D808ECF3317}']
-    procedure ApplyTo(aDest: TObject); deprecated 'Use ApplyTo(TLazEditTextAttribute) // to be removed in 5.99';
     procedure ApplyTo(aDest: TLazEditTextAttribute);
     function GetMarkupAllOverviewColor: TColor;
 
@@ -153,7 +148,6 @@ type
     function Count: integer;
     function GetScheme(AnIndex: Integer): IColorScheme;
     function GetScheme(AName: String): IColorScheme;
-    function GetCurrentSchemeForHighlighter(AnHiglighter: TObject): IColorScheme; deprecated 'Use GetCurrentSchemeForHighlighter(TLazEditCustomHighlighter) // to be removed in 5.99';
     function GetCurrentSchemeForHighlighter(AnHiglighter: TLazEditCustomHighlighter): IColorScheme;
     function GetCurrentSchemeForHighlighter(AnHighlighterId: TIdeSyntaxHighlighterID): IColorScheme;
 
@@ -174,16 +168,6 @@ procedure _IDE_CallOnIdeColorSchemeListCreated;  deprecated 'AddAttribute can be
 
 
 implementation
-
-function GetSyntaxHighlighterCaption(h: TLazSyntaxHighlighter): string;
-begin
-  Result:=IdeSyntaxHighlighters.Captions[IdeSyntaxHighlighters.GetIdForLazSyntaxHighlighter(h)];
-end;
-
-function StrToLazSyntaxHighlighter(const s: String): TLazSyntaxHighlighter;
-begin
-  Result := IdeSyntaxHighlighters.GetLazSyntaxHighlighterType(IdeSyntaxHighlighters.GetIdForName(s)){%H-};
-end;
 
 var
   OnIdeColorSchemeListCreated: TMethodList;

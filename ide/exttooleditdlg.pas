@@ -614,7 +614,8 @@ var
   Tool: TIDEExternalToolOptions;
 begin
   Result:=mrCancel;
-  Assert((Index>=0) and (Index<fItems.Count), 'TExternalUserTools.Run: Index out of bounds.');
+  // tool can be called via a IDE command - need to ignore non-existent ones
+  if (Index<0) or (Index>=fItems.Count) then exit;
   Item:=Items[Index];
   if (ExternalToolsRef.RunningCount=0) and (Item.Parsers.Count>0) then
     IDEMessagesWindow.Clear;
@@ -639,8 +640,8 @@ end;
 function TExternalUserTools.DoRun(Index: integer; ShowAbort: Boolean): TModalResult;
 begin
   SourceEditorManagerIntf.ClearErrorLines;
-  if EnvironmentGuiOpts.MsgViewShowAutomatically = mwsaCompiling then
-    MainIDE.DoShowMessagesView(false);
+  if EnvironmentGuiOpts.MsgViewShowAutomatically = mwsaDefault then
+    MainIDE.DoShowMessagesView;
   Result:=Run(Index,ShowAbort);
   LazarusIDE.DoCheckFilesOnDisk;
 end;
@@ -843,7 +844,7 @@ procedure TExternalToolOptionDlg.FormCreate(Sender: TObject);
 begin
   Caption:=lisEdtExtToolEditTool;
   TitleLabel.Caption:=dlgPOTitle;
-  FilenameLabel.Caption:=lisEdtExtToolProgramfilename;
+  FilenameLabel.Caption:=lisEdtExtToolProgramExecutable;
   FilenameEdit.ButtonHint:=lisClickHereToBrowseTheFileHint;
 
   FilenameEdit.DialogTitle:=lisSelectFile;

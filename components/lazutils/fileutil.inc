@@ -98,16 +98,45 @@ begin
   Result:=false;
 end;
 
-function DeleteDirectory(const DirectoryName: string; OnlyChildren: boolean): boolean;
+// Deletes the contents in DirectoryName folder
+// - OnlyChildren: if True, do NOT delete DirectoryName itself, only it's contents
+// - Force: if True: also try to delete files and folder that are read-only (or in a write-only folder on *nix)
+// - Culprit: the name of the first file or folder that could not be deleted. Only has meaning if Result=False
+// - Result: True if no error occurred. False if an error occurred. You can query GetLastOsError in that case for the reason it failed.
+function DeleteDirectory(const DirectoryName: string; OnlyChildren, Force: boolean; out Culprit: String): boolean;
+  procedure MaybeMakeReadWrite(const Fn: String; SR: TSearchRec);
+  begin
+    {$ifdef unix}
+    //you cannot list the contents of a no-read directory
+    //you cannot delete files in a no-write directory
+    //you can however delete files/empty directories that are no-read/no-write
+    if ((SR.Attr and faDirectory)<>0) and ((SR.Mode and (STAT_IRUSR or STAT_IWUSR)) = 0) then
+    begin
+      //writeln('MakeRW: ',Fn,' is NOT Read+Write');
+      BaseUnix.fpChMod(Fn, SR.Mode or (STAT_IRUSR or STAT_IWUSR)); //ignore the result, deleting will trigger an error later
+    end;
+    {$endif unix}
+    {$ifdef windows}
+    //you cannot delete a readonly file, nor can you remove an empty readonly directory
+    if (SR.Attr and faReadOnly)>0 then
+      FileSetAttrUtf8(Fn, SR.Attr and not faReadOnly); //ignore the result, deleting will trigger an error later
+    {$endif windows}
+  end;
+
 const
-  //Don't follow symlinks on *nix, just delete them
-  DeleteMask = faAnyFile {$ifdef unix} or faSymLink{%H-} {$endif unix};
+  //Don't follow symlinks just delete them (note: Windows has symlinks too (and junctions): issue #42561
+  DeleteMask = faAnyFile or faSymLink{%H-};
 var
   FileInfo: TSearchRec;
   CurSrcDir: String;
   CurFilename: String;
 begin
   Result:=false;
+  Culprit := '';
+  if not DirectoryExistsUtf8(DirectoryName) then begin  //analogous to (Delphi's) TDirectory.Delete()
+    Culprit := DirectoryName;
+    exit;
+  end;
   CurSrcDir:=CleanAndExpandDirectory(DirectoryName);
   if FindFirstUTF8(CurSrcDir+GetAllFilesMask,DeleteMask,FileInfo)=0 then begin
     try
@@ -116,19 +145,74 @@ begin
         if (FileInfo.Name='.') or (FileInfo.Name='..') or (FileInfo.Name='') then
           continue;
         CurFilename:=CurSrcDir+FileInfo.Name;
-        if ((FileInfo.Attr and faDirectory)>0)
-           {$ifdef unix} and ((FileInfo.Attr and faSymLink{%H-})=0) {$endif unix} then begin
-          if not DeleteDirectory(CurFilename,false) then exit;
+        if Force then
+          MaybeMakeReadWrite(CurFileName, FileInfo);
+        if ((FileInfo.Attr and faDirectory)>0) then begin
+          if ((FileInfo.Attr and faSymLink{%H-})=0) then begin
+            //regular directory
+            if not DeleteDirectory(CurFilename,False, Force, Culprit) then exit;
+          end else begin
+            //symlink to directory
+            {$ifdef unix}
+            if not DeleteFileUtf8(CurFilename) then begin
+              Culprit := CurFileName;
+              exit;
+            end;
+            {$else}
+            if not RemoveDirUtf8(CurFilename) then begin
+              Culprit := CurFileName;
+              exit;
+            end;
+            {$endif}
+          end;
         end else begin
-          if not DeleteFileUTF8(CurFilename) then exit;
+            //file or symlink to a file
+            if not DeleteFileUTF8(CurFilename) then begin
+              Culprit := CurFileName;
+              exit;
+            end;
         end;
       until FindNextUTF8(FileInfo)<>0;
     finally
       FindCloseUTF8(FileInfo);
     end;
   end;
-  if (not OnlyChildren) and (not RemoveDirUTF8(CurSrcDir)) then exit;
+  if (not OnlyChildren) then begin
+    CurSrcDir := ChompPathDelim(CurSrcDir);
+    if Force then begin
+      if (FindFirstUtf8(CurSrcDir, DeleteMask, FileInfo) = 0) then begin
+        try
+          MaybeMakeReadWrite(CurSrcDir, FileInfo);
+        finally
+          FindCloseUTF8(FileInfo);
+        end;
+      end;
+    end;
+    if not RemoveDirUTF8(CurSrcDir) then begin
+      Culprit := CurSrcDir;
+      exit;
+    end;
+  end;
   Result:=true;
+end;
+
+function DeleteDirectory(const DirectoryName: string; OnlyChildren, Force: boolean): boolean;
+var
+  Dummy: String;
+begin
+  Result := DeleteDirectory(DirectoryName, OnlyChildren, Force, Dummy);
+end;
+
+function DeleteDirectory(const DirectoryName: string; OnlyChildren: boolean; out Culprit: String): boolean;
+begin
+  Result := DeleteDirectory(DirectoryName, OnlyChildren, False, Culprit);
+end;
+
+function DeleteDirectory(const DirectoryName: string; OnlyChildren: boolean): boolean;
+var
+  Dummy: String;
+begin
+  Result := DeleteDirectory(DirectoryName, OnlyChildren, False, Dummy);
 end;
 
 function ProgramDirectory: string;
@@ -406,7 +490,7 @@ begin
     Bytes:=nil;
     SetLength(Bytes, len);
     if Length(Bytes) = 0 then exit;
-    InStream := TFileStream.Create(Filename, fmOpenRead);
+    InStream := TFileStream.Create(Filename, fmOpenRead or fmShareDenyWrite);
     try
       {$IF FPC_FULLVERSION>30300}
       InStream.Read64(Bytes, 0, Length(Bytes));
@@ -454,7 +538,7 @@ begin
     s:='';
     Setlength(s, len);
     if Length(s) = 0 then exit;
-    InStream := TFileStream.Create(Filename, fmOpenRead);
+    InStream := TFileStream.Create(Filename, fmOpenRead or fmShareDenyWrite);
     try
       {$IF FPC_FULLVERSION>30300}
       InStream.Read64(TBytes(s), 0, Length(s));

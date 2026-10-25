@@ -152,6 +152,7 @@ type
     DefaultDesc: TCodeTreeNodeDesc;
     Flags: TIdentListItemFlags;
     BaseExprType: TExpressionType;
+    Specialized: TSpecializeParamsDictionary;
     function AsString: string;
     procedure BeautifyIdentifier({%H-}IdentList: TIdentifierList); virtual;
     function GetDesc: TCodeTreeNodeDesc;
@@ -160,7 +161,8 @@ type
                        NewIdentifier: PChar; NewLevel: integer;
                        NewNode: TCodeTreeNode; NewTool: TFindDeclarationTool;
                        NewDefaultDesc: TCodeTreeNodeDesc;
-                       IsDottedIdent: boolean=false);
+                       IsDottedIdent: boolean=false;
+                       GenEntry: PTGenericParams=nil);
     function IsProcNodeWithParams: boolean;
     function IsPropertyWithParams: boolean;
     function IsPropertyReadOnly: boolean;
@@ -386,6 +388,7 @@ type
     FProcNameAtom: TAtomPosition;
     FStartPos: integer;
     FTool: TFindDeclarationTool;
+    FSpecialized: TSpecializeParamsDictionary;
     function GetItems(Index: integer): TCodeContextInfoItem;
   public
     constructor Create;
@@ -401,7 +404,7 @@ type
     property ProcNameAtom: TAtomPosition read FProcNameAtom write FProcNameAtom;
     property StartPos: integer read FStartPos write FStartPos;// context is valid from StartPos to EndPos
     property EndPos: integer read FEndPos write FEndPos;
-
+    property Specialized: TSpecializeParamsDictionary read FSpecialized write FSpecialized;
     function CalcMemSize: PtrUInt;
   end;
 
@@ -426,6 +429,7 @@ type
     FIDTTreeOfNamespaces: TAVLTree;// tree of TNameSpaceInfo
     FOnGatherUserIdentifiers: TOnGatherUserIdentifiers;
     FStartAtProc: boolean; // predefined self and result must be oferred only once at gathering all identifiers
+    FStartedAsFullyQualified: boolean; // mark initiation at own "unit_name."
     procedure AddToTreeOfUnitFileInfo(const AFilename: string);
     procedure AddBaseConstant(const BaseName: PChar);
     procedure AddBaseType(const BaseName: PChar);
@@ -435,6 +439,7 @@ type
     procedure AddKeyWord(aKeyWord: string);
     procedure AddAutoPropertyBackingFields(ClassNode: TCodeTreeNode);
     procedure AddFutureControlMembers;
+    function IsSourceNameOfSelf(const CursorPos: TCodeXYPosition):boolean;
   protected
     CurrentIdentifierList: TIdentifierList;
     CurrentIdentifierContexts: TCodeContextInfo;
@@ -480,11 +485,20 @@ type
                                  SkipAbstractsInStartClass: boolean = false): boolean;
     function GetValuesOfCaseVariable(const CursorPos: TCodeXYPosition;
                                      List: TStrings; WithTypeDefIfScoped: boolean = true): boolean;
+    function IsIfExpressionKeyword(KeyWordPos: integer): boolean;
+    function IsCaseExpressionAtom(AtomPos: integer): boolean;
+    function IsTryExpressionAtom(AtomPos: integer): boolean;
+    function Is_TypeOf_Operand(OperandPos: integer): boolean;
+    function IsExpressionStartInFront(KeyWordPos: integer): boolean;
+    function ReadBackTilBlockStart: boolean;
+    function CreateDeclarationPathAt(StartNode: TCodeTreeNode;
+      TargetTool: TFindDeclarationTool; TargetNode: TCodeTreeNode): string;
     property Beautifier: TBeautifyCodeOptions read FBeautifier write FBeautifier;
 
     procedure CalcMemSize(Stats: TCTMemStats); override;
 
     property OnGatherUserIdentifiers: TOnGatherUserIdentifiers read FOnGatherUserIdentifiers write FOnGatherUserIdentifiers;
+    property StartedAsFullyQualified: boolean read FStartedAsFullyQualified;
   end;
 
 function dbgs(Flag: TIdentifierListContextFlag): string; overload;
@@ -1292,6 +1306,39 @@ begin
   end;
 end;
 
+function TIdentCompletionTool.IsSourceNameOfSelf(const CursorPos: TCodeXYPosition
+  ): boolean;
+var
+  p: integer;
+  s: string;
+begin
+  result:=false;
+  if (CursorPos.Code = FindUnitSource(ExtractSourceName,'',false)) or
+     (CompareFilenames(CursorPos.Code.Filename, Self.MainFilename)=0)
+  then begin
+    if CaretToCleanPos(CursorPos,p)<>0 then
+      exit;
+    MoveCursorToCleanPos(p);
+    ReadNextAtom;
+    ReadPriorAtom;
+    if CurPos.Flag<>cafPoint then
+      exit;
+    s:='';
+    repeat
+      if CurPos.StartPos<=1 then break;
+      ReadPriorAtom;
+      s:=GetAtom+s;
+      ReadPriorAtom;
+      if CurPos.Flag=cafPoint then  // may be dotted
+        s:='.'+s
+      else
+        break;
+    until false;
+  end;
+  if (length(s)=0) or not IsIdentStartChar[s[1]] then exit;
+  result:= CompareDottedIdentifiers(PChar(s),PChar(ExtractSourceName))=0;
+end;
+
 procedure TIdentCompletionTool.AddCompilerFunction(const AProcName, AParameterList,
   AResultType: PChar);
 var
@@ -1427,7 +1474,8 @@ var
   Lvl: LongInt;
   HasLowerVisibility: Boolean;
   IsDottedIdent, IsStrict, IsHelper: Boolean;
-  PlaceForDotted: string;
+  PlaceForDotted : string;
+  i: integer;
 begin
   // proceed searching ...
   Result:=ifrProceedSearch;
@@ -1451,6 +1499,13 @@ begin
 
   ProtectedForeignClass:=false;
   Node:=FoundContext.Node;
+
+  if (Node<>nil) and ((Node.Desc=ctnGenericType) or Node.HasParentOfType(ctnGenericType)) and
+    Node.HasAsParent(Params.GenParams.GenericNode) then
+  begin // specialized type params update
+    if Node.Desc=ctnSpecialize then exit; // don't show specialization itself
+  end;
+
   if FoundContext.Tool=Self then begin
     // identifier is in the same unit
     if FStartAtProc then begin // add result & self if applicable
@@ -1482,8 +1537,16 @@ begin
               1,
               nil,
               nil,
-              ctnVarDefinition);
+              ctnVarDefinition,
+              false,
+              @Params.GenParams);
           NewItem.ResultType:= FoundContext.Tool.ExtractClassNameOfProcNode(FuncNode,false);
+          if Params.GenParams.SpecializeParamsNode<>nil then begin
+            i:=Params.GenParams.SpecializeDictionary.GetVerse(NewItem.ResultType);
+            if i>=0 then // replace generic param with specialized type
+              NewItem.ResultType:=
+                Params.GenParams.SpecializeDictionary.ParamTypes[i].SpecializedType;
+          end;
           CurrentIdentifierList.Add(NewItem);
         end;
 
@@ -1519,11 +1582,21 @@ begin
                 1,
                 nil,
                 nil,
-                ctnVarDefinition);
+                ctnVarDefinition,
+                false,
+                @Params.GenParams);
 
-            if FuncNode<>nil then
+            if FuncNode<>nil then begin
               NewItem.ResultType:=
-                CurrentIdentifierList.StartContext.Tool.ExtractIdentifier(FuncNode.StartPos,false); // allow &type
+                CurrentIdentifierList.StartContext.Tool.ExtractIdentifier(FuncNode.StartPos,false);
+              if Params.GenParams.SpecializeParamsNode<>nil then begin
+                i:=Params.GenParams.SpecializeDictionary.GetVerse(NewItem.ResultType);
+                if i>=0 then // replace generic param with specialized type
+                  NewItem.ResultType:=
+                Params.GenParams.SpecializeDictionary.ParamTypes[i].SpecializedType;
+              end;
+            end;
+
             CurrentIdentifierList.Add(NewItem);
           end;
         end;
@@ -1544,6 +1617,8 @@ begin
     end;
 
     Node:=Node.Parent;
+    if (Node<>nil) and (Node.Desc=ctnRecordComposition) then
+      Node:=Node.Parent;
     if (Node<>nil) and (Node.Desc in AllClassSubSections) then
       Node:=Node.Parent;
 
@@ -1583,6 +1658,8 @@ begin
   begin
     // identifier is in another unit
     Node:=Node.Parent;
+    if (Node<>nil) and (Node.Desc=ctnRecordComposition) then
+      Node:=Node.Parent;
     if (Node<>nil) and (Node.Desc in AllClassSubSections) then
       Node:=Node.Parent;
     if (Node<>nil) and (Node.Desc in AllClassBaseSections) then begin
@@ -1666,8 +1743,15 @@ begin
       end;
     end;
 
-  ctnGenericParameter:
+  ctnGenericParameter:  begin
     Ident:=@FoundContext.Tool.Src[FoundContext.Node.StartPos];
+    if Params.GenParams.SpecializeParamsNode<>nil then begin
+      i:=Params.GenParams.SpecializeDictionary.GetVerse(GetIdentifier(Ident));
+      if i>=0 then // replace generic param with specialized type
+        Ident:=
+      PChar(Params.GenParams.SpecializeDictionary.ParamTypes[i].SpecializedType);
+    end;
+  end;
   
   ctnVarDefinition,ctnConstDefinition,ctnEnumIdentifier,ctnLabel,ctnGlobalProperty:
     Ident:=@FoundContext.Tool.Src[FoundContext.Node.StartPos];
@@ -1757,6 +1841,7 @@ begin
   ctnProgram..ctnUnit:
     begin
       if (FoundContext.Tool=Self) then begin
+        if StartedAsFullyQualified and (FoundContext.Node.Desc = ctnUnit) then exit; // don't add yourself
         PlaceForDotted:=ExtractSourceName;  //can apply name from file name if empty program header
         if length(PlaceForDotted)>0 then begin
           Ident:=@PlaceForDotted[1];
@@ -1777,7 +1862,8 @@ begin
                             Node,
                             FoundContext.Tool,
                             ctnNone,
-                            IsDottedIdent);
+                            IsDottedIdent,
+                            @Params.GenParams);
 
   // '&' prefixed identifiers
   if (Ident^='&') and (IsIdentStartChar[Ident[1]]) then
@@ -1933,6 +2019,7 @@ begin
     AddCompilerFunction('GetTypeKind','Identifier', 'TTypeKind');
     AddCompilerFunction('IsManagedType','Identifier', 'Boolean');
     AddCompilerFunction('IsConstValue','const Value', 'Boolean');
+    AddCompilerFunction('NameOf','Identifier', 'string');
     AddCompilerFunction('TypeOf','Identifier', 'Pointer');
     AddCompilerProcedure('Val','S:String;var V;var Code:Integer');
     AddCompilerFunction('Unaligned','var X','var'); // Florian declaration :)
@@ -2292,7 +2379,14 @@ type
   end;
 
   procedure AddTypeKeywords;
+  var
+    OperandPos: Integer;
   begin
+    // no type keywords behind 'type of'
+    OperandPos:=CleanPos;
+    while (OperandPos>1) and IsIdentChar[Src[OperandPos-1]] do
+      dec(OperandPos);
+    if Is_TypeOf_Operand(OperandPos) then exit;
     if CurrentIdentifierList.IdentComplIncludeKeywords then begin
       Add('array');
       Add('set');
@@ -2386,6 +2480,8 @@ begin
         end;
         if (Node.Desc=ctnRecordType) or (Node.Parent.Desc=ctnRecordType) then begin
           Add('case');
+          if cmsRecordComposition in Scanner.CompilerModeSwitches then
+            Add('contains');
         end;
         AddTypeKeywords;
         LastChild:=Node.LastChild;
@@ -2503,6 +2599,8 @@ begin
         end;
         if (Node.Desc=ctnRecordType) or (Node.Parent.Desc=ctnRecordType) then begin
           Add('case');
+          if cmsRecordComposition in Scanner.CompilerModeSwitches then
+            Add('contains');
         end;
         AddTypeKeywords;
       end
@@ -2576,6 +2674,21 @@ begin
             Add('while');
             Add('with');
           end;
+          if (cmsStatementExpressions in Scanner.CompilerModeSwitches)
+          and (CurrentIdentifierList.ContextFlags
+               * [ilcfStartInStatement, ilcfStartOfOperand, ilcfStartOfStatement]
+               = [ilcfStartInStatement, ilcfStartOfOperand])
+          then begin
+            Add('if');
+            Add('case');
+            Add('try');
+          end;
+          if (cmsTypeInquiry in Scanner.CompilerModeSwitches)
+          and (CurrentIdentifierList.ContextFlags
+               * [ilcfStartInStatement, ilcfStartOfOperand, ilcfStartOfStatement]
+               = [ilcfStartInStatement, ilcfStartOfOperand])
+          then
+            Add('type'); // type of
           if (ilcfStartInStatement in CurrentIdentifierList.ContextFlags)
           and not (ilcfStartOfOperand in CurrentIdentifierList.ContextFlags)
           and (CurrentIdentifierList.StartBracketLvl = 0)
@@ -2601,6 +2714,14 @@ begin
             if not NotStartOfOp then begin
               MoveCursorToAtomPos(CurrentIdentifierList.StartAtomInFront);
               NotStartOfOp := AtomIsNumber or AtomIsRealNumber;
+              if UpAtomIs('NOT') then begin
+                // "operand not |" -> "not in"
+                ReadPriorAtom;
+                if AtomIsIdentifier or AtomIsNumber or AtomIsRealNumber
+                or AtomIsStringConstant
+                or (CurPos.Flag in [cafRoundBracketClose,cafEdgedBracketClose]) then
+                  Add('in');
+              end;
             end;
             if NotStartOfOp then
             begin
@@ -3448,7 +3569,7 @@ function TIdentCompletionTool.GatherIdentifiers(
 var
   CleanCursorPos, IdentStartPos, IdentEndPos: integer;
   CursorNode: TCodeTreeNode;
-  Params: TFindDeclarationParams;
+  Params, ExParams: TFindDeclarationParams;
   GatherContext: TFindContext;
   ContextExprStartPos: Integer;
   StartInSubContext: Boolean;
@@ -3513,11 +3634,11 @@ begin
 
   ActivateGlobalWriteLock;
   try
+
     try
       InitCollectIdentifiers(CursorPos,IdentifierList);
       IdentStartXY:=FindIdentifierStartPos(CursorPos);
-    if CheckCursorInCompilerDirective(IdentStartXY) then exit(true);
-
+      if CheckCursorInCompilerDirective(IdentStartXY) then exit(true);
       if not ParseSourceTillCollectionStart(IdentStartXY,CleanCursorPos,CursorNode,
                                             IdentStartPos,IdentEndPos) then
         Exit;
@@ -3526,8 +3647,32 @@ begin
       // partial parse). FindDeepestNodeAtPos's gap-case exits without
       // raising even when ExceptionOnNotFound is set; guard the deref.
       if CursorNode=nil then exit;
+      FStartedAsFullyQualified:= IsSourceNameOfSelf(CursorPos) ;
       Params:=TFindDeclarationParams.Create(Self,CursorNode);
       try
+        if StartedAsFullyQualified and (CursorNode.GetRoot.Desc = ctnUnit)
+        then begin  // complete expression like "maybedotted.current.unit1."
+          try
+            CursorNode:=FindInterfaceNode;
+            GatherContext:=CreateFindContext(Self,CursorNode);
+            ExParams:=TFindDeclarationParams.Create(Self,CursorNode);
+            // gather all identifiers in context
+            ExParams.ContextNode:=GatherContext.Node;
+            ExParams.SetIdentifier(Self,nil,@CollectAllIdentifiers);
+            FStartAtProc:=true;
+            ExParams.Flags:=[fdfCollect,fdfFindVariable,fdfIgnoreUsedUnits];
+
+            {$IFDEF CTDEBUG}
+            DebugLn('TIdentCompletionTool.GatherIdentifiers F_');
+            {$ENDIF}
+            CurrentIdentifierList.Context:=GatherContext;
+            GatherContext.Tool.FindIdentifierInContext(ExParams);
+          finally
+            CursorNode:=Params.ContextNode;
+            ExParams.Free;
+          end;
+        end;
+
         if CleanCursorPos=0 then ;
         if IdentStartPos>0 then begin
           MoveCursorToCleanPos(IdentStartPos);
@@ -3601,7 +3746,7 @@ begin
           // context in front of
           StartPosOfVariable:=FindStartOfTerm(IdentStartPos,NodeTermInType(CursorNode));
           if StartPosOfVariable>0 then begin
-            if StartPosOfVariable=IdentStartPos then begin
+            if StartedAsFullyQualified or (StartPosOfVariable=IdentStartPos) then begin
               // cursor is at start of an operand
               CurrentIdentifierList.ContextFlags:=
                 CurrentIdentifierList.ContextFlags+[ilcfStartOfOperand];
@@ -3619,7 +3764,19 @@ begin
             if (ilcfStartInStatement in CurrentIdentifierList.ContextFlags)
             then begin
               // check if LValue
-              if (CurPos.Flag in [cafSemicolon,cafEnd,cafColon])
+              if ((UpAtomIs('THEN') or UpAtomIs('ELSE'))
+                  and IsIfExpressionKeyword(CurPos.StartPos))
+              or (((CurPos.Flag=cafColon) or UpAtomIs('ELSE') or UpAtomIs('OTHERWISE'))
+                  and IsCaseExpressionAtom(CurPos.StartPos))
+              or ((UpAtomIs('TRY') or UpAtomIs('EXCEPT') or UpAtomIs('DO')
+                   or UpAtomIs('ELSE'))
+                  and IsTryExpressionAtom(CurPos.StartPos))
+              or (UpAtomIs('OF') and Is_TypeOf_Operand(StartPosOfVariable))
+              then begin
+                // in an if-, case- or try-except-expression, e.g. x := if a then |
+                CurrentIdentifierList.ContextFlags:=
+                  CurrentIdentifierList.ContextFlags+[ilcfIsExpression, ilcfDontAllowProcedures];
+              end else if (CurPos.Flag in [cafSemicolon,cafEnd,cafColon])
               or UpAtomIs('BEGIN')
               or UpAtomIs('TRY') or UpAtomIs('FINALLY') or UpAtomIs('EXCEPT')
               or UpAtomIs('FOR') or UpAtomIs('DO') or UpAtomIs('THEN')
@@ -3718,7 +3875,8 @@ begin
           end;
 
           CursorContext:=CreateFindContext(Self,CursorNode);
-          GatherContextKeywords(CursorContext, IdentStartPos, Beautifier, GatherContext); //note: coth:
+          if not StartedAsFullyQualified then
+            GatherContextKeywords(CursorContext, IdentStartPos, Beautifier, GatherContext); //note: coth:
 
           // search and gather identifiers in context
           if (GatherContext.Tool<>nil) and (GatherContext.Node<>nil) then begin
@@ -3733,7 +3891,10 @@ begin
             Params.ContextNode:=GatherContext.Node;
             Params.SetIdentifier(Self,nil,@CollectAllIdentifiers);
             FStartAtProc:=true;
-            Params.Flags:=[fdfSearchInAncestors,fdfCollect,fdfFindVariable,fdfSearchInHelpers];
+            if not StartedAsFullyQualified then
+              Params.Flags:=[fdfSearchInParentNodes,fdfSearchInAncestors,fdfCollect,fdfFindVariable,fdfSearchInHelpers]
+            else
+              Params.Flags:=[fdfCollect,fdfFindVariable,fdfIgnoreUsedUnits];
             if (Params.ContextNode.Desc=ctnInterface) and StartInSubContext then
               Include(Params.Flags,fdfIgnoreUsedUnits);
             if not StartInSubContext then
@@ -4108,7 +4269,8 @@ begin
           {$IFDEF CTDEBUG}
           DebugLn('TIdentCompletionTool.GatherIdentifiers G');
           {$ENDIF}
-          GatherUsefulIdentifiers(IdentStartPos,CursorContext,GatherContext);
+          if not StartedAsFullyQualified then
+            GatherUsefulIdentifiers(IdentStartPos,CursorContext,GatherContext);
         end;
 
         Result:=true;
@@ -4248,6 +4410,7 @@ var
       AddCompilerProc('GetTypeKind','Identifier', 'TTypeKind');
       AddCompilerProc('IsManagedType','Identifier', 'Boolean');
       AddCompilerProc('IsConstValue','const Value', 'Boolean');
+      AddCompilerProc('NameOf','Identifier', 'string');
       AddCompilerProc('TypeOf','Identifier', 'Pointer');
       AddCompilerProc('Val','S:String;var V;var Code:Integer');
       AddCompilerProc('Unaligned','var X','var');
@@ -4412,6 +4575,7 @@ begin
       Result:=true;
     finally
       if Result then begin
+        CurrentIdentifierContexts.FSpecialized.ApplyFrom(Params.GenParams.SpecializeDictionary);
         CodeContexts:=CurrentIdentifierContexts;
         CurrentIdentifierContexts:=nil;
       end else begin
@@ -4769,6 +4933,366 @@ begin
   end;
 end;
 
+function TIdentCompletionTool.CreateDeclarationPathAt(StartNode: TCodeTreeNode;
+  TargetTool: TFindDeclarationTool; TargetNode: TCodeTreeNode): string;
+{ Create the shortest identifier path, that FindDeclarationPathAt resolves at
+  StartNode to TargetTool+TargetNode.
+  For example, if TargetNode is the ctnTypeDefinition of a class TBird, it first
+  tries 'TBird'. If that finds another declaration, e.g. because a local
+  variable hides the type, the parent type is prepended, e.g. 'TWing.TBird',
+  and finally the namespace and unit name, e.g. 'ns1.unit2.TBird'.
+  Returns '' if no path was found.
+
+  Note: the trees must already be built, StartNode must belong to this tool and
+  TargetNode to TargetTool.
+  Note: TargetNode must be the declaration node itself, as returned by
+  FindDeclarationPathAt with Flags=[]. For example the ctnProcedure of a method
+  body in the implementation section gives '', because 'TBird.Fly' finds the
+  ctnProcedure in the class. The same applies to a forward class declaration and
+  to the ctnSrcName of a unit, whose path finds the ctnUnit.
+}
+var
+  StrictGenParams: boolean;
+
+  function NodeName(Node: TCodeTreeNode): string;
+  // the name of a declaration node, in mode delphi with the generic parameters
+  var
+    Cnt, i: integer;
+  begin
+    Result:='';
+    if Node=nil then exit;
+    case Node.Desc of
+    ctnTypeDefinition,ctnVarDefinition,ctnConstDefinition,ctnEnumIdentifier,
+    ctnLabel:
+      Result:=GetIdentifier(@TargetTool.Src[Node.StartPos],false);
+    ctnGenericType:
+      if Node.FirstChild<>nil then
+        Result:=GetIdentifier(@TargetTool.Src[Node.FirstChild.StartPos],false);
+    ctnProcedure,ctnProcedureHead:
+      Result:=TargetTool.ExtractProcName(Node,
+                            [phpWithoutClassName,phpWithoutGenericParams]);
+    ctnProperty,ctnGlobalProperty:
+      Result:=TargetTool.ExtractPropName(Node,false);
+    ctnProgram,ctnPackage,ctnLibrary,ctnUnit,ctnSrcName:
+      Result:=TargetTool.GetSourceName(false);
+    end;
+    if Result='' then exit;
+    if not StrictGenParams then exit;
+    // in mode delphi the number of generic parameters must match, the types are
+    // irrelevant, so use 'T' for every parameter
+    Cnt:=TargetTool.GetNodeGenericParamCount(Node);
+    if Cnt<=0 then exit;
+    Result:=Result+'<T';
+    for i:=2 to Cnt do
+      Result:=Result+',T';
+    Result:=Result+'>';
+  end;
+
+  function FindQualifierNode(Node: TCodeTreeNode;
+    out AtUnitLevel: boolean): TCodeTreeNode;
+  // Search the type declaration owning Node, e.g. the TBird of a member.
+  // Returns nil if there is none. Then AtUnitLevel tells, if the unit name can
+  // be prepended, or if Node is local and can not be qualified at all.
+  begin
+    Result:=nil;
+    AtUnitLevel:=false;
+    Node:=Node.Parent;
+    while Node<>nil do begin
+      if Node.Desc in (AllClasses+[ctnEnumerationType]) then begin
+        // a member of a class, record, interface, helper or enumeration
+        Node:=Node.Parent;
+        if (Node<>nil) and (Node.Desc in [ctnTypeDefinition,ctnGenericType]) then
+          Result:=Node;
+        exit;
+      end;
+      if Node.Desc=ctnProcedure then
+        exit; // a local declaration can not be qualified
+      if Node.Desc in AllCodeSections then begin
+        AtUnitLevel:=true;
+        exit;
+      end;
+      Node:=Node.Parent;
+    end;
+  end;
+
+var
+  PathNode, QualNode: TCodeTreeNode;
+  Ctx: TFindContext;
+  UnitPrefixed, AtUnitLevel: boolean;
+  s: string;
+begin
+  Result:='';
+  if (StartNode=nil) or (TargetTool=nil) or (TargetNode=nil) then exit;
+  {$IFDEF CheckNodeTool}CheckNodeTool(StartNode);{$ENDIF}
+  if (Scanner=nil) then exit;
+
+  // the mode of this tool decides, how the path is parsed
+  StrictGenParams:=Scanner.CompilerMode in [cmDELPHI,cmDELPHIUNICODE];
+
+  PathNode:=TargetNode;
+  Result:=NodeName(PathNode);
+  if Result='' then exit;
+  UnitPrefixed:=false;
+  repeat
+    Ctx:=FindDeclarationPathAt(StartNode,Result,[]);
+    if (Ctx.Tool=TargetTool) and (Ctx.Node=TargetNode) then
+      exit; // found the shortest path
+    if UnitPrefixed then
+      exit(''); // there is nothing longer to try
+    QualNode:=FindQualifierNode(PathNode,AtUnitLevel);
+    if QualNode<>nil then begin
+      // a nested declaration -> prepend the parent type
+      s:=NodeName(QualNode);
+      if s='' then
+        exit('');
+      Result:=s+'.'+Result;
+      PathNode:=QualNode;
+    end else if AtUnitLevel then begin
+      // a top level declaration -> prepend the namespace and unit name
+      s:=TargetTool.GetSourceName(false);
+      if s='' then
+        exit('');
+      Result:=s+'.'+Result;
+      UnitPrefixed:=true;
+    end else
+      exit(''); // a local declaration, can not be qualified
+  until false;
+end;
+
+function TIdentCompletionTool.IsIfExpressionKeyword(KeyWordPos: integer
+  ): boolean;
+// Checks if the IF, THEN or ELSE at KeyWordPos belongs to an if-expression,
+// e.g. "x := if a then b else c". The cursor position is kept.
+var
+  OldPos: TAtomPosition;
+  Level: Integer;
+begin
+  Result:=false;
+  if not (cmsStatementExpressions in Scanner.CompilerModeSwitches) then exit;
+  OldPos:=CurPos;
+  try
+    MoveCursorToCleanPos(KeyWordPos);
+    ReadNextAtom;
+    // find the IF
+    Level:=0;
+    if not UpAtomIs('IF') then begin
+      repeat
+        if CurPos.StartPos<=1 then exit;
+        ReadPriorAtom;
+        if CurPos.StartPos<1 then exit;
+        if CurPos.Flag in [cafRoundBracketClose,cafEdgedBracketClose] then begin
+          if not ReadBackTilBracketOpen(false) then exit;
+        end else if CurPos.Flag=cafEND then begin
+          // skip case-expression
+          if not ReadBackTilBlockStart then exit;
+        end else if CurPos.Flag in [cafSemicolon,cafColon,cafAssignment,
+          cafRoundBracketOpen,cafEdgedBracketOpen]
+        then
+          // an if-expression cannot contain these
+          exit
+        else if UpAtomIs('ELSE') then
+          // skip nested if-expression
+          inc(Level)
+        else if UpAtomIs('IF') then begin
+          if Level=0 then break;
+          dec(Level);
+        end else if UpAtomIs('THEN') then
+        else if AtomIsKeyWord
+        and not IsKeyWordInConstAllowed.DoItCaseInsensitive(Src,
+                                   CurPos.StartPos,CurPos.EndPos-CurPos.StartPos)
+        then
+          // e.g. begin, do, of
+          exit;
+      until false;
+    end;
+    // check what is in front of the IF
+    Result:=IsExpressionStartInFront(CurPos.StartPos);
+  finally
+    MoveCursorToAtomPos(OldPos);
+  end;
+end;
+
+function TIdentCompletionTool.Is_TypeOf_Operand(OperandPos: integer): boolean;
+// Checks if the operand at OperandPos follows a 'type of',
+// e.g. "var a: type of b". The cursor position is kept.
+var
+  OldPos: TAtomPosition;
+begin
+  Result:=false;
+  if not (cmsTypeInquiry in Scanner.CompilerModeSwitches) then exit;
+  OldPos:=CurPos;
+  try
+    MoveCursorToCleanPos(OperandPos);
+    ReadPriorAtom;
+    if not UpAtomIs('OF') then exit;
+    ReadPriorAtom;
+    Result:=UpAtomIs('TYPE');
+  finally
+    MoveCursorToAtomPos(OldPos);
+  end;
+end;
+
+function TIdentCompletionTool.IsCaseExpressionAtom(AtomPos: integer): boolean;
+// Checks if the CASE, colon, semicolon, ELSE, OTHERWISE or END at AtomPos
+// belongs to a case-expression, e.g. "x := case a of 1: b; else c end".
+// The cursor position is kept.
+var
+  OldPos: TAtomPosition;
+begin
+  Result:=false;
+  if not (cmsStatementExpressions in Scanner.CompilerModeSwitches) then exit;
+  OldPos:=CurPos;
+  try
+    MoveCursorToCleanPos(AtomPos);
+    ReadNextAtom;
+    if CurPos.Flag=cafEND then begin
+      if not ReadBackTilBlockStart then exit;
+      if not UpAtomIs('CASE') then exit;
+    end else if not UpAtomIs('CASE') then begin
+      // find the CASE
+      repeat
+        if CurPos.StartPos<=1 then exit;
+        ReadPriorAtom;
+        if CurPos.StartPos<1 then exit;
+        if CurPos.Flag in [cafRoundBracketClose,cafEdgedBracketClose] then begin
+          if not ReadBackTilBracketOpen(false) then exit;
+        end else if CurPos.Flag=cafEND then begin
+          // skip nested block, e.g. a case-expression
+          if not ReadBackTilBlockStart then exit;
+        end else if CurPos.Flag in [cafAssignment,cafRoundBracketOpen,
+          cafEdgedBracketOpen]
+        then
+          // a case-expression cannot contain these
+          exit
+        else if UpAtomIs('CASE') then
+          break
+        else if UpAtomIs('BEGIN') or UpAtomIs('TRY') or UpAtomIs('FINALLY')
+        or UpAtomIs('EXCEPT') or UpAtomIs('REPEAT') or UpAtomIs('UNTIL')
+        or UpAtomIs('DO') or UpAtomIs('WHILE') or UpAtomIs('FOR')
+        or UpAtomIs('WITH') or UpAtomIs('ASM') or UpAtomIs('RECORD') then
+          // statement
+          exit;
+      until false;
+    end;
+    // check what is in front of the CASE
+    Result:=IsExpressionStartInFront(CurPos.StartPos);
+  finally
+    MoveCursorToAtomPos(OldPos);
+  end;
+end;
+
+function TIdentCompletionTool.IsTryExpressionAtom(AtomPos: integer): boolean;
+// Checks if the TRY, EXCEPT, DO, ELSE, semicolon or END at AtomPos belongs to
+// a try-except-expression, e.g. "x := try a except on E: T do b; else c end".
+// The cursor position is kept.
+var
+  OldPos: TAtomPosition;
+begin
+  Result:=false;
+  if not (cmsStatementExpressions in Scanner.CompilerModeSwitches) then exit;
+  OldPos:=CurPos;
+  try
+    MoveCursorToCleanPos(AtomPos);
+    ReadNextAtom;
+    if CurPos.Flag=cafEND then begin
+      if not ReadBackTilBlockStart then exit;
+      if not UpAtomIs('TRY') then exit;
+    end else if not UpAtomIs('TRY') then begin
+      // find the TRY
+      repeat
+        if CurPos.StartPos<=1 then exit;
+        ReadPriorAtom;
+        if CurPos.StartPos<1 then exit;
+        if CurPos.Flag in [cafRoundBracketClose,cafEdgedBracketClose] then begin
+          if not ReadBackTilBracketOpen(false) then exit;
+        end else if CurPos.Flag=cafEND then begin
+          // skip nested block, e.g. a case-expression
+          if not ReadBackTilBlockStart then exit;
+        end else if CurPos.Flag in [cafAssignment,cafRoundBracketOpen,
+          cafEdgedBracketOpen]
+        then
+          // a try-except-expression cannot contain these
+          exit
+        else if UpAtomIs('TRY') then
+          break
+        else if UpAtomIs('BEGIN') or UpAtomIs('CASE') or UpAtomIs('FINALLY')
+        or UpAtomIs('REPEAT') or UpAtomIs('UNTIL') or UpAtomIs('WHILE')
+        or UpAtomIs('FOR') or UpAtomIs('WITH') or UpAtomIs('ASM')
+        or UpAtomIs('RECORD') then
+          // statement
+          exit;
+      until false;
+    end;
+    // check what is in front of the TRY
+    Result:=IsExpressionStartInFront(CurPos.StartPos);
+  finally
+    MoveCursorToAtomPos(OldPos);
+  end;
+end;
+
+function TIdentCompletionTool.IsExpressionStartInFront(KeyWordPos: integer
+  ): boolean;
+// Checks if the atom in front of KeyWordPos is followed by an expression,
+// e.g. "x := |if" or "x := case a of 1: |if". The cursor position is kept.
+var
+  OldPos: TAtomPosition;
+begin
+  Result:=false;
+  if KeyWordPos<=1 then exit;
+  OldPos:=CurPos;
+  try
+    MoveCursorToCleanPos(KeyWordPos);
+    ReadPriorAtom;
+    if CurPos.StartPos<1 then exit;
+    if CurPos.Flag in [cafAssignment,cafEqual,cafComma,cafRoundBracketOpen,
+      cafEdgedBracketOpen,cafOtherOperator]
+    then
+      Result:=true
+    else if UpAtomIs('NOT')
+    or WordIsBinaryOperator.DoItCaseInsensitive(Src,CurPos.StartPos,
+                                               CurPos.EndPos-CurPos.StartPos)
+    then
+      Result:=true
+    else if UpAtomIs('THEN') then
+      // e.g. x := if a then if b then 1 else 2 else 3
+      Result:=IsIfExpressionKeyword(CurPos.StartPos)
+    else if UpAtomIs('ELSE') then
+      Result:=IsIfExpressionKeyword(CurPos.StartPos)
+              or IsCaseExpressionAtom(CurPos.StartPos)
+              or IsTryExpressionAtom(CurPos.StartPos)
+    else if (CurPos.Flag=cafColon) or UpAtomIs('OTHERWISE') then
+      // e.g. x := case a of 1: if b then 2 else 3 end
+      Result:=IsCaseExpressionAtom(CurPos.StartPos)
+    else if UpAtomIs('TRY') or UpAtomIs('EXCEPT') or UpAtomIs('DO') then
+      // e.g. x := try if b then 2 else 3 except 4 end
+      Result:=IsTryExpressionAtom(CurPos.StartPos);
+  finally
+    MoveCursorToAtomPos(OldPos);
+  end;
+end;
+
+function TIdentCompletionTool.ReadBackTilBlockStart: boolean;
+// cursor is on an END, moves the cursor back to the start of the block,
+// e.g. BEGIN, CASE, TRY. Does not raise exceptions.
+var
+  Level: Integer;
+begin
+  Result:=false;
+  Level:=0;
+  repeat
+    if CurPos.StartPos<=1 then exit;
+    ReadPriorAtom;
+    if CurPos.StartPos<1 then exit;
+    if CurPos.Flag=cafEND then
+      inc(Level)
+    else if UpAtomIs('BEGIN') or UpAtomIs('CASE') or UpAtomIs('TRY')
+    or UpAtomIs('ASM') or UpAtomIs('RECORD') then begin
+      if Level=0 then exit(true);
+      dec(Level);
+    end;
+  until false;
+end;
+
 procedure TIdentCompletionTool.CalcMemSize(Stats: TCTMemStats);
 var
   Node: TAVLTreeNode;
@@ -4957,7 +5481,8 @@ constructor TIdentifierListItem.Create(
   NewCompatibility: TIdentifierCompatibility; NewHasChilds: boolean;
   NewHistoryIndex: integer; NewIdentifier: PChar; NewLevel: integer;
   NewNode: TCodeTreeNode; NewTool: TFindDeclarationTool;
-  NewDefaultDesc: TCodeTreeNodeDesc; IsDottedIdent: boolean);
+  NewDefaultDesc: TCodeTreeNodeDesc; IsDottedIdent: boolean;
+  GenEntry: PTGenericParams=nil);
 begin
   Compatibility:=NewCompatibility;
   if NewHasChilds then Include(FLags,iliHasChilds);
@@ -4968,6 +5493,10 @@ begin
   Node:=NewNode;
   DefaultDesc:=NewDefaultDesc;
   BaseExprType:=CleanExpressionType;
+  if (GenEntry = nil) or (Node=nil) then
+    Specialized.ParamTypes:=nil
+  else
+    Specialized.ApplyFrom(GenEntry^.SpecializeDictionary);
 end;
 
 function TIdentifierListItem.IsProcNodeWithParams: boolean;

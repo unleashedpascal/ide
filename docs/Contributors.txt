@@ -126,6 +126,7 @@ Juha Manninen
 Júnior Gonçalves
 Justin Smyth
 Karl Brandt
+Karl-Michael Schindler
 Keith Bowes
 Kevin Jesshope
 Khaled Shagrouni
@@ -161,6 +162,7 @@ Márton Papp
 Martyn Ranyard
 Massimo Magnano
 Massimo Soricetti
+Matt Bradford
 Matthijs Willemstein
 Mattias Gärtner
 Mattias Hansson
@@ -175,6 +177,7 @@ Michal Gawrycki
 Michalis Kamburelis
 Mike Sapsard
 Mike Thompson
+n7800
 Nikolay Ermolov
 Nur Cholif Murtadho
 Olivier Guilbaud
@@ -186,6 +189,7 @@ Patrick Chevalley
 Paul Ishenin
 Paul Michell
 Pawel Trochimczuk
+Paweł Dmitruk
 Percy Van Den bylaardt
 Peter Dyson
 Péter Gábor

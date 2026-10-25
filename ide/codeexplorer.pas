@@ -206,6 +206,7 @@ type
     ImgIDDestructor: Integer;
     ImgIDProgram: Integer;
     ImgIDProperty: Integer;
+    ImgIDOperator: Integer;
     ImgIDPropertyReadOnly: Integer;
     ImgIDType: Integer;
     ImgIDUnit: Integer;
@@ -776,6 +777,7 @@ begin
   ImgIDConstructor := IDEImages.GetImageIndex('cc_constructor');
   ImgIDDestructor := IDEImages.GetImageIndex('cc_destructor');
   ImgIDLabel := IDEImages.GetImageIndex('cc_label');
+  ImgIDOperator := IDEImages.GetImageIndex('cc_operator');
   ImgIDProperty := IDEImages.GetImageIndex('cc_property');
   ImgIDPropertyReadOnly := IDEImages.GetImageIndex('cc_property_ro');
   // sections
@@ -957,6 +959,9 @@ begin
                                       if Tool.NodeIsFunction(CodeNode) then
                                         Result:=ImgIDFunction
                                       else
+                                      if Tool.NodeIsOperator(CodeNode) then
+                                        Result:=ImgIDOperator
+                                      else
                                         Result:=ImgIDProcedure;
     ctnProperty:                      Result:=ImgIDProperty;
     ctnUsesSection:                   Result:=ImgIDSection;
@@ -1053,6 +1058,10 @@ begin
       
     // don't show class visibility section nodes
     if (CodeNode.Desc in AllClassSections) then
+      ShowNode:=false;
+
+    // don't show record composition nodes, only the named field
+    if CodeNode.Desc=ctnRecordComposition then
       ShowNode:=false;
 
     if Mode=cemCategory then begin
@@ -1207,6 +1216,15 @@ procedure TCodeExplorerView.CreateObservations(Tool: TCodeTool);
     Result.Text:=NodeText;
     Result.ImageIndex:=NodeImageIndCex;
     Result.SelectedIndex:=NodeImageIndCex;
+  end;
+
+  function IsHiddenClassSection(SectionNode: TCodeTreeNode): boolean;
+  // the first visibility section of a class/object/record has no keyword
+  begin
+    Result:=(SectionNode<>nil)
+        and (SectionNode.Desc in AllClassBaseSections)
+        and ((SectionNode.PriorBrother=nil)
+          or (not (SectionNode.PriorBrother.Desc in AllClassBaseSections)));
   end;
 
   procedure CheckUnsortedClassMembers(ParentCodeNode: TCodeTreeNode);
@@ -1393,11 +1411,11 @@ begin
           and (CodeNode.PriorBrother.Desc in AllClassBaseSections)
           and (CodeNode.PriorBrother.Desc>CodeNode.Desc)
           then begin
-            if (CodeNode.PriorBrother.Desc=ctnClassPublished)
-            and ((CodeNode.PriorBrother.PriorBrother=nil)
-               or (not (CodeNode.PriorBrother.PriorBrother.Desc in AllClassBaseSections)))
+            if IsHiddenClassSection(CodeNode.PriorBrother)
+            and ((CodeNode.PriorBrother.Desc=ctnClassPublished)
+              or (CodeNode.PriorBrother.FirstChild=nil))
             then begin
-              // the first section can be published
+              // the hidden first section is either published or empty
             end else begin
               // the prior section was more visible
               AddCodeNode(cefcUnsortedClassVisibility,CodeNode);
@@ -1409,11 +1427,8 @@ begin
           if (cefcEmptyClassSections in ObserverCats)
           and (CodeNode.FirstChild=nil) then
           begin
-            if (CodeNode.Desc=ctnClassPublished)
-            and ((CodeNode.PriorBrother=nil)
-               or (not (CodeNode.PriorBrother.Desc in AllClassBaseSections)))
-            then begin
-              // the first section can be empty
+            if IsHiddenClassSection(CodeNode) then begin
+              // the hidden first section can be empty
             end else begin
               // empty class section
               AddCodeNode(cefcEmptyClassSections,CodeNode);

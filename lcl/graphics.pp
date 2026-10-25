@@ -54,9 +54,20 @@ uses
   // LazUtils
   GraphType, GraphMath, FPCAdds, LazLoggerBase, LazTracer, LazUtilities;
 
+
 type
   PColor = System.UITypes.PColor;
   TColor = TGraphicsColor;
+
+  {$if declared(TFPGradientDirection)} // introduced in 3.2.3 and 3.2.4-after-RC1
+    // ToDo: when fpc 3.2.4 is released, replace with FPC_FULLVERSION>=30203
+    {$DEFINE HasTFPGradientDirection}
+  {$endif}
+  {$IF FPC_FULLVERSION>30300}
+    {$DEFINE HasTRectangleMode}
+    {$DEFINE HasTFPTextMetric}
+    {$DEFINE HasTFPTextStyle}
+  {$ENDIF}
 
   {$IF FPC_FULLVERSION>=30203}
   TFontPitch = System.UITypes.TFontPitch;
@@ -507,7 +518,6 @@ type
   private
     FIsMonoSpace: boolean;
     FIsMonoSpaceValid: boolean;
-    FOrientation: Integer;
     FPitch: TFontPitch;
     FQuality: TFontQuality;
     FStyle: TFontStylesBase;
@@ -533,10 +543,7 @@ type
   protected
     function GetCharSet: TFontCharSet;
     function GetHeight: Integer;
-    function GetName: string;
-    function GetOrientation: Integer;
     function GetPitch: TFontPitch;
-    function GetSize: Integer;
     function GetStyle: TFontStyles;
     procedure Changed; override;
     procedure DoAllocateResources; override;
@@ -550,7 +557,7 @@ type
     procedure SetFPColor(const AValue: TFPColor); override;
     procedure SetHeight(Avalue: Integer);
     procedure SetName(AValue: string); override;
-    procedure SetOrientation(AValue: Integer); override; // This was introduced in 2.5 quite late, and the Android pre-compiled compiler was before this, so I prefer to let it only for 2.6
+    procedure SetOrientation(AValue: Integer); override;
     procedure SetPitch(Value: TFontPitch);
     procedure SetSize(AValue: integer); override;
     procedure SetStyle(Value: TFontStyles);
@@ -577,11 +584,11 @@ type
     property CharSet: TFontCharSet read GetCharSet write SetCharSet default DEFAULT_CHARSET;
     property Color: TColor read FColor write SetColor default {$ifdef UseCLDefault}clDefault{$else}clWindowText{$endif};
     property Height: Integer read GetHeight write SetHeight stored IsHeightStored;
-    property Name: string read GetName write SetName stored IsNameStored;
-    property Orientation: Integer read GetOrientation write SetOrientation default 0;
+    property Name stored IsNameStored;
+    property Orientation;
     property Pitch: TFontPitch read GetPitch write SetPitch default fpDefault;
     property Quality: TFontQuality read FQuality write SetQuality default fqDefault;
-    property Size: Integer read GetSize write SetSize stored false;
+    property Size stored false;
     property Style: TFontStyles read GetStyle write SetStyle default [];
   end;
 
@@ -652,11 +659,9 @@ type
     FInternalUpdateIndex: Integer;
     FReference: TWSPenReference;
     procedure FreeReference;
-    function GetHandle: HPEN;
     function GetReference: TWSPenReference;
     procedure ReferenceNeeded;
     procedure SetCosmetic(const AValue: Boolean);
-    procedure SetHandle(const Value: HPEN);
   protected
     procedure DoAllocateResources; override;
     procedure DoDeAllocateResources; override;
@@ -673,7 +678,6 @@ type
     constructor Create; override;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
-    property Handle: HPEN read GetHandle write SetHandle; deprecated;
     property Reference: TWSPenReference read GetReference;
 
     function GetPattern: TPenPattern;
@@ -767,12 +771,9 @@ type
     procedure AddOperation(AOp: TRegionOperation);
     procedure ClearSubRegions();
     procedure AddSubRegion(AHandle: HRGN);
-    //
     procedure FreeReference;
     function GetReference: TWSRegionReference;
-    function GetHandle: HRGN;
     procedure ReferenceNeeded;
-    procedure SetHandle(const Value: HRGN);
   protected
     procedure SetClipRect(value: TRect);
     function GetClipRect: TRect;
@@ -780,12 +781,10 @@ type
     constructor Create;
     destructor Destroy; override;
     procedure Assign(Source: TPersistent); override;
-
     // Convenience routines to add elements to the region
     procedure AddRectangle(X1, Y1, X2, Y2: Integer);
 
     property ClipRect: TRect read GetClipRect write SetClipRect;
-    property Handle: HRGN read GetHandle write SetHandle; deprecated;
     property Reference: TWSRegionReference read GetReference;
   end;
 
@@ -962,7 +961,7 @@ type
   EInvalidGraphic = class(EGraphicException);
   EInvalidGraphicOperation = class(EGraphicException);
 
-{$if declared(TFPGradientDirection)} // introduced in 3.2.3 and 3.2.4-after-RC1
+{$ifdef HasTFPGradientDirection}
 type
   TGradientDirection = FPCanvas.TFPGradientDirection;
 const
@@ -1066,6 +1065,17 @@ type
     procedure DoDraw(x, y: integer; const Image: TFPCustomImage); override;
     procedure CheckHelper(AHelper: TFPCanvasHelper); override;
     function GetDefaultColor(const ADefaultColorType: TDefaultColorType): TColor; virtual;
+    {$IFDEF HasTRectangleMode}
+    function GetDeviceClipRect: TRect; override; // including Right,Bottom
+    {$ENDIF}
+    {$IFDEF HasTFPTextMetric}
+    function DoGetTextMetrics(out aMetrics: TFPTextMetric): Boolean; override;
+    {$ENDIF}
+    {$IFDEF HasTFPTextStyle}
+    procedure DoChord(const Bounds: TRect; aStart16, aLength16: Integer); override;
+    procedure DoRoundRect(const Bounds: TRect; RX, RY: Integer); override;
+    procedure DoFloodFillStyle(x, y: Integer; const FillColor: TFPColor; FillStyle: TFPFloodFillStyle); override;
+    {$ENDIF}
   protected
     function GetClipRect: TRect; override;
     procedure SetClipRect(const ARect: TRect); override;
@@ -1104,7 +1114,7 @@ type
     // extra drawing methods (there are more in the ancestor TFPCustomCanvas)
     procedure Arc(ALeft, ATop, ARight, ABottom, Angle16Deg, Angle16DegLength: Integer); virtual; {$IFDEF HasFPCanvas1}reintroduce;{$ENDIF}
     procedure Arc(ALeft, ATop, ARight, ABottom, SX, SY, EX, EY: Integer); virtual; {$IFDEF HasFPCanvas1}reintroduce;{$ENDIF}
-    procedure ArcTo(ALeft, ATop, ARight, ABottom, SX, SY, EX, EY: Integer); virtual; //As Arc(), but updates pen position
+    procedure ArcTo(ALeft, ATop, ARight, ABottom, SX, SY, EX, EY: Integer); {$IFDEF HasTFPTextStyle}override{$ELSE}virtual{$ENDIF}; //As Arc(), but updates pen position
     procedure AngleArc(X, Y: Integer; Radius: Longword; StartAngle, SweepAngle: Single);
     procedure BrushCopy(ADestRect: TRect; ABitmap: TBitmap; ASourceRect: TRect;
                         ATransparentColor: TColor); virtual;
@@ -1114,7 +1124,7 @@ type
     procedure CopyRect(const Dest: TRect; SrcCanvas: TCanvas;
                        const Source: TRect); virtual; reintroduce;
     procedure Draw(X,Y: Integer; SrcGraphic: TGraphic); virtual; reintroduce;
-    procedure DrawFocusRect(const ARect: TRect); virtual;
+    procedure DrawFocusRect(const ARect: TRect); {$IFDEF HasTFPTextStyle}override{$ELSE}virtual{$ENDIF};
     procedure StretchDraw(const DestRect: TRect; SrcGraphic: TGraphic); virtual; reintroduce;
     procedure Ellipse(const ARect: TRect); {$IFDEF HasFPCanvas1}reintroduce;{$ENDIF}
     procedure Ellipse(x1, y1, x2, y2: Integer); virtual; {$IFDEF HasFPCanvas1}reintroduce;{$ENDIF}
@@ -1126,16 +1136,16 @@ type
                       const Style: TGraphicsBevelCut); virtual;
     procedure Frame3D(var ARect: TRect; TopColor, BottomColor: TColor;
                       const FrameWidth: integer); overload;
-    procedure Frame(const ARect: TRect); virtual; // border using pen
+    procedure Frame(const ARect: TRect); {$IFDEF HasTFPTextStyle}override{$ELSE}virtual{$ENDIF}; // border using pen
     procedure Frame(X1,Y1,X2,Y2: Integer);     // border using pen
-    procedure FrameRect(const ARect: TRect); virtual; // border using brush
+    procedure FrameRect(const ARect: TRect); {$IFDEF HasTFPTextStyle}override{$ELSE}virtual{$ENDIF}; // border using brush
     procedure FrameRect(X1,Y1,X2,Y2: Integer); // border using brush
     function  GetTextMetrics(out TM: TLCLTextMetric): boolean; virtual;
-    procedure GradientFill(ARect: TRect; AStart, AStop: TColor; ADirection: TGradientDirection); {$IFDEF HasFPCanvas1}reintroduce;{$ENDIF}
+    procedure GradientFill(ARect: TRect; AStart, AStop: TColor; ADirection: TGradientDirection); virtual; {$IFDEF HasFPCanvas1}reintroduce;{$ENDIF}
     procedure RadialPie(x1, y1, x2, y2,
                         StartAngle16Deg, Angle16DegLength: Integer); virtual; {$IFDEF HasFPCanvas1}reintroduce;{$ENDIF}
     procedure Pie(EllipseX1,EllipseY1,EllipseX2,EllipseY2,
-                  StartX,StartY,EndX,EndY: Integer); virtual;
+                  StartX,StartY,EndX,EndY: Integer); {$IFDEF HasTFPTextStyle}override{$ELSE}virtual{$ENDIF};
     procedure PolyBezier(Points: PPoint; NumPts: Integer;
                          Filled: boolean = False;
                          Continuous: boolean = True); virtual; {$IFDEF HasFPCanvas1}reintroduce;{$ENDIF}
@@ -1147,16 +1157,16 @@ type
                       StartIndex: Integer = 0;
                       NumPts: Integer = -1);
     procedure Polygon(Points: PPoint; NumPts: Integer;
-                      Winding: boolean = False); virtual;
+                      Winding: boolean = False); {$IFDEF HasTFPTextStyle}override{$ELSE}virtual{$ENDIF};
     procedure Polygon(const Points: array of TPoint); {$IFDEF HasFPCanvas1}reintroduce;{$ENDIF}
     procedure Polyline(const Points: array of TPoint;
                        StartIndex: Integer;
                        NumPts: Integer = -1);
-    procedure Polyline(Points: PPoint; NumPts: Integer); virtual;
+    procedure Polyline(Points: PPoint; NumPts: Integer); {$IFDEF HasTFPTextStyle}override{$ELSE}virtual{$ENDIF};
     procedure Polyline(const Points: array of TPoint); {$IFDEF HasFPCanvas1}reintroduce;{$ENDIF}
     procedure Rectangle(X1,Y1,X2,Y2: Integer); virtual; {$IFDEF HasFPCanvas1}reintroduce;{$ENDIF}
     procedure Rectangle(const ARect: TRect); {$IFDEF HasFPCanvas1}reintroduce;{$ENDIF}
-    procedure RoundRect(X1, Y1, X2, Y2: Integer; RX,RY: Integer); virtual;
+    procedure RoundRect(X1, Y1, X2, Y2: Integer; RX,RY: Integer); {$IFDEF HasTFPTextStyle}override{$ELSE}virtual{$ENDIF};
     procedure RoundRect(const Rect: TRect; RX,RY: Integer);
     procedure TextOut(X,Y: Integer; const Text: String); virtual; {$IFDEF HasFPCanvas1}reintroduce;{$ENDIF}
     procedure TextRect(const ARect: TRect; X, Y: integer; const Text: string);
@@ -1165,7 +1175,7 @@ type
     function TextExtent(const Text: string): TSize; virtual; {$IFDEF HasFPCanvas1}reintroduce;{$ENDIF}
     function TextHeight(const Text: string): Integer; virtual; {$IFDEF HasFPCanvas1}reintroduce;{$ENDIF}
     function TextWidth(const Text: string): Integer; virtual; {$IFDEF HasFPCanvas1}reintroduce;{$ENDIF}
-    function TextFitInfo(const Text: string; MaxWidth: Integer): Integer; virtual;
+    function TextFitInfo(const Text: string; MaxWidth: Integer): Integer; {$IFDEF HasTFPTextStyle}override{$ELSE}virtual{$ENDIF};
     function HandleAllocated: boolean; virtual;
     function GetUpdatedHandle(ReqState: TCanvasState): HDC; virtual;
   public
@@ -1999,8 +2009,6 @@ function LazResourceXPMToPPChar(const ResourceName: string): PPChar;
 function ReadXPMFromStream(Stream: TStream; Size: integer): PPChar;
 function ReadXPMSize(XPM: PPChar; var Width, Height, ColorCount: integer): boolean;
 function LoadCursorFromLazarusResource(ACursorName: String): HCursor;
-function LoadBitmapFromLazarusResource(const ResourceName: String): TBitmap; deprecated;
-function LoadBitmapFromLazarusResourceHandle(Handle: TLResource): TBitmap; deprecated;
 
 // technically a bitmap is created and not loaded
 function CreateGraphicFromResourceName(Instance: TLCLHandle; const ResName: String): TGraphic;
@@ -2227,39 +2235,6 @@ begin
   finally
     Stream.Free;
   end;
-end;
-
-function LoadBitmapFromLazarusResourceHandle(Handle: TLResource): TBitmap;
-var
-  CB: TCustomBitmap;
-begin
-  CB := CreateBitmapFromLazarusResource(Handle, TCustomBitmap);
-  if CB is TBitmap
-  then begin
-    Result := TBitmap(CB);
-    Exit;
-  end;
-  
-  Result := TBitmap.Create;
-  Result.Assign(CB);
-  CB.Free;
-end;
-
-function LoadBitmapFromLazarusResource(const ResourceName: String): TBitmap;
-var
-  CB: TCustomBitmap;
-begin
-  CB := CreateBitmapFromLazarusResource(ResourceName, TCustomBitmap);
-
-  if CB is TBitmap
-  then begin
-    Result := TBitmap(CB);
-    Exit;
-  end;
-
-  Result := TBitmap.Create;
-  Result.Assign(CB);
-  CB.Free;
 end;
 
 //TODO: publish ?? (as RawImage_CreateCompatibleBitmaps)

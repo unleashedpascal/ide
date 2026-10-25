@@ -55,14 +55,14 @@ const
     'Full'      // mwfsFull
     );
 type
-  TMsgWndShowAutomatically = (
-    mwsaCompiling,
-    mwsaError,
-    mwsaNever
+  TMsgWndShowAutomatically = (  // Messages window is opened automatically ...
+    mwsaDefault, // when any message is received
+    mwsaError,   // when an error occurs
+    mwsaNever    // never
   );
 const
   MsgWndShowAutoNames: array[TMsgWndShowAutomatically] of string = (
-    'Compiling', // mwsaCompiling
+    'Default',   // mwsaDefault
     'Error',     // mwsaError
     'Never'      // mwsaNever
     );
@@ -72,7 +72,6 @@ type
     mwRunning,
     mwSuccess,
     mwFailed,
-    mwAutoHeader,
     mwTextColor
     );
 const
@@ -80,7 +79,6 @@ const
   MsgWndDefHeaderBackgroundRunning = clYellow;
   MsgWndDefHeaderBackgroundSuccess = TColor($60FF60); // light green
   MsgWndDefHeaderBackgroundFailed = TColor($6060FF); // light red
-  MsgWndDefAutoHeaderBackground = clSkyBlue;
   MsgWndDefTextColor = clDefault;
 
   MsgWndDefaultColors: array[TMsgWndColor] of TColor = (
@@ -88,7 +86,6 @@ const
     MsgWndDefHeaderBackgroundRunning, // mwRunning
     MsgWndDefHeaderBackgroundSuccess, // mwSuccess
     MsgWndDefHeaderBackgroundFailed,  // mwFailed
-    MsgWndDefAutoHeaderBackground,    // mwAutoHeader
     MsgWndDefTextColor
     );
   MsgWndColorNames: array[TMsgWndColor] of string = (
@@ -96,7 +93,6 @@ const
     'Running',
     'Success',
     'Failed',
-    'AutoHeader',
     'TextColor'
     );
 
@@ -117,6 +113,7 @@ type
   protected
     FName:string;
     FAssociatedDebugDesktopName: String;
+    FAssociatedDesignDesktopName: String;
     FConfigStore: TXMLOptionsStorage;
     FIsDocked: Boolean;
     FXMLCfg: TRttiXMLConfig;
@@ -130,6 +127,7 @@ type
     procedure Save(Path: String); virtual; abstract;
     property Name: String read FName write FName;
     property AssociatedDebugDesktopName: String read FAssociatedDebugDesktopName write FAssociatedDebugDesktopName;
+    property AssociatedDesignDesktopName: String read FAssociatedDesignDesktopName write FAssociatedDesignDesktopName;
     property IsDocked: Boolean read FIsDocked;
     property Compatible: Boolean read GetCompatible;
   end;
@@ -323,6 +321,7 @@ type
     FMsgViewStayOnTop: boolean;
     FMsgViewFocus: boolean;
     FMsgViewAlwaysDrawFocused: boolean;
+    FMsgViewWordWrap: boolean;
     FShowMessagesIcons: boolean;
     FMsgViewShowAutomatically: TMsgWndShowAutomatically;
     FMsgViewShowTranslations: boolean;
@@ -335,9 +334,12 @@ type
     FDesktops: TDesktopOptList;
     FDesktop: TDesktopOpt;
     FLastDesktopBeforeDebug: TDesktopOpt;
+    FLastDesktopBeforeDesign: TDesktopOpt;
     FActiveDesktopName: string;
     FAutoSaveActiveDesktop: Boolean;
     FDebugDesktopName: string;
+    FDesignDesktopName: string;
+    FInDesktopSwitch: Boolean; // true = currently enabling/disabled design/debug desktop
     function GetMsgColors(u: TMessageLineUrgency): TColor;
     function GetMsgViewColors(c: TMsgWndColor): TColor;
     function GetGridColor: TColor;
@@ -350,6 +352,8 @@ type
 
     function GetActiveDesktop: TDesktopOpt;
     function GetDebugDesktop: TDesktopOpt;
+    function GetDesignDesktop: TDesktopOpt;
+    function GetDesignDesktopActive: Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -360,6 +364,8 @@ type
     procedure UseDesktop(ADesktop: TDesktopOpt);
     procedure EnableDebugDesktop;
     procedure DisableDebugDesktop;
+    procedure EnableDesignDesktop;
+    procedure DisableDesignDesktop;
     class function DesktopCanBeLoaded(const aDockMaster: string): Boolean;
     // mouse action
     // true=double click, false=single click
@@ -428,6 +434,7 @@ type
     property MsgViewFocus: boolean read FMsgViewFocus write FMsgViewFocus; // when showing the window, focus it
     property MsgViewAlwaysDrawFocused: boolean read FMsgViewAlwaysDrawFocused
                                               write FMsgViewAlwaysDrawFocused;
+    property MsgViewWordWrap: boolean read FMsgViewWordWrap write FMsgViewWordWrap;
     property ShowMessagesIcons: boolean read FShowMessagesIcons write FShowMessagesIcons;
     property MsgViewShowAutomatically: TMsgWndShowAutomatically read FMsgViewShowAutomatically
                                                                write FMsgViewShowAutomatically;
@@ -445,6 +452,10 @@ type
     property DebugDesktopName: string read FDebugDesktopName write FDebugDesktopName;
     property DebugDesktop: TDesktopOpt read GetDebugDesktop;   // debug desktop from Desktops list
     property LastDesktopBeforeDebug: TDesktopOpt read FLastDesktopBeforeDebug write FLastDesktopBeforeDebug;
+    property DesignDesktopName: string read FDesignDesktopName write FDesignDesktopName;
+    property DesignDesktop: TDesktopOpt read GetDesignDesktop; // design desktop from Desktops list
+    property LastDesktopBeforeDesign: TDesktopOpt read FLastDesktopBeforeDesign write FLastDesktopBeforeDesign;
+    property DesignDesktopActive: Boolean read GetDesignDesktopActive;
     property ActiveDesktopName: string read FActiveDesktopName write FActiveDesktopName;
     property ActiveDesktop: TDesktopOpt read GetActiveDesktop; // active desktop from Desktops list
     property AutoSaveActiveDesktop: Boolean read FAutoSaveActiveDesktop write FAutoSaveActiveDesktop;
@@ -507,7 +518,7 @@ function StrToMsgWndShowAuto(const s: string): TMsgWndShowAutomatically;
 begin
   for Result in TMsgWndShowAutomatically do
     if CompareText(s,MsgWndShowAutoNames[Result])=0 then exit;
-  Result:=mwsaCompiling;
+  Result:=mwsaDefault;
 end;
 
 { TCustomDesktopOpt }
@@ -520,6 +531,7 @@ end;
 procedure TCustomDesktopOpt.Load(Path: String);
 begin
   FAssociatedDebugDesktopName:=FXMLCfg.GetValue(Path+'AssociatedDebugDesktopName/Value', '');
+  FAssociatedDesignDesktopName:=FXMLCfg.GetValue(Path+'AssociatedDesignDesktopName/Value', '');
 end;
 
 constructor TCustomDesktopOpt.Create(const aName: String);
@@ -729,6 +741,7 @@ begin
     FIDEWindowCreatorsLayoutList.CopyItemsFrom(Source.FIDEWindowCreatorsLayoutList);
     FIDEDialogLayoutList.Assign(Source.FIDEDialogLayoutList);
     FAssociatedDebugDesktopName := Source.FAssociatedDebugDesktopName;
+    FAssociatedDesignDesktopName := Source.FAssociatedDesignDesktopName;
   end;
   FSingleTaskBarButton := Source.FSingleTaskBarButton;
   FHideIDEOnRun := Source.FHideIDEOnRun;
@@ -829,6 +842,7 @@ begin
   FIDEDialogLayoutList.SaveToConfig(FConfigStore,Path+'Dialogs/');
 
   FXMLCfg.SetDeleteValue(Path+'AssociatedDebugDesktopName/Value', FAssociatedDebugDesktopName, '');
+  FXMLCfg.SetDeleteValue(Path+'AssociatedDesignDesktopName/Value', FAssociatedDesignDesktopName, '');
   FXMLCfg.SetDeleteValue(Path+'SingleTaskBarButton/Value',FSingleTaskBarButton, False);
   FXMLCfg.SetDeleteValue(Path+'HideIDEOnRun/Value',FHideIDEOnRun,false);
   FXMLCfg.SetDeleteValue(Path+'AutoAdjustIDEHeight/Value',FAutoAdjustIDEHeight,false);
@@ -1120,9 +1134,10 @@ begin
   FMsgViewStayOnTop:=false;
   fMsgViewFocus:=DefaultMsgViewFocus;
   FShowMessagesIcons:=true;
-  FMsgViewShowAutomatically:=mwsaCompiling;
+  FMsgViewShowAutomatically:=mwsaDefault;
   FMsgViewShowTranslations:=false;
   FMsgViewAlwaysDrawFocused:=false;
+  FMsgViewWordWrap:=true;
   FMsgViewFilenameStyle:=mwfsShort;
   for c:=low(TMsgWndColor) to high(TMsgWndColor) do
     fMsgViewColors[c]:=MsgWndDefaultColors[c];
@@ -1138,6 +1153,8 @@ end;
 
 destructor TEnvGuiOptions.Destroy;
 begin
+  FreeAndNil(FLastDesktopBeforeDesign);
+  FreeAndNil(FLastDesktopBeforeDebug);
   FreeAndNil(FDesktop);
   FreeAndNil(FDesktops);
   FreeAndNil(FMsgViewFilters);
@@ -1216,9 +1233,10 @@ begin
   fMsgViewFocus:=XMLCfg.GetValue(Path+'MsgView/Focus/Value',FMsgViewFocus);
   FShowMessagesIcons:=XMLCfg.GetValue(Path+'MsgView/ShowMessagesIcons/Value',true);
   FMsgViewShowAutomatically:=StrToMsgWndShowAuto(XMLCfg.GetValue(
-    Path+'MsgView/ShowAutomatically/Value',MsgWndShowAutoNames[mwsaCompiling]));
+    Path+'MsgView/ShowAutomatically/Value',MsgWndShowAutoNames[mwsaDefault]));
   FMsgViewShowTranslations:=XMLCfg.GetValue(Path+'MsgView/ShowTranslations/Value',false);
   FMsgViewAlwaysDrawFocused:=XMLCfg.GetValue(Path+'MsgView/AlwaysDrawFocused/Value',false);
+  FMsgViewWordWrap:=XMLCfg.GetValue(Path+'MsgView/WordWrap/Value',true);
   FMsgViewFilenameStyle:=StrToMsgWndFilenameStyle(XMLCfg.GetValue(
     Path+'MsgView/Filename/Style',MsgWndFileNameStyleNames[mwfsShort]));
   for mwc:=low(TMsgWndColor) to high(TMsgWndColor) do
@@ -1276,6 +1294,7 @@ begin
   end else begin
     CurPath := 'Desktops/';
     FDebugDesktopName := XMLCfg.GetValue(CurPath+'DebugDesktop', '');
+    FDesignDesktopName := XMLCfg.GetValue(CurPath+'DesignDesktop', '');
     FActiveDesktopName := XMLCfg.GetValue(CurPath+'ActiveDesktop', '');
     j := XMLCfg.GetValue(CurPath+'Count', 1);
     for i := 1 to j do
@@ -1356,9 +1375,10 @@ begin
   XMLCfg.SetDeleteValue(Path+'MsgView/ShowMessagesIcons/Value',FShowMessagesIcons,true);
   XMLCfg.SetDeleteValue(Path+'MsgView/ShowAutomatically/Value',
     MsgWndShowAutoNames[FMsgViewShowAutomatically],
-    MsgWndShowAutoNames[mwsaCompiling]);
+    MsgWndShowAutoNames[mwsaDefault]);
   XMLCfg.SetDeleteValue(Path+'MsgView/ShowTranslations/Value',FMsgViewShowTranslations,false);
   XMLCfg.SetDeleteValue(Path+'MsgView/AlwaysDrawFocused/Value',FMsgViewAlwaysDrawFocused,false);
+  XMLCfg.SetDeleteValue(Path+'MsgView/WordWrap/Value',FMsgViewWordWrap,true);
   XMLCfg.SetDeleteValue(Path+'MsgView/Filename/Style',
     MsgWndFileNameStyleNames[FMsgViewFilenameStyle],
     MsgWndFileNameStyleNames[mwfsShort]);
@@ -1412,10 +1432,19 @@ begin
       xSaveDesktop := FDesktops.Find(FLastDesktopBeforeDebug.Name);
       if Assigned(xSaveDesktop) and xSaveDesktop.InheritsFrom(TDesktopOpt) then
         TDesktopOpt(xSaveDesktop).Assign(FLastDesktopBeforeDebug, False);
+    end
+    else if Assigned(FLastDesktopBeforeDesign) then//are we in the design desktop?
+    begin
+      //save last desktop before the design desktop
+      xSaveDesktop := FDesktops.Find(FLastDesktopBeforeDesign.Name);
+      if Assigned(xSaveDesktop) and xSaveDesktop.InheritsFrom(TDesktopOpt) then
+        TDesktopOpt(xSaveDesktop).Assign(FLastDesktopBeforeDesign, False);
     end;
   end;
   if Assigned(FLastDesktopBeforeDebug) then
     xActiveDesktopName := FLastDesktopBeforeDebug.Name
+  else if Assigned(FLastDesktopBeforeDesign) then
+    xActiveDesktopName := FLastDesktopBeforeDesign.Name
   else
     xActiveDesktopName := FActiveDesktopName;
   // The user can define many desktops. They are saved under path Desktops/.
@@ -1423,6 +1452,7 @@ begin
   CurPath:='Desktops/';
   XMLCfg.SetDeleteValue(CurPath+'Count', FDesktops.Count, 0);
   XMLCfg.SetDeleteValue(CurPath+'DebugDesktop', FDebugDesktopName, '');
+  XMLCfg.SetDeleteValue(CurPath+'DesignDesktop', FDesignDesktopName, '');
   XMLCfg.SetDeleteValue(CurPath+'ActiveDesktop', xActiveDesktopName, '');
   for i := 0 to FDesktops.Count-1 do
   begin
@@ -1459,14 +1489,28 @@ var
 begin
   xLastFocusControl := Screen.ActiveControl;
   xLastFocusForm := Screen.ActiveCustomForm;
+  if not FInDesktopSwitch then
+  begin
+    // an explicit desktop choice supersedes the design desktop level
+    FreeAndNil(FLastDesktopBeforeDesign);
+  end;
   // needed to get EditorToolBar refreshed! - needed only here in UseDesktop()
   EnvironmentOptions.DoBeforeWrite(False);
 
   Desktop.Assign(ADesktop);
   ActiveDesktopName := ADesktop.Name;
-  s := ADesktop.AssociatedDebugDesktopName;
-  if (s<>'') and Assigned(Desktops.Find(s)) then
-    DebugDesktopName := s;
+  if not FInDesktopSwitch then
+  begin
+    // Only an explicit desktop choice follows the associations. Otherwise switching
+    // into the debug/design desktop would move DebugDesktopName/DesignDesktopName
+    // elsewhere and the layout would later be saved into the wrong desktop.
+    s := ADesktop.AssociatedDebugDesktopName;
+    if (s<>'') and Assigned(Desktops.Find(s)) then
+      DebugDesktopName := s;
+    s := ADesktop.AssociatedDesignDesktopName;
+    if (s<>'') and Assigned(Desktops.Find(s)) then
+      DesignDesktopName := s;
+  end;
   Desktop.ExportSettingsToIDE(Self);
 
   EnvironmentOptions.DoAfterWrite(False); // needed to get EditorToolBar refreshed!
@@ -1489,11 +1533,16 @@ begin
   and Assigned(DebugDesktop)
   and (DebugDesktop <> ActiveDesktop) then
   begin
-    LastDesktopBeforeDebug := TDesktopOpt.Create(ActiveDesktopName);
-    if AutoSaveActiveDesktop then
-      Desktop.ImportSettingsFromIDE(Self);
-    LastDesktopBeforeDebug.Assign(Desktop, False);
-    UseDesktop(DebugDesktop);
+    FInDesktopSwitch := True;
+    try
+      LastDesktopBeforeDebug := TDesktopOpt.Create(ActiveDesktopName);
+      if AutoSaveActiveDesktop then
+        Desktop.ImportSettingsFromIDE(Self);
+      LastDesktopBeforeDebug.Assign(Desktop, False);
+      UseDesktop(DebugDesktop);
+    finally
+      FInDesktopSwitch := False;
+    end;
   end;
 end;
 
@@ -1501,6 +1550,7 @@ procedure TEnvGuiOptions.DisableDebugDesktop;
 begin
   if (LastDesktopBeforeDebug=nil) or (Desktop=nil) then
     Exit;
+  FInDesktopSwitch := True;
   try
     if AutoSaveActiveDesktop and Assigned(DebugDesktop) then
     begin
@@ -1510,7 +1560,52 @@ begin
     UseDesktop(LastDesktopBeforeDebug);
   finally
     LastDesktopBeforeDebug.Free;
-    LastDesktopBeforeDebug:=Nil
+    LastDesktopBeforeDebug:=Nil;
+    FInDesktopSwitch := False;
+  end;
+end;
+
+procedure TEnvGuiOptions.EnableDesignDesktop;
+begin
+  if FInDesktopSwitch then
+    Exit;
+  if Assigned(FLastDesktopBeforeDebug) then
+    Exit;  // the debug desktop wins, do not stack the two levels
+  if not Assigned(FLastDesktopBeforeDesign)
+  and Assigned(DesignDesktop)
+  and (DesignDesktop <> ActiveDesktop) then
+  begin
+    FInDesktopSwitch := True;
+    try
+      FLastDesktopBeforeDesign := TDesktopOpt.Create(ActiveDesktopName);
+      if AutoSaveActiveDesktop then
+        Desktop.ImportSettingsFromIDE(Self);
+      FLastDesktopBeforeDesign.Assign(Desktop, False);
+      UseDesktop(DesignDesktop);
+    finally
+      FInDesktopSwitch := False;
+    end;
+  end;
+end;
+
+procedure TEnvGuiOptions.DisableDesignDesktop;
+begin
+  if FInDesktopSwitch then
+    Exit;
+  if (FLastDesktopBeforeDesign=nil) or (Desktop=nil) then
+    Exit;
+  FInDesktopSwitch := True;
+  try
+    if AutoSaveActiveDesktop and Assigned(DesignDesktop) then
+    begin
+      Desktop.ImportSettingsFromIDE(Self);
+      DesignDesktop.Assign(Desktop);
+    end;
+    UseDesktop(FLastDesktopBeforeDesign);
+  finally
+    FLastDesktopBeforeDesign.Free;
+    FLastDesktopBeforeDesign := Nil;
+    FInDesktopSwitch := False;
   end;
 end;
 
@@ -1614,6 +1709,25 @@ begin
     and lDskTpOpt.InheritsFrom(TDesktopOpt) and lDskTpOpt.Compatible then
       Result := TDesktopOpt(lDskTpOpt);
   end;
+end;
+
+function TEnvGuiOptions.GetDesignDesktop: TDesktopOpt;
+var
+  lDskTpOpt: TCustomDesktopOpt;
+begin
+  Result := nil;
+  if FDesignDesktopName <> '' then
+  begin
+    lDskTpOpt := FDesktops.Find(FDesignDesktopName);
+    if Assigned(lDskTpOpt)                 //do not mix docked/undocked desktops
+    and lDskTpOpt.InheritsFrom(TDesktopOpt) and lDskTpOpt.Compatible then
+      Result := TDesktopOpt(lDskTpOpt);
+  end;
+end;
+
+function TEnvGuiOptions.GetDesignDesktopActive: Boolean;
+begin
+  Result := Assigned(FLastDesktopBeforeDesign);
 end;
 
 end.

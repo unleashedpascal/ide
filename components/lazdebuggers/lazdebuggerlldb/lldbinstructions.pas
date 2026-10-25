@@ -412,6 +412,20 @@ implementation
 var
   DBG_VERBOSE: PLazLoggerLogGroup;
 
+function QuotePath(const AValue: String; AForce: Boolean = False): String;
+begin
+  if (pos(' ', AValue) < 1) and (pos(#9, AValue) < 1) and
+     (pos('\', AValue) < 1) and (pos('''', AValue) < 1) and
+     (pos('"', AValue) < 1) and
+     (not AForce)
+  then
+    exit(AValue);
+  Result := StringReplace(AValue, '\', '\\', [rfReplaceAll]);
+  Result := StringReplace(AValue, '"', '\"', [rfReplaceAll]);
+  Result := '"' + Result + '"';
+end;
+
+
 { TLldbInstructionValueBase }
 
 function TLldbInstructionValueBase.ParseStruct(ALine: string): Boolean;
@@ -684,9 +698,7 @@ end;
 
 constructor TLldbInstructionTargetCreate.Create(AFile: String);
 begin
-  if pos(' ', AFile) > 0 then
-    AFile := ''''+AFile+'''';
-  inherited Create('target create '+AFile);
+  inherited Create('target create '+QuotePath(AFile));
 end;
 
 { TLldbInstructionTargetDelete }
@@ -750,7 +762,7 @@ begin
   else
     s := 'process launch -n';
   if AWorkingDir <> '' then
-    s := s + ' -w ' + AWorkingDir;
+    s := s + ' -w ' + QuotePath(AWorkingDir);
   inherited Create(s);
 end;
 
@@ -1333,7 +1345,7 @@ begin
     exit;
 
 
-  if StrStartsWith(AData, '* thread #') or StrStartsWith(AData, '  thread #') then begin
+  if ParseLineType(AData) in [lltThread, lltCurThread] then begin
     l := Length(FRes);
     SetLength(FRes, l+1);
     FRes[l] := AData;
@@ -1371,7 +1383,7 @@ end;
 function TLldbInstructionThreadListReader.ProcessInputFromDbg(
   const AData: String): Boolean;
 begin
-  if StrStartsWith(AData, '    frame ') then begin
+  if ParseLineType(AData) in [lltFrame] then begin
     MarkAsFailed;
     Result := False;
     exit;
@@ -1413,7 +1425,7 @@ begin
     exit;
 
 
-  if StrStartsWith(AData, '  * frame ') or StrStartsWith(AData, '    frame ') then begin
+  if ParseLineType(AData) in [lltFrame, lltCurFrame] then begin
     l := Length(FRes);
     SetLength(FRes, l+1);
     FRes[l] := AData;

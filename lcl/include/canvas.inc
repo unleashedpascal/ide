@@ -478,19 +478,30 @@ begin
   Result:=TextWidth(Text);
 end;
 
+{ The Do* hooks of TFPCustomCanvas receive rectangles with Right and Bottom included;
+  LCL drawing excludes them. }
+function FPRectToLCL(const ARect: TRect): TRect; inline;
+begin
+  Result := ARect;
+  {$IFDEF HasTRectangleMode}
+  Inc(Result.Right);
+  Inc(Result.Bottom);
+  {$ENDIF}
+end;
+
 procedure TCanvas.DoRectangle(const Bounds: TRect);
 begin
-  Frame(Bounds);
+  Frame(FPRectToLCL(Bounds));
 end;
 
 procedure TCanvas.DoRectangleFill(const Bounds: TRect);
 begin
-  FillRect(Bounds);
+  FillRect(FPRectToLCL(Bounds));
 end;
 
 procedure TCanvas.DoRectangleAndFill(const Bounds: TRect);
 begin
-  Rectangle(Bounds);
+  Rectangle(FPRectToLCL(Bounds));
 end;
 
 procedure TCanvas.DoEllipse(const Bounds: TRect);
@@ -499,31 +510,33 @@ var
   y1: Integer;
   x2: Integer;
   y2: Integer;
+  R: TRect;
 begin
-  if Bounds.Left < Bounds.Right then
+  R := FPRectToLCL(Bounds);
+  if R.Left < R.Right then
   begin
-    x1 := Bounds.Left;
-    x2 := Bounds.Right;
+    x1 := R.Left;
+    x2 := R.Right;
   end else
   begin
-    x1 := Bounds.Right;
-    x2 := Bounds.Left;
+    x1 := R.Right;
+    x2 := R.Left;
   end;
-  if Bounds.Top < Bounds.Bottom then
+  if R.Top < R.Bottom then
   begin
-    y1 := Bounds.Top;
-    y2 := Bounds.Bottom;
+    y1 := R.Top;
+    y2 := R.Bottom;
   end else
   begin
-    y1 := Bounds.Bottom;
-    y2 := Bounds.Top;
+    y1 := R.Bottom;
+    y2 := R.Top;
   end;
   Arc(x1, y1, x2, y2, 0, 360*16);
 end;
 
 procedure TCanvas.DoEllipseFill(const Bounds: TRect);
 begin
-  Ellipse(Bounds);
+  Ellipse(FPRectToLCL(Bounds));
 end;
 
 procedure TCanvas.DoEllipseAndFill(const Bounds: TRect);
@@ -595,13 +608,15 @@ procedure TCanvas.DoCopyRect(x, y: integer; SrcCanvas: TFPCustomCanvas;
 var
   SH: Integer;
   SW: Integer;
+  R: TRect;
 Begin
   if SrcCanvas=nil then exit;
   if SrcCanvas is TCanvas then begin
-    SW := SourceRect.Right - SourceRect.Left;
-    SH := SourceRect.Bottom - SourceRect.Top;
+    R := FPRectToLCL(SourceRect);
+    SW := R.Right - R.Left;
+    SH := R.Bottom - R.Top;
     if (SH=0) or (SW=0) then exit;
-    CopyRect(Rect(x,y,x+SW,y+SH),TCanvas(SrcCanvas),SourceRect);
+    CopyRect(Rect(x,y,x+SW,y+SH),TCanvas(SrcCanvas),R);
   end else begin
     WarnNotSupported;
   end;
@@ -649,6 +664,57 @@ function TCanvas.GetDefaultColor(const ADefaultColorType: TDefaultColorType): TC
 begin
   Result := clDefault;
 end;
+
+{$IFDEF HasTRectangleMode}
+function TCanvas.GetDeviceClipRect: TRect;
+begin
+  Result := ClipRect;
+  Dec(Result.Right);
+  Dec(Result.Bottom);
+end;
+{$ENDIF}
+
+{$IFDEF HasTFPTextMetric}
+function TCanvas.DoGetTextMetrics(out aMetrics: TFPTextMetric): Boolean;
+var
+  TM: TLCLTextMetric;
+begin
+  aMetrics := Default(TFPTextMetric);
+  Result := GetTextMetrics(TM);
+  if Result then
+  begin
+    aMetrics.Ascender := TM.Ascender;
+    aMetrics.Descender := TM.Descender;
+    aMetrics.Height := TM.Height;
+  end;
+end;
+{$ENDIF}
+
+{$IFDEF HasTFPTextStyle}
+procedure TCanvas.DoChord(const Bounds: TRect; aStart16, aLength16: Integer);
+var
+  R: TRect;
+begin
+  R := FPRectToLCL(Bounds);
+  Chord(R.Left, R.Top, R.Right, R.Bottom, aStart16, aLength16);
+end;
+
+procedure TCanvas.DoRoundRect(const Bounds: TRect; RX, RY: Integer);
+var
+  R: TRect;
+begin
+  R := FPRectToLCL(Bounds);
+  RoundRect(R.Left, R.Top, R.Right, R.Bottom, RX, RY);
+end;
+
+procedure TCanvas.DoFloodFillStyle(x, y: Integer; const FillColor: TFPColor; FillStyle: TFPFloodFillStyle);
+begin
+  if FillStyle = ffBorder then
+    FloodFill(x, y, FPColorToTColor(FillColor), fsBorder)
+  else
+    FloodFill(x, y, FPColorToTColor(FillColor), fsSurface);
+end;
+{$ENDIF}
 
 {------------------------------------------------------------------------------
   Method:   TCanvas.Arc
@@ -748,8 +814,7 @@ begin
   try
     // First copy the source rectangle to another bitmap
     // So that we don't have to iterate in pixels which wont be used changing the color
-    lPaintedBitmap.Width := lSrcWidth;
-    lPaintedBitmap.Height := lSrcHeight;
+    lPaintedBitmap.SetSize(lSrcWidth, lSrcHeight);
     lPaintedBitmap.Canvas.Draw(-ASourceRect.Left, -ASourceRect.Top, ABitmap);
 
     // Next copy the bitmap to a intfimage to be able to make the color change
@@ -1122,7 +1187,7 @@ procedure TCanvas.FrameRect(const ARect: TRect);
 begin
   Changing;
   RequiredState([csHandleValid, csBrushValid]);
-  LCLIntf.FrameRect(FHandle, ARect, Brush.GetHandle);
+  LCLIntf.FrameRect(FHandle, ARect, Brush.Reference.Handle);
   Changed;
 end;
 
@@ -1513,6 +1578,9 @@ begin
   FSavedRegionHandle := 0;
   FCopyMode := cmSrcCopy;
   FAntialiasingMode := amDontCare;
+  {$IFDEF HasTRectangleMode}
+  RectangleMode := rmExclude;
+  {$ENDIF}
   // FLock will be initialized on demand, because most canvas don't use it
   with FTextStyle do
   begin

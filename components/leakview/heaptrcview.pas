@@ -5,16 +5,20 @@ unit HeapTrcView;
 interface
 
 uses
-  Types, Classes, SysUtils, XMLConf, DOM, contnrs,
+  Classes, SysUtils, Types, XMLConf, DOM, Contnrs,
   // LCL
-  LCLType, Clipbrd, LResources,
-  Forms, Controls, Graphics, Dialogs, StdCtrls, ComCtrls, ExtCtrls,
+  Forms, Controls, Dialogs, StdCtrls, ComCtrls, ExtCtrls, LCLType, Clipbrd, LResources, LCLStrConsts, LCLProc,
   // LazUtils
   FileUtil, LazFileUtils,
   // IDEIntf
-  LazIDEIntf, MenuIntf, ToolBarIntf, IDECommands,
+  LazIDEIntf, MenuIntf, ToolBarIntf, IDECommands, SrcEditorIntf, IDEDialogs,
+  // BuildIntf
+  ProjectIntf, MacroIntf,
   // LeakView
-  LeakInfo;
+  LeakInfo, SynEdit;
+
+const
+  CMaxRecentFiles = 8;
 
 type
   TJumpProc = procedure (Sender: TObject; const SourceName: string;
@@ -32,10 +36,12 @@ type
     edtTrcFileName:TComboBox;
     lblTrcFile: TLabel;
     ctrlPanel: TPanel;
-    memoSummary: TMemo;
     OpenDialog: TOpenDialog;
-    splitter: TSplitter;
     trvTraceInfo: TTreeView;
+    pnlSummary: TPanel;
+    lblLeakingMemSize: TLabel;
+    lblLeakingBlocksCount: TLabel;
+    lblTotalMemAlloc: TLabel;
     procedure btnClipboardClick(Sender: TObject);
     procedure BtnResolveClick(Sender: TObject);
     procedure btnUpdateClick(Sender: TObject);
@@ -44,10 +50,15 @@ type
     procedure chkUseRawChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormDropFiles(Sender: TObject; const FileNames: array of string);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure trvTraceInfoDblClick(Sender: TObject);
+    procedure trvTraceInfoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     Finfo  : TLeakInfo;
     fItems  : TStackTraceList;
+
+    procedure SetSummaryInfo(aTotalMemAlloc, aLeakingMemSize, aLeakingBlocksCount: int64);
 
     procedure DoUpdateLeaks(aInfo: TLeakInfo);
     procedure DoUpdateLeaksFromText(aText: string);
@@ -79,17 +90,17 @@ resourcestring
   StackTraceFormat         = 'Leak: %d bytes x %d times'; // number of bytes leaked, leaks count
   StackTraceFormatSingle   = 'Leak: %d bytes';            // number of bytes leaked
   StackLineFormatWithFile  = '%s file: %s : %d; ';        // stack addr, filename (no path), line number
-  StackLineFormat          = '%s';                        // stack addr
 
   strTotalMemAlloc      = 'Total Mem allocated: %d';
   strLeakingMemSize     = 'Leaking Mem Size: %d';
   strLeakingBlocksCount = 'Leaking Blocks Count: %d';
   //
   rsErrorParse = 'Error while parsing trace file';
+  rsErrorMacroExpanding = 'Failed to expand macros.';
   rsDTimes = ' (%d times)';
   rsLeakView = 'Leaks and Traces';
   //
-  slblTrace = '.trc file';
+  slblTrace = 'Trace file';
   sbtnUpdate = 'Update';
   sbtnClipBrd = 'Paste Clipboard';
   sbtnResolve = 'Resolve';
@@ -98,6 +109,9 @@ resourcestring
   sfrmCap = 'Leaks and Traces - HeapTrc and GDB backtrace output viewer';
   sfrmSelectFileWithDebugInfo = 'Select file with debug info';
   sfrmSelectTrcFile = 'Select file with trace log';
+  brkFailedToOpenFile = 'Failed to open file';
+  brkFailedToOpenSJumpToCurren = 'Failed to open "%s". Jump to appropriate line in current editor instead?';
+  brkFailedToOpenS = 'Failed to open "%s".';
 
 var
   HeapTrcViewForm: THeapTrcViewForm = nil;
@@ -134,6 +148,7 @@ end;
 procedure THeapTrcViewForm.btnClipboardClick(Sender: TObject);
 begin
   DoUpdateLeaksFromText(Clipboard.AsText);
+  edtTrcFileName.Text := ''; // avoid confusion about loading a report from a file
 end;
 
 procedure THeapTrcViewForm.BtnResolveClick(Sender: TObject);
@@ -152,7 +167,8 @@ end;
 procedure THeapTrcViewForm.btnBrowseClick(Sender: TObject);
 begin
   OpenDialog.FileName := '';
-  OpenDialog.Filter := slblTrace + '|*.trc';
+  OpenDialog.Filter := slblTrace + ' (*.trc;*.log;*.txt) |*.trc;*.log;*.txt|' +
+                       Format(rsAllFiles, [GetAllFilesMask, GetAllFilesMask, '']);
   OpenDialog.Title := sfrmSelectTrcFile;
   if not OpenDialog.Execute then Exit;
 
@@ -162,8 +178,10 @@ end;
 
 procedure THeapTrcViewForm.chkStayOnTopChange(Sender: TObject);
 begin
-  if chkStayOnTop.Checked then Self.formStyle := fsStayOnTop
-  else Self.formStyle := fsNormal;
+  if chkStayOnTop.Checked then
+    FormStyle := fsStayOnTop
+  else
+    FormStyle := fsNormal;
 end;
 
 procedure THeapTrcViewForm.chkUseRawChange(Sender: TObject);
@@ -183,6 +201,14 @@ begin
   Result.FileName:=ConfigFileName;
 end;
 
+procedure THeapTrcViewForm.SetSummaryInfo(aTotalMemAlloc, aLeakingMemSize, aLeakingBlocksCount: int64);
+begin
+  pnlSummary.Visible := aTotalMemAlloc >= 0; // equals -1 if a simple stack trace is open (not a leak report)
+  lblTotalMemAlloc     .Caption := Format(strTotalMemAlloc     , [aTotalMemAlloc     ]);
+  lblLeakingMemSize    .Caption := Format(strLeakingMemSize    , [aLeakingMemSize    ]);
+  lblLeakingBlocksCount.Caption := Format(strLeakingBlocksCount, [aLeakingBlocksCount]);
+end;
+
 procedure THeapTrcViewForm.FormCreate(Sender: TObject);
 var
   cfg   : TXMLConfig;
@@ -194,6 +220,14 @@ begin
   BtnResolve.Caption:=sbtnResolve;
   chkUseRaw.Caption:=schkRaw;
   chkStayOnTop.Caption:=schkTop;
+
+  edtTrcFileName.Hint:='['+ShortCutToText(KeyToShortCut(VK_L ,[ssCtrl        ]))+']';
+  btnBrowse     .Hint:='['+ShortCutToText(KeyToShortCut(VK_O ,[ssCtrl        ]))+']';
+  btnUpdate     .Hint:='['+ShortCutToText(KeyToShortCut(VK_F5,[              ]))+']';
+  btnClipboard  .Hint:='['+ShortCutToText(KeyToShortCut(VK_V ,[ssCtrl,ssShift]))+']';
+
+  SetSummaryInfo(0,0,0);
+
   fItems:=TStackTraceList.Create;
   try
     cfg:=CreateXMLConfig;
@@ -224,9 +258,59 @@ begin
   HeapTrcViewForm:=nil;
 end;
 
+procedure THeapTrcViewForm.FormDropFiles(Sender: TObject; const FileNames: array of string);
+var
+  i: integer;
+begin
+  // open the first file immediately
+  edtTrcFileName.Text := FileNames[0];
+  btnUpdateClick(Sender);
+  // add the remaining files to the drop-down list (but only within the maximum count)
+  for i := 1 to high(FileNames) do
+    AddFileToList(FileNames[i]);
+end;
+
+procedure THeapTrcViewForm.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if (Key = VK_F5) and (Shift = []) then
+  begin
+    btnUpdateClick(Sender);
+    Key := 0;
+  end
+  else if (Key = VK_O) and (Shift = [ssCtrl]) then
+  begin
+    btnBrowseClick(Sender);
+    Key := 0;
+  end
+  else if (Key = VK_L) and (Shift = [ssCtrl]) then
+  begin
+    edtTrcFileName.SetFocus;
+    Key := 0;
+  end
+  else if (Key = VK_T) and (Shift = [ssCtrl]) then
+  begin
+    trvTraceInfo.SetFocus;
+    Key := 0;
+  end
+  else if (Key = VK_V) and (Shift = [ssCtrl, ssShift]) then
+  begin
+    btnClipboardClick(Sender);
+    Key := 0;
+  end;
+end;
+
 procedure THeapTrcViewForm.trvTraceInfoDblClick(Sender: TObject);
 begin
   DoJump;
+end;
+
+procedure THeapTrcViewForm.trvTraceInfoKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if (Key = VK_RETURN) and (Shift = []) then
+  begin
+    DoJump;
+    Key := 0;
+  end;
 end;
 
 //note: to range check performed
@@ -320,20 +404,20 @@ begin
     trvTraceInfo.Items.Clear;
 
     Finfo := aInfo;
+    SetSummaryInfo(0, 0, 0);
     if FInfo = nil then exit;
 
     if Finfo.GetLeakInfo(data, fItems) then ItemsToTree
     else trvTraceInfo.Items.Add(nil, rsErrorParse);
 
-    memoSummary.Clear;
-    with memoSummary.Lines do begin
-      Add( Format(strTotalMemAlloc, [data.TotalMem]));
-      Add( Format(strLeakingMemSize, [data.LeakedMem]));
-      Add( Format(strLeakingBlocksCount, [data.LeakCount]));
-    end;
-
+    SetSummaryInfo(data.TotalMem, data.LeakedMem, data.LeakCount);
   finally
     trvTraceInfo.EndUpdate;
+  end;
+  if trvTraceInfo.Items.Count <> 0 then
+  begin
+    trvTraceInfo.SetFocus;
+    trvTraceInfo.Items.GetFirstNode.Selected := true;
   end;
   if trvTraceInfo.Items.TopLvlCount = 1 then
     trvTraceInfo.Items.TopLvlItems[0].Expand(False);
@@ -349,6 +433,17 @@ end;
 
 procedure THeapTrcViewForm.DoUpdateLeaksFromFile(aFileName: string);
 begin
+  if not IDEMacros.SubstituteMacros(aFileName) then
+  begin
+    IDEMessageDialog(rsError, rsErrorMacroExpanding, mtError, [mbCancel]);
+    exit;
+  end;
+
+  // resolve paths relative to executable file location
+  // TODO: maybe take into account the work dir from the "Menu > Run > Run Parameters" dialog
+  if (aFileName <> '') and not FilenameIsAbsolute(aFileName) then
+    aFileName := CreateAbsolutePath(aFileName, ExtractFileDir(LazProject1.LazCompilerOptions.CreateTargetFilename));
+
   if FileExistsUTF8(aFileName) then
     DoUpdateLeaks(AllocHeapTraceInfoFromFile(aFileName))
   else
@@ -433,7 +528,7 @@ begin
     with Line do
       if FileName <> ''
         then Result := Format(StackLineFormatWithFile, ['$'+IntToHex(Addr, sizeof(Pointer)*2), ExtractFileName(FileName), LineNum])
-        else Result := Format(StackLineFormat, ['$'+IntToHex(Addr, sizeof(Pointer)*2)]);
+        else Result := '$'+IntToHex(Addr, sizeof(Pointer)*2);
 end;
 
 procedure THeapTrcViewForm.SaveState(cfg:TXMLConfig);
@@ -474,42 +569,44 @@ begin
 end;
 
 procedure THeapTrcViewForm.LoadState(cfg:TXMLConfig);
+const
+  // with several monitors negative coordinates can be valid, so something further from zero is needed
+  InvalidCoord = LongInt.MaxValue;
 var
-  b     : TRect;
+  b     : TRect = (Left: InvalidCoord{%H-});
   isTop : Boolean;
   st    : TStringList;
   s     : WideString;
   i     : Integer;
-const
-  InitFormStyle: array [Boolean] of TFormStyle = (fsNormal, fsStayOnTop);
 begin
   isTop:=True;
-  b:=BoundsRect;
   st:=TStringList.Create;
   try
     istop:=cfg.GetValue('isStayOnTop',isTop);
     cfg.OpenKey('bounds');
-    b.Left:=cfg.GetValue('left', b.Left);
-    b.Top:=cfg.GetValue('top', b.Top);
-    b.Right:=cfg.GetValue('right', b.Right);
-    b.Bottom:=cfg.GetValue('bottom', b.Bottom);
+    b.Left   := cfg.GetValue('left'  , InvalidCoord);
+    b.Top    := cfg.GetValue('top'   , InvalidCoord);
+    b.Right  := cfg.GetValue('right' , InvalidCoord);
+    b.Bottom := cfg.GetValue('bottom', InvalidCoord);
     cfg.CloseKey;
-
-    if b.Right-b.Left<=0 then b.Right:=b.Left+40;
-    if b.Bottom-b.Top<=0 then b.Bottom:=b.Top+40;
-
-    for i:=0 to 7 do begin
+    for i:=0 to CMaxRecentFiles-1 do begin
       s:=cfg.GetValue(DOMString('path'+IntToStr(i)), '');
       if s<>'' then st.Add(UTF8Encode(s));
     end;
-
   except
   end;
-  inAnyMonitor(b);
 
-  FormStyle:=InitFormStyle[isTop];
-  BoundsRect:=b;
+  if (b.Left = InvalidCoord) or (b.Top = InvalidCoord) then
+  begin
+    Position := poWorkAreaCenter;
+    MoveToDefaultPosition; // apply immediately
+    Position := poDesigned; // to save previous coords when calling "Show" after closing (hiding)
+  end else begin
+    inAnyMonitor(b);
+    BoundsRect := b; // Position=poDesigned already in LFM
+  end;
   chkStayOnTop.Checked := isTop;
+  chkStayOnTopChange(nil);
   if st.Count>0 then begin
     edtTrcFileName.Items.AddStrings(st);
     edtTrcFileName.ItemIndex:=0;
@@ -521,20 +618,25 @@ end;
 procedure THeapTrcViewForm.AddFileToList(const FileName:AnsiString);
 var
   i : Integer;
+  s: string;
 begin
+  s := edtTrcFileName.Text; // store current text
   i:=edtTrcFileName.Items.IndexOf(FileName);
   if (i<0) then begin
-    if edtTrcFileName.Items.Count=8 then
-      edtTrcFileName.Items.Delete(7);
+    if edtTrcFileName.Items.Count=CMaxRecentFiles then
+      edtTrcFileName.Items.Delete(CMaxRecentFiles-1);
   end else
     edtTrcFileName.Items.Delete(i);
   edtTrcFileName.Items.Insert(0, FileName);
+  edtTrcFileName.Text := s;
 end;
 
 procedure THeapTrcViewForm.LazarusJump(Sender: TObject;
   const SourceFile: string; Line, Column: Integer);
 var
   nm  , SrcFile: string;
+  r: boolean;
+  e: TSourceEditorInterface;
 begin
   SrcFile := SourceFile;
   if not FileExistsUTF8(SrcFile) then begin
@@ -544,9 +646,32 @@ begin
       nm := SrcFile;
   end else
     nm := SrcFile;
+
+  r := False;
   try
-    LazarusIDE.DoOpenFileAndJumpToPos(nm, Point(Column, Line), -1, -1, -1, [ofOnlyIfExists, ofRegularFile]);
+    r := LazarusIDE.DoOpenFileAndJumpToPos(nm, Point(Column, Line), -1, -1, -1, [ofOnlyIfExists, ofRegularFile, ofQuiet]) = mrOK;
   except
+  end;
+  if not r then begin
+    try
+      nm := LazarusIDE.FindSourceFile(SrcFile, '', [fsfSearchForProject, fsfUseDebugPath, fsfMapTempToVirtualFiles, fsfUseIncludePaths, fsfWrongLeftPath, fsReturnFullPath] );
+      if nm <> '' then
+        r := LazarusIDE.DoOpenFileAndJumpToPos(nm, Point(Column, Line), -1, -1, -1, [ofOnlyIfExists, ofRegularFile, ofQuiet]) = mrOK;
+    except
+    end;
+  end;
+  if not r then begin
+    e := SourceEditorManagerIntf.ActiveEditor;
+    if e = nil then
+      QuestionDlg(brkFailedToOpenFile,
+        Format(brkFailedToOpenS, [SourceFile]),
+        mtError, [mrOK], 0)
+    else
+    if QuestionDlg(brkFailedToOpenFile,
+      Format(brkFailedToOpenSJumpToCurren, [SourceFile]),
+      mtError, [mrYes, mrNo], 0) = mrYes
+    then
+      LazarusIDE.DoJumpToCodePosition(e, 1, Line, -1, -1 ,-1);
   end;
 end;
 

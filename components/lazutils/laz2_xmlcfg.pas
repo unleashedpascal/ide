@@ -143,9 +143,8 @@ type
     function GetChildCount(const APath: string): Integer;
     function IsLegacyList(const APath: string): Boolean;
     function GetListItemCount(const APath, AItemName: string; const aLegacyList: Boolean): Integer;
-    class function GetListItemXPath(const AName: string; const AIndex: Integer; const aLegacyList: Boolean;
+    class function GetListItemXPath(const AName: string; const AIndex: Integer; const aLegacyList: Boolean = False;
       const aLegacyList1Based: Boolean = False): string;
-    procedure SetListItemCount(const APath: string; const ACount: Integer; const ALegacyList: Boolean);
     property Modified: Boolean read FModified write FModified;
     procedure InvalidatePathCache;
   published
@@ -166,13 +165,13 @@ type
                             PropInfo: Pointer; DefInstance: TObject = nil;
                             OnlyProperty: String = '');
     procedure WriteProperty(Path: String; Instance: TObject;
-                            PropInfo: Pointer; DefInstance: TObject = nil;
+                            PropInfo: Pointer; DefInstance: TObject;
                             const OnlyProperty: array of String);
     procedure ReadProperty(Path: String; Instance: TObject;
                             PropInfo: Pointer; DefInstance: TObject = nil;
                             OnlyProperty: String= '');
     procedure ReadProperty(Path: String; Instance: TObject;
-                            PropInfo: Pointer; DefInstance: TObject = nil;
+                            PropInfo: Pointer; DefInstance: TObject;
                             const OnlyProperty: array of String);
   public
     procedure WriteObject(Path: String; Obj: TObject;
@@ -1098,13 +1097,6 @@ begin
   {$IFDEF MEM_CHECK}CheckHeapWrtMemCnt('TXMLConfig.SetFilename END');{$ENDIF}
 end;
 
-procedure TXMLConfig.SetListItemCount(const APath: string;
-  const ACount: Integer; const ALegacyList: Boolean);
-begin
-  if ALegacyList then
-    SetDeleteValue(APath+'Count',ACount,0)
-end;
-
 procedure TXMLConfig.CreateConfigNode;
 var
   cfg: TDOMElement;
@@ -1129,7 +1121,7 @@ end;
 { TRttiXMLConfig }
 
 procedure TRttiXMLConfig.WriteProperty(Path: String; Instance: TObject; PropInfo: Pointer;
-  DefInstance: TObject; OnlyProperty: String);
+  DefInstance: TObject; OnlyProperty: String = '');
 begin
   if OnlyProperty = '' then
     WriteProperty(Path, Instance, PropInfo, DefInstance, [])
@@ -1337,7 +1329,7 @@ begin
 end;
 
 procedure TRttiXMLConfig.ReadProperty(Path: String; Instance: TObject; PropInfo: Pointer;
-  DefInstance: TObject; OnlyProperty: String);
+  DefInstance: TObject; OnlyProperty: String = '');
 begin
   if OnlyProperty = '' then
     ReadProperty(Path, Instance, PropInfo, DefInstance, [])
@@ -1499,7 +1491,7 @@ begin
 end;
 
 procedure TRttiXMLConfig.WriteObject(Path: String; Obj: TObject; DefObject: TObject;
-  OnlyProperty: String);
+  OnlyProperty: String = '');
 begin
   if OnlyProperty = '' then
     WriteObject(Path, Obj, DefObject, [])
@@ -1525,7 +1517,7 @@ begin
 end;
 
 procedure TRttiXMLConfig.ReadObject(Path: String; Obj: TObject; DefObject: TObject;
-  OnlyProperty: String);
+  OnlyProperty: String = '');
 begin
   if OnlyProperty = '' then
     ReadObject(Path, Obj, DefObject, [])

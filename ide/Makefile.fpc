@@ -29,20 +29,6 @@ unitdir=../designer \
 includedir=include include/$(OS_TARGET) ../images
 targetdir=..
 
-[clean]
-files=$(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT)) \
-      $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT)) \
-      $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT)) \
-      $(wildcard $(COMPILER_UNITTARGETDIR)/*.lfm) \
-      $(wildcard $(COMPILER_UNITTARGETDIR)/*.or) \
-      $(wildcard $(COMPILER_UNITTARGETDIR)/*.res) \
-      $(wildcard ../designer/*$(OEXT)) $(wildcard ../designer/*$(PPUEXT)) \
-      $(wildcard ../debugger/*$(OEXT)) $(wildcard ../debugger/*$(PPUEXT)) \
-      $(wildcard ../converter/*$(OEXT)) $(wildcard ../converter/*$(PPUEXT)) \
-      $(wildcard ../packager/*$(OEXT)) $(wildcard ../packager/*$(PPUEXT)) \
-      $(wildcard ../*$(OEXT)) $(wildcard ../*$(PPUEXT)) \
-      $(wildcard *$(OEXT)) $(wildcard *$(PPUEXT)) $(wildcard *$(RSTEXT))
-
 [install]
 fpcpackage=n
 basedir=share/lazarus/ide
@@ -117,49 +103,6 @@ DEFAULT_IDE_OPTIONS=  \
   -Fupackages/idedebugger/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM)
 
 #
-# Options to compile an IDE with a lot of packages
-BIG_IDE_OPTIONS=-dBigIDE $(DEFAULT_IDE_OPTIONS) \
-  -Fu../components/lazedit/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/synedit/design/units/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/rtticontrols/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/cairocanvas/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/printers/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/printers/design/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/tdbf/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/turbopower_ipro/units/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/turbopower_ipro/design/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/fpcunit/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/fpcunit/testinsight/lib/$(CPU_TARGET)-$(OS_TARGET) \
-  -Fu../components/fpcunit/ide/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/projecttemplates/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/sqldb/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/sdf/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/leakview/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/memds/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/tachart/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/todolist/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/datetimectrls/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/datetimectrls/design/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/jcf2/lib/$(CPU_TARGET)-$(OS_TARGET) \
-  -Fu../components/jcf2/IdePlugin/lazarus/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/chmhelp/packages/help/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/chmhelp/packages/idehelp/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/instantfpc/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/externhelp/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/PascalScript/Source/lib/$(CPU_TARGET)-$(OS_TARGET) \
-  -Fu../components/macroscript/lib/$(CPU_TARGET)-$(OS_TARGET) \
-  -Fu../components/onlinepackagemanager/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/simplewebservergui/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/projectgroups/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/pas2js/units/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/exampleswindow/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/charactermap/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/charactermap/design/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/dockedformeditor/lib/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/anchordocking/units/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM) \
-  -Fu../components/anchordocking/design/units/$(CPU_TARGET)-$(OS_TARGET)/$(LCL_PLATFORM)
-
-#
 # Options for compiling lazbuild
 LAZBUILD_OPT=$(LAZARUS_LIBPATHS) \
   -Fu../packager/units/$(CPU_TARGET)-$(OS_TARGET) \
@@ -180,7 +123,7 @@ endif
 
 #-----------------------------------------------------------------------------
 [rules]
-.PHONY: ide bigide starter lazbuilder all clean cleanide purge revisioninc
+.PHONY: ide lazbuilder all clean cleanide purge revisioninc
 
 #-----------------------------------------------------------------------------
 revisioninc:
@@ -192,28 +135,9 @@ endif
 endif
 
 #-----------------------------------------------------------------------------
-# compile IDE without extra packages
-idepackages:
-        $(MAKE) -C packages/ideconfig
-        $(MAKE) -C packages/ideutils
-        $(MAKE) -C packages/idepackager
-        $(MAKE) -C packages/ideproject
-        $(MAKE) -C packages/idedebugger
-
-#-----------------------------------------------------------------------------
-# compile IDE without extra packages
+# compile IDE without extra packages - kept for legacy IDEs
 ide: $(COMPILER_UNITTARGETDIR) revisioninc
         $(MAKE) --assume-new=lazarus.pp lazarus$(EXEEXT) OPT='$(DEFAULT_IDE_OPTIONS) $(LAZARUS_OPT) $(OPT)'
-
-#-----------------------------------------------------------------------------
-# compile IDE with some extra packages
-bigide: $(COMPILER_UNITTARGETDIR) revisioninc
-        -$(DEL) $(COMPILER_UNITTARGETDIR)/pkgmanager$(PPUEXT)
-        $(MAKE) --assume-new=lazarus.pp lazarus$(EXEEXT) OPT='$(BIG_IDE_OPTIONS) $(LAZARUS_OPT) $(OPT)'
-
-#-----------------------------------------------------------------------------
-starter: $(COMPILER_UNITTARGETDIR)
-        $(MAKE) --assume-new=startlazarus.lpr startlazarus$(EXEEXT) OPT='$(DEFAULT_IDE_OPTIONS) $(LAZARUS_OPT) $(OPT)'
 
 #-----------------------------------------------------------------------------
 lazbuilder: $(COMPILER_UNITTARGETDIR)
@@ -227,10 +151,6 @@ cleanide:
         -$(DEL) $(wildcard *$(OEXT))
         -$(DEL) $(wildcard *$(PPUEXT))
         -$(DEL) $(wildcard *$(RSTEXT))
-        -$(DEL) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(OEXT))
-        -$(DEL) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(PPUEXT))
-        -$(DEL) $(wildcard $(COMPILER_UNITTARGETDIR)/*$(RSTEXT))
-        -$(DEL) $(wildcard $(COMPILER_UNITTARGETDIR)/*.lfm)
         -$(DEL) $(wildcard ../*$(OEXT))
         -$(DEL) $(wildcard ../*$(PPUEXT))
         -$(DEL) $(wildcard ../designer/*$(OEXT))
@@ -243,17 +163,14 @@ cleanide:
         -$(DEL) $(wildcard ../converter/*$(PPUEXT))
         -$(DEL) $(wildcard ../doceditor/*$(OEXT))
         -$(DEL) $(wildcard ../doceditor/*$(PPUEXT))
-ifneq ($(findstring $(OS_TARGET),win32 win64),)
-        -$(DEL) $(wildcard $(COMPILER_UNITTARGETDIR)/*.or)
-        -$(DEL) $(wildcard $(COMPILER_UNITTARGETDIR)/*.res)
-endif
 
 cleanlaz: clean cleanide
-        $(MAKE) -C packages/ideconfig clean
-        $(MAKE) -C packages/idepackager clean
-        $(MAKE) -C packages/ideproject clean
-        $(MAKE) -C packages/ideutils clean
-        $(MAKE) -C packages/idedebugger clean
+        $(DELTREE) packages/ideconfig/lib/*
+        $(DELTREE) packages/idepackager/lib/*
+        $(DELTREE) packages/ideproject/lib/*
+        $(DELTREE) packages/ideutils/lib/*
+        $(DELTREE) packages/idedebugger/lib/*
+        $(DELTREE) packages/idesynedit/lib/*
         ${DELTREE} ../units/*
 
 purge: cleanlaz

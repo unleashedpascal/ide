@@ -6,9 +6,9 @@ unit FpDebugDebuggerBase;
 interface
 
 uses
-  Classes, SysUtils, fgl, Math, FPDbgController, FpdMemoryTools, FpDbgClasses,
+  Classes, SysUtils, fgl, FPDbgController, FpdMemoryTools, FpDbgClasses,
   FpDbgUtil, FpDbgInfo, FpDbgCallContextInfo, FpDbgDwarfFreePascal, DbgIntfDebuggerBase,
-  DbgIntfBaseTypes, {$ifdef FORCE_LAZLOGGER_DUMMY} LazLoggerDummy {$else} LazLoggerBase {$endif}, FpDebugDebuggerUtils,
+  {$ifdef FORCE_LAZLOGGER_DUMMY} LazLoggerDummy {$else} LazLoggerBase {$endif}, FpDebugDebuggerUtils,
   LazDebuggerIntfBaseTypes;
 
 type
@@ -108,7 +108,8 @@ begin
   if Result <> 0 then
     exit;
 
-  FunctSymbol := DbgController.CurrentProcess.FindProcSymbol(AName);
+  // Link tables only: AName is an RTL linker name, e.g. FPC_ANSISTR_DECR_REF
+  FunctSymbol := DbgController.CurrentProcess.FindNamedProcSymbol(AName, [psfLinkTableSym]);
 
   if (FunctSymbol <> nil) and (IsTargetNotNil(FunctSymbol.Address)) then
     ACacheVar := FunctSymbol.Address.Address;
@@ -289,7 +290,7 @@ end;
 function TFpDebugDebuggerBase.ReadAnsiStringFromTarget(AStringAddr: TDBGPtr;
   out AString: String): boolean;
 begin
-  FpDbgDwarfFreePascal.ReadAnsiStringFromTarget(DbgController.CurrentProcess, AStringAddr, AString);
+  Result := FpDbgDwarfFreePascal.ReadAnsiStringFromTarget(DbgController.CurrentProcess, AStringAddr, AString);
 end;
 
 end.

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="5">
+  <Package Version="6">
     <PathDelim Value="\"/>
     <Name Value="IdeDebugger"/>
     <Type Value="RunAndDesignTime"/>
@@ -26,6 +26,12 @@
       <Item>
         <Filename Value="idedebuggerbase.pas"/>
         <UnitName Value="IdeDebuggerBase"/>
+      </Item>
+      <Item>
+        <Filename Value="frames\idedebugger_consolewindow_options.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="IdeDebugger_ConsoleWindow_Options"/>
+        <ResourceBaseClass Value="Frame"/>
       </Item>
       <Item>
         <Filename Value="idedebuggerpackage.pas"/>
@@ -154,6 +160,7 @@
       </Item>
       <Item>
         <Filename Value="pseudoterminaldlg.pp"/>
+        <HasRegisterProc Value="True"/>
         <UnitName Value="PseudoTerminalDlg"/>
         <ResourceBaseClass Value="Form"/>
         <ResourceBaseClassname Value=""/>
@@ -344,6 +351,12 @@
       <OutDir Value="languages"/>
     </i18n>
     <RequiredPkgs>
+      <Item>
+        <PackageName Value="LazControlDsgn"/>
+      </Item>
+      <Item>
+        <PackageName Value="IdeHelpUtils"/>
+      </Item>
       <Item>
         <PackageName Value="IdeUtilsPkg"/>
       </Item>

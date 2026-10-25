@@ -40,9 +40,9 @@ type
     procedure LoadRegisterCache; override;
     procedure SaveRegisterCache; override;
     function GetReturnPC: TDbgPtr;
-    function GetStackUnwinder: TDbgStackUnwinder; override;
   public
     destructor Destroy; override;
+    function GetStackUnwinder: TDbgStackUnwinder; override;
     procedure LoadRegisterValues; override;
     procedure SetRegisterValue(AName: string; AValue: QWord); override;
     function GetInstructionPointerRegisterValue: TDbgPtr; override;
@@ -62,6 +62,7 @@ type
     function CreateBreakPointTargetHandler: TFpBreakPointTargetHandler; override;
   public
     class function isSupported(target: TTargetDescriptor): boolean; override;
+    function StepOutReturnMayKeepStackPointer: Boolean; override;
     constructor Create(const AFileName: string; AnOsClasses: TOSDbgClasses;
                       AMemManager: TFpDbgMemManager; AMemModel: TFpDbgMemModel;
                       AProcessConfig: TDbgProcessConfig = nil); override;
@@ -280,6 +281,13 @@ end;
 destructor TDbgRiscvProcess.Destroy;
 begin
   inherited Destroy;
+end;
+
+function TDbgRiscvProcess.StepOutReturnMayKeepStackPointer: Boolean;
+begin
+  // RISC-V "call" (jal/jalr) leaves the return address in ra, not on the stack, so
+  // stepping out before the prologue spills ra returns with SP unchanged.
+  Result := True;
 end;
 
 class function TDbgRiscvProcess.isSupported(target: TTargetDescriptor): boolean;

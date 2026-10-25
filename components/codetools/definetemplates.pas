@@ -1185,6 +1185,7 @@ function ParseFPCInfo(FPCInfo: string; InfoTypes: TFPCInfoTypes;
                       out Infos: TFPCInfoStrings): boolean;
 function RunFPCInfo(const CompilerFilename: string;
                    InfoTypes: TFPCInfoTypes; const Options: string =''): string;
+function RunFPCInfoXML(const CompilerFilename, Options: string; aXMLLines: TStrings): boolean;
 function FPCVersionToNumber(const FPCVersionString: string): integer; // 2.7.1 -> 20701
 function SplitFPCVersion(const FPCVersionString: string;
                         out FPCVersion, FPCRelease, FPCPatch: integer): boolean; // 2.7.1 -> 2,7,1
@@ -1668,6 +1669,37 @@ begin
   end;
 end;
 
+function RunFPCInfoXML(const CompilerFilename, Options: string; aXMLLines: TStrings): boolean;
+// Runs "<compiler> -ix <Options>" and returns its stdout (the <fpcoutput> XML) as lines.
+// False if the tool produced nothing or an "Error:" first line.
+var
+  Params, ToolOutput: TStringList;
+begin
+  Result:=false;
+  aXMLLines.Clear;
+  Params:=TStringList.Create;
+  try
+    // -P<cpu> must come before -ix so the fpc wrapper dispatches to the right ppc<cpu>
+    // (otherwise it answers -ix with the native compiler).
+    SplitCmdLineParams(Options,Params);
+    Params.Add('-ix');
+    // run from the compiler's own directory so it resolves fpc.cfg / cross compiler
+    // the same way an interactive shell in that directory would
+    ToolOutput:=RunTool(CompilerFilename,Params,ExtractFilePath(CompilerFilename),CTConsoleVerbosity<0);
+    if ToolOutput=nil then exit;
+    try
+      if ToolOutput.Count<1 then exit;
+      if copy(ToolOutput[0],1,6)='Error:' then exit;
+      aXMLLines.Assign(ToolOutput);
+      Result:=true;
+    finally
+      ToolOutput.Free;
+    end;
+  finally
+    Params.Free;
+  end;
+end;
+
 function FPCVersionToNumber(const FPCVersionString: string): integer;
 var
   FPCVersion, FPCRelease, FPCPatch: integer;
@@ -1786,6 +1818,16 @@ function ParseFPCVerbose(List: TStrings; const WorkDir: string; out
       Inc(CurPos, 2); // skip space too
       if len - CurPos < 6 then Exit; // shortest match
     end;
+
+    // skip message number e.g. (nnn)
+    if Line[CurPos] = '(' then begin
+      repeat
+        inc(CurPos);
+        if CurPos > len then Exit;
+      until line[CurPos] = ')';
+      Inc(CurPos, 2); // skip space too
+      if len - CurPos < 6 then Exit; // shortest match
+    end; 
 
     UpLine:=UpperCaseStr(Line);
     case UpLine[CurPos] of
@@ -6583,7 +6625,7 @@ var
   Params: TStringList;
 begin
   Result:=nil;
-  //DebugLn('TDefinePool.CreateFPCTemplate PPC386Path="',CompilerPath,'" FPCOptions="',CompilerOptions,'"');
+  //DebugLn('TDefinePool.CreateFPCTemplate CompilerPath="',CompilerPath,'" FPCOptions="',CompilerOptions,'"');
   if TestPascalFile='' then begin
     DebugLn(['Warning: [TDefinePool.CreateFPCTemplate] TestPascalFile empty']);
   end;
@@ -6916,6 +6958,7 @@ begin
       d(LazarusSrcDir+'/ide;'
        +LazarusSrcDir+'/ide/frames;'
        +LazarusSrcDir+'/designer;'
+       +LazarusSrcDir+'/ide/packages/idesynedit;'
        +LazarusSrcDir+'/ide/packages/ideutils;'
        +LazarusSrcDir+'/ide/packages/ideconfig;'
        +LazarusSrcDir+'/ide/packages/idepackager;'
@@ -6966,6 +7009,7 @@ begin
     SrcPathMacroName,
       d('../components/lazutils'
        +';../components/codetools'
+       +';../ide/packages/idesynedit;'
        +';../ide/packages/ideutils;'
        +';../ide/packages/ideconfig;'
        +';../ide/packages/idepackager;'
@@ -7008,6 +7052,7 @@ begin
       d(LazarusSrcDir+'/debugger;'
        +LazarusSrcDir+'/debugger/frames;'
        +LazarusSrcDir+'/ide;'
+       +LazarusSrcDir+'/ide/packages/idesynedit;'
        +LazarusSrcDir+'/ide/packages/ideutils;'
        +LazarusSrcDir+'/ide/packages/ideconfig;'
        +LazarusSrcDir+'/ide/packages/ideproject;'
@@ -7039,6 +7084,7 @@ begin
     Format(ctsAddsDirToSourcePath,['lcl, components']),
     SrcPathMacroName,
       d('../ide'
+       +';../ide/packages/idesynedit;'
        +';../ide/packages/ideutils;'
        +';../ide/packages/ideconfig;'
        +';../ide/packages/idepackager;'
@@ -7070,6 +7116,7 @@ begin
       +';'+LazarusSrcDir+'/lcl/interfaces'
       +';'+LazarusSrcDir+'/lcl/interfaces/'+WidgetType
       +';'+LazarusSrcDir+'/ide'
+      +';'+LazarusSrcDir+'/ide/packages/idesynedit'
       +';'+LazarusSrcDir+'/ide/packages/ideutils'
       +';'+LazarusSrcDir+'/ide/packages/ideconfig'
       +';'+LazarusSrcDir+'/ide/packages/idepackager'
@@ -7097,6 +7144,7 @@ begin
     Format(ctsAddsDirToSourcePath,['ide']),
     SrcPathMacroName,
     d(LazarusSrcDir+'/ide;'
+     +LazarusSrcDir+'/ide/packages/idesynedit;'
      +LazarusSrcDir+'/ide/packages/ideutils;'
      +LazarusSrcDir+'/ide/packages/ideconfig;'
      +LazarusSrcDir+'/ide/packages/idepackager;'

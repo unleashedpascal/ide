@@ -1735,65 +1735,98 @@ String with the content examined and converted to its lowercase representation.
 
 <element name="UTF8SwapCase">
 <short>
-Provides a simplistic implementation of UTF8UpperCase and UTF8LowerCase.
+Converts the case for UTF-8 codepoints in the specified string and returns 
+the converted value.
 </short>
 <descr>
 <p>
-<var>UTF8SwapCase</var> provides a "naive" implementation that uses 
-<var>UTF8UpperCase</var> and <var>UTF8LowerCase</var>. Performance is 
-acceptable for short and reasonably long strings, but it could benefit from 
-better performance and lower memory consumption.
+<var>UTF8SwapCase</var> is a String function used to convert the case for the 
+specified UTF-8 codepoints.
 </p>
 <p>
-AInStr contains a UTF-8-encoded string with values to convert it the method. 
-Each character in AInStr will have its case "toggled" in the function. In 
-other words, an uppercase character is converted to lowercase, and vice versa.
+<var>AInStr</var> contains a UTF-8-encoded string with values to convert it 
+the routine. Each codepoint in AInStr will have its case "toggled" in the 
+function. In other words, a codepoint which is an uppercase character is 
+converted to a lowercase one, and vice versa.
 </p>
 <p>
-ALanguage indicates the language code to use for the conversion. ALanguage 
-should be specified using ISO 639-1 format, which uses 2 characters to 
-represent each language. If the language has no code in ISO 639-1, then the 
-3-character code from ISO 639-2 should be used. For example: "tr"for the 
-Turkish language locale. Special handling is provided in the function for 
-Turkish ('tr') and Azeri ('az') language codes. ALanguage can be set to an 
-empty string ('') for maximum speed in the conversion.
+<var>ALanguage</var> indicates the language code to use for the conversion. 
+ALanguage should be specified using ISO 639-1 format, which uses 2 characters 
+to represent each language. If the language has no code in ISO 639-1, then the 
+3-character code from ISO 639-2 should be used. For example: 'tr' for the 
+Turkish language locale or 'az' for the Azeri language code. ALanguage can be 
+set to an empty string ('') for maximum speed in the conversion routine.
 </p>
 <p>
-No actions are performed in the method when the number of bytes for the 
-converted value differs from the number of bytes in the original value. In 
-this case, the return value contains the unmodified string in AInStr. The 
-return value is an empty string ('') when AInStr is an empty string ('').
+No actions are performed in the routine when AInStr is an empty string (''), 
+and the return value is an empty string as well.
+</p>
+<p>
+UTF6SwapCase processes the individual codepoints in AInStr to get the return 
+value for the function. It ensures that codepoints which have a different 
+number of bytes in the lowercase and uppercase variants are handled properly. 
+UTF8UpperCase and UTF8LowerCase are called to change the case for each 
+codepoint.
 </p>
 </descr>
-<seealso/>
+<seealso>
+<link id="UTF8LowerCase"/>
+<link id="UTF8UpperCase"/>
+<link id="UTF8CodepointSize"/>
+<link id="UTF8Length"/>
+</seealso>
 </element>
 <element name="UTF8SwapCase.Result">
-<short>String with the converted case values.</short>
+<short>
+UTF-8-encoded values after case conversion.
+</short>
 </element>
 <element name="UTF8SwapCase.AInStr">
-<short>Original values for the conversion.</short>
+<short>
+UTF-8-encoded values converted in the routine.
+</short>
 </element>
 <element name="UTF8SwapCase.ALanguage">
-<short>Language code for the locale used in the conversion.</short>
+<short>
+Optional Language code for the locale used in the conversion.
+</short>
 </element>
 
 <element name="UTF8ProperCase">
 <short>
-Capitalizes the first letter of each word in the string.
+Capitalizes the first letter of each word in the UTF-8-encoded string.
 </short>
 <descr>
 <p>
 <var>UTF8ProperCase</var> is a <var>String</var> function used to capitalize 
-the first letter of each word in the specified string. WordDelims is set 
-which contains the system characters used as word boundaries in the string.
+the first letter of each word in the specified string. 
 </p>
 <p>
-UTF8ProperCase converts all of the values in AInStr to their lowercase 
-equivalents, before converting letters following a word delimiter to 
-uppercase.
+<var>AInStr</var> contains the UTF-8-encoded byte values examined and 
+converted in the function. All of the values in AInStr are converted to 
+lowercase using UTF8LowerCase prior to converting the case for codepoints.
+</p>
+<p>
+<var>WordDelims</var> is the <var>TSysCharSet</var> set type which contains 
+the system characters used as word delimiters in the conversion. Each 
+occurrence of a character in WordDelims signals that the following codepoint 
+should be converted to Uppercase.
+</p>
+<p>
+UTF8ProperCase processes individual codepoints to get the return value for the 
+function. It ensures that codepoints which have a different number of bytes in 
+the lowercase and uppercase variants are handled properly. UTF8UpperCase is 
+called to change the case for each codepoint following a word delimiter.
+</p>
+<p>
+If AInStr is an empty string (''), the return value is also an empty string.
 </p>
 </descr>
-<seealso/>
+<seealso>
+<link id="UTF8LowerCase"/>
+<link id="UTF8UpperCase"/>
+<link id="#rtl.sysutils.TSysCharSet">TSysCharSet</link>
+</seealso>
 </element>
 <element name="UTF8ProperCase.Result">
 <short>Converting values for the string.</short>
@@ -2390,79 +2423,223 @@ Represents styles used to escape control characters.
 <descr>
 <p>
 <var>TEscapeMode</var> is an enumerated type with values that determine the 
-output style for escaped characters in <var>Utf8EscapeControlChars</var>.
+output style for escaped control characters in 
+<var>Utf8EscapeControlChars</var>. A value from the enumeration is passed to 
+Utf8EscapeControlChars to control conversion of control characters to their 
+escaped equivalent. Use emCustom to perform custom encoding for control 
+characters using the fixed-size array passed as an argument to 
+Utf8EscapeControlChars.
 </p>
 </descr>
-<seealso/>
+<version>
+Enumeration values modified in LazUtils version 5.0. Ordinal positions for the 
+emHexC and emC enumeration values were swapped. Enumeration values emPercent 
+and emCustom were added.
+</version>
+<seealso>
+<link id="Utf8EscapeControlChars"/>
+<link id="TEscapedStrings"/>
+<link id="PEscapedStrings"/>
+</seealso>
 </element>
 <element name="TEscapeMode.emPascal">
-<short>Pascal-style escape characters '#27'</short>
+<short>Pascal-style escape characters. '#27'</short>
 </element>
 <element name="TEscapeMode.emHexPascal">
-<short>Pascal-style hexadecimal strings '#$1B'</short>
-</element>
-<element name="TEscapeMode.emHexC">
-<short>C-style hexadecimal strings '\0x1B'</short>
+<short>Pascal-style hexadecimal strings. '#$1B'</short>
 </element>
 <element name="TEscapeMode.emC">
-<short>C-style strings '\e'</short>
+<short>C-style strings. '\e'</short>
+</element>
+<element name="TEscapeMode.emHexC">
+<short>C-style hexadecimal strings. '\0x1B'</short>
 </element>
 <element name="TEscapeMode.emAsciiControlNames">
-<short>ASCII-style control names '[ESC]'</short>
+<short>ASCII-style control character names. '[ESC]'</short>
+</element>
+<element name="TEscapeMode.emPercent">
+<short>Percent encoding-style control characters. '%0D'</short>
+</element>
+<element name="TEscapeMode.emCustom">
+<short>
+User-defined encoding style. Passed as a TEscapedStrings argument in the 
+Utf8EscapeControlChars routine.
+</short>
+</element>
+
+<element name="TControlChars">
+<short>
+Specifies a range used to identify control characters.
+</short>
+<descr>
+<p>
+<var>TControlChars</var> is a range type which identifies the single-byte 
+values recognized as control characters. Used as an index into values in the 
+<var>TEscapedStrings</var> type, and in the implementation of the 
+<var>Utf8EscapeControlChars</var> routine.
+</p>
+</descr>
+<version>
+Added in LazUtils version 5.0.
+</version>
+<seealso>
+<link id="Utf8EscapeControlChars"/>
+<link id="TEscapedStrings"/>
+</seealso>
+</element>
+
+<element name="TEscapedStrings">
+<short>
+Fixed-length array of strings used to convert control characters to an escaped 
+encoding style.
+</short>
+<descr>
+<p>	
+<var>TEscapedStrings</var> is an array type used to represent the escaped 
+values for control characters using a specific encoding style. It is used for 
+character conversion tables needed in the <var>Utf8EscapeControlChars</var> 
+routine. Values in TEscapedStrings are indexed by <var>TControlChars</var> 
+enumeration values, and each element contains a String with the escaped 
+encoding for the corresponding control character.
+</p>
+<p>
+A pointer to a TEscapedStrings instance (PEscapedStrings) is passed as an argument to the Utf8EscapeControlChars routine for a custom encoding style.
+</p>
+</descr>
+<version>
+Added in LazUtils version 5.0.
+</version>
+<seealso>
+<link id="Utf8EscapeControlChars"/>
+<link id="TControlChars"/>
+<link id="TEscapeMode"/>
+<link id="PEscapedStrings"/>
+</seealso>
+</element>
+
+<element name="PEscapedStrings">
+<short>
+Pointer to a TEscapedStrings type.
+</short>
+<descr>
+<p>
+<var>PEscapedStrings</var> is pointer to a <var>TEscapedStrings</var> instance 
+with character conversions for control characters. A PEscapedStrings value is 
+passed as an argument to the <var>Utf8EscapeControlChars</var> routine to 
+represent the character encodings need in a custom encoding style.
+</p>
+</descr>
+<version>
+Added in LazUtils version 5.0.
+</version>
+<seealso>
+<link id="Utf8EscapeControlChars"/>
+<link id="TControlChars"/>
+<link id="TEscapeMode"/>
+<link id="TEscapedStrings"/>
+</seealso>
 </element>
 
 <element name="Utf8EscapeControlChars">
 <short>
-Translates control characters in a UTF-8-encoded string into human readable 
-format.
+Translates control characters in a UTF-8-encoded string into human-readable escaped format.
 </short>
 <descr>
 <p>
 <var>Utf8EscapeControlChars</var> translates control characters inside a 
-UTF-8-encoded string into human readable format. Characters in the range 
-#0..#31 are converted into the human-readable values for the control 
-characters in the format specified by <var>EscapeMode</var>, including:
+UTF-8-encoded string into human-readable escaped format. S is the 
+UTF-8-encoded string examined and converted in the routine. Characters in the 
+<var>TControlChars</var> range (#0..#31) are converted into the human-readable 
+values for the control characters in the format specified by 
+<var>EscapeMode</var>, including:
 </p>
 <dl>
 <dt>emPascal</dt>
 <dd>Pascal-style escape characters '#27'</dd>
 <dt>emHexPascal</dt>
 <dd>Pascal-style hexadecimal strings '#$1B'</dd>
-<dt>emHexC</dt>
-<dd>C-style hexadecimal strings '\0x1B'</dd>
 <dt>emC</dt>
 <dd>C-style strings '\e'</dd>
+<dt>emHexC</dt>
+<dd>C-style hexadecimal strings '\0x1B'</dd>
 <dt>emAsciiControlNames</dt>
 <dd>ASCII-style control names '[ESC]'</dd>
+<dt>emPercent</dt>
+<dd>Percent-encoded control characters '%0D'</dd>
+<dt>emCustom</dt>
+<dd>User-defined encoding style defined in the CustomStrings argument.</dd>
 </dl>
+<p>
+<var>CustomStrings</var> is a <var>PEscapedStrings</var> argument which 
+contains the replacement values for control characters when EscapeMode is set 
+to <var>emCustom</var>. It is a Pointer to the fixed-size 
+<var>TEscapedStrings</var> array where the custom encoding is defined for the 
+control characters. CustomStrings cannot be Nil (unassigned) when EscapeMode 
+is set to <var>emCustom</var>; an EInvalidOp exception is raised if 
+CustomStrings has not been assigned.
+</p>
+<p>
+<var>AMaxGrowFactor</var> specifies the maximum growth allowed when converting 
+S using the specified EscapeMode. Most escape encoding styles have a maximum 
+growth factor of 3, 4, or 5. emCustom does not specify a growth factor limit 
+(0 is used). The growth factor is calculated by examining each of the values 
+in the fixed-length CustomStrings array. As a result, emCustom can be the 
+slowest of the escape encoding styles.
+</p>
 <p>
 Utf8EscapeControlChars calls <var>FindInvalidUTF8Codepoint</var> to see if 
 <var>S</var> contains any invalid codepoints for the UTF-8 encoding. 
 <var>UTF8FixBroken</var> is called to repair the input value.
 </p>
 <p>
-Utf8EscapeControlChars iterates over the characters in S, and converts any 
-character value in the eligible range using an internal lookup table for the 
-value in EscapeMode. All other character values (or values in multi-byte 
-UTF-8 code points) are included in the return value in their unmodified form.
+Utf8EscapeControlChars iterates over the values in S, and converts any 
+control character value in the range #0..#31 using a conversion table 
+for the value in EscapeMode. All other character values (or byte values in a 
+multi-byte UTF-8 code point) are included in the return value in their 
+unmodified form.
 </p>
 <p>
 Mainly used as a diagnostic or logging tool.
 </p>
 </descr>
+<version>
+Modified in LazUtils version 5.0 to include new encoding styles in EscapeMode, 
+and use of the CustomStrings argument.
+</version>
 <seealso>
-<link id="UTF8FixBroken"/>
 <link id="TEscapeMode"/>
+<link id="TEscapedStrings"/>
+<link id="PEscapedStrings"/>
+<link id="UTF8FixBroken"/>
 </seealso>
 </element>
 <element name="Utf8EscapeControlChars.Result">
-<short>String with the escaped values for control characters in S.</short>
+<short>
+String with the escaped values for control characters found in S.
+</short>
 </element>
 <element name="Utf8EscapeControlChars.S">
-<short>UTF-8 encoded string with values converted in the routine.</short>
+<short>
+UTF-8-encoded string with control characters converted in the routine.
+</short>
 </element>
 <element name="Utf8EscapeControlChars.EscapeMode">
-<short>Controls the human readable format for escaped characters.</short>
+<short>
+Controls the human readable format for escaped control characters.
+</short>
+</element>
+<element name="Utf8EscapeControlChars.CustomStrings">
+<short>
+Pointer to an array with the custom encoding used for control characters. 
+Required for EscapeMode emCustom.
+</short>
+</element>
+<element name="Utf8EscapeControlChars.AMaxGrowFactor">
+<short>
+Maximum growth factor allowed for the specified EscapeMode. If non-zero, no 
+error checking is done on it's value. If set to zero (the default for 
+EmCustom), it will be calculated on the fly (which is time consuming).
+</short>
 </element>
 
 <element name="TUTF8TrimFlag">
@@ -2672,126 +2849,6 @@ PChar with the values used in the comparison.
 </short>
 </element>
 
-<element name="UTF8CompareLatinTextFast">
-<short>
-Deprecated. Use UTF8CompareText or AnsiCompareText instead.
-</short>
-<descr>
-<p>
-<var>UTF8CompareLatinTextFast</var> is like UTF8CompareText, but does not 
-return strict alphabetical order. The order is deterministic and good for 
-binary search and similar uses. It avoids the conversions from UTF-8 to UTF-16 
-needed to use WideCompareText.
-</p>
-<p>
-UTF8CompareLatinTextFast optimizes the comparison of values using single-byte 
-encoding by converting uppercase characters to lowercase characters for the 
-comparison. Multi-byte portions (with character values larger than Decimal 
-127) are optimized to ignore leading bytes sequences common to both compared 
-values.
-</p>
-<p>
-Otherwise, the routine falls back to AnsiCompareText to compare lowercase 
-ASCII values in S1 and S2.
-</p>
-<p>
-The return value is a pointer to an Integer where the relative sort order for 
-the compared values is stored.
-</p>
-<dl>
-<dt>&lt;0</dt>
-<dd>S1 comes before S2 in the sort order.</dd>
-<dt>&gt;0</dt>
-<dd>S1 comes after S2 in the sort order.</dd>
-<dt>0 (zero)</dt>
-<dd>S1 and S2 have the same value in the sort order.</dd>
-</dl>
-</descr>
-<version>
-Deprecated in LazUtils version 3.2 (Feb 2024).
-</version>
-<seealso>
-<link id="UTF8CompareText"/>
-<link id="#rtl.sysutils.AnsiCompareText">AnsiCompareText</link>
-</seealso>
-</element>
-<element name="UTF8CompareLatinTextFast.Result">
-<short>
-Pointer to an Integer with the relative order for the compared values.
-</short>
-</element>
-<element name="UTF8CompareLatinTextFast.S1">
-<short>
-UTF-8-encoded String value used in the comparison.
-</short>
-</element>
-<element name="UTF8CompareLatinTextFast.S2">
-<short>
-UTF-8-encoded String value used in the comparison.
-</short>
-</element>
-
-<element name="UTF8CompareStrCollated">
-<short>
-Deprecated. Use UTF8CompareStr instead.
-</short>
-<descr>
-<p>
-<var>UTF8CompareStrCollated</var> is used to compare two strings using 
-language-specific sorting. The return value contains the relative sort order 
-for the compared values, as defined for <var>UTF8CompareStr</var>.
-</p>
-</descr>
-<version>
-Deprecated in LazUtils version 3.2 (Feb 2024).
-</version>
-<seealso/>
-</element>
-<element name="UTF8CompareStrCollated.Result">
-<short>Relative order for the compared values.</short>
-</element>
-<element name="UTF8CompareStrCollated.S1">
-<short>First string for the comparison.</short>
-</element>
-<element name="UTF8CompareStrCollated.S2">
-<short>Second string for the comparison.</short>
-</element>
-
-<element name="CompareStrListUTF8LowerCase">
-<short>
-Compares the specified lines of text in a TStringList.
-</short>
-<descr>
-<p>
-<var>CompareStrListUTF8LowerCase</var> is an <var>Integer</var> function used 
-to compare the specified lines of text in the <var>TStringList</var> 
-argument. <var>Index1</var> and <var>Index2</var> contain the ordinal 
-positions for the respective lines of text. CompareStrListUTF8LowerCase calls 
-<var>UTF8CompareText</var> to perform a case-insensitive comparison between 
-the values.
-</p>
-<p>
-The return value contains the relative sort order for the compared values, as 
-defined for <var>UTF8CompareText</var>.
-</p>
-</descr>
-<seealso>
-<link id="UTF8CompareText"/>
-</seealso>
-</element>
-<element name="CompareStrListUTF8LowerCase.Result">
-<short>Relative order for the compared values.</short>
-</element>
-<element name="CompareStrListUTF8LowerCase.List">
-<short>TStringList with values for the comparison.</short>
-</element>
-<element name="CompareStrListUTF8LowerCase.Index1">
-<short>Position of the first text line.</short>
-</element>
-<element name="CompareStrListUTF8LowerCase.Index2">
-<short>Position of the second text line.</short>
-</element>
-
 <element name="TStringListUTF8Fast">
 <short>
 Implements a string list using fast ASCII comparison functions when its data is 
@@ -2861,8 +2918,8 @@ the result from <var>ConvertUTF8ToUTF16</var> and
 </descr>
 <seealso/>
 </element>
-<element name="TConvertResult.trNoError">
-<short>No error in the conversion.</short>
+<element name="TConvertResult.trSuccess">
+<short>Indicates a successful conversion with no errors.</short>
 </element>
 <element name="TConvertResult.trNullSrc">
 <short>Source value is null.</short>
@@ -2922,6 +2979,18 @@ argument to <var>ConvertUTF8ToUTF16</var> and <var>ConvertUTF16ToUTF8</var>.
 </seealso>
 </element>
 
+<element name="trNoError">
+<short>
+Deprecated. Use trSuccess in TConvertResult instead.
+</short>
+<descr/>
+<version>
+Deprecated in LazUtils version 4.0. Replaced with the enumeration value 
+trSuccess in TConvertResult.
+</version>
+<seealso/>
+</element>
+
 <element name="ConvertUTF8ToUTF16">
 <short>
 Converts values from UTF-8 encoding to UTF-16 encoding.
@@ -2959,40 +3028,40 @@ including:
 </p>
 <dl>
 <dt>
-trNoError
+trSuccess
 </dt>
 <dd>
-The string was successfully converted without any error
+The string was successfully converted without any error.
 </dd>
 <dt>
 trNullSrc
 </dt>
 <dd>
-Pointer to source string is nil
+Pointer to source string is <b>Nil</b>.
 </dd>
 <dt>
 trNullDest
 </dt>
 <dd>
-Pointer to destination string is nil
+Pointer to destination string is <b>Nil</b>.
 </dd>
 <dt>
 trDestExhausted
 </dt>
 <dd>
-Destination buffer size is not big enough to hold converted string
+Destination buffer size is not big enough to hold converted string.
 </dd>
 <dt>
 trInvalidChar
 </dt>
 <dd>
-Invalid source char has occurred
+Invalid source char has occurred.
 </dd>
 <dt>
 trUnfinishedChar
 </dt>
 <dd>
-Unfinished source char has occurred
+Unfinished source char has occurred.
 </dd>
 </dl>
 </descr>
@@ -3058,40 +3127,40 @@ including:
 </p>
 <dl>
 <dt>
-trNoError
+trSuccess
 </dt>
 <dd>
-The string was successfully converted without any error
+The string was successfully converted without any error.
 </dd>
 <dt>
 trNullSrc
 </dt>
 <dd>
-Pointer to source string is nil
+Pointer to source string is <b>Nil</b>.
 </dd>
 <dt>
 trNullDest
 </dt>
 <dd>
-Pointer to destination string is nil
+Pointer to destination string is <b>Nil</b>.
 </dd>
 <dt>
 trDestExhausted
 </dt>
 <dd>
-Destination buffer size is not big enough to hold converted string
+Destination buffer size is not big enough to hold converted string.
 </dd>
 <dt>
 trInvalidChar
 </dt>
 <dd>
-Invalid source char has occurred
+Invalid source char has occurred.
 </dd>
 <dt>
 trUnfinishedChar
 </dt>
 <dd>
-Unfinished source char has occurred
+Unfinished source char has occurred.
 </dd>
 </dl>
 </descr>
@@ -3153,40 +3222,40 @@ includes:
 </p>
 <dl>
 <dt>
-trNoError
+trSuccess
 </dt>
 <dd>
-The string was successfully converted without any error
+The string was successfully converted without any error.
 </dd>
 <dt>
 trNullSrc
 </dt>
 <dd>
-Pointer to source string is Nil
+Pointer to source string is <b>Nil</b>.
 </dd>
 <dt>
 trNullDest
 </dt>
 <dd>
-Pointer to destination string is Nil
+Pointer to destination string is <b>Nil</b>.
 </dd>
 <dt>
 trDestExhausted
 </dt>
 <dd>
-Destination buffer size is not big enough to hold converted string
+Destination buffer size is not big enough to hold converted string.
 </dd>
 <dt>
 trInvalidChar
 </dt>
 <dd>
-Invalid source char has occurred
+Invalid source char has occurred.
 </dd>
 <dt>
 trUnfinishedChar
 </dt>
 <dd>
-Unfinished source char has occurred
+Unfinished source char has occurred.
 </dd>
 </dl>
 </descr>
@@ -3206,37 +3275,6 @@ Unfinished source char has occurred
 <element name="UTF16ToUTF8.WideCnt">
 <short>Number of WideChar values in the source string.</short>
 </element>
-
-<element name="LazGetLanguageIDs">
-<short>
-Deprecated. Use the GetLanguageID function from the 
-<file>translations.pas</file> unit instead.
-</short>
-<descr/>
-<version>
-Deprecated in LazUtils version 2.3.0.
-</version>
-<seealso>
-<link id="#lazutils.translations.GetLanguageID"/>
-</seealso>
-</element>
-<element name="LazGetLanguageIDs.Lang"/>
-<element name="LazGetLanguageIDs.FallbackLang"/>
-
-<element name="LazGetShortLanguageID">
-<short>
-Deprecated. Use the GetLanguageID function from the 
-<file>translations.pas</file> unit instead.
-</short>
-<descr/>
-<version>
-Deprecated in LazUtils version 2.3.0.
-</version>
-<seealso>
-<link id="#lazutils.translations.GetLanguageID"/>
-</seealso>
-</element>
-<element name="LazGetShortLanguageID.Lang"/>
 
 <element name="FPUpChars">
 <short>

@@ -280,8 +280,10 @@ var
       itmViewMainWindows: TIDEMenuSection;
       itmViewDesignerWindows: TIDEMenuSection;
       itmViewSecondaryWindows: TIDEMenuSection;
-        itmViewDebugWindows: TIDEMenuSection;
-        itmViewIDEInternalsWindows: TIDEMenuSection;
+        itmViewDebugWindowsMenu: TIDEMenuSection;
+          itmViewDebugWindows: TIDEMenuSection;
+          itmViewDebugConsoleWindows: TIDEMenuSection;
+      itmViewIDEInternalsWindows: TIDEMenuSection;
 
     // source menu
     mnuSource: TIDEMenuSection;
@@ -315,7 +317,6 @@ var
 
     // package menu
     mnuPackage: TIDEMenuSection;
-    mnuComponent: TIDEMenuSection; // = mnuPackage, for compatibility with older lazarus versions
       itmPkgOpening: TIDEMenuSection;
         itmPkgOpenRecent: TIDEMenuSection;
       itmPkgUnits: TIDEMenuSection;

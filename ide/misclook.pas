@@ -22,7 +22,7 @@ type
   // the IDE colors outside the theme and the syntax scheme: the messages window, the headers of
   // its tool runs and the text of each message urgency
   TMiscSeed = record
-    background, text, running, success, failed, autoHeader: TColor;
+    background, text, running, success, failed: TColor;
     hint, note, warning, error, fatal: TColor;
   end;
 
@@ -42,8 +42,6 @@ type
     ButtonSuccess: TColorButton;
     LabelFailed: TLabel;
     ButtonFailed: TColorButton;
-    LabelAutoHeader: TLabel;
-    ButtonAutoHeader: TColorButton;
     LabelHint: TLabel;
     ButtonHint: TColorButton;
     LabelNote: TLabel;
@@ -203,7 +201,6 @@ begin
   result.running := shownColor(o.MsgViewColors[mwRunning], MsgWndDefHeaderBackgroundRunning);
   result.success := shownColor(o.MsgViewColors[mwSuccess], MsgWndDefHeaderBackgroundSuccess);
   result.failed := shownColor(o.MsgViewColors[mwFailed], MsgWndDefHeaderBackgroundFailed);
-  result.autoHeader := shownColor(o.MsgViewColors[mwAutoHeader], MsgWndDefAutoHeaderBackground);
   result.hint := shownColor(o.MsgColors[mluHint], result.text);
   result.note := shownColor(o.MsgColors[mluNote], result.text);
   result.warning := shownColor(o.MsgColors[mluWarning], result.text);
@@ -218,7 +215,6 @@ begin
   ctrl.HeaderBackground[lmvtsRunning] := value.running;
   ctrl.HeaderBackground[lmvtsSuccess] := value.success;
   ctrl.HeaderBackground[lmvtsFailed] := value.failed;
-  ctrl.AutoHeaderBackground := value.autoHeader;
   ctrl.UrgencyStyles[mluHint].Color := value.hint;
   ctrl.UrgencyStyles[mluNote].Color := value.note;
   ctrl.UrgencyStyles[mluWarning].Color := value.warning;
@@ -254,7 +250,6 @@ begin
   o.MsgViewColors[mwRunning] := value.running;
   o.MsgViewColors[mwSuccess] := value.success;
   o.MsgViewColors[mwFailed] := value.failed;
-  o.MsgViewColors[mwAutoHeader] := value.autoHeader;
   o.MsgColors[mluHint] := value.hint;
   o.MsgColors[mluNote] := value.note;
   o.MsgColors[mluWarning] := value.warning;
@@ -294,7 +289,6 @@ begin
   result.running := headerFill(result.background, HUE_YELLOW, dark);
   result.success := headerFill(result.background, HUE_GREEN, dark);
   result.failed := headerFill(result.background, HUE_RED, dark);
-  result.autoHeader := headerFill(result.background, HUE_SKY, dark);
   result.hint := textTone(HUE_SKY, dark);
   result.note := textTone(HUE_TEAL, dark);
   result.warning := textTone(HUE_AMBER, dark);
@@ -329,7 +323,6 @@ begin
   LabelRunning.Caption := lisMiscLookRunning;
   LabelSuccess.Caption := lisMiscLookSuccess;
   LabelFailed.Caption := lisMiscLookFailed;
-  LabelAutoHeader.Caption := lisMiscLookAutoHeader;
   LabelHint.Caption := lisMiscLookHint;
   LabelNote.Caption := lisMiscLookNote;
   LabelWarning.Caption := lisMiscLookWarning;
@@ -393,7 +386,6 @@ begin
   result.running := ButtonRunning.ButtonColor;
   result.success := ButtonSuccess.ButtonColor;
   result.failed := ButtonFailed.ButtonColor;
-  result.autoHeader := ButtonAutoHeader.ButtonColor;
   result.hint := ButtonHint.ButtonColor;
   result.note := ButtonNote.ButtonColor;
   result.warning := ButtonWarning.ButtonColor;
@@ -410,7 +402,6 @@ begin
   ButtonRunning.ButtonColor := value.running;
   ButtonSuccess.ButtonColor := value.success;
   ButtonFailed.ButtonColor := value.failed;
-  ButtonAutoHeader.ButtonColor := value.autoHeader;
   ButtonHint.ButtonColor := value.hint;
   ButtonNote.ButtonColor := value.note;
   ButtonWarning.ButtonColor := value.warning;

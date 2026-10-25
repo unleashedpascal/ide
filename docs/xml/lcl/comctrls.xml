@@ -5141,7 +5141,7 @@ Enables display of tabs on the control when set to <b>True</b> (default).
 </short>
 <descr>
 <p>
-<var>ShowTabs</var> is a <var>Boolean</var>	 property which enables or 
+<var>ShowTabs</var> is a <var>Boolean</var> property which enables or 
 disables display of the tab captions specified in the Tabs property. The 
 default value for the property is <b>True</b> and enables captions to be drawn 
 along the control side indicated in <var>TabPosition</var>.
@@ -14684,6 +14684,44 @@ finalizes the items and columns for the control.
 <element name="TCustomListView.DestroyWnd" link="#lcl.controls.TWinControl.DestroyWnd"/>
 <element name="TCustomListView.BeginAutoDrag" link="#lcl.controls.TControl.BeginAutoDrag"/>
 
+<element name="TCustomListView.CreateListColumns">
+<short>
+Creates the collection used to store the columns definitions for the control.
+</short>
+<descr>
+<p>
+<var>CreateListColumns</var> is a <var>TListColumns</var> function which gets 
+the collection used to store the column definitions in the <var>Columns</var> 
+property. In TCustomListView, the collection stores TListColumn instances. 
+CreateListColumns is a virtual method and can be overridden / re-implemented 
+in descendent classes (like TCustomShellListView / TShellListView) to reflect 
+the collection and item class type needed for the Columns used in the 
+implementation.
+</p>
+<p>
+CreateListColumns is used in the Create constructor to initialize the internal 
+member for the Columns property.
+</p>
+</descr>
+<version>
+Added in LCL version 5.0.
+</version>
+<seealso>
+<link id="TCustomListView.Columns"/>
+<link id="TCustomListView.Create"/>
+<link id="TListColumns"/>
+<link id="TListColumn"/>
+<link id="#lcl.shellctrls.TCustomShellListView.CreateListColumns">TCustomShellListView.CreateListColumns</link>
+<link id="#lcl.shellctrls.TShellListView">TShellListView</link>
+<link id="#lcl.shellctrls.TShellListColumns">TShellListColumns</link>
+</seealso>
+</element>
+<element name="TCustomListView.CreateListColumns.Result">
+<short>
+TListColumns collection instance created in the method.
+</short>
+</element>
+
 <element name="TCustomListView.CreateListItem">
 <short>
 Signals the OnCreateItemClass event handler to get the class type used for 
@@ -17280,16 +17318,61 @@ control when the draw stage is cdPrePaint.
 </element>
 
 <element name="TCustomListView.Create">
-<short>Constructor for the class instance.</short>
+<short>
+Constructor for the class instance.
+</short>
 <descr>
 <p>
 <var>Create</var> is the overridden constructor for 
 <var>TCustomListView</var>. It calls the inherited <var>Create</var> method, 
-and allocates resources needed for the class instance.
+and allocates resources needed for the class instance. CreateListColumns is 
+called to initialize the Columns property. CreateListItems is called to 
+initialize the Items property.
 </p>
 <p>
-Create sets the default values for properties and control style flags. It 
-creates TChangeLink instances for the image lists in SmallImages, 
+Create sets the default values for properties and control style flags. 
+Properties and their default values include:
+</p>
+<ul>
+<li>
+AutoSort (True)
+</li>
+<li>
+AutoWidthLastColumn (False)
+</li>
+<li>
+SortType (stNone)
+</li>
+<li>
+SortColumn (-1 for no sort order)
+</li>
+<li>
+SortDirection (sdAscending)
+</li>
+<li>
+BorderStyle (bsSingle)
+</li>
+<li>
+ScrollBars (ssBoth)
+</li>
+<li>
+ViewStyle (vsList)
+</li>
+<li>
+TabStop (True)
+</li>
+<li>
+ParentColor (False)
+</li>
+<li>
+Color (clDefault if UseCLDefault has been defined, otherwise clWindow)
+</li>
+<li>
+Canvas (set to a TControlCanvas instance)
+</li>
+</ul>
+<p>
+It creates TChangeLink instances for the image lists in SmallImages, 
 LargeImages, and StateImages. The change links are configured to use the 
 ImageChange and ImageResolutionHandleDestroyed methods in their event 
 handlers. It also creates the TCustomListViewEditor instance used to edit 
@@ -17301,7 +17384,9 @@ values in the list view control.
 </seealso>
 </element>
 <element name="TCustomListView.Create.AOwner">
-<short>Owner of the class instance.</short>
+<short>
+Owner of the class instance.
+</short>
 </element>
 
 <element name="TCustomListView.Destroy">
@@ -23053,6 +23138,32 @@ property in <var>TToolBar</var>.
 <short>Drawing state for the button.</short>
 </element>
 
+<element name="TToolBarOrientation">
+<short>
+Represents the orientations used in the TToolBar control.
+</short>
+<descr/>
+<seealso/>
+</element>
+<element name="TToolBarOrientation.tboAutomatic">
+<short>
+Indicates the tool bar orientation is determined automatically by its alignment 
+on a parent control or form.
+</short>
+</element>
+<element name="TToolBarOrientation.tboHorizontal">
+<short>
+Indicates the tool bar is oriented horizontally with buttons laid out in the 
+direction needed for the BiDiMode used on the tool bar.
+</short>
+</element>
+<element name="TToolBarOrientation.tboVertical">
+<short>
+Indicates the tool bar is oriented vertically with buttons laid out from top to 
+bottom.
+</short>
+</element>
+
 <element name="TToolBarFlag">
 <short>
 Contains values used as status flags in the TToolBar control.
@@ -23139,6 +23250,7 @@ package.
 <element name="TToolBar.FOnPaint"/>
 <element name="TToolBar.FOnPaintButton"/>
 <element name="TToolBar.FButtonHeight"/>
+<element name="TToolBar.FOrientation"/>
 <element name="TToolBar.FRealizedButtonHeight"/>
 <element name="TToolBar.FRealizedButtonWidth"/>
 <element name="TToolBar.FRealizedDropDownWidth"/>
@@ -23239,6 +23351,9 @@ Called from the <var>FontChanged</var> method.
 <element name="TToolBar.SetList"/>
 <element name="TToolBar.SetList.AValue"/>
 
+<element name="TToolBar.SetOrientation"/>
+<element name="TToolBar.SetOrientation.AValue"/>
+
 <element name="TToolBar.SetShowCaptions"/>
 <element name="TToolBar.SetShowCaptions.AValue"/>
 
@@ -23299,20 +23414,42 @@ vertically.
 <var>IsVertical</var> is a <var>Boolean</var> function in <var>TToolBar</var> 
 used to determine if the tool bar displays its buttons or controls using a 
 vertical orientation. The return value is determined by the value in the 
-Align property, as follows:
+Orientation property, as follows:
 </p>
 <dl>
-<dt>alLeft, alRight</dt>
+<dt>tboVertical</dt>
 <dd>The return value is <b>True</b>.</dd>
-<dt>alNone, alClient, alCustom</dt>
-<dd>The return value is <b>True</b> when Height is larger than Width.</dd>
+<dt>tboHorizontal</dt>
+<dd>The return value is <b>False</b>.</dd>
+<dt>tboAutomatic</dt>
+<dd>
+Causes the value in <var>Align</var> to be used to determine the result. 
+alNone, alClient, and alCustom return <b>True</b> when the Height for the 
+control is larger than its Width. alLeft or alRight cause the result to be set 
+to <b>True</b>.
+</dd>
 </dl>
 <p>
 If the tool bar is parented by a <var>TCoolBar</var> control, the value in 
-its <var>Vertical</var> property is used as the return value.
+the <var>Vertical</var> property in the parent control is used as the return 
+value.
+</p>
+<p>
+IsVertical is used in the in the AlignControls and WrapButtons methods when the 
+position and layout for buttons on the control are calculated.
 </p>
 </descr>
-<seealso/>
+<version>
+Modified in LCL version 5.0 to use Orientation, <b>or</b> Align when 
+Orientation is tboAutomatic.
+</version>
+<seealso>
+<link id="TToolBar.Orientation"/>
+<link id="TToolBar.Align"/>
+<link id="TToolBar.AlignControls"/>
+<link id="TToolBarOrientation"/>
+<link id="#lcl.controls.TControl.Parent">TControl.Parent</link>
+</seealso>
 </element>
 <element name="TToolBar.IsVertical.Result">
 <short>
@@ -23423,7 +23560,71 @@ setting in AutoSize.
 </seealso>
 </element>
 
-<element name="TToolBar.CalculatePreferredSize" link="#lcl.controls.TControl.CalculatePreferredSize"/>
+<element name="TToolBar.CalculatePreferredSize">
+<short>
+Calculates the preferred size (width and height) for the control.
+</short>
+<descr>
+<p>
+<var>CalculatePreferredSize</var> is an overridden method in 
+<var>TToolBar</var> used to get the preferred dimensions for the control. The 
+width and height values are used by the LCL auto-sizing and layout algorithms 
+as the default size. CalculatePreferredSize reimplements the method introduced 
+in ancestor classes, and does not call the inherited methods.
+</p>
+<p>
+In TToolBar, CalculatePreferredSize ensures that minimum and maximum widths 
+defined in Constraints are respected when the control is aligned to a 
+fixed-width parent control. If the control does not have a parent, or the 
+parent control is auto-sized, the Width size constraint for the Screen is used 
+instead.
+</p>
+<p>
+The sizes and positions for the <var>Buttons</var> on the tool bar are 
+determined for the width. The calculated width or height values are adjusted 
+(when needed) for the layout of the buttons.
+</p>
+<p>
+CalculatePreferredSize stores and returns the width and height values in the 
+<var>PreferredWidth</var> and <var>PreferredHeight</var> arguments. Only 
+positive values are valid. Negative or 0 (Zero) values are treated as 
+undefined, and the LCL uses other values to perform auto-sizing and layout.
+</p>
+<p>
+The WithThemeSpace parameter is not used in the method.
+</p>
+</descr>
+<seealso>
+<link id="TToolBar.Constraints"/>
+<link id="TToolBar.Anchors"/>
+<link id="TToolBar.AutoSize"/>
+<link id="TToolBar.WrapButtons"/>
+<link id="TToolBar.Buttons"/>
+<link id="TToolBar.ButtonWidth"/>
+<link id="TToolBar.ButtonHeight"/>
+<link id="TToolBar.Wrapable"/>
+<link id="TToolButton.CalculatePreferredSize"/>
+<link id="#lcl.controls.TWinControl.CalculatePreferredSize">TWinControl.CalculatePreferredSize</link>
+<link id="#lcl.controls.TControl.Parent">TControl.Parent</link>
+<link id="#lcl.controls.TAnchorSide.IsAnchoredToParent">TAnchorSide.IsAnchoredToParent</link>
+</seealso>
+</element>
+<element name="TToolBar.CalculatePreferredSize.PreferredWidth">
+<short>
+Preferred width for the control.
+</short>
+</element>
+<element name="TToolBar.CalculatePreferredSize.PreferredHeight">
+<short>
+Preferred height for the control.
+</short>
+</element>
+<element name="TToolBar.CalculatePreferredSize.WithThemeSpace">
+<short>
+Indicates whether additional space is reserved for theme element details. Not 
+used in the method.
+</short>
+</element>
 
 <element name="TToolBar.CheckMenuDropdown">
 <short>
@@ -23664,28 +23865,76 @@ implementation.
 
 <element name="TToolBar.WrapButtons">
 <short>
-Adjusts tool button sizes and positions, and handles wrapping to new rows or 
-columns.
+Calculates sizes and positions for buttons and controls, and handles wrapping 
+to new rows or columns (when enabled).
 </short>
 <descr>
 <p>
 <var>WrapButtons</var> is a <var>Boolean</var> function used to resize and 
-position buttons on the tool bar. WrapButtons positions buttons from left to 
-right in the client display area, and repositions any child control with its 
-<var>Align</var> property set to <var>clNone</var>.
+position tool buttons and child controls on the tool bar. When 
+<var>Simulate</var> is <b>True</b>, the child control sizes and positions are 
+calculated but not applied to the tool bar. The output parameters 
+<var>NewWidth</var> and <var>NewHeight</var> can be used to return the new size 
+for buttons on the control.
 </p>
 <p>
-When <var>Simulate</var> is <b>True</b>, the child control sizes and 
-positions are calculated but not applied to the tool bar.
+IsVertical determines the layout direction used for the child controls on the 
+tool bar. If IsVertical returns <b>True</b>, controls are positioned from top 
+to bottom with wrapped columns flowing towards the right edge of the control 
+(when enabled in Wrapable). If IsVertical returns <b>False</b>, child controls 
+are positioned horizontally in the direction indicated by 
+UseRightToLeftAlignment with wrapped rows flowing towards the bottom of the 
+control (when enabled).
+</p>
+<p>
+Use Orientation to specify the preferred orientation for the child controls on 
+the tool bar. tboAutomatic causes the dimensions for the toolbar or its Align 
+setting to be used for the purpose.
+</p>
+<p>
+WrapButtons examines child controls to determine their sizes and positions on 
+the tool bar. If a child control is <b>not</b> aligned (Align = alNone), it is 
+auto-sized and auto-positioned using Top and Left anchoring. If the child 
+controls is aligned (Align &lt;&gt; alNone), it will be positioned and sized 
+using the LCL layout routines but will not overlap a non-aligned child control.
+</p>
+<p>
+A child control with its Visible property set to <b>False</b> is not positioned 
+and/or resized in the method.
+</p>
+<p>
+ButtonWidth and ButtonHeight contain the initial dimensions used for child 
+controls which are not auto-sized. Child controls with AutoSize enabled use the 
+values in their Width or Height properties (depending on Orientation). Tool 
+buttons using divider or separator styles are not resized in the method; they 
+use the Width or Height property (depending on Orientation).
 </p>
 <p>
 Set Wrapable to <b>True</b> to allow a new row or column to be created when 
-the cumulative button width is larger than the width for the tool bar. Or set 
-the <var>Wrap</var> property in a specific tool button to <b>True</b> to 
-force it and subsequent controls onto a new row.
+the cumulative width or height needed for child controls is larger than the 
+width or height for the tool bar. Set the <var>Wrap</var> property in a 
+specific tool button to <b>True</b> to force it and subsequent child controls 
+onto a new row or column.
+</p>
+<p>
+WrapButtons is called from the AlignControls method using the Width or Height 
+needed for the Orientation on the tool bar. It is also called from the 
+CalculatePreferredSize method.
 </p>
 </descr>
-<seealso/>
+<seealso>
+<link id="TToolBar.Orientation"/>
+<link id="TToolBar.IsVertical"/>
+<link id="TToolBar.Buttons"/>
+<link id="TToolBar.ButtonWidth"/>
+<link id="TToolBar.ButtonHeight"/>
+<link id="TToolBar.AlignControls"/>
+<link id="TToolBar.CalculatePreferredSize"/>
+<link id="TToolBar.Wrapable"/>
+<link id="TToolButton.Style"/>
+<link id="#lcl.controls.TWinControl.Controls">TWinControl.Controls</link>
+<link id="#lcl.controls.TWinControl.ControlCount">TWinControl.ControlCount</link>
+</seealso>
 </element>
 <element name="TToolBar.WrapButtons.Result">
 <short>
@@ -24466,6 +24715,45 @@ notification.
 <element name="TToolBar.OnResize" link="#lcl.controls.TControl.OnResize"/>
 <element name="TToolBar.OnChangeBounds" link="#lcl.controls.TControl.OnChangeBounds"/>
 <element name="TToolBar.OnStartDrag" link="#lcl.controls.TControl.OnStartDrag"/>
+
+<element name="TToolBar.Orientation">
+<short>
+Indicates the orientation and layout direction for the buttons on the tool bar.
+</short>
+<descr>
+<p>
+<var>TToolBar</var> is a <var>TToolBarOrientation</var> property which 
+indicates the orientation for the tool bar on a parent control or form. 
+TToolBar contains one of the values from the TTooBarOrientation property. The
+default value is tboAutomatic and indicates the orientation is determined by 
+the setting used in the <var>Align</var> property.
+</p>
+<p>
+In short, using tboHorizontal or tboVertical causes Align to be ignored. Using 
+tboAutomatic allows Align to be used to determine the orientation for the tool 
+bar buttons. When using tboAutomatic in Orientation and alNone in Align, the 
+tool bar orientation can be flipped when wrapping occurs and the dimensions for 
+the control are changed. TToolbar instances on a TCoolBar parent control are 
+oriented using the Vertical property for the parent control.
+</p>
+<p>
+Changing the value for the property causes the control to be redrawn.
+</p>
+<p>
+Use IsVertical to determine whether tboVertical has been explicitly assigned to the Orientation property, or the Align property requires the orientation.
+</p>
+</descr>
+<version>
+Added in LCL version 5.0.
+</version>
+<seealso>
+<link id="TToolBar.Align"/>
+<link id="TToolBar.IsVertical"/>
+<link id="TToolBar.WrapButtons"/>
+<link id="TToolBar.AlignControls"/>
+<link id="TToolBarOrientation"/>
+</seealso>
+</element>
 
 <element name="TGrabStyle">
 <short>
@@ -28531,15 +28819,16 @@ A pointer to <var>TDelphiNodeInfo</var>.
 
 <element name="TDelphiNodeInfo">
 <short>
-<var>TDelphiNodeInfo</var> - record structure for Tree Node information (for 
-Delphi compatibility).
+Record structure for Tree Node information (for Delphi compatibility).
 </short>
 <descr/>
 <seealso/>
 </element>
 
 <element name="TDelphiNodeInfo.ImageIndex">
-<short>Ordinal position for the image displayed for the node</short>
+<short>
+Ordinal position for the image displayed for the node.
+</short>
 <descr/>
 <seealso/>
 </element>
@@ -28578,6 +28867,54 @@ Delphi compatibility).
 <short/>
 <descr/>
 <seealso/>
+</element>
+
+<element name="TDelphiNodeDataInfo">
+<short>
+Record structure used to represent Tree Node Data in Delphi DFM resources.
+</short>
+<descr></descr>
+<seealso></seealso>
+</element>
+
+<element name="TDelphiNodeDataInfo.ImageIndex">
+<short>
+Ordinal position for the image used for the tree node.
+</short>
+<descr></descr>
+<seealso></seealso>
+</element>
+
+<element name="TDelphiNodeDataInfo.SelectedIndex">
+<short></short>
+</element>
+
+<element name="TDelphiNodeDataInfo.StateIndex">
+<short></short>
+</element>
+
+<element name="TDelphiNodeDataInfo.Unknown1">
+<short></short>
+</element>
+
+<element name="TDelphiNodeDataInfo.OverlayIndex">
+<short></short>
+</element>
+
+<element name="TDelphiNodeDataInfo.Unknown2">
+<short></short>
+</element>
+
+<element name="TDelphiNodeDataInfo.ChildCount">
+<short></short>
+</element>
+
+<element name="TDelphiNodeDataInfo.Enabled">
+<short></short>
+</element>
+
+<element name="TDelphiNodeDataInfo.TextLen">
+<short></short>
 </element>
 
 <element name="TTreeNode">
@@ -28720,7 +29057,9 @@ Lazarus Wiki</url>
 <element name="TTreeNode.ReadDelphiData"/>
 <element name="TTreeNode.ReadDelphiData.Stream"/>
 <element name="TTreeNode.ReadDelphiData.Info"/>
-
+<element name="TTreeNode.ReadDelphiNodeData"/>
+<element name="TTreeNode.ReadDelphiNodeData.Stream"/>
+<element name="TTreeNode.ReadDelphiNodeData.ASignature"/>
 <element name="TTreeNode.SetCut"/>
 <element name="TTreeNode.SetCut.AValue"/>
 <element name="TTreeNode.SetData"/>
@@ -31628,6 +31967,8 @@ deprecated THandle type.
 <element name="TTreeNodes.ReadData.Stream"/>
 <element name="TTreeNodes.ReadExpandedState"/>
 <element name="TTreeNodes.ReadExpandedState.Stream"/>
+<element name="TTreeNodes.ReadDelphiNodeData"/>
+<element name="TTreeNodes.ReadDelphiNodeData.Stream"/>
 <element name="TTreeNodes.Repaint"/>
 <element name="TTreeNodes.Repaint.ANode"/>
 <element name="TTreeNodes.ShrinkTopLvlItems"/>
@@ -31679,10 +32020,27 @@ An existing tree node to update, or <b>Nil</b> to create a new tree node.
 <short>Position in the tree hierarchy where the node is stored.</short>
 </element>
 
-<element name="TTreeNodes.DefineProperties" link="#rtl.classes.TPersistent.DefineProperties">
-<short/>
-<descr/>
-<seealso/>
+<element name="TTreeNodes.DefineProperties">
+<short>
+Specifies read and write routines used to stream the class instance in LCL.
+</short>
+<descr>
+<p>
+<var>DefineProperties</var> is an overridden method in <var>TTreeNodes</var> 
+used to associate read and write routines with properties handled by the 
+TFiler instance specified in <var>Filer</var>. It calls the inherited (empty) 
+virtual method on entry, and assigns to Filer the read and write routines 
+which are used for the Data and NodeData properties in TTreeNode instances in 
+the container. These routines ensure that TTreeNode data written using both 
+Lazarus and Delphi are handled during LCL streaming. ReadData and 
+WriteData methods are used for the Data properties in the tree nodes. The 
+ReadDelphiNodeData method is used for the NodeData properties in tree nodes; 
+no write routine is provided.
+</p>
+</descr>
+<seealso>
+<link id="#rtl.classes.TPersistent">TPersistent</link>
+</seealso>
 </element>
 <element name="TTreeNodes.DefineProperties.Filer">
 <short>
@@ -32971,11 +33329,6 @@ Values in the States property for the control have been changed.
 <element name="TTreeViewState.tvsManualNotify">
 <short>A tree node has been expanded or collapsed using code.</short>
 </element>
-<element name="TTreeViewState.tvsUpdating">
-<short>
-This tree view state is deprecated, and has no functionality after r64855.
-</short>
-</element>
 <element name="TTreeViewState.tvsPainting">
 <short>The control has called it Paint method.</short>
 </element>
@@ -33289,6 +33642,48 @@ Uses an insert mark for the root or first child node in a tree view.
 <short/>
 </element>
 
+<element name="THideSelectionMode">
+<short>
+Controls the display logic used when HideSelection is enabled for a tree view 
+control.
+</short>
+<descr>
+<p>
+Values in <var>THideSelectionMode</var> control how (or if) a selection node is highlighted when the tree view control loses focus. THideSelectionMode is 
+the type used to implement the HideSelectionMode property in TCustomTreeView. 
+The value is used when the Paint method in TCustomTreeView / TTreeView is 
+called to display the tree nodes on the control.
+</p>
+</descr>
+<version>
+Added in LCL version 5.0.
+</version>
+<seealso>
+<link id="TCustomTreeView.HideSelectionMode"/>
+<link id="TCustomTreeView.HideSelection"/>
+<link id="TCustomTreeView.SelectionIsHidden"/>
+<link id="TCustomTreeView.DoPaintNode"/>
+<link id="TCustomTreeView.DoPaint"/>
+<link id="TCustomTreeView.Paint"/>
+<link id="TCustomTreeView.Selected"/>
+<link id="TCustomTreeView.Selections"/>
+</seealso>
+</element>
+<element name="THideSelectionMode.hsmGray">
+<short>
+Draws a selection node using a "grayed" or "dimmed" state when the associated 
+control loses focus. The value in the HideSelection property in the tree view 
+control is ignored for this value.
+</short>
+</element>
+<element name="THideSelectionMode.hsmHide">
+<short>
+Causes a selection node to hide any highlighting when the associated control 
+loses focus. This is the Delphi VCL-compatible setting, and is enabled when 
+the HideSelection property for the associated control is <b>True</b>.
+</short>
+</element>
+
 <element name="TCustomTreeView">
 <short>
 The base class for <var>TTreeView</var>.
@@ -33432,6 +33827,7 @@ turn accessibility off for tree view items by setting the
 <element name="TCustomTreeView.FPrevToolTips"/>
 <element name="TCustomTreeView.FDragScrollMargin"/>
 <element name="TCustomTreeView.FDragScrollTimer"/>
+<element name="TCustomTreeView.FHideSelectionMode"/>
 
 <element name="TCustomTreeView.DragScrollTimerTick">
 <short>
@@ -34916,84 +35312,123 @@ Implements the Paint method for the control.
 </short>
 <descr>
 <p>
-<var>DoPaint</var> is a method used render the control to its canvas. It 
-Implements the overridden <var>Paint</var> method. No actions are performed 
-in the method when <var>tvsPainting</var> has been included in the 
-<var>States</var> property (Paint has already been called).
+<var>DoPaint</var> is a method used to render the control to its 
+<var>Canvas</var>. It implements the overridden <var>Paint</var> method for 
+the control. DoPaint performs the multi-stage drawing process for the control 
+and its tree nodes using the display rectangle in <var>ClientRect</var>. The 
+<var>Color</var> for the control is used as the Brush color on the Canvas.
 </p>
 <p>
-DoPaint includes the value tvsPainting in the States property to indicate 
-that the paint method is active. It includes the value 
-<var>tvoFocusedPainting</var> in States when <var>Focused</var> is 
-<b>True</b>, or excludes the value when Focused is <var>False</var>.
+DoPaint updates the values in the <var>States</var> property to reflect the 
+drawing state for the control. It includes the value <var>tvsPainting</var> in 
+the States property to indicate that the Paint method is active. No actions 
+are performed in the method if <var>tvsPainting</var> has already been 
+included (Paint has already been called). <var>tvoFocusedPainting</var> is 
+included in States when <var>Focused</var> is <b>True</b>, and excluded when 
+Focused is <var>False</var>.
 </p>
 <p>
-The UpdateDefaultItemHeight is called when <var>tvoAutoItemHeight</var> is 
-included in the <var>Options</var> for the control. The existing value in 
-DefaultItemHeight is used when the Option is omitted.
+The UpdateDefaultItemHeight method is called when <var>tvoAutoItemHeight</var> 
+is included in the <var>Options</var> for the control. The existing value in 
+<var>DefaultItemHeight</var> is used if the option value is omitted.
 </p>
 <p>
-DoPaint performs the multi-stage drawing process for nodes in the tree view 
-control using its Canvas and a display rectangle using the 
-<var>ClientWidth</var> for the control. If the control includes event 
-handlers for the cdPrePaint stage, the <var>CustomDraw</var> method is called.
+If the control is custom-drawn, the <var>CustomDraw</var> method is called to 
+signal assigned event handlers used for the <var>cdPrePaint</var> drawing 
+stage. Any change to the Canvas brush color in the event handlers is retained 
+for subsequent use in the method. If the event handlers do not handle drawing 
+for the cdPrePaint drawing stage, no additional actions are performed in the 
+method.
 </p>
 <p>
-DoPaint draws the nodes on the tree view starting at the node in TopItem. If 
-the node is Visible, the <var>DoPaintNode</var> method is called to render 
-the tree node. The next visible node in the tree is retrieved, and the 
-process is repeated until no more nodes are available or the drawing area is 
-filled.
+See <var>IsCustomDrawn</var> for information about the custom draw event 
+handlers and their use for specific drawing stages.
 </p>
 <p>
-An <var>InsertMark</var> is drawn for the root node if needed.
+DoPaint draws the nodes on the tree view starting at the node in 
+<var>TopItem</var>. If a given node is visible, the <var>DoPaintNode</var> 
+method is called to render the tree node. The next visible node in the tree is 
+retrieved, and the process is repeated until no more nodes are available, 
+<var>BottomItem</var>) is reached, or the drawing area is filled.
 </p>
 <p>
-Borders are drawn around the control using the value in 
-<var>BorderWidth</var>.
+An <var>InsertMark</var> is drawn for the root node when needed.
 </p>
 <p>
-If the control has event handlers for the cdPostPaint stage, the CustomDraw 
-method is called.
+Unused space on the client rectangle between on the control borders is filled 
+with the background color for the control. Borders are drawn for the control 
+using the value in <var>BorderWidth</var>. clGray, clLtGray, and clWhite are 
+used as Pen colors to simulate a 3D edge on the control. clBlack is used as 
+the Pen color for the half-width line drawn using the mid-point for the border.
 </p>
 <p>
-The value <var>tvsPainting</var> is excluded from the States property prior 
-to exit.
+If the control is custom-drawn, the <var>CustomDraw</var> method is called 
+again to signal assigned event handlers used for the <var>cdPostPaint</var> 
+drawing stage. If the event handlers do not perform drawing for the 
+cdPostPaint drawing stage, no additional actions are performed in the method.
+</p>
+<p>
+<var>tvsPainting</var> is excluded from the States property prior to exiting 
+from the method.
 </p>
 </descr>
-<seealso/>
+<version>
+Modified in LCL version 5.0 to retain changes to the Brush color in custom 
+draw event handlers.
+</version>
+<seealso>
+<link id="TCustomTreeView.BorderWidth"/>
+<link id="TCustomTreeView.BottomItem"/>
+<link id="TCustomTreeView.Color"/>
+<link id="TCustomTreeView.CustomDraw"/>
+<link id="TCustomTreeView.DoPaintNode"/>
+<link id="TCustomTreeView.InsertMarkType"/>
+<link id="TCustomTreeView.IsCustomDrawn"/>
+<link id="TCustomTreeView.Options"/>
+<link id="TCustomTreeView.Paint"/>
+<link id="TCustomTreeView.States"/>
+<link id="TCustomTreeView.TopItem"/>
+<link id="TCustomDrawState"/>
+<link id="TCustomDrawTarget"/>
+<link id="TTreeNode"/>
+<link id="TTreeViewState"/>
+<link id="TTreeViewStates"/>
+<link id="#lcl.controls.TCustomControl.Canvas">TCustomControl.Canvas</link>
+<link id="#lcl.controls.TCustomControl.Paint">TCustomControl.Paint</link>
+<link id="#lcl.controls.TControl.ClientRect">TControl.ClientRect</link>
+<link id="#lcl.graphics.TCanvas.Brush">TCanvas.Brush</link>
+<link id="#lcl.graphics.TCanvas.Pen">TCanvas.Pen</link>
+</seealso>
 </element>
 
 <element name="TCustomTreeView.DoPaintNode">
-<short>Renders the specified tree node to the canvas for the control.</short>
+<short>
+Renders the specified tree node to the canvas for the control.
+</short>
 <descr>
 <p>
 <var>DoPaintNode</var> is a method used to render the tree node specified in 
 <var>Node</var> to the <var>Canvas</var> for the control. DoPaintNode is 
 called from the DoPaint method, and occurs for visible nodes processed in the 
-method. No actions are performed in the method when the Node is not in the 
-visible client area for the control.
+method. The display rectangle needed for the tree node is calculated in the 
+method. No actions are performed if the Node is not in the visible client area 
+for the control.
 </p>
 <p>
-DoPaintNode draws the elements which represent a given tree node, including:
+By default, text drawn for a node uses the Font assigned to the control with 
+its Color used for the background on the rendered tree node. The font, color, 
+and background are overridden as needed to reflect the enabled, selected, or 
+hot-tracked state for the tree node. These may also be changed when theme 
+drawing is enabled in Options (using <var>tvoThemedDraw</var>).
 </p>
-<ul>
-<li>Text for the tree node (when it is not the EditingItem for the 
-control).</li>
-<li>An Image or State Image for the node.</li>
-<li>Expand or Collapse indicators for the node.</li>
-<li>Background for the node using theme services or node state.</li>
-<li>An Insert mark for the initial child node in the tree hierarchy.</li>
-<li>Horizontal and vertical lines used to join nodes in the tree 
-hierarchy.</li>
-<li>The Separator line drawn after a node.</li>
-</ul>
 <p>
-The text color is determined using the Enabled properties in both the tree 
-view control and the tree Node. When theme services are enabled in Options 
-(using tvoThemedDraw), theme element details provide the color and font style 
-for the enabled state. Otherwise, the color value in DisabledFontColor or 
-Font is used.
+SelectedColor and SelectedFontColor are used when the tree node is selected 
+(or multi-selected), selection highlighting is not hidden, and theme drawing 
+has <b>not</b> been enabled.
+</p>
+<p>
+DisabledFontColor is used when the tree node is not enabled and the property 
+contains a value other than clNone.
 </p>
 <p>
 DoPaintNode retrieves scaled image resolutions needed for the Images and 
@@ -35001,12 +35436,81 @@ StateImages in the control. The images sizes are determined by applying the
 scaling factor in Canvas to the current PixelsPerInch setting in Font.
 </p>
 <p>
-Use of multi-stage custom drawing is supported. If event handlers are 
-provided for the cdPrePaint and cdPostPaint stages, the CustomDraw and 
-CustomDrawItem methods are used to render the node with the drawing state for 
-the node.
+Use of multi-stage custom drawing is supported. If event handlers are provided 
+which support the stages, the draw state flags needed for a focused / selected 
+/ multi-selected / hot-tracked / disabled tree node are calculated. 
+</p>
+<p>
+CustomDrawItem is called to draw the node using the draw state flags and image 
+settings for the node. No additional actions are performed in the method if 
+event handlers have not been assigned which support custom drawing the item 
+for the cdPrePaint state.
+</p>
+<p>
+See <var>IsCustomDrawn</var> for information about the custom draw event 
+handlers and their use for specific drawing stages.
+</p>
+<p>
+ShowButtons controls whether an Expand / Collapse indicator is drawn for a 
+tree node which has child nodes, or is the root node for the tree view control.
+</p>
+<p>
+DoPaintNode performs default drawing for the elements which represent a given 
+tree node using its Canvas. These actions are performed when custom draw event 
+handlers have not been assigned or enabled in Options, including:
+</p>
+<ul>
+<li>
+Drawing the normal, unselected, non-tracked background for the node.
+</li>
+<li>
+Drawing the background for a selected or hot-tracked node.
+</li>
+<li>
+Drawing the full-width background for a selected or hot-tracked node when 
+RowSelect is enabled.
+</li>
+<li>
+Drawing horizontal and vertical lines which connect tree nodes using the 
+TreeLineColor and TreeLinePenStyle for the control.
+</li>
+<li>
+Drawing the expand or collapse indicator using the expanded state for a node 
+with child nodes. Use ExpandSignType and ExpandSignColor for the pre-defined 
+indicators used on the control. Use OnCustomDrawArrow to draw a custom expand 
+/ collapse indicator.
+</li>
+<li>
+Drawing the StateImage, Image (including the built-in ones), and an overlay 
+image using the ImageIndex, SelectedIndex, and OverlayIndex for the tree node.
+</li>
+<li>
+Drawing the text for the node when assigned and the node is not being edited. 
+The text is drawn using the selected and hot-tracked state for the node. The 
+underline style is added to the font when a node is hot-tracked and themed 
+drawing has <b>not</b> been enabled in Options.
+</li>
+<li>
+Drawing the separator line after a tree node when tvoShowSeparators has been 
+included in Options.
+</li>
+<li>
+Drawing the insert mark for a tree node inserted in to the tree view control. 
+Use InsertMarkType to specify the position for the mark relative to the 
+InsertMarkNode.
+</li>
+</ul>
+<p>
+If custom draw event handlers for the cdPostPaint drawing stage have been 
+assigned, draw state flags are calculated for Selected, MultiSelected, 
+Focused, and hot-tracking state for the node. The CustomDrawItem method is 
+called to draw the node using the event handlers for the drawing stage.
 </p>
 </descr>
+<version>
+Modified in LCL version 5.0 to provide better support for background drawing, 
+and selected or hot-tracked drawing states in multi-stage drawing.
+</version>
 <seealso>
 <link id="TCustomTreeView.DoPaint"/>
 <link id="TCustomTreeView.ExpandSignType"/>
@@ -35022,7 +35526,9 @@ the node.
 </seealso>
 </element>
 <element name="TCustomTreeView.DoPaintNode.Node">
-<short>Tree node rendered in the method.</short>
+<short>
+Tree node examined and rendered in the method.
+</short>
 </element>
 
 <element name="TCustomTreeView.DoStartDrag">
@@ -36027,25 +36533,58 @@ The default value for the property is bsSingle in TCustomTreeView.
 
 <element name="TCustomTreeView.HideSelection">
 <short>
-Indicates if the current selection is hidden when the control loses focus.
+Indicates if the highlighting for current selection(s) are hidden when the 
+control loses focus.
 </short>
 <descr>
 <p>
-<var>HideSelection</var> is a <var>Boolean</var> property which indicates if 
-the current selection is hidden when the control loses focus. The default 
-value for the property is <b>True</b>.
+<var>HideSelection</var> is a <var>Boolean</var> property which indicates 
+whether tree nodes in Selected or Selections are drawn in the selected 
+state when the control loses focus.
 </p>
 <p>
 The value for the property is <b>True</b> if <var>tvoHideSelection</var> has 
 been included in the <var>Options</var> for the control. Changing the value 
 in the property causes tvoHideSelection to be included in or excluded from 
 Options. The control is redrawn if <var>Selected</var> has an assigned tree 
-node when the property is changed.
+node when the property is changed. The default value for the property is 
+<b>True</b>.
+</p>
+<p>
+HideSelection is used in conjunction with the HideSelectionMode property which 
+controls whether unfocused selections use the native LCL behavior or the 
+behavior used in the Delphi VCL TTreeView control. HideSelection is not 
+relevant unless HideSelectionMode is set to the Delphi behavior. The native 
+LCL drawing style always draws selection nodes on the unfocused control using 
+the "grayed" or "dimmed" drawing state. In Delphi mode, the highlighting (not 
+the tree node) is hidden when HideSelection is <b>True</b>.
+</p>
+<p>
+The value in HideSelection is used in the SelectionIsHidden method called when 
+the DoPaintNode method is executed for the control.
+</p>
+<p>
+Use MultiSelect to enable or disable multi-selections on the control.
+</p>
+<p>
+Use RowSelect to highlight a selected tree node using the entire width for the 
+the tree view control.
 </p>
 </descr>
 <seealso>
 <link id="TCustomTreeView.Options"/>
 <link id="TCustomTreeView.Selected"/>
+<link id="TCustomTreeView.Selections"/>
+<link id="TCustomTreeView.HideSelectionMode"/>
+<link id="TCustomTreeView.SelectionIsHidden"/>
+<link id="TCustomTreeView.DoPaintNode"/>
+<link id="TCustomTreeView.DoPaint"/>
+<link id="TCustomTreeView.Paint"/>
+<link id="TCustomTreeView.MultiSelect"/>
+<link id="TCustomTreeView.RowSelect"/>
+<link id="THideSelectionMode"/>
+<link id="TTreeNode.Selected"/>
+<link id="TTreeNode.MultiSelected"/>
 </seealso>
 </element>
 
@@ -38562,18 +39101,60 @@ not been assigned.
 <seealso/>
 </element>
 
+<element name="TCustomTreeView.SelectionIsHidden">
+<short>
+Indicates whether the highlighting for a selection node is 
+actually hidden (not visually displayed) or displayed in a 
+"grayed" or "dim" state when the control loses focus.
+</short>
+<descr>
+<p>
+When HideSelection is <b>True</b> and the control is not focused, the 
+selection highlighting is really hidden only in Delphi mode. Lazarus mode 
+ignores the HideSelection setting.
+</p>
+<p>
+Use HideSelectionMode to control the behavior used for selection nodes when 
+the tree view control loses focus.
+</p>
+</descr>
+<version>
+Added in LCLversion 5.0.
+</version>
+<seealso>
+<link id="TCustomTreeView.HideSelection"/>
+<link id="TCustomTreeView.HideSelectionMode"/>
+<link id="TCustomTreeView.Selected"/>
+<link id="TCustomTreeView.Selections"/>
+<link id="TCustomTreeView.MultiSelectStyle"/>
+<link id="TCustomTreeView.MultiSelect"/>
+<link id="TCustomTreeView.DoPaintNode"/>
+<link id="TCustomTreeView.DoPaint"/>
+<link id="TCustomTreeView.Paint"/>
+<link id="TTreeNode.Selected"/>
+<link id="TTreeNode.MultiSelected"/>
+<link id="#lcl.controls.TWinControl.Focused">TWinControl.Focused</link>
+</seealso>
+</element>
+<element name="TCustomTreeView.SelectionIsHidden.Result">
+<short>
+Returns <b>True</b> if selection node(s) are available but not highlighted, 
+"grayed" or "dimmed".
+</short>
+</element>
+
 <element name="TCustomTreeView.StoreCurrentSelection">
 <short>
-Creates and fills a TStringList with the text for each of the tree nodes in the 
-access path to the Selected node on the tree view control.
+Creates and fills a TStringList with the text for each of the tree nodes in 
+the access path to the Selected node on the tree view control.
 </short>
 <descr>
 <p>
 <var>StoreCurrentSelection</var> uses the Selected property to determine the 
-values returned in the TStringList instance. The Text for each of the TTreeNode 
-instances is inserted in the return value in the order the nodes were visited 
-to reach the Selected node. The Text for each of the tree nodes appears on a 
-separate line.
+values returned in the TStringList instance. The Text for each of the 
+TTreeNode instances is inserted in the return value in the order the nodes 
+were visited to reach the Selected node. The Text for each of the tree nodes 
+appears on a separate line.
 </p>
 <p>
 If multi-selection is enabled on the tree view control, the first node in 
@@ -38611,8 +39192,8 @@ to the selected node.
 </p>
 <p>
 ApplyStoredSelection searches the sibling and child nodes in Items to locate a 
-tree node which matches the specified values. When a node is found, Selected is 
-set to the TTreeNode instance located in the method. If a node is not found, 
+tree node which matches the specified values. When a node is found, Selected 
+is set to the TTreeNode instance located in the method. If a node is not found,
 Selected is set to <b>Nil</b>.
 </p>
 <p>
@@ -39696,6 +40277,57 @@ lines which connect the nodes in the tree hierarchy.
 </p>
 </descr>
 <seealso/>
+</element>
+
+<element name="TCustomTreeView.HideSelectionMode">
+<short>
+Deprecated; use the HideSelection property instead. 
+Controls the display mode used for selection node(s) when the control loses 
+focus.
+</short>
+<descr>
+<p>
+<var>HideSelectionMode</var> is a <var>THideSelectionMode</var> property which 
+determines the display mode used for node(s) in Selected or Selections when 
+the tree view control loses focus. It is used when HideSelection is 
+<b>False</b>, and switches between the Lazarus native mode (where selection
+node(s) are "grayed" or "dimmed") and Delphi mode (where no visual indicator 
+for selection node(s) is drawn).
+</p>
+<p>
+See THideSelectionMode for more information about the enumeration values and 
+their meanings.
+</p>
+<p>
+HideSelectionMode is used in methods like SelectionIsHidden and DoPaintNode to 
+determine the actions needed when drawing a selection node when the control 
+loses focus.
+</p>
+<p>
+Use HideSelection to enable (<b>True</b>) or disable (<b>False</b>) use of the 
+property when its value is set to hsmHide. The value in HideSelection is 
+ignored when HideSelectionMode is set to hsmGray.
+</p>
+</descr>
+<version>
+Added and deprecated in LCL version 5.0. Will be removed in LCL version 6.0.
+</version>
+<notes>
+<note>
+I'm confused. Why was this added and immediately deprecated before it has ever 
+been in a release?
+</note>
+</notes>
+<seealso>
+<link id="TCustomTreeview.HideSelection"/>
+<link id="TCustomTreeview.SelectionIsHidden"/>
+<link id="TCustomTreeview.DoPaintNode"/>
+<link id="TCustomTreeView.DoPaint"/>
+<link id="TCustomTreeview.Paint"/>
+<link id="TCustomTreeView.Selected"/>
+<link id="TCustomTreeView.Selections"/>
+<link id="THideSelectionMode"/>
+</seealso>
 </element>
 
 <element name="TCustomTreeView.TabStop">
@@ -41676,7 +42308,7 @@ completed.
 <p>
 <var>OnSectionResize</var> is a <var>TCustomSectionNotifyEvent</var> property 
 with the event handler signalled when one of the header Sections has been 
-resized by dragging the  separator for the section. It is signalled (when 
+resized by dragging the separator for the section. It is signalled (when 
 assigned) in the SectionResize method with arguments that identify the header 
 control and the header section for the event notification.
 </p>

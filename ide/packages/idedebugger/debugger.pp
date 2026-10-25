@@ -47,7 +47,7 @@ uses
   // IdeIntf
   IdeDebuggerWatchValueIntf,
   // DebuggerIntf
-  DbgIntfMiscClasses, DbgIntfDebuggerBase,
+  DbgIntfMiscClasses, DbgIntfDebuggerBase, ProjectIntf,
   LazDebuggerIntf, LazDebuggerIntfBaseTypes, LazDebuggerValueConverter, LazDebuggerTemplate,
   LazDebuggerIntfFloatTypes, LazDebuggerIntfExceptions,
   // IdeDebugger
@@ -359,6 +359,8 @@ type
   end;
 
   TIDEBreakPoint = class(TIdeTracePoint)
+  private
+    function IgnoreAll: boolean; inline;
   protected
     procedure AssignLocationTo(Dest: TPersistent); override;
     procedure AssignTo(Dest: TPersistent); override;
@@ -367,6 +369,7 @@ type
     function GetValid: TValidState; override;
     procedure SetBreakHitCount(const AValue: Integer); override;
     procedure SetEnabled(const AValue: Boolean); override;
+    procedure IgnoreAllChanged;
     procedure SetInitialEnabled(const AValue: Boolean); override;
     procedure SetExpression(const AValue: String); override;
     procedure SetKind(const AValue: TDBGBreakPointKind);
@@ -384,6 +387,7 @@ type
     procedure SaveToXMLConfig(const AConfig: TXMLConfig; const APath: string;
                       const OnSaveFilename: TOnSaveFilenameToConfig); reintroduce;
     procedure SetAddress(const AValue: TDBGPtr); override;
+    procedure SetSource(const ASource: String);
     procedure SetLocation(const ASource: String; const ALine: Integer); override;
     procedure SetWatch(const AData: String; const AScope: TDBGWatchPointScope;
                        const AKind: TDBGWatchPointKind); override;
@@ -410,18 +414,24 @@ type
 
   TIDEBreakPoints = class(TBaseBreakPoints)
   private
+    FDebugger: TIdeDebugManagerIntf;
+    FIgnoreAll: boolean;
     FNotificationList: TList;
     FMaster: TDBGBreakPoints;
+    procedure DoFileRenamed(ASender: TLazProjectFile; AnOldName, ANewName: String);
     procedure SetMaster(const AValue: TDBGBreakPoints);
     function GetItem(const AnIndex: Integer): TIDEBreakPoint;
     procedure SetItem(const AnIndex: Integer; const AValue: TIDEBreakPoint);
   protected
+    procedure SetIgnoreAll(AValue: boolean); virtual;
     procedure NotifyAdd(const ABreakPoint: TIDEBreakPoint); virtual;    // called when a breakpoint is added
     procedure NotifyRemove(const ABreakpoint: TIDEBreakPoint); virtual; // called by breakpoint when destructed
     procedure Update(Item: TCollectionItem); override;
   public
     constructor Create(const ABreakPointClass: TIDEBreakPointClass);
     destructor Destroy; override;
+    procedure Clear; override;
+    procedure TriggerChanged;
     function Add(const ASource: String; const ALine: Integer; AnUpdating: Boolean = False): TIDEBreakPoint; overload; reintroduce;
     function Add(const AAddress: TDBGPtr; AnUpdating: Boolean = False): TIDEBreakPoint; overload; reintroduce;
     function Add(const AData: String; const AScope: TDBGWatchPointScope;
@@ -439,12 +449,13 @@ type
     procedure LoadFromXMLConfig(XMLConfig: TXMLConfig; const Path: string;
                       const OnLoadFilename: TOnLoadFilenameFromConfig;
                       const OnGetGroup: TOnGetGroupByName); virtual;
-    procedure SaveToXMLConfig(XMLConfig: TXMLConfig; const Path: string; const ALegacyList: Boolean;
-                      const OnSaveFilename: TOnSaveFilenameToConfig); virtual;
+    procedure SaveToXMLConfig(XMLConfig: TXMLConfig; const Path: string; const OnSaveFilename: TOnSaveFilenameToConfig); virtual;
     property Master: TDBGBreakPoints read FMaster write SetMaster;
   public
+    property Debugger: TIdeDebugManagerIntf read FDebugger write FDebugger;
     property Items[const AnIndex: Integer]: TIDEBreakPoint read GetItem
                                                          write SetItem; default;
+    property IgnoreAll: boolean read FIgnoreAll write SetIgnoreAll;
   end;
 
 
@@ -495,8 +506,7 @@ type
   public
     constructor Create;
     procedure LoadFromXMLConfig(XMLConfig: TXMLConfig; const Path: string; const AClear: boolean = True); virtual;
-    procedure SaveToXMLConfig(XMLConfig: TXMLConfig;
-      const Path: string; const ALegacyList: Boolean); virtual;
+    procedure SaveToXMLConfig(XMLConfig: TXMLConfig; const Path: string); virtual;
     function GetGroupByName(const GroupName: string; ACreateIfNotExist: boolean = False): TIDEBreakPointGroup;
     function FindGroupByName(const GroupName: string;
                              Ignore: TIDEBreakPointGroup): TIDEBreakPointGroup;
@@ -924,8 +934,7 @@ type
     function Find(const AExpression: String): TCurrentWatch; reintroduce;
     // IDE
     procedure LoadFromXMLConfig(const AConfig: TXMLConfig; const APath: string);
-    procedure SaveToXMLConfig(const AConfig: TXMLConfig; const APath: string;
-      const ALegacyList: Boolean);
+    procedure SaveToXMLConfig(const AConfig: TXMLConfig; const APath: string);
   public
     property Debugger: TIdeDebugManagerIntf read FDebuggerIntf;
     property Items[const AnIndex: Integer]: TCurrentWatch read GetItem
@@ -972,8 +981,7 @@ type
     procedure Clear;
     procedure DoModified; override;
     procedure LoadFromXMLConfig(const AConfig: TXMLConfig; const APath: string);
-    procedure SaveToXMLConfig(const AConfig: TXMLConfig; const APath: string;
-      const ALegacyList: Boolean);
+    procedure SaveToXMLConfig(const AConfig: TXMLConfig; const APath: string);
 
     procedure BeginIgnoreModified;
     procedure EndIgnoreModified;
@@ -2076,7 +2084,7 @@ type
     procedure RemoveNotification(const ANotification: TIDEExceptionsNotification);
 
     procedure LoadFromXMLConfig(const AXMLConfig: TXMLConfig; const APath: string; const OnGetGroup: TOnGetGroupByName);
-    procedure SaveToXMLConfig(const AXMLConfig: TXMLConfig; const APath: string; const ALegacyList: Boolean);
+    procedure SaveToXMLConfig(const AXMLConfig: TXMLConfig; const APath: string);
     property Items[const AIndex: Integer]: TIDEException read GetItem
                                                         write SetItem; default;
     property IgnoreAll: Boolean read FIgnoreAll write SetIgnoreAll;
@@ -2141,6 +2149,7 @@ const
     'RunTo',
     'Jumpto',
     'Attach',
+    'AttachToExecStarter',
     'Detach',
     'Break',
     'Watch',
@@ -2233,7 +2242,11 @@ end;
 
 function HasConsoleSupport: Boolean;
 begin
-  {$IFDEF DBG_ENABLE_TERMINAL}
+  (* Windows is deliberately tested for separately rather than by defining
+     DBG_ENABLE_TERMINAL for it. That define also guards the pseudo-terminal
+     code, which is a Unix pty and does not build here; the console dialog
+     itself has no such dependency and compiles on Windows already. *)
+  {$IF defined(DBG_ENABLE_TERMINAL) or defined(MSWINDOWS)}
   Result := True;
   {$ELSE}
   Result := False;
@@ -5263,10 +5276,9 @@ begin
   CurrentWatches.LoadFromXMLConfig(AConfig, APath);
 end;
 
-procedure TIdeWatchesMonitor.SaveToXMLConfig(const AConfig: TXMLConfig;
-  const APath: string; const ALegacyList: Boolean);
+procedure TIdeWatchesMonitor.SaveToXMLConfig(const AConfig: TXMLConfig; const APath: string);
 begin
-  CurrentWatches.SaveToXMLConfig(AConfig, APath, ALegacyList);
+  CurrentWatches.SaveToXMLConfig(AConfig, APath);
 end;
 
 procedure TIdeWatchesMonitor.BeginIgnoreModified;
@@ -6378,6 +6390,7 @@ begin
 
     AutoContinueTime:=XMLConfig.GetValue(Path+'AutoContinueTime/Value',0);
     BreakHitCount := XMLConfig.GetValue(Path+'BreakHitCount/Value',0);
+    Expression:=XMLConfig.GetValue(Path+'Expression/Value','');
 
     InitialEnabled:=XMLConfig.GetValue(Path+'InitialEnabled/Value',true);
     Enabled:=InitialEnabled;
@@ -6423,6 +6436,7 @@ begin
 
   AConfig.SetDeleteValue(APath+'AutoContinueTime/Value',AutoContinueTime,0);
   AConfig.SetDeleteValue(APath+'BreakHitCount/Value',BreakHitCount,0);
+  AConfig.SetDeleteValue(APath+'Expression/Value',Expression,'');
 
   AConfig.SetDeleteValue(APath+'InitialEnabled/Value',InitialEnabled,true);
   AConfig.SetDeleteValue(APath+'LogEvalExpression/Value', FLogEvalExpression,'');
@@ -6442,6 +6456,11 @@ end;
 { =========================================================================== }
 { TIDEBreakPoint }
 { =========================================================================== }
+
+function TIDEBreakPoint.IgnoreAll: boolean;
+begin
+  Result := (Collection <> nil) and (TIDEBreakPoints(Collection).IgnoreAll);
+end;
 
 procedure TIDEBreakPoint.AssignLocationTo(Dest: TPersistent);
 var
@@ -6464,6 +6483,7 @@ begin
     if Master <> nil then Master.Slave := nil;
     Master := TDBGBreakPoint(Dest);
     Master.Slave := Self;
+    IgnoreAllChanged;
   end;
 end;
 
@@ -6502,7 +6522,13 @@ begin
   if Enabled = AValue then exit;
   inherited SetEnabled(AValue);
   InitialEnabled:=Enabled;
-  if Master <> nil then Master.Enabled := AValue;
+  if Master <> nil then Master.Enabled := AValue and not IgnoreAll;
+end;
+
+procedure TIDEBreakPoint.IgnoreAllChanged;
+begin
+  if Master <> nil then Master.Enabled := Enabled and not IgnoreAll;
+  Changed;
 end;
 
 procedure TIDEBreakPoint.SetInitialEnabled(const AValue: Boolean);
@@ -6596,8 +6622,6 @@ begin
     try ReadStr(XMLConfig.GetValue(Path+'WatchKind/Value', 'wpkWrite'), FWatchKind);
     except FWatchKind:= wpkWrite; end;
 
-    Expression:=XMLConfig.GetValue(Path+'Expression/Value','');
-
     Filename:=XMLConfig.GetValue(Path+'Source/Value','');
     if Assigned(OnLoadFilename) then OnLoadFilename(Filename);
     FSource:=Filename;
@@ -6624,8 +6648,6 @@ begin
   WriteStr(s, FWatchKind);
   AConfig.SetDeleteValue(APath+'WatchKind/Value', s, 'wpkWrite');
 
-  AConfig.SetDeleteValue(APath+'Expression/Value',Expression,'');
-
   Filename := Source;
   if Assigned(OnSaveFilename) then OnSaveFilename(Filename);
   AConfig.SetDeleteValue(APath+'Source/Value',Filename,'');
@@ -6640,6 +6662,16 @@ begin
   if Master<>nil then Master.Address := Address;
 
   //TODO: Why not DoUserChanged; ?
+end;
+
+procedure TIDEBreakPoint.SetSource(const ASource: String);
+begin
+  if (TIDEBreakPoints(Collection).Debugger <> nil) and
+     (TIDEBreakPoints(Collection).Debugger.State in [dsRun, dsPause, dsInternalPause])
+  then
+    inherited SetLocation(ASource, Line)
+  else
+    SetLocation(ASource, Line);
 end;
 
 procedure TIDEBreakPoint.SetLocation(const ASource: String; const ALine: Integer);
@@ -6707,6 +6739,7 @@ constructor TIDEBreakPoints.Create(const ABreakPointClass: TIDEBreakPointClass);
 begin
   FMaster := nil;
   FNotificationList := TList.Create;
+  GlobalLazProjectHooks.RegisterProjectFileRenamedHandler(@DoFileRenamed);
   inherited Create(ABreakPointClass);
 end;
 
@@ -6714,12 +6747,27 @@ destructor TIDEBreakPoints.Destroy;
 var
   n: Integer;
 begin
+  GlobalLazProjectHooks.UnregisterProjectFileRenamedHandler(@DoFileRenamed);
   for n := FNotificationList.Count - 1 downto 0 do
     TDebuggerNotification(FNotificationList[n]).ReleaseReference;
 
   inherited;
 
   FreeAndNil(FNotificationList);
+end;
+
+procedure TIDEBreakPoints.Clear;
+begin
+  inherited Clear;
+  IgnoreAll := False;
+end;
+
+procedure TIDEBreakPoints.TriggerChanged;
+var
+  i: Integer;
+begin
+  for i := 0 to Count - 1 do
+    Items[i].DoChanged;
 end;
 
 function TIDEBreakPoints.Find(const ASource: String;
@@ -6770,6 +6818,40 @@ begin
   end
   else begin
     FMaster.Assign(Self);
+    FMaster.IgnoreAll := FIgnoreAll;
+  end;
+end;
+
+procedure TIDEBreakPoints.SetIgnoreAll(AValue: boolean);
+var
+  i: Integer;
+begin
+  if FMaster <> nil then
+    FMaster.IgnoreAll := AValue;
+
+  if FIgnoreAll = AValue then Exit;
+  FIgnoreAll := AValue;
+  BeginUpdate;
+  for i := 0 to Count - 1 do
+    Items[i].IgnoreAllChanged;
+  Changed;
+  EndUpdate;
+end;
+
+procedure TIDEBreakPoints.DoFileRenamed(ASender: TLazProjectFile; AnOldName, ANewName: String);
+var
+  i: Integer;
+  b: TIDEBreakPoint;
+begin
+  BeginUpdate;
+  try
+    for i := 0 to Count - 1 do begin
+      b := Items[i];
+      if (b.Kind = bpkSource) and (b.Source = AnOldName) then
+        b.SetSource(ANewName);
+    end;
+  finally
+    EndUpdate;
   end;
 end;
 
@@ -6836,6 +6918,8 @@ var
   BreakPointPath: string;
 begin
   Clear;
+  FIgnoreAll := XMLConfig.GetValue(Path + 'IgnoreAll', False);
+
   IsLegacyList := XMLConfig.IsLegacyList(Path);
   NewCount := XMLConfig.GetListItemCount(Path, 'Item', IsLegacyList);
 
@@ -6878,19 +6962,17 @@ begin
   end;
 end;
 
-procedure TIDEBreakPoints.SaveToXMLConfig(XMLConfig: TXMLConfig;
-  const Path: string; const ALegacyList: Boolean;
-  const OnSaveFilename: TOnSaveFilenameToConfig);
+procedure TIDEBreakPoints.SaveToXMLConfig(XMLConfig: TXMLConfig; const Path: string; const OnSaveFilename: TOnSaveFilenameToConfig);
 var
   Cnt: Integer;
   i: Integer;
   CurBreakPoint: TIDEBreakPoint;
   BreakPointPath: string;
 begin
+  XMLConfig.SetDeleteValue(Path + 'IgnoreAll', IgnoreAll, False);
   Cnt:=Count;
-  XMLConfig.SetListItemCount(Path,Cnt,ALegacyList);
   for i:=0 to Cnt-1 do begin
-    BreakPointPath := Path+XMLConfig.GetListItemXPath('Item', i, ALegacyList, True)+'/';
+    BreakPointPath := Path+XMLConfig.GetListItemXPath('Item', i)+'/';
     CurBreakPoint:=Items[i];
     CurBreakPoint.SaveToXMLConfig(XMLConfig, BreakPointPath, OnSaveFilename);
   end;
@@ -7088,8 +7170,7 @@ begin
   end;
 end;
 
-procedure TIDEBreakPointGroups.SaveToXMLConfig(XMLConfig: TXMLConfig;
-  const Path: string; const ALegacyList: Boolean);
+procedure TIDEBreakPointGroups.SaveToXMLConfig(XMLConfig: TXMLConfig; const Path: string);
 var
   Cnt: Integer;
   CurGroup: TIDEBreakPointGroup;
@@ -7097,11 +7178,10 @@ var
   ItemPath: string;
 begin
   Cnt:=Count;
-  XMLConfig.SetListItemCount(Path,Cnt,ALegacyList);
   for i := 0 to Cnt - 1 do
   begin
     CurGroup := Items[i];
-    ItemPath := Path+XMLConfig.GetListItemXPath('Item', i, ALegacyList, True)+'/';
+    ItemPath := Path+XMLConfig.GetListItemXPath('Item', i)+'/';
     CurGroup.SaveToXMLConfig(XMLConfig, ItemPath);
   end;
 end;
@@ -7956,8 +8036,7 @@ begin
     FMonitor.DoModified;
 end;
 
-procedure TCurrentWatches.SaveToXMLConfig(const AConfig: TXMLConfig;
-  const APath: string; const ALegacyList: Boolean);
+procedure TCurrentWatches.SaveToXMLConfig(const AConfig: TXMLConfig; const APath: string);
 var
   Cnt: Integer;
   i: Integer;
@@ -7965,11 +8044,10 @@ var
   ItemPath: string;
 begin
   Cnt := Count;
-  AConfig.SetListItemCount(APath, Cnt, ALegacyList);
   for i := 0 to Cnt - 1 do
   begin
     Watch := Items[i];
-    ItemPath := APath+AConfig.GetListItemXPath('Item', i, ALegacyList, True)+'/';
+    ItemPath := APath+AConfig.GetListItemXPath('Item', i)+'/';
     Watch.SaveToXMLConfig(AConfig, ItemPath);
   end;
 end;
@@ -8108,9 +8186,12 @@ var
   f: TWatchResultDataFieldInfo;
   i: int64;
 begin
+  Result := FValue <> nil;
+  if Result then
+    exit;
   ParentVal := FindParentValue;
   Result := (ParentVal <> nil) and (ParentVal.FValue <> nil);
-  if (not Result) or (FValue <> nil) then
+  if (not Result) then
     exit;
 
   if (ParentVal.FValue.ValueKind = rdkStruct) then begin
@@ -8320,6 +8401,9 @@ end;
 
 procedure TSubLocalsValue.RequestData;
 begin
+  if FValidity <> ddsUnknown then
+    exit;
+
   if MaybeCopyResultForChild and
      (FValue <> nil) and FValue.IsFullDephtEvaluated
   then begin
@@ -8327,9 +8411,7 @@ begin
     exit;
   end;
 
-  if(DebugBossManager <> nil) and
-     (FValidity = ddsUnknown) and
-     (TSubLocals(Owner).TopOwner is TCurrentLocals)
+  if (DebugBossManager <> nil) and (TSubLocals(Owner).TopOwner is TCurrentLocals)
   then begin
     FValidity := ddsRequested;
     DebugBossManager.RequestWatchData(Self);
@@ -9563,9 +9645,7 @@ begin
 
   c := HitCount + 1;
   SetHitCount(c);
-  //if (BreakHitCount > 0) and (c >= BreakHitCount) then begin
-  //  AContinue := True;
-  if (BreakHitCount > 0) and (c < BreakHitCount) then begin
+  if (BreakHitCount > 0) and (c >= BreakHitCount) then begin
     exit;
   end;
 
@@ -9604,10 +9684,16 @@ end;
 procedure TIDEException.LoadFromXMLConfig(const AXMLConfig: TXMLConfig; const APath: string;
   const OnGetGroup: TOnGetGroupByName);
 begin
-  inherited LoadFromXMLConfig(AXMLConfig, APath, OnGetGroup);
-  FName:=AXMLConfig.GetValue(APath+'Name/Value','');
-  Enabled:=AXMLConfig.GetValue(APath+'Enabled/Value',true);
-  SetKind(bpkException);
+  inc(FLoading);
+  try
+    inherited LoadFromXMLConfig(AXMLConfig, APath, OnGetGroup);
+    FName:=AXMLConfig.GetValue(APath+'Name/Value','');
+    Enabled:=AXMLConfig.GetValue(APath+'Enabled/Value',true);
+    SetKind(bpkException);
+  finally
+    dec(FLoading);
+    DoUserChanged;
+  end;
 end;
 
 procedure TIDEException.SaveToXMLConfig(const AXMLConfig: TXMLConfig;
@@ -9825,8 +9911,7 @@ begin
   end;
 end;
 
-procedure TIDEExceptions.SaveToXMLConfig(const AXMLConfig: TXMLConfig;
-  const APath: string; const ALegacyList: Boolean);
+procedure TIDEExceptions.SaveToXMLConfig(const AXMLConfig: TXMLConfig; const APath: string);
 var
   Cnt: Integer;
   i: Integer;
@@ -9834,12 +9919,11 @@ var
   ItemPath: string;
 begin
   Cnt := Count;
-  AXMLConfig.SetListItemCount(APath, Cnt, ALegacyList);
   AXMLConfig.SetDeleteValue(APath + 'IgnoreAll', IgnoreAll, False);
   for i := 0 to Cnt - 1 do
   begin
     IDEException := Items[i];
-    ItemPath := APath+AXMLConfig.GetListItemXPath('Item', i, ALegacyList, True)+'/';
+    ItemPath := APath+AXMLConfig.GetListItemXPath('Item', i)+'/';
     IDEException.SaveToXMLConfig(AXMLConfig, ItemPath);
   end;
 end;

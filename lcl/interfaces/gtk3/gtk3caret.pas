@@ -54,6 +54,7 @@ type
     procedure RedrawCaret;
     property PosX: integer read FPos.X;
     property PosY: integer read FPos.Y;
+    property Height: integer read FHeight;
     property RespondToFocus: boolean read FRespondToFocus write SetRespondToFocus;
     property Visible: boolean read FVisible;
   end;
@@ -156,7 +157,7 @@ begin
   begin
     if Assigned(W) and (W.Context = 0) then
     begin
-      if (FLastPos.X >= 0) and (FLastPos.Y >=0) and (FLastPos.X <> FPos.X) or (FLastPos.Y <> FPos.Y) then
+      if (FLastPos.X >= 0) and (FLastPos.Y >=0) and ((FLastPos.X <> FPos.X) or (FLastPos.Y <> FPos.Y)) then
       begin
         FBlinkState := False;
         RepaintLayoutCaret(Bounds(FLastPos.X, FLastPos.Y, FWidth, FHeight));
@@ -209,6 +210,7 @@ end;
 procedure TGtk3Caret.CairoDrawCaret(cr: Pcairo_t);
 begin
   cairo_save(cr);
+  cairo_reset_clip(cr);
   cairo_move_to(cr, FPos.X, FPos.Y);
   cairo_set_operator(cr, CAIRO_OPERATOR_DIFFERENCE);
   if FBlinkState then

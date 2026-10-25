@@ -352,6 +352,21 @@ function CompareCodeTreeNodeExtMethodHeaders(NodeData1, NodeData2: pointer): int
 
 implementation
 
+function IsClassIdentContainer(Node: TCodeTreeNode): boolean; inline;
+// class sections and record compositions contain the identifier nodes of a class
+begin
+  Result:=(Node.Desc in AllClassSections) or (Node.Desc=ctnRecordComposition);
+end;
+
+function CanDescendToClassIdent(Node: TCodeTreeNode): boolean; inline;
+// only named record compositions contain a field
+begin
+  Result:=(Node.FirstChild<>nil)
+    and ((Node.Desc in AllClassSections)
+      or ((Node.Desc=ctnRecordComposition)
+        and (Node.FirstChild.Desc=ctnVarDefinition)));
+end;
+
 function dbgs(Search: TCorrespondingProcSearch): string;
 begin
   str(Search,Result);
@@ -2895,6 +2910,10 @@ begin
     Node:=Node.Parent;
     if Node=nil then exit;
   end;
+  if Node.Desc=ctnRecordComposition then begin
+    Node:=Node.Parent;
+    if Node=nil then exit;
+  end;
   if Node.Desc in AllClassSubSections then
     Node:=Node.Parent;
   if Node.Desc in AllClassBaseSections then
@@ -2966,9 +2985,9 @@ begin
   if (ClassNode=nil) then exit(nil);
   Result:=ClassNode.LastChild;
   if Result=nil then exit;
-  while (Result.FirstChild<>nil) and (Result.Desc in AllClassSections) do
+  while CanDescendToClassIdent(Result) do
     Result:=Result.LastChild;
-  if not (Result.Desc in AllClassSections) then
+  if not IsClassIdentContainer(Result) then
     Result:=FindPriorIdentNodeInClass(Result);
 end;
 
@@ -2979,18 +2998,19 @@ begin
   Result:=Node;
   if Result=nil then exit;
   repeat
-    // descend into class sections, skip empty class sections
-    if (Result.FirstChild<>nil) and (Result.Desc in AllClassSections) then
+    // descend into class sections and named record compositions,
+    // skip empty class sections and unnamed record compositions
+    if CanDescendToClassIdent(Result) then
       Result:=Result.FirstChild
     else begin
       while Result.NextBrother=nil do begin
         Result:=Result.Parent;
-        if (Result=nil) or (not (Result.Desc in AllClassSections)) then
+        if (Result=nil) or (not IsClassIdentContainer(Result)) then
           exit(nil);
       end;
       Result:=Result.NextBrother
     end;
-  until not (Result.Desc in AllClassSections);
+  until not IsClassIdentContainer(Result);
 end;
 
 function TPascalReaderTool.FindPriorIdentNodeInClass(Node: TCodeTreeNode
@@ -3001,13 +3021,13 @@ begin
   repeat
     if Result.PriorBrother<>nil then begin
       Result:=Result.PriorBrother;
-      while (Result.LastChild<>nil) and (Result.Desc in AllClassSections) do
+      while CanDescendToClassIdent(Result) do
         Result:=Result.LastChild;
-    end else if Result.Parent.Desc in AllClassSections then
+    end else if IsClassIdentContainer(Result.Parent) then
       Result:=Result.Parent
     else
       exit(nil);
-  until not (Result.Desc in AllClassSections);
+  until not IsClassIdentContainer(Result);
 end;
 
 function TPascalReaderTool.ClassSectionNodeStartsWithWord(ANode: TCodeTreeNode
@@ -3054,22 +3074,28 @@ end;
 
 function TPascalReaderTool.IdentNodeIsInVisibleClassSection(
   Node: TCodeTreeNode; Visibility: TClassSectionVisibility): Boolean;
+var
+  SectionNode: TCodeTreeNode;
 begin
   if Visibility = csvEverything then
     Result := True
-  else
-  if (Node.Parent<>nil) then
-    case Visibility of
-      //csvAbovePrivate: todo: add strict private and strict protected (should be registered as new sections)
-      csvProtectedAndHigher:
-        Result := not(Node.Parent.Desc = ctnClassPrivate);//todo: add strict private
-      csvPublicAndHigher:
-        Result := not(Node.Parent.Desc in [ctnClassPrivate, ctnClassProtected]);//todo: strict private and strict protected
+  else begin
+    SectionNode:=Node.Parent;
+    if (SectionNode<>nil) and (SectionNode.Desc=ctnRecordComposition) then
+      SectionNode:=SectionNode.Parent;
+    if (SectionNode<>nil) then
+      case Visibility of
+        //csvAbovePrivate: todo: add strict private and strict protected (should be registered as new sections)
+        csvProtectedAndHigher:
+          Result := not(SectionNode.Desc = ctnClassPrivate);//todo: add strict private
+        csvPublicAndHigher:
+          Result := not(SectionNode.Desc in [ctnClassPrivate, ctnClassProtected]);//todo: strict private and strict protected
+      else
+        Result := True
+      end
     else
-      Result := True
-    end
-  else
-    Result := False;
+      Result := False;
+  end;
 end;
 
 function TPascalReaderTool.ExtractProcedureGroup(ProcNode: TCodeTreeNode
@@ -3403,7 +3429,7 @@ begin
     Exit;
   aNode:=ProcNode.LastChild;
   if aNode=nil then exit;
-  if aNode.Desc in [ctnIdentifier,ctnSpecialize] then begin
+  if aNode.Desc in [ctnIdentifier,ctnSpecialize,ctnTypeOf] then begin
     Result:=ExtractNode(aNode,Attr);
   end;
 end;
@@ -3936,7 +3962,7 @@ function TPascalReaderTool.GetProcResultNode(ProcNode: TCodeTreeNode
   ): TCodeTreeNode;
 // procedure: none
 // operator: ctnVarDefinition,ctnIdentifier
-// function: ctnIdentifier, ctnSpecialize
+// function: ctnIdentifier, ctnSpecialize, ctnTypeOf
 begin
   Result:=nil;
   if ProcNode=nil then exit;
@@ -3947,7 +3973,7 @@ begin
   if ProcNode.Desc<>ctnProcedureHead then exit;
   Result:=ProcNode.FirstChild;
   while Result<>nil do begin
-    if Result.Desc in [ctnVarDefinition,ctnIdentifier,ctnSpecialize] then exit;
+    if Result.Desc in [ctnVarDefinition,ctnIdentifier,ctnSpecialize,ctnTypeOf] then exit;
     Result:=Result.NextBrother;
   end;
 end;

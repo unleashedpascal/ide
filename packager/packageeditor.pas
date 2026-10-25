@@ -33,7 +33,7 @@ interface
 
 uses
   // RTL, FCL
-  Classes, SysUtils, Contnrs,
+  Classes, SysUtils, Math, Contnrs,
   // LCL
   Forms, Controls, StdCtrls, ComCtrls, Buttons, Graphics, Menus, Dialogs,
   ExtCtrls, ImgList, LCLType, LCLIntf,
@@ -541,8 +541,8 @@ begin
   PkgEditMenuAddDiskFile:=RegisterIDEMenuCommand(AParent,'Add disk file',lisPckEditAddFilesFromFileSystem);
   PkgEditMenuAddNewDiskFiles:=RegisterIDEMenuCommand(AParent,'Add new disk files',lisAddNewFilesFromFileSystem);
   PkgEditMenuAddNewFile:=RegisterIDEMenuCommand(AParent,'New file',lisA2PNewFile);
-  PkgEditMenuAddNewComp:=RegisterIDEMenuCommand(AParent,'New component',lisMenuNewComponent);
-  PkgEditMenuAddNewReqr:=RegisterIDEMenuCommand(AParent,'New requirement',lisProjAddNewRequirement);
+  PkgEditMenuAddNewComp:=RegisterIDEMenuCommand(AParent,'New component',lisMenuNewComponent + ' ...');
+  PkgEditMenuAddNewReqr:=RegisterIDEMenuCommand(AParent,'New requirement',lisProjAddNewRequirement + ' ...');
   PkgEditMenuAddNewFPMakeReqr:=RegisterIDEMenuCommand(AParent,'New FPMake requirement',lisProjAddNewFPMakeRequirement);
   //
   PkgEditMenuOpenFile:=RegisterIDEMenuCommand(AParent,'Open File',lisOpen);
@@ -574,9 +574,9 @@ begin
   // register the section for operations on all files
   PkgEditMenuSectionFiles:=RegisterIDEMenuSection(PackageEditorMenuRoot,'Files');
   AParent:=PkgEditMenuSectionFiles;
-  PkgEditMenuFindInFiles:=RegisterIDEMenuCommand(AParent,'Find in files',srkmecFindInFiles + ' ...');
-  PkgEditMenuSortFiles:=RegisterIDEMenuCommand(AParent,'Sort Files Permanently',lisPESortFiles);
-  PkgEditMenuFixFilesCase:=RegisterIDEMenuCommand(AParent,'Fix Files Case',lisPEFixFilesCase);
+  PkgEditMenuFindInFiles:=RegisterIDEMenuCommand(AParent,'Find in files',srkmecFindInFiles+' ...',nil,nil,nil,'menu_search_files');
+  PkgEditMenuSortFiles:=RegisterIDEMenuCommand(AParent,'Sort Files Permanently',lisPESortFiles,nil,nil,nil,'menu_edit_sort');
+  PkgEditMenuFixFilesCase:=RegisterIDEMenuCommand(AParent,'Fix Files Case',lisPEFixFilesCase,nil,nil,nil,'menu_edit_swapcase');
   PkgEditMenuShowMissingFiles:=RegisterIDEMenuCommand(AParent, 'Show Missing Files', lisPEShowMissingFiles);
 
   // register the section for using the package
@@ -585,17 +585,17 @@ begin
   // register the section for saving the package
   PkgEditMenuSectionSave:=RegisterIDEMenuSection(PackageEditorMenuRoot,'Save');
   AParent:=PkgEditMenuSectionSave;
-  PkgEditMenuSave:=RegisterIDEMenuCommand(AParent, 'Save', lisPckEditSavePackage);
-  PkgEditMenuSaveAs:=RegisterIDEMenuCommand(AParent, 'Save As', lisPESavePackageAs);
-  PkgEditMenuRevert:=RegisterIDEMenuCommand(AParent, 'Revert', lisPERevertPackage);
-  PkgEditMenuPublish:=RegisterIDEMenuCommand(AParent,'Publish',lisPkgEditPublishPackage);
+  PkgEditMenuSave:=RegisterIDEMenuCommand(AParent,'Save',lisPckEditSavePackage,nil,nil,nil,'laz_save');
+  PkgEditMenuSaveAs:=RegisterIDEMenuCommand(AParent,'Save As',lisPESavePackageAs,nil,nil,nil,'menu_saveas');
+  PkgEditMenuRevert:=RegisterIDEMenuCommand(AParent,'Revert',lisPERevertPackage,nil,nil,nil,'menu_file_revert');
+  PkgEditMenuPublish:=RegisterIDEMenuCommand(AParent,'Publish',lisMenuPublishPackage);
 
   // register the section for compiling the package
   PkgEditMenuSectionCompile:=RegisterIDEMenuSection(PackageEditorMenuRoot,'Compile');
   AParent:=PkgEditMenuSectionCompile;
-  PkgEditMenuCompile:=RegisterIDEMenuCommand(AParent,'Compile',lisCompile);
-  PkgEditMenuRecompileClean:=RegisterIDEMenuCommand(AParent,'Recompile Clean',lisPckEditRecompileClean);
-  PkgEditMenuRecompileAllRequired:=RegisterIDEMenuCommand(AParent,'Recompile All Required',lisPckEditRecompileAllRequired);
+  PkgEditMenuCompile:=RegisterIDEMenuCommand(AParent,'Compile',lisCompile,nil,nil,nil,'menu_compile');
+  PkgEditMenuRecompileClean:=RegisterIDEMenuCommand(AParent,'Recompile Clean',lisPckEditRecompileClean,nil,nil,nil,'menu_recompile_clean');
+  PkgEditMenuRecompileAllRequired:=RegisterIDEMenuCommand(AParent,'Recompile All Required',lisPckEditRecompileAllRequired,nil,nil,nil,'menu_recompile_all_required');
   PkgEditMenuCreateFpmakeFile:=RegisterIDEMenuCommand(AParent,'Create fpmake.pp',lisPckEditCreateFpmakeFile);
   PkgEditMenuCreateMakefile:=RegisterIDEMenuCommand(AParent,'Create Makefile',lisPckEditCreateMakefile);
 
@@ -605,7 +605,7 @@ begin
   // register the section for other things
   PkgEditMenuSectionMisc:=RegisterIDEMenuSection(PackageEditorMenuRoot,'Misc');
   AParent:=PkgEditMenuSectionMisc;
-  PkgEditMenuViewPackageSource:=RegisterIDEMenuCommand(AParent,'View Package Source',lisPckEditViewPackageSource);
+  PkgEditMenuViewPackageSource:=RegisterIDEMenuCommand(AParent,'View Package Source',lisPckEditViewPackageSource,nil,nil,nil,'item_project_source');
 end;
 
 { TPackageEditorForm }
@@ -1507,8 +1507,8 @@ end;
 
 procedure TPackageEditorForm.FormResize(Sender: TObject);
 begin
-  PropsGroupBox.Constraints.MaxHeight := self.Height - ToolBar.Height - FilterPanel.Height
-    - StatusBar.Height - 20;
+  PropsGroupBox.Constraints.MaxHeight := max(0,
+    self.Height - ToolBar.Height - FilterPanel.Height - StatusBar.Height - 20);
 end;
 
 procedure TPackageEditorForm.RevertClick(Sender: TObject);
@@ -1719,6 +1719,9 @@ begin
           OtherFile.AddToUsesPkgSection:=false;
       end;
     end;
+    // the file list is unchanged -> no need to rebuild the tree
+    fForcedFlags:=[pefNeedUpdateTitle,pefNeedUpdateProperties,
+                   pefNeedUpdateButtons,pefNeedUpdateStatusBar];
     LazPackage.Modified:=True;
   end;
 end;
@@ -1758,8 +1761,12 @@ begin
     or CurFile.HasRegisterProc=FPropGui.CallRegisterProcCheckBox.Checked then
       continue;
     CurFile.HasRegisterProc:=FPropGui.CallRegisterProcCheckBox.Checked;
-    if not NodeData.Removed then
+    if not NodeData.Removed then begin
+      // the file list is unchanged -> no need to rebuild the tree
+      fForcedFlags:=[pefNeedUpdateTitle,pefNeedUpdateProperties,
+                     pefNeedUpdateButtons,pefNeedUpdateStatusBar];
       LazPackage.Modified:=True;
+    end;
   end;
 end;
 
@@ -1880,8 +1887,12 @@ begin
       or CurFile.DisableI18NForLFM=FPropGui.DisableI18NForLFMCheckBox.Checked then
         continue;
       CurFile.DisableI18NForLFM:=FPropGui.DisableI18NForLFMCheckBox.Checked;
-      if not NodeData.Removed then
+      if not NodeData.Removed then begin
+        // the file list is unchanged -> no need to rebuild the tree
+        fForcedFlags:=[pefNeedUpdateTitle,pefNeedUpdateProperties,
+                       pefNeedUpdateButtons,pefNeedUpdateStatusBar];
         LazPackage.Modified:=true;
+      end;
     end;
   finally
     EndUpdate;
@@ -1955,8 +1966,10 @@ begin
   ImageIndexBinary          := IDEImages.LoadImage('pkg_binary');
   ImageIndexDirectory       := IDEImages.LoadImage('pkg_files');
 
-  ItemsTreeView.Images := IDEImages.Images_16;
-  ToolBar.Images := IDEImages.Images_16;
+  ItemsTreeView .Images := IDEImages.Images_16;
+  ToolBar       .Images := IDEImages.Images_16;
+  MorePopupMenu .Images := IDEImages.Images_16;
+
   FilterEdit.OnGetImageIndex:=@TreeViewGetImageIndex;
 
   SaveBitBtn    := CreateToolButton('SaveBitBtn', lisMenuSave, lisPckEditSavePackage, 'laz_save', @SaveBitBtnClick);
@@ -1980,8 +1993,8 @@ begin
   mnuAddDiskFile.Caption := lisPckEditAddFilesFromFileSystem;
   mnuAddNewDiskFiles.Caption := lisAddNewFilesFromFileSystem;
   mnuAddNewFile.Caption := lisA2PNewFile;
-  mnuAddNewComp.Caption := lisMenuNewComponent;
-  mnuAddNewReqr.Caption := lisProjAddNewRequirement;
+  mnuAddNewComp.Caption := lisMenuNewComponent + ' ...';
+  mnuAddNewReqr.Caption := lisProjAddNewRequirement + ' ...';
   mnuAddFPMakeReq.Caption := lisProjAddNewFPMakeRequirement;
 
   // Buttons on FilterPanel
@@ -2659,7 +2672,7 @@ var
   NodeData: TPENodeData;
   Item: TObject;
   i, j: Integer;
-  SelFileCount, SelDepCount, SelUnitCount, SelDirCount, SelHasLFMCount: Integer;
+  SelFileCount, SelDepCount, SelUnitCount, SelDirCount, SelHasLFMCount, SelVirtualCount: Integer;
   FileCount, HasRegisterProcCount, AddToUsesPkgSectionCount: integer;
   SelHasRegisterProc, SelAddToUsesPkgSection, SelDisableI18NForLFM: TMultiBool;
   aVisible, OnlyFilesWithUnitsSelected, SingleSelectedRemoved: Boolean;
@@ -2681,6 +2694,7 @@ begin
   SelDisableI18NForLFM:=mubNone;
   SelUnitCount:=0;
   SelHasLFMCount:=0;
+  SelVirtualCount:=0;
   SelDirCount:=0;
   for i:=0 to ItemsTreeView.SelectionCount-1 do begin
     TVNode:=ItemsTreeView.Selections[i];
@@ -2704,7 +2718,9 @@ begin
               inc(SelHasLFMCount);
               MergeMultiBool(SelDisableI18NForLFM,CurFile.DisableI18NForLFM);
             end;
-          end;
+          end
+          else   // pftVirtualUnit
+            Inc(SelVirtualCount);
           // fetch all registered plugins
           for j:=0 to CurFile.ComponentCount-1 do begin
             CurComponent:=CurFile.Components[j];
@@ -2751,6 +2767,10 @@ begin
     // Min/Max version of dependency (only single selection)
     FPropGui.ControlVisible := SingleSelectedDep<>nil;
     FPropGui.SetMinMaxVisibility;
+
+    // Virtual unit
+    FPropGui.ControlVisible := OnlyFilesWithUnitsSelected and (SelVirtualCount>0);
+    FPropGui.SetVirtualUnit;
 
     // disable i18n for lfm
     FPropGui.ControlVisible := OnlyFilesWithUnitsSelected and (SelHasLFMCount>0)
@@ -3113,14 +3133,14 @@ end;
 
 procedure TPackageEditorForm.FilterEditAfterFilter(Sender: TObject);
 var
-  LPackage: TIDEPackage;
+  Pkg: TIDEPackage;
 begin
-  if Assigned(SourceEditorManagerIntf) and Assigned(PackageEditingInterface) and Assigned(SourceEditorManagerIntf.ActiveEditor) then
-  begin
-    PackageEditingInterface.GetPackageOfSourceEditor(LPackage, SourceEditorManagerIntf.ActiveEditor);
-    if (LPackage is TEditablePackage) and (TEditablePackage(LPackage).Editor = Self) then
-      SelectFileNode(SourceEditorManagerIntf.ActiveEditor.FileName);
-  end;
+  if (SourceEditorManagerIntf=nil) or (SourceEditorManagerIntf.ActiveEditor=nil)
+  or (PackageEditingInterface=nil) then
+    exit;
+  PackageEditingInterface.GetPackageOfSourceEditor(Pkg, SourceEditorManagerIntf.ActiveEditor);
+  if (Pkg is TEditablePackage) and (TEditablePackage(Pkg).Editor = Self) then
+    SelectFileNode(SourceEditorManagerIntf.ActiveEditor.FileName);
 end;
 
 function TPackageEditorForm.FirstRequiredDependency: TPkgDependency;
@@ -3158,10 +3178,10 @@ begin
       and (LazPackage.PackageType=lptDesignTime) then
   begin
     MsgResult:=IDEQuestionDialog(dlgMsgWinColorUrgentWarning,
-        Format(lisPackageIsDesigntimeOnlySoItShouldOnlyBeCompiledInt, [
-          LazPackage.Name, #13]),
-        mtWarning, [mrYes, lisCompileWithProjectSettings,
-        mrYesToAll, lisCompileAndDoNotAskAgain, mrCancel]);
+        Format(lisPackageIsDesigntimeOnlySoItShouldOnlyBeCompiledInt,
+          [LazPackage.Name, #13]),
+          mtWarning, [mrYes, lisCompileWithProjectSettings,
+                      mrYesToAll, lisCompileAndDoNotAskAgain, mrCancel]);
     case MsgResult of
     mrYes: ;
     mrYesToAll:

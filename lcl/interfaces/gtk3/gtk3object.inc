@@ -81,6 +81,8 @@ procedure TGtk3WidgetSet.Gtk3Create;
 var
   AGtkThread: PGThread;
   AId: String;
+  ASettings: PGtkSettings;
+  AValue: TGValue;
 begin
   // the scroll bars stay in view as on the other widgetsets; gtk takes the
   // variable from the libc environment as it initializes, an explicit
@@ -89,6 +91,15 @@ begin
     setenv('GTK_OVERLAY_SCROLLING', '0', 0);
   g_type_init;
   gtk_init(@argc, @argv);
+  ASettings := gtk_settings_get_default;
+  if Assigned(ASettings) then
+  begin
+    FillByte(AValue{%H-}, SizeOf(AValue), 0);
+    AValue.init(G_TYPE_BOOLEAN);
+    AValue.set_boolean(False);
+    ASettings^.set_property('gtk-entry-select-on-focus', @AValue);
+    AValue.unset;
+  end;
   AGtkThread := g_thread_self();
   if not IsLibrary then
   begin
@@ -203,6 +214,7 @@ function TGtk3WidgetSet.GetWMName: string;
 var
   AScreen: PGdkScreen;
   AName: Pgchar;
+  ADisplayType: string;
 {$ENDIF}
 begin
   if FWMNameCached then
@@ -218,8 +230,15 @@ begin
     Result := FWMName;
     exit;
   end;
+  ADisplayType := G_OBJECT_TYPE_NAME(gdk_display_get_default);
+  if CompareText(ADisplayType, 'GdkBroadwayDisplay') = 0 then
+  begin
+    FWMName := 'broadway';
+    Result := FWMName;
+    exit;
+  end;
   AScreen := gdk_screen_get_default;
-  if AScreen <> nil then
+  if (AScreen <> nil) and (CompareText(ADisplayType, 'GdkX11Display') = 0) then
   begin
     AName := gdk_x11_screen_get_window_manager_name(AScreen);
     if AName <> nil then
@@ -374,6 +393,8 @@ var
 begin
   SetExceptionMask([exInvalidOp, exDenormalized, exZeroDivide, exOverflow, exUnderflow, exPrecision]);
   inherited Create;
+  System.InitCriticalSection(FHandlesCS);
+  FSavedHandlesList := TMap.Create(TMapIdType(ituPtrSize), SizeOf(TObject));
   FDockImage := nil;
 
   FDragImageList := nil;
@@ -476,6 +497,8 @@ begin
   FCSSTheme.Free;
   FSystemMetricsList.Free;
   DoneGtk3KeyboardTables;
+  FreeAndNil(FSavedHandlesList);
+  System.DoneCriticalSection(FHandlesCS);
   inherited Destroy;
 end;
 
@@ -488,18 +511,27 @@ end;
 procedure ApplyCustomScrollbarStyles(const APixels: integer);
 var
   CssProvider: PGtkCssProvider;
+  AScreen: PGdkScreen;
 begin
-  CssProvider := gtk_css_provider_new();
+  AScreen := gdk_screen_get_default();
+  if AScreen = nil then
+    exit;
+  // one provider per screen, reloaded on theme change instead of adding a new one each time
+  CssProvider := PGtkCssProvider(g_object_get_data(PGObject(AScreen), 'lcl-scrollbar-css'));
+  if CssProvider = nil then
+  begin
+    CssProvider := gtk_css_provider_new();
+    gtk_style_context_add_provider_for_screen(AScreen,
+      PGtkStyleProvider(CssProvider),
+      GTK_STYLE_PROVIDER_PRIORITY_APPLICATION
+    );
+    g_object_set_data_full(PGObject(AScreen), 'lcl-scrollbar-css', CssProvider,
+      TGDestroyNotify(@g_object_unref));
+  end;
   gtk_css_provider_load_from_data(CssProvider,
     PgChar(Format('scrollbar.horizontal { margin-right: %dpx; }' +
     'scrollbar.vertical { margin-bottom: %dpx; }',[APixels, APixels])),
     -1, nil);
-
-  gtk_style_context_add_provider_for_screen(
-    gdk_screen_get_default(),
-    PGtkStyleProvider(CssProvider),
-    GTK_STYLE_PROVIDER_PRIORITY_APPLICATION
-  );
 end;
 
 procedure ApplyCustomSpinButtonCSS;
@@ -513,12 +545,17 @@ var
     '}';
 
 begin
+  Screen := gdk_screen_get_default();
+  if Screen = nil then
+    exit;
+  if g_object_get_data(PGObject(Screen), 'lcl-spinbutton-css') <> nil then
+    exit;
   CssProvider := gtk_css_provider_new();
   gtk_css_provider_load_from_data(CssProvider, CSSData, -1, nil);
-  Screen := gdk_screen_get_default();
   gtk_style_context_add_provider_for_screen(Screen,
     PGtkStyleProvider(CssProvider), GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
-  g_object_unref(CssProvider);
+  g_object_set_data_full(PGObject(Screen), 'lcl-spinbutton-css', CssProvider,
+    TGDestroyNotify(@g_object_unref));
 end;
 
 function Gtk3RefreshThemeIdle(AData: gpointer): gboolean; cdecl;
@@ -718,6 +755,7 @@ procedure TGtk3WidgetSet.AppInit(var ScreenInfo: TScreenInfo);
 
 var
   ScreenDC: HDC;
+  ADpi: gdouble;
 begin
   DisableContainerArrowBindings;
   {$IFDEF GTK3DEBUGCORE}
@@ -725,9 +763,12 @@ begin
   {$ENDIF}
   ScreenDC := GetDC(0);
   try
-    ScreenInfo.PixelsPerInchX := Round(gdk_screen_get_resolution(gdk_screen_get_default));
+    ADpi := gdk_screen_get_resolution(gdk_screen_get_default);
+    if ADpi <= 0 then
+      ADpi := 96;
+    ScreenInfo.PixelsPerInchX := Round(ADpi);
     // GetDeviceCaps(ScreenDC, LOGPIXELSX);
-    ScreenInfo.PixelsPerInchY := Round(gdk_screen_get_resolution(gdk_screen_get_default));
+    ScreenInfo.PixelsPerInchY := Round(ADpi);
     // GetDeviceCaps(ScreenDC, LOGPIXELSY);
     ScreenInfo.ColorDepth := GetDeviceCaps(ScreenDC, BITSPIXEL);
   finally
@@ -747,6 +788,7 @@ var
   ASettings: PGtkSettings;
   AValue: TGValue;
   EnvTheme: string;
+  ACSSText: Pgchar;
 begin
   ACSSProvider := nil;
   EnvTheme := GetEnvironmentVariable('GTK_THEME');
@@ -777,7 +819,9 @@ begin
     exit;
   end;
 
-  FCSSTheme.Text := gtk_css_provider_to_string(ACSSProvider);
+  ACSSText := gtk_css_provider_to_string(ACSSProvider);
+  FCSSTheme.Text := ACSSText;
+  g_free(ACSSText);
 end;
 
 procedure TGtk3WidgetSet.ClearCSSTheme;
@@ -850,10 +894,8 @@ begin
     {$IFDEF GTK3DEBUGCORE}
     AList := FGtk3Application^.get_windows;
     if Assigned(AList) then
-    begin
-      DebugLn('TGtk3WidgetSet.Gtk3Destroy app Windows list ',dbgs(g_list_length(AList)));
-      g_list_free(AList);
-    end else
+      DebugLn('TGtk3WidgetSet.Gtk3Destroy app Windows list ',dbgs(g_list_length(AList)))
+    else
       DebugLn('TGtk3WidgetSet.Gtk3Destroy app Windows list is null ');
     {$ENDIF}
     FGtk3Application^.unref;
@@ -899,7 +941,12 @@ begin
       (TGtk3Widget(AForm.Handle).Visible) and
       not (AForm.FormStyle in [fsMDIChild, fsSplash]) and
       not (AForm.BorderStyle in [bsNone]) then
+    begin
+      if IsWayland then
+        PGtkWindow(TGtk3Window(AForm.Handle).Widget)^.present
+      else
         PGtkWindow(TGtk3Window(AForm.Handle).Widget)^.deiconify;
+    end;
   end;
 end;
 
@@ -924,12 +971,10 @@ var
 begin
   // DebugLn('TGtk3WidgetSet.AppSetIcon Small=',dbgHex(Small),' Big=',dbgHex(Big));
   DoDestroyIcon := Big = 0;
-  if DoDestroyIcon then
-  begin
-    if Assigned(FAppIcon) then
-      FAppIcon^.unref;
-    FAppIcon := nil;
-  end else
+  if Assigned(FAppIcon) then
+    FAppIcon^.unref;
+  FAppIcon := nil;
+  if not DoDestroyIcon then
   begin
     AIcon := TGtk3Image(Big).Handle;
     FAppIcon := PGdkPixbuf(AIcon)^.copy;
@@ -1296,19 +1341,63 @@ end;
 
 function TGtk3WidgetSet.IsValidDC(const DC: HDC): Boolean;
 begin
-  Result := DC <> 0;
+  Result := Gtk3IsValidDeviceContext(DC);
   if Result then
     Result := TGtk3DeviceContext(DC).pcr <> nil;
 end;
 
 function TGtk3WidgetSet.IsValidGDIObject(const AGdiObject: HGDIOBJ): Boolean;
 begin
-  Result := (AGdiObject <> 0) and (TObject(AGdiObject) is TGtk3ContextObject);
+  Result := Gtk3IsValidGDIObject(AGdiObject);
 end;
 
 function TGtk3WidgetSet.IsValidHandle(const AHandle: HWND): Boolean;
+var
+  Key: PtrUInt;
 begin
-  Result := AHandle <> 0;
+  if (AHandle = 0) or (FSavedHandlesList = nil) then
+    exit(False);
+  Key := PtrUInt(AHandle);
+  System.EnterCriticalSection(FHandlesCS);
+  try
+    Result := FSavedHandlesList.HasId(Key);
+  finally
+    System.LeaveCriticalSection(FHandlesCS);
+  end;
+end;
+
+procedure TGtk3WidgetSet.AddHandle(AHandle: TObject);
+var
+  Key: PtrUInt;
+  Obj: TObject;
+begin
+  if (AHandle = nil) or (FSavedHandlesList = nil) then
+    exit;
+  Key := PtrUInt(AHandle);
+  Obj := AHandle;
+  System.EnterCriticalSection(FHandlesCS);
+  try
+    if not FSavedHandlesList.HasId(Key) then
+      FSavedHandlesList.Add(Key, Obj);
+  finally
+    System.LeaveCriticalSection(FHandlesCS);
+  end;
+end;
+
+procedure TGtk3WidgetSet.RemoveHandle(AHandle: TObject);
+var
+  Key: PtrUInt;
+begin
+  if (AHandle = nil) or (FSavedHandlesList = nil) then
+    exit;
+  Key := PtrUInt(AHandle);
+  System.EnterCriticalSection(FHandlesCS);
+  try
+    if FSavedHandlesList.HasId(Key) then
+      FSavedHandlesList.Delete(Key);
+  finally
+    System.LeaveCriticalSection(FHandlesCS);
+  end;
 end;
 
 procedure TGtk3WidgetSet.InitStockItems;

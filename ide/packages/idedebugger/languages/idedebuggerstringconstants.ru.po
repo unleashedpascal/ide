@@ -28,6 +28,26 @@ msgstr "- Добавить новую группу -"
 msgid "No group"
 msgstr "Не в группе"
 
+#: idedebuggerstringconstants.brkhandleignorebreakpoints
+msgid "Handle/Ignore breakpoints"
+msgstr "Обрабатывать/игнорировать точки останова"
+
+#: idedebuggerstringconstants.brkhandleignoreexceptions
+msgid "Handle/Ignore exceptions"
+msgstr "Обрабатывать/игнорировать исключения"
+
+#: idedebuggerstringconstants.brkshowbreakpointsandwatchpo
+msgid "Show breakpoints and watchpoints"
+msgstr "Показывать точки останова и наблюдения"
+
+#: idedebuggerstringconstants.brkshowbreakwatchpointsandex
+msgid "Show break/watchpoints and exception-filter"
+msgstr "Показывать точки останова, наблюдения и фильтр исключений"
+
+#: idedebuggerstringconstants.brkshowexceptionfilter
+msgid "Show exception-filter"
+msgstr "Показывать фильтр исключений"
+
 #: idedebuggerstringconstants.dbgasmwindowlinktarget
 msgid "Link target line"
 msgstr "Целевая строка ссылки"
@@ -315,6 +335,10 @@ msgctxt "idedebuggerstringconstants.dispformatcharord"
 msgid "Ordinal"
 msgstr "Числовое значение"
 
+#: idedebuggerstringconstants.dispformatdlgaddrprefix
+msgid "Address marker"
+msgstr "Маркер адреса"
+
 #: idedebuggerstringconstants.dispformatdlgarraycombine
 msgid "Combine lengths"
 msgstr "Складывать длины"
@@ -359,6 +383,10 @@ msgstr "Учитывать вложенные"
 #: idedebuggerstringconstants.dispformatdlgbtnadrformat
 msgid "Address"
 msgstr "Адрес"
+
+#: idedebuggerstringconstants.dispformatdlgbtnadrformatdata
+msgid "Data-address"
+msgstr "Адрес данных"
 
 #: idedebuggerstringconstants.dispformatdlgbtnall
 msgid "All"
@@ -449,6 +477,10 @@ msgstr "(Типизированный)"
 msgctxt "idedebuggerstringconstants.dispformatdlgindent"
 msgid "Multiline"
 msgstr "Многострочность"
+
+#: idedebuggerstringconstants.dispformatdlgnumprefix
+msgid "Number marker"
+msgstr "Маркер числа"
 
 #: idedebuggerstringconstants.dispformatenumname
 msgctxt "idedebuggerstringconstants.dispformatenumname"
@@ -804,6 +836,39 @@ msgstr "- По умолчанию -"
 msgctxt "debuggerstrconst.dlgbackendconvoptdisabled"
 msgid "- Disabled -"
 msgstr "- Отключено -"
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowchangetakeseffect
+msgid "A change takes effect when the next debug session starts."
+msgstr "Изменение вступает в силу с началом следующего сеанса отладки."
+
+#: idedebuggerstringconstants.dlgdebugconsolewindoweditdiv
+msgid "Edit IDE console provider"
+msgstr "Редактирование поставщика консоли IDE"
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowediting
+#, object-pascal-format
+msgid "Currently editing %s"
+msgstr "Сейчас редактируется %s"
+
+#: idedebuggerstringconstants.dlgdebugconsolewindownone
+msgid "No console window is available."
+msgstr "Доступные окна консолей отсутствуют."
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowoptions
+msgid "Debug Console Window"
+msgstr "Окно отладочной консоли"
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowrunparamshint
+msgid ""
+"Selects the default Console for showing the target's StdIn/Out in the IDE.\n"
+"Project can override this in their \"Run Parameters\". The default there is \"use IDE default\"."
+msgstr ""
+"Позволяет выбрать консоль по умолчанию для отображения стандартного ввода/вывода цели в IDE.\n"
+"Проект может перекрыть это значение в диалоге \"Параметры запуска\". По умолчанию используется значение, заданное в параметрах IDE."
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowselectdiv
+msgid "Select provider for IDE console window"
+msgstr "Выбор поставщика консоли IDE"
 
 #: idedebuggerstringconstants.dlgdisplayformatdebugoptions
 msgid "Display Format"
@@ -1263,6 +1328,10 @@ msgstr "Видимость"
 msgid "Condition"
 msgstr "Условие"
 
+#: idedebuggerstringconstants.lisconsolelocalecho
+msgid "Echo typed input"
+msgstr "Эхо-вывод набираемых символов"
+
 #: idedebuggerstringconstants.liscopyall
 msgid "Copy All"
 msgstr "Копировать все"
@@ -1399,6 +1468,10 @@ msgstr "Вкл./выкл."
 msgctxt "idedebuggerstringconstants.lisdbgwinpowerhint"
 msgid "Disable/Enable updates for the entire window"
 msgstr "Отключить/включить обновления для всего окна"
+
+#: idedebuggerstringconstants.lisdebugconsolebuiltinname
+msgid "IDE Debug Console"
+msgstr "Отладочная консоль IDE"
 
 #: idedebuggerstringconstants.lisdebuggerfeedbackerror
 msgid "Debugger Error"
@@ -1883,7 +1956,7 @@ msgid "Assembler"
 msgstr "Ассемблер"
 
 #: idedebuggerstringconstants.lismenuviewbreakpointsandexceptions
-msgid "BreakPoints/Exceptions"
+msgid "Breakpoints/Exceptions"
 msgstr "Точки останова и исключения"
 
 #: idedebuggerstringconstants.lismenuviewcallstack
@@ -2189,6 +2262,10 @@ msgstr "Word (от старшего байта к младшему)"
 #: idedebuggerstringconstants.memviewgroupwordlittleendian
 msgid "Word (Little Endian)"
 msgstr "Word (от младшего байта к старшему)"
+
+#: idedebuggerstringconstants.mnuconsoleinoutputwindow
+msgid "Console In/Output (Lazarus)"
+msgstr "Ввод/вывод в консоли (Lazarus)"
 
 #: idedebuggerstringconstants.optdispguttercustomdisplayformat
 msgid "Custom Display Format"

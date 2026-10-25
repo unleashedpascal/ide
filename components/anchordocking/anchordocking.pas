@@ -488,7 +488,6 @@ type
     procedure StoreConstraints;
     function GetSitePreferredClientSize: TPoint;
     function IsEnabledControl(Control: TControl):Boolean; override;
-    function CanBeDoubleDocked:Boolean; override;
 
     property Site: TWinControl read FSite; // the associated TControl (a TAnchorDockHostSite or a custom dock site)
     property DockSite: TAnchorDockHostSite read FDockSite; // if Site is a TAnchorDockHostSite, this is it
@@ -513,6 +512,7 @@ type
     FDockOutsideMargin: integer;
     FDockParentMargin: integer;
     FDragTreshold: integer;
+    FDragDelay: integer;
     FFloatingWindowsOnTop: boolean;
     FHeaderAlignLeft: integer;
     FHeaderAlignTop: integer;
@@ -537,6 +537,7 @@ type
     procedure SetDockOutsideMargin(AValue: integer);
     procedure SetDockParentMargin(AValue: integer);
     procedure SetDragTreshold(AValue: integer);
+    procedure SetDragDelay(AValue: integer);
     procedure SetFloatingWindowsOnTop(AValue: boolean);
     procedure SetHeaderAlignLeft(AValue: integer);
     procedure SetHeaderAlignTop(AValue: integer);
@@ -559,6 +560,7 @@ type
     procedure SetFlatHeadersButtons(AValue: boolean);
   public
     property DragTreshold: integer read FDragTreshold write SetDragTreshold;
+    property DragDelay: integer read FDragDelay write SetDragDelay;
     property DockOutsideMargin: integer read FDockOutsideMargin write SetDockOutsideMargin;
     property DockParentMargin: integer read FDockParentMargin write SetDockParentMargin;
     property PageAreaInPercent: integer read FPageAreaInPercent write SetPageAreaInPercent;
@@ -629,6 +631,7 @@ type
     FDockOutsideMargin: integer;
     FDockParentMargin: integer;
     FDragTreshold: integer;
+    FDragDelay: integer;
     FFloatingWindowsOnTop: boolean;
     FFormStyles: TFormStyles;
     FHeaderAlignLeft: integer;
@@ -714,6 +717,7 @@ type
     procedure SetDockOutsideMargin(AValue: integer);
     procedure SetDockParentMargin(AValue: integer);
     procedure SetDragTreshold(AValue: integer);
+    procedure SetDragDelay(AValue: integer);
     procedure SetHeaderHint(AValue: string);
     procedure SetHeaderStyle(AValue: THeaderStyleName);
     procedure SetPageAreaInPercent(AValue: integer);
@@ -839,6 +843,7 @@ type
     property OnShowOptions: TADShowDockMasterOptionsEvent read FOnShowOptions write FOnShowOptions;
     property OnOptionsChanged: TNotifyEvent read FOnOptionsChanged write FOnOptionsChanged;
     property DragTreshold: integer read FDragTreshold write SetDragTreshold default 4;
+    property DragDelay: integer read FDragDelay write SetDragDelay default 0;
     property DockOutsideMargin: integer read FDockOutsideMargin write SetDockOutsideMargin default 10; // max distance for outside mouse snapping
     property DockParentMargin: integer read FDockParentMargin write SetDockParentMargin default 10; // max distance for snap to parent
     property FloatingWindowsOnTop: boolean read FFloatingWindowsOnTop write SetFloatingWindowsOnTop default false;
@@ -1417,6 +1422,13 @@ begin
   IncreaseChangeStamp;
 end;
 
+procedure TAnchorDockSettings.SetDragDelay(AValue: integer);
+begin
+  if FDragDelay=AValue then Exit;
+  FDragDelay:=AValue;
+  IncreaseChangeStamp;
+end;
+
 procedure TAnchorDockSettings.SetFloatingWindowsOnTop(AValue: boolean);
 begin
   if FFloatingWindowsOnTop=AValue then Exit;
@@ -1574,6 +1586,7 @@ begin
   FDockSitesCanBeMinimized          := Source.FDockSitesCanBeMinimized;
   FlatHeadersButtons                := Source.FlatHeadersButtons;
   FDragTreshold                     := Source.FDragTreshold;
+  FDragDelay                        := Source.FDragDelay;
   FFloatingWindowsOnTop             := Source.FFloatingWindowsOnTop;
   FHeaderAlignLeft                  := Source.FHeaderAlignLeft;
   FHeaderAlignTop                   := Source.FHeaderAlignTop;
@@ -1620,6 +1633,7 @@ begin
   DockSitesCanBeMinimized          := Config.GetValue('DockSitesCanBeMinimized',False);
   FlatHeadersButtons               := Config.GetValue('FlatHeadersButtons',True);
   DragTreshold                     := Config.GetValue('DragThreshold',4);
+  DragDelay                        := Config.GetValue('DragDelay',0);
   FloatingWindowsOnTop             := Config.GetValue('FloatingWindowsOnTop',false);
   HeaderAlignLeft                  := Config.GetValue('HeaderAlignLeft',120);
   HeaderAlignTop                   := Config.GetValue('HeaderAlignTop',80);
@@ -1648,6 +1662,7 @@ begin
   Config.SetDeleteValue(Path+'DockSitesCanBeMinimized',DockSitesCanBeMinimized,False);
   Config.SetDeleteValue(Path+'FlatHeadersButtons',FlatHeadersButtons,True);
   Config.SetDeleteValue(Path+'DragThreshold',DragTreshold,4);
+  Config.SetDeleteValue(Path+'DragDelay',DragDelay,0);
   Config.SetDeleteValue(Path+'FloatingWindowsOnTop',FloatingWindowsOnTop,false);
   Config.SetDeleteValue(Path+'HeaderAlignLeft',HeaderAlignLeft,120);
   Config.SetDeleteValue(Path+'HeaderAlignTop',HeaderAlignTop,80);
@@ -1674,8 +1689,9 @@ begin
   Config.SetDeleteValue('DockOutsideMargin',DockOutsideMargin,10);
   Config.SetDeleteValue('DockParentMargin',DockParentMargin,10);
   Config.SetDeleteValue('DockSitesCanBeMinimized',DockSitesCanBeMinimized,False);
-  Config.SetDeleteValue('FlatHeadersButtons',DockSitesCanBeMinimized,True);
+  Config.SetDeleteValue('FlatHeadersButtons',FlatHeadersButtons,True);
   Config.SetDeleteValue('DragThreshold',DragTreshold,4);
+  Config.SetDeleteValue('DragDelay',DragDelay,0);
   Config.SetDeleteValue('FloatingWindowsOnTop',FloatingWindowsOnTop,false);
   Config.SetDeleteValue('HeaderAlignLeft',HeaderAlignLeft,120);
   Config.SetDeleteValue('HeaderAlignTop',HeaderAlignTop,80);
@@ -1704,6 +1720,7 @@ begin
       and (DockSitesCanBeMinimized=Settings.DockSitesCanBeMinimized)
       and (FlatHeadersButtons=Settings.FlatHeadersButtons)
       and (DragTreshold=Settings.DragTreshold)
+      and (DragDelay=Settings.DragDelay)
       and (FloatingWindowsOnTop=Settings.FloatingWindowsOnTop)
       and (HeaderAlignLeft=Settings.HeaderAlignLeft)
       and (HeaderAlignTop=Settings.HeaderAlignTop)
@@ -1734,6 +1751,7 @@ begin
   DockSitesCanBeMinimized          := Config.GetValue(Path+'DockSitesCanBeMinimized',false);
   FlatHeadersButtons               := Config.GetValue(Path+'FlatHeadersButtons',true);
   DragTreshold                     := Config.GetValue(Path+'DragThreshold',4);
+  DragDelay                        := Config.GetValue(Path+'DragDelay',0);
   FloatingWindowsOnTop             := Config.GetValue(Path+'FloatingWindowsOnTop',false);  ;
   HeaderAlignLeft                  := Config.GetValue(Path+'HeaderAlignLeft',120);
   HeaderAlignTop                   := Config.GetValue(Path+'HeaderAlignTop',80);
@@ -2985,6 +3003,13 @@ begin
   OptionsChanged;
 end;
 
+procedure TAnchorDockMaster.SetDragDelay(AValue: integer);
+begin
+  if FDragDelay=AValue then Exit;
+  FDragDelay:=AValue;
+  OptionsChanged;
+end;
+
 procedure TAnchorDockMaster.SetHeaderHint(AValue: string);
 begin
   if FHeaderHint=AValue then Exit;
@@ -3284,6 +3309,7 @@ begin
   FControls:=TFPList.Create;
   FAllowDragging:=false;
   FDragTreshold:=4;
+  FDragDelay:=0;
   FDockOutsideMargin:=10;
   FDockParentMargin:=10;
   FFloatingWindowsOnTop:=false;
@@ -4005,6 +4031,7 @@ begin
   FlatHeadersButtons               := False;
  {$ENDIF}
   DragTreshold                     := Settings.DragTreshold;
+  DragDelay                        := Settings.DragDelay;
   FloatingWindowsOnTop             := Settings.FloatingWindowsOnTop;
   PageAreaInPercent                := Settings.PageAreaInPercent;
   OuterBorderAreaMaxPixel          := Settings.OuterBorderAreaMaxPixel;
@@ -4032,6 +4059,7 @@ begin
   Settings.DockSitesCanBeMinimized          := DockSitesCanBeMinimized;
   Settings.FlatHeadersButtons               := FlatHeadersButtons;
   Settings.DragTreshold                     := DragTreshold;
+  Settings.DragDelay                        := DragDelay;
   Settings.FloatingWindowsOnTop             := FloatingWindowsOnTop;
   Settings.PageAreaInPercent                := PageAreaInPercent;
   Settings.OuterBorderAreaMaxPixel          := OuterBorderAreaMaxPixel;
@@ -4735,6 +4763,7 @@ begin
         begin
           dec(NewBounds.Left,NewSite.Width+Splitter.Width);
           MoveAllControls(NewSite.Width+Splitter.Width,0);
+          Splitter.FPercentPosition := -1;
         end;
       alRight:
         inc(NewBounds.Right,NewSite.Width+Splitter.Width);
@@ -4742,6 +4771,7 @@ begin
         begin
           dec(NewBounds.Top,NewSite.Height+Splitter.Height);
           MoveAllControls(0,NewSite.Height+Splitter.Height);
+          Splitter.FPercentPosition := -1;
         end;
       alBottom:
         inc(NewBounds.Bottom,NewSite.Height+Splitter.Height);
@@ -4759,8 +4789,9 @@ begin
         begin
           i:=NewSite.Width+Splitter.Width;
           dec(NewParentBounds.Left,i);
-          dec(NewBounds.Left,i);
+          inc(NewBounds.Right,i);
           MoveAllControls(i,0);
+          Splitter.FPercentPosition := -1;
         end;
       alRight:
         begin
@@ -4771,9 +4802,10 @@ begin
       alTop:
         begin
           i:=NewSite.Height+Splitter.Height;
-          dec(NewBounds.Top,i);
           dec(NewParentBounds.Top,i);
+          inc(NewBounds.Bottom,i);
           MoveAllControls(0,i);
+          Splitter.FPercentPosition := -1;
         end;
       alBottom:
         begin
@@ -7021,6 +7053,7 @@ begin
     PreferredWidth := max(R.Bottom - R.Top, PreferredWidth);
     PreferredHeight:=PreferredWidth;
   finally
+    ReleaseDC(Handle, LCanvas.Handle);
     LCanvas.Handle:= 0;
     LCanvas.Free;
   end;
@@ -7089,7 +7122,12 @@ begin
           //if parent=DockMaster.FOverlappingForm.Panel then
             DockMaster.HideOverlappingForm(nil);
       if (Button=mbLeft) and (DockMaster.AllowDragging) and (DockMaster.FOverlappingForm=nil) then
-        DragManager.DragStart(Parent,false,DockMaster.DragTreshold);
+        begin
+          if DockMaster.DragDelay=0 then
+            DragManager.DragStart(Parent,false,DockMaster.DragTreshold)
+          else
+            DragManager.DragStartAfterDelay(Parent,DockMaster.DragTreshold,DockMaster.DragDelay);
+        end;
     end;
 end;
 
@@ -8059,11 +8097,6 @@ begin
   Result := (DockMaster <> nil) and DockMaster.IsSite(Control);
 end;
 
-function TAnchorDockManager.CanBeDoubleDocked:Boolean;
-begin
-  Result := False;
-end;
-
 { TAnchorDockSplitter }
 
 procedure TAnchorDockSplitter.SetResizeAnchor(const AValue: TAnchorKind);
@@ -8402,7 +8435,10 @@ begin
     if (APage.ControlCount>0) and (APage.Controls[0] is TAnchorDockHostSite) then
     begin
       Site:=TAnchorDockHostSite(APage.Controls[0]);
-      DragManager.DragStart(Site,false,DockMaster.DragTreshold);
+      if DockMaster.DragDelay=0 then
+        DragManager.DragStart(Site,false,DockMaster.DragTreshold)
+      else
+        DragManager.DragStartAfterDelay(Site,DockMaster.DragTreshold,DockMaster.DragDelay);
     end;
   end;
   if (Button = mbRight) then

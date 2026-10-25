@@ -32,7 +32,8 @@ uses
   Classes, SysUtils;
 
 const
-  cRemoteRepository = 'http://packages.lazarus-ide.org/';
+  cRemoteRepository = 'https://packages.lazarus-ide.org/';
+  cRemoteRepositoryOld = 'http://packages.lazarus-ide.org/'; // old insecure address. Old configurations are updated.
   cRemoteRepositoryTitle = 'Lazarus Central Repository';
   cRemoteJSONFile = 'packagelist.json';
   cLocalRepository =  'onlinepackagemanager';
@@ -47,6 +48,8 @@ const
   cHelpPage = 'https://wiki.freepascal.org/Online_Package_Manager';
   cHelpPage_CreateRepositoryPackage = 'https://wiki.freepascal.org/Online_Package_Manager#Create_repository_package';
   cHelpPage_CreateExternalJSON = 'https://wiki.freepascal.org/Online_Package_Manager#Create_JSON_for_updates';
+  // Note: the OpenSSL archives are fetched via plain http on purpose. They are
+  // only downloaded when OpenSSL is not available yet, so https can not be used.
   {$ifdef win64}
   //cOpenSSLURL = 'http://packages.lazarus-ide.org/openssl-1.0.2j-x64_86-win64.zip';
   cOpenSSLURL = 'http://packages.lazarus-ide.org/openssl-1.1.1o-x64_86-win64.zip';
@@ -151,6 +154,7 @@ resourcestring
   rsMainFrm_VSTText_Open_Error = 'Cannot open package file.';
   rsMainFrm_VSTText_ComDesc = 'Community description for metapackage';
   rsMainFrm_VSTText_ExternalMetaPackageDeps = 'External dependencies for metapackage';
+  rsMainFrm_VSTText_VersionError = '(Version error)';
   rsMainFrm_cbAll_Caption = 'All/None';
   rsMainFrm_cbAll_Hint = 'Check/Uncheck packages';
   rsMainFrm_lbFilter_Caption = 'Filter by:';
@@ -504,7 +508,7 @@ resourcestring
   rsRepositoryDetailsFrm_lbName_Caption = 'Name';
   rsRepositoryDetailsFrm_edName_Hint = 'Enter the repository name';
   rsRepositoryDetailsFrm_lbAddress_Caption = 'Address';
-  rsRepositoryDetailsFrm_edAddress_Hint = 'Enter the repository address (e.g.: "http://localhost/packages/")';
+  rsRepositoryDetailsFrm_edAddress_Hint = 'Enter the repository address (e.g.: "https://example-repo.tld/packages/")';
   rsRepositoryDetailsFrm_lbDescription_Caption = 'Description';
   rsRepositoryDetailsFrm_mDescription_Hint = 'Enter the repository description';
   rsRepositoryDetailsFrm_bOk_Caption = 'OK';
@@ -542,6 +546,9 @@ resourcestring
   rsOpenSSLFrm_chPermanent_Caption = 'Do not ask this question again';
   rsOpenSSLFrm_lbMessage1_Caption = 'In order to work properly, OPM needs the OpenSSL libraries.';
   rsOpenSSLFrm_lbMessage2_Caption = 'Download these files from "https://packages.lazarus-ide.org/"?';
+  rsOpenSSLFrm_Error1 = 'Cannot download the OpenSSL libraries from "%s". Error message:';
+  rsOpenSSLFrm_Error2 = 'Cannot unzip the OpenSSL libraries "%s". Error message:';
+  rsOpenSSLFrm_Error3 = 'The OpenSSL libraries were extracted to "%s", but they cannot be loaded.';
 
 
 implementation

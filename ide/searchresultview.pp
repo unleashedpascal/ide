@@ -852,12 +852,13 @@ function TSearchResultsView.BeautifyPageName(const APageName: string; out
 const
   MaxPageName = 25;
 begin
-  aoTabEllipsed:= False;
-  Result:=Utf8EscapeControlChars(APageName, emHexPascal);
-  if UTF8Length(Result)>MaxPageName then begin
-    Result:=UTF8Copy(Result,1,MaxPageName-5)+'...';
-    aoTabEllipsed:= True;
-  end;
+  result := APageName;
+  aoTabEllipsed := UTF8Length(result) > MaxPageName;
+  if aoTabEllipsed then
+    result := UTF8Copy(result, 1, MaxPageName - 5) + '...';
+  // escape special chars after trimming to avoid cutting off special sequences
+  result := Utf8EscapeControlChars(result, emHexPascal);
+  result := StringReplace(result, '&', '&&', [rfReplaceAll]); // escape key accel
 end;
 
 procedure TSearchResultsView.AddMatch(const APageIndex: integer;
@@ -955,10 +956,8 @@ begin
 
   // Page name
   lPage := GetResultsPage(APageIndex); // this also check APageIndex range
-  if (lPage <> nil) and (APageName <> '') then
-  begin
+  if APageName <> '' then
     lPage.Caption := BeautifyPageName(APageName, lEllipsed);
-  end;
 
   // Count
   lPage.Caption := lPage.Caption + ' (' + inttostr(lTree.Items.Count - lTree.Items.TopLvlCount) + ')';

@@ -512,7 +512,9 @@ end;
 class procedure TGtk3WSCustomListBox.SetScrollWidth(
   const ACustomListBox: TCustomListBox; const AScrollWidth: Integer);
 begin
-
+  if not WSCheckHandleAllocated(ACustomListBox, 'SetScrollWidth') then
+    Exit;
+  TGtk3ListBox(ACustomListBox.Handle).SetScrollWidth(AScrollWidth);
 end;
 
 class procedure TGtk3WSCustomListBox.SetSelectionMode(const ACustomListBox: TCustomListBox;
@@ -695,7 +697,15 @@ end;
 
 class procedure TGtk3WSCustomComboBox.Sort(const ACustomComboBox: TCustomComboBox;
   AList: TStrings; IsSorted: boolean);
+var
+  ComboList: TGtkListStoreStringList;
 begin
+  if not WSCheckHandleAllocated(ACustomComboBox, 'Sort') then
+    Exit;
+  ComboList := TGtkListStoreStringList(g_object_get_data(PGObject(TGtk3ComboBox(ACustomComboBox.Handle).GetContainerWidget),
+                                     GtkListItemLCLListTag));
+  if Assigned(ComboList) then
+    ComboList.Sorted := IsSorted;
 end;
 
 class function TGtk3WSCustomComboBox.GetItemHeight(const ACustomComboBox: TCustomComboBox): Integer;

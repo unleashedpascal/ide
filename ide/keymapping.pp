@@ -231,7 +231,7 @@ type
     property RelationCount:integer read GetRelationCount;
   end;
 
-function IDEShortCutEmpty(const Key: TIDEShortCut): boolean;
+function IDEShortCutEmpty(const Key: TIDEShortCut): boolean; deprecated 'use IdeIntf.IdeCommands.IDEShortCutEmpty';
 function EditorCommandToDescriptionString(cmd: word): String;
 function EditorMouseCommandToDescriptionString(cmd: TSynEditorMouseCommand): String;
 function EditorMouseCommandToConfigString(cmd: TSynEditorMouseCommand): String;
@@ -846,6 +846,12 @@ begin
     ecAddBpSource             : Result:= srkmecAddBpSource;
     ecAddBpAddress            : Result:= srkmecAddBpAddress;
     ecAddBpDataWatch          : Result:= srkmecAddBpWatchPoint;
+    ecBreakIgnoreToggle       : Result:= liskecBreakIgnoreToggle;
+    ecBreakIgnoreOn           : Result:= liskecBreakIgnoreOn;
+    ecBreakIgnoreOff          : Result:= liskecBreakIgnoreOff;
+    ecExceptIgnoreToggle      : Result:= liskecExceptIgnoreToggle;
+    ecExceptIgnoreOn          : Result:= liskecExceptIgnoreOn;
+    ecExceptIgnoreOff         : Result:= liskecExceptIgnoreOff;
 
     // components menu
     ecNewPackage              : Result:= lisKMNewPackage;
@@ -3379,6 +3385,12 @@ begin
   AddDefault(C, 'Add source breakpoint', lisKMAddBpSource, ecAddBpSource);
   AddDefault(C, 'Add address breakpoint', lisKMAddBpAddress, ecAddBpAddress);
   AddDefault(C, 'Add data watchpoint', lisKMAddBpWatchPoint, ecAddBpDataWatch);
+  AddDefault(C, 'Toggle Ignore all Breakpoints', liskecBreakIgnoreToggle  ,ecBreakIgnoreToggle  );
+  AddDefault(C, 'Set Ignore all Breakpoints',    liskecBreakIgnoreOn      ,ecBreakIgnoreOn      );
+  AddDefault(C, 'Unset Ignore all Breakpoints',  liskecBreakIgnoreOff     ,ecBreakIgnoreOff     );
+  AddDefault(C, 'Toggle Ignore all Exceptions',  liskecExceptIgnoreToggle ,ecExceptIgnoreToggle );
+  AddDefault(C, 'Set Ignore all Exceptions',     liskecExceptIgnoreOn     ,ecExceptIgnoreOn     );
+  AddDefault(C, 'Unset Ignore all Exceptions',   liskecExceptIgnoreOff    ,ecExceptIgnoreOff    );
 
   // components menu
   C:=Categories[AddCategory('Components',srkmCatPackageMenu,nil)];
@@ -4005,7 +4017,7 @@ var
   end;
 
 var
-  i, j: integer;
+  i: integer;
   Key: TSynEditKeyStroke;
   KeyStrokesByCmds: TAvlTree;
   KeyList: TKeyStrokeList;

@@ -446,7 +446,7 @@ begin
   LCLObject := TObject(data);
   if (widget <> nil) and (LCLObject is TCustomEdit) then
     { NumbersOnly: stop signal if inserted text is not a number }
-    if TCustomEdit(LCLObject).NumbersOnly and not IsNumeric(ANewText) then
+    if TCustomEdit(LCLObject).NumbersOnly and IsNotNumeric(ANewText) then
     begin
       gtk_entry_set_text(PGtkEntry(widget), EntryText);
       g_signal_stop_emission_by_name(Widget, 'insert-text');
@@ -535,7 +535,7 @@ begin
       FClip := gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
       if (FClip <> nil) and gtk_clipboard_wait_is_text_available(FClip) then
         FClipText := gtk_clipboard_wait_for_text(FClip);
-      if Assigned(FClip) and not IsNumeric(FClipText) then
+      if Assigned(FClip) and IsNotNumeric(FClipText) then
         g_signal_stop_emission_by_name(Widget, 'paste-clipboard');
     end;
 end;
@@ -1177,19 +1177,22 @@ begin
           ' SizeType=',SizeMsg.SizeType-Size_SourceIsInterface,'+Size_SourceIsInterface'
           ]);
         {$ENDIF}
+        if (TheForm = Application.MainForm)
+        and ((GDK_WINDOW_STATE_ICONIFIED or GDK_WINDOW_STATE_MAXIMIZED or GDK_WINDOW_STATE_FULLSCREEN)
+          and state^.changed_mask <> 0)
+        and (GDK_WINDOW_STATE_ICONIFIED and state^.new_window_state = 0)
+        and ((GDK_WINDOW_STATE_ICONIFIED or GDK_WINDOW_STATE_MAXIMIZED or GDK_WINDOW_STATE_FULLSCREEN)
+          and (state^.new_window_state xor state^.changed_mask) <> 0) then
+          Application.IntfAppRestore;
         DeliverMessage(TheForm, SizeMsg);
         if (gtk_major_version = 2) and (gtk_minor_version <= 8) and
           (TheForm.WindowState = wsMaximized) then
             gtk_widget_queue_draw({%H-}PGtkWidget(TheForm.Handle));
 
         if (TheForm = Application.MainForm)
-        and (GDK_WINDOW_STATE_ICONIFIED and state^.changed_mask <> 0) then
-        begin
-          if GDK_WINDOW_STATE_ICONIFIED and state^.new_window_state <> 0 then
-            Application.IntfAppMinimize
-          else
-            Application.IntfAppRestore;
-        end;
+        and (GDK_WINDOW_STATE_ICONIFIED and state^.changed_mask <> 0)
+        and (GDK_WINDOW_STATE_ICONIFIED and state^.new_window_state <> 0) then
+          Application.IntfAppMinimize;
       end;
     end;
   end;

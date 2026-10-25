@@ -343,6 +343,8 @@ type
                                Flags: TPkgCompileFlags): TModalResult; override;
     function DoCompilePackage(APackage: TIDEPackage; Flags: TPkgCompileFlags;
                               ShowAbort: boolean): TModalResult; override;
+    function CheckCompileTrust(AProject: TLazProject;
+                              APackage: TIDEPackage): TModalResult; override;
     function DoCreatePackageMakefile(APackage: TLazPackage;
                                      ShowAbort: boolean): TModalResult;
     function DoCreatePackageFpmakefile(APackage: TLazPackage;
@@ -2579,7 +2581,7 @@ var
         exit(true);
       end;
     end else if SrcProject<>nil then begin
-      OldProjFile:=TUnitInfo(SrcProject.UnitInfoWithFilename(OldFilename,[pfsfOnlyProjectFiles]));
+      OldProjFile:=TUnitInfo(SrcProject.UnitWithFilename(OldFilename,[pfsfOnlyProjectFiles]));
       if OldProjFile=nil then begin
         {$IFDEF VerbosePkgEditDrag}
         debugln(['MoveOrCopyFile old file not in lpi: "',OldFilename,'"']);
@@ -2644,7 +2646,7 @@ var
     end else if TargetProject<>nil then begin
       // create new TUnitInfo
 
-      NewProjFile:=TargetProject.UnitInfoWithFilename(NewFilename);
+      NewProjFile:=TargetProject.UnitWithFilename(NewFilename);
       if NewProjFile=nil then begin
         NewProjFile:=TEditableUnitInfo.Create(nil);
         NewProjFile.Filename:=NewFilename;
@@ -3563,6 +3565,61 @@ begin
   Result:=DoOpenPackage(APackage,Flags,ShowAbort);
 end;
 
+procedure CheckPackageCompilerPathTrust(APackage: TEditablePackage);
+// When opening a package the IDE reads the compiler executable path from the .lpk and uses
+// it for building and for background codetools. A custom compiler path is a code execution
+// vector, so if the package points at a compiler that is neither the default macro
+// $(CompPath) nor the IDE-configured default, neutralize it to $(CompPath) and ask the user
+// whether they trust it. On trust the original path is restored; otherwise the safe default
+// is kept (in memory only, the .lpk on disk is left untouched).
+// This runs only in the IDE; lazbuild uses its own TLazBuildApplication.LoadPackage (it does
+// not link pkgmanager) and always trusts.
+var
+  Opts: TBaseCompilerOptions;
+  UnparsedPath: string;
+  WasModified: Boolean;
+begin
+  if APackage=nil then exit;
+  Opts:=APackage.CompilerOptions;
+  if Opts=nil then exit;
+  UnparsedPath:=Opts.CompilerPath;
+
+  // safe cases: empty or the default macro resolve to the IDE default anyway
+  if (UnparsedPath='') or SameText(UnparsedPath,DefaultCompilerPath) then exit;
+  // Important: do not resolve macros here
+  if CompareFilenames(UnparsedPath,EnvironmentOptions.GetParsedCompilerFilename)=0 then exit;
+  // already trusted (permanently or "this time" this session) -> use silently
+  if EnvironmentOptions.IsCompilerTrusted(UnparsedPath) then exit;
+
+  // custom compiler: neutralize BEFORE asking so nothing (e.g. codetools) uses it while the
+  // dialog is open. Preserve the package's modified state so declining does not mark it dirty.
+  WasModified:=APackage.Modified;
+  Opts.CompilerPath:=DefaultCompilerPath;
+  case IDEQuestionDialog(lisTrustPkgCompilerCaption,
+       Format(lisThePackageWantsToUseTheCompiler,
+              [APackage.Name,
+               LineEnding+LineEnding, UnparsedPath, LineEnding+LineEnding,
+               LineEnding+LineEnding]),
+       mtConfirmation,
+       [mrYes, lisTrustCompilerThisTime,
+        mrAll, lisTrustCompilerAlways,
+        mrNo, lisDoNotTrustCompiler], '') of
+    mrYes:
+      begin
+        Opts.CompilerPath:=UnparsedPath; // trust for this project session only
+        EnvironmentOptions.AddSessionTrustedCompiler(UnparsedPath); // don't ask again until project close
+      end;
+    mrAll:
+      begin
+        Opts.CompilerPath:=UnparsedPath; // trust and remember
+        EnvironmentOptions.AddTrustedCompiler(UnparsedPath);
+        EnvironmentOptions.Save(False); // persist the trusted list immediately
+      end;
+    // mrNo / closed: keep DefaultCompilerPath
+  end;
+  APackage.Modified:=WasModified;
+end;
+
 function TPkgManager.DoOpenPackageFile(AFilename: string; Flags: TPkgOpenFlags;
   ShowAbort: boolean): TModalResult;
 
@@ -3664,6 +3721,9 @@ begin
 
       // newly loaded is not modified
       APackage.Modified:=false;
+
+      // ask the user before trusting a custom compiler executable from the .lpk
+      CheckPackageCompilerPathTrust(APackage);
 
       // check if package name and file name correspond
       if (SysUtils.CompareText(AlternativePkgName,APackage.Name)<>0) then begin
@@ -4216,6 +4276,134 @@ begin
   Result:=mrOk;
 end;
 
+function TPkgManager.CheckCompileTrust(AProject: TLazProject;
+  APackage: TIDEPackage): TModalResult;
+// Before building, ask the user about untrusted compiler executables and untrusted
+// execute-before/after shell commands of the target (project or package) and of every
+// required package, in compile order. One dialog per untrusted item. The user may Cancel
+// (aborts the whole build), trust for this session, or trust always.
+// This runs only in the IDE; lazbuild uses its own build flow and always trusts.
+var
+  PkgList: TFPList;
+  i: integer;
+  Pkg: TLazPackage;
+
+  function AskTrust(const aCaption, aMessage, aValue: string;
+    IsCommand: boolean): TModalResult;
+  // returns mrOk to continue the build, mrCancel to abort it
+  begin
+    Result:=mrOk;
+    case IDEQuestionDialog(aCaption, aMessage, mtConfirmation,
+           [mrAll, lisTrustCompilerAlways,
+            mrYes, lisTrustCompilerThisTime,
+            mrCancel, lisCancel], '') of
+      mrYes:
+        // trust for this project session only
+        if IsCommand then
+          EnvironmentOptions.AddSessionTrustedCommand(aValue)
+        else
+          EnvironmentOptions.AddSessionTrustedCompiler(aValue);
+      mrAll:
+        begin
+          // trust and remember
+          if IsCommand then
+            EnvironmentOptions.AddTrustedCommand(aValue)
+          else
+            EnvironmentOptions.AddTrustedCompiler(aValue);
+          EnvironmentOptions.Save(False); // persist the trusted list immediately
+        end;
+    else
+      Result:=mrCancel; // Cancel / closed -> abort the build
+    end;
+  end;
+
+  function CheckOptions(Opts: TBaseCompilerOptions; const OwnerName: string;
+    IsPackage: boolean): TModalResult;
+  var
+    UnparsedPath, Cmd, CmdMsgFmt: string;
+  begin
+    Result:=mrOk;
+    if Opts=nil then exit;
+
+    // compiler path (compare the unparsed value, do not resolve macros here)
+    UnparsedPath:=Opts.CompilerPath;
+    if (UnparsedPath<>'') and (not SameText(UnparsedPath,DefaultCompilerPath))
+    and (CompareFilenames(UnparsedPath,EnvironmentOptions.GetParsedCompilerFilename)<>0)
+    and (not EnvironmentOptions.IsCompilerTrusted(UnparsedPath)) then
+    begin
+      if IsPackage then
+        Result:=AskTrust(lisTrustPkgCompilerCaption,
+          Format(lisThePackageWantsToUseTheCompilerBuild,
+            [OwnerName, LineEnding+LineEnding, UnparsedPath,
+             LineEnding+LineEnding, LineEnding+LineEnding]), UnparsedPath, false)
+      else
+        Result:=AskTrust(lisTrustCompilerCaption,
+          Format(lisTheProjectWantsToUseTheCompilerBuild,
+            [OwnerName, LineEnding+LineEnding, UnparsedPath,
+             LineEnding+LineEnding, LineEnding+LineEnding]), UnparsedPath, false);
+      if Result<>mrOk then exit;
+    end;
+
+    if IsPackage then
+      CmdMsgFmt:=lisThePackageWantsToRunTheCommand
+    else
+      CmdMsgFmt:=lisTheProjectWantsToRunTheCommand;
+
+    // execute before command
+    Cmd:=Opts.ExecuteBefore.Command;
+    if (Cmd<>'') and (not EnvironmentOptions.IsCommandTrusted(Cmd)) then
+    begin
+      Result:=AskTrust(lisTrustCommandCaption,
+        Format(CmdMsgFmt, [OwnerName, LineEnding+LineEnding, Cmd,
+                           LineEnding+LineEnding, LineEnding+LineEnding]), Cmd, true);
+      if Result<>mrOk then exit;
+    end;
+
+    // execute after command
+    Cmd:=Opts.ExecuteAfter.Command;
+    if (Cmd<>'') and (not EnvironmentOptions.IsCommandTrusted(Cmd)) then
+    begin
+      Result:=AskTrust(lisTrustCommandCaption,
+        Format(CmdMsgFmt, [OwnerName, LineEnding+LineEnding, Cmd,
+                           LineEnding+LineEnding, LineEnding+LineEnding]), Cmd, true);
+      if Result<>mrOk then exit;
+    end;
+  end;
+
+begin
+  Result:=mrOk;
+  PkgList:=nil;
+  try
+    // ordered list of all required packages (leaves first)
+    if APackage<>nil then
+      PackageGraph.GetAllRequiredPackages(TLazPackage(APackage),nil,PkgList,[pirCompileOrder])
+    else if AProject<>nil then
+      PackageGraph.GetAllRequiredPackages(nil,TProject(AProject).FirstRequiredDependency,
+                                          PkgList,[pirCompileOrder])
+    else
+      exit;
+
+    // check the top-level target first
+    if APackage<>nil then
+      Result:=CheckOptions(TLazPackage(APackage).CompilerOptions,
+                           TLazPackage(APackage).Name, true)
+    else
+      Result:=CheckOptions(TProject(AProject).CompilerOptions,
+                           TProject(AProject).GetTitleOrName, false);
+    if Result<>mrOk then exit;
+
+    // then every required package in compile order
+    if PkgList<>nil then
+      for i:=0 to PkgList.Count-1 do begin
+        Pkg:=TLazPackage(PkgList[i]);
+        Result:=CheckOptions(Pkg.CompilerOptions, Pkg.Name, true);
+        if Result<>mrOk then exit;
+      end;
+  finally
+    PkgList.Free;
+  end;
+end;
+
 function TPkgManager.DoCompilePackage(APackage: TIDEPackage;
   Flags: TPkgCompileFlags; ShowAbort: boolean): TModalResult;
 var
@@ -4250,13 +4438,17 @@ begin
   Result:=CheckUserSearchPaths(TBaseCompilerOptions(APackage.LazCompilerOptions));
   if Result<>mrOk then exit;
 
+  // ask the user about untrusted compilers/commands before building anything
+  Result:=CheckCompileTrust(nil,APackage);
+  if Result<>mrOk then exit;
+
   // compile
   if LazarusIDE<>nil then begin
     OldToolStatus:=LazarusIDE.ToolStatus;
     LazarusIDE.ToolStatus:=itBuilder;
   end;
   MessagesView.ApplyIDEOptions;
-  if EnvironmentGuiOpts.MsgViewShowAutomatically = mwsaCompiling then
+  if EnvironmentGuiOpts.MsgViewShowAutomatically = mwsaDefault then
     IDEWindowCreators.ShowForm(MessagesView,EnvironmentGuiOpts.MsgViewFocus);
   Result:=PackageGraph.CompilePackage(TLazPackage(APackage),Flags,false);
   if LazarusIDE<>nil then
@@ -4892,6 +5084,7 @@ begin
         for i:=0 to PackageGraph.Count-1 do
         begin
           CurPackage:=PackageGraph[i];
+          Assert(Assigned(CurPackage), 'TPkgManager.GetUnitsOfOwners: CurPackage=Nil');
           if OwnerList.IndexOf(CurPackage)>=0 then continue;
           for j:=0 to CurPackage.FileCount-1 do
           begin
@@ -4943,7 +5136,7 @@ var
     if not (piosfExcludeOwned in Flags) then begin
       //DebugLn(['SearchInProject ',AProject.ProjectInfoFile,' UnitFilename=',UnitFilename]);
       if (CompareFilenames(UnitFilename,AProject.ProjectInfoFile)=0)
-      or (AProject.UnitInfoWithFilename(UnitFilename,[pfsfOnlyProjectFiles])<>nil)
+      or (AProject.UnitWithFilename(UnitFilename,[pfsfOnlyProjectFiles])<>nil)
       then
         Add:=true;
     end;

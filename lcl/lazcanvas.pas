@@ -47,6 +47,9 @@ uses
   ;
 
 type
+  {$IF DECLARED(TRectangleMode)}
+    {$DEFINE HasTRectangleMode}
+  {$ENDIF}
 
   TLazCanvasImageFormat = (
     clfOther,
@@ -174,6 +177,7 @@ begin
   Brush.Free;
   Pen.Free;
   Font.Free;
+  ClipRegion.Free;
   inherited Destroy;
 end;
 
@@ -269,8 +273,10 @@ var b : TRect;
 
 begin
   b := bounds;
+  {$IFNDEF HasTRectangleMode}
   b.right := b.Right-1;
   b.bottom := b.bottom-1;
+  {$ENDIF}
   if pen.style = psSolid then
     for r := 1 to pen.width do
     begin
@@ -299,11 +305,15 @@ var
 begin
   b := Bounds;
   SortRect (b);
+  {$IFNDEF HasTRectangleMode}
   dec(b.Right);
   dec(b.Bottom);
+  {$ENDIF}
 
   // Optimize when filling everything
-  if (b.Left = 0) and (b.Top = 0) and (b.Right = Width) and (b.Bottom = Height)
+  if (b.Left = 0) and (b.Top = 0)
+     and (b.Right = Width{$IFDEF HasTRectangleMode}-1{$ENDIF})
+     and (b.Bottom = Height{$IFDEF HasTRectangleMode}-1{$ENDIF})
      and (Brush.Style = bsSolid) and (FWindowOrg.X = 0) and (FWindowOrg.Y = 0)
      and ((Clipping=False) {or cliprect=entire area}) then
   begin
@@ -532,7 +542,8 @@ procedure TLazCanvas.DoCopyRect(x, y: integer; canvas: TFPCustomCanvas;
   const SourceRect: TRect);
 begin
   CanvasCopyRect(canvas, X, Y, SourceRect.Left, SourceRect.Top,
-    SourceRect.right-SourceRect.Left, SourceRect.Bottom-SourceRect.Top);
+    SourceRect.right-SourceRect.Left{$IFDEF HasTRectangleMode}+1{$ENDIF},
+    SourceRect.Bottom-SourceRect.Top{$IFDEF HasTRectangleMode}+1{$ENDIF});
 end;
 
 procedure TLazCanvas.DoDraw(x, y: integer; const AImage: TFPCustomImage);
@@ -543,6 +554,9 @@ end;
 constructor TLazCanvas.create(AnImage: TFPCustomImage);
 begin
   inherited Create(AnImage);
+  {$IFDEF HasTRectangleMode}
+  RectangleMode := rmExclude;
+  {$ENDIF}
   GraphicStateList := TFPList.Create;
   HasNoImage := AnImage = nil;
 end;
@@ -573,6 +587,7 @@ end;
 function TLazCanvas.SaveState: Integer;
 var
   lState: TLazCanvasState;
+  lChildRegion: TLazRegionWithChilds;
 begin
   lState := TLazCanvasState.Create;
 
@@ -582,6 +597,25 @@ begin
   lState.BaseWindowOrg := BaseWindowOrg;
   lState.WindowOrg := WindowOrg;
   lState.Clipping := Clipping;
+  if ClipRegion is TLazRegionWithChilds then
+  begin
+    lChildRegion := TLazRegionWithChilds.Create;
+    lChildRegion.Assign(TLazRegion(ClipRegion));
+    lChildRegion.Childs.Assign(TLazRegionWithChilds(ClipRegion).Childs);
+    lChildRegion.Parent := TLazRegionWithChilds(ClipRegion).Parent;
+    lChildRegion.UserData := TLazRegionWithChilds(ClipRegion).UserData;
+    lState.ClipRegion := lChildRegion;
+  end
+  else if ClipRegion is TLazRegion then
+  begin
+    lState.ClipRegion := TLazRegion.Create;
+    TLazRegion(lState.ClipRegion).Assign(TLazRegion(ClipRegion));
+  end
+  else if ClipRegion is TFPRectRegion then
+  begin
+    lState.ClipRegion := TFPRectRegion.Create;
+    TFPRectRegion(lState.ClipRegion).Rect := TFPRectRegion(ClipRegion).Rect;
+  end;
 
   Result := GraphicStateList.Add(lState);
 end;
@@ -602,6 +636,13 @@ begin
   AssignFontData(lState.Font);
   BaseWindowOrg := lState.BaseWindowOrg;
   WindowOrg := lState.WindowOrg;
+  {$if defined(ver2_6)}
+  FreeAndNil(FLazClipRegion);
+  {$else}
+  FreeAndNil(FClipRegion);
+  {$endif}
+  ClipRegion := lState.ClipRegion;
+  lState.ClipRegion := nil;
   Clipping := lState.Clipping;
 
   lState.Free;
@@ -614,6 +655,9 @@ begin
 
   Brush.FPColor := colWhite;
   Brush.Style := bsSolid;
+  {$IFDEF HasTRectangleMode}
+  RectangleMode := rmExclude;
+  {$ENDIF}
 end;
 
 procedure TLazCanvas.AlphaBlend(ASource: TLazCanvas;
@@ -782,7 +826,7 @@ begin
 
   {$ifdef lazcanvas_new_fast_copy}
   // If the formats match, make a fast copy of the data itself, without pixel conversion
-  if (ASource is TLazCanvas) and
+  if not Clipping and (ASource is TLazCanvas) and
      (Image is TLazIntfImage) and (ALazSource.Image is TLazIntfImage) and
      (ImageFormat in [clfRGB24, clfRGB24UpsideDown, clfBGR24, clfBGRA32, clfRGBA32, clfARGB32]) and
      (ImageFormat = ALazSource.ImageFormat) then

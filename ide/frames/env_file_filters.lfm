@@ -1,21 +1,169 @@
 object FileFiltersOptionsFrame: TFileFiltersOptionsFrame
   Left = 0
-  Height = 319
+  Height = 469
   Top = 0
   Width = 455
-  ClientHeight = 319
+  ClientHeight = 469
   ClientWidth = 455
+  LCLVersion = '4.99.0.0'
   TabOrder = 0
   DesignLeft = 386
   DesignTop = 179
+  object pnlTrustedLists: TPanel
+    Left = 0
+    Height = 162
+    Top = 0
+    Width = 455
+    Align = alTop
+    BevelOuter = bvNone
+    ChildSizing.HorizontalSpacing = 6
+    ChildSizing.EnlargeHorizontal = crsSameSize
+    ChildSizing.EnlargeVertical = crsSameSize
+    ChildSizing.ShrinkHorizontal = crsSameSize
+    ChildSizing.ShrinkVertical = crsSameSize
+    ChildSizing.Layout = cclTopToBottomThenLeftToRight
+    ChildSizing.ControlsPerLine = 1
+    ClientHeight = 162
+    ClientWidth = 455
+    Constraints.MinHeight = 100
+    TabOrder = 0
+    object pnlTrustedCompilers: TPanel
+      Left = 0
+      Height = 162
+      Top = 0
+      Width = 224
+      BevelOuter = bvNone
+      ClientHeight = 162
+      ClientWidth = 224
+      TabOrder = 0
+      object lblTrustedCompilers: TLabel
+        Left = 0
+        Height = 15
+        Top = 0
+        Width = 224
+        Align = alTop
+        BorderSpacing.Bottom = 6
+        Caption = 'lblTrustedCompilers'
+      end
+      object lstTrustedCompilers: TListBox
+        Left = 0
+        Height = 79
+        Top = 21
+        Width = 224
+        Align = alClient
+        ItemHeight = 0
+        MultiSelect = True
+        TabOrder = 0
+      end
+      object btnDeleteTrustedCompiler: TButton
+        Left = 0
+        Height = 25
+        Top = 106
+        Width = 224
+        Align = alBottom
+        AutoSize = True
+        BorderSpacing.Top = 6
+        Caption = 'btnDeleteTrustedCompiler'
+        TabOrder = 1
+        OnClick = btnDeleteTrustedCompilerClick
+      end
+      object btnAddTrustedCompiler: TButton
+        Left = 0
+        Height = 25
+        Top = 137
+        Width = 224
+        Align = alBottom
+        AutoSize = True
+        BorderSpacing.Top = 6
+        Caption = 'btnAddTrustedCompiler'
+        TabOrder = 2
+        OnClick = btnAddTrustedCompilerClick
+      end
+    end
+    object pnlTrustedCommands: TPanel
+      Left = 230
+      Height = 162
+      Top = 0
+      Width = 225
+      BevelOuter = bvNone
+      ClientHeight = 162
+      ClientWidth = 225
+      TabOrder = 1
+      object lblTrustedCommands: TLabel
+        Left = 0
+        Height = 15
+        Top = 0
+        Width = 225
+        Align = alTop
+        BorderSpacing.Bottom = 6
+        Caption = 'lblTrustedCommands'
+      end
+      object lstTrustedCommands: TListBox
+        Left = 0
+        Height = 79
+        Top = 21
+        Width = 225
+        Align = alClient
+        ItemHeight = 0
+        MultiSelect = True
+        TabOrder = 0
+      end
+      object btnDeleteTrustedCommand: TButton
+        Left = 0
+        Height = 25
+        Top = 106
+        Width = 225
+        Align = alBottom
+        AutoSize = True
+        BorderSpacing.Top = 6
+        Caption = 'btnDeleteTrustedCommand'
+        TabOrder = 1
+        OnClick = btnDeleteTrustedCommandClick
+      end
+      object btnAddTrustedCommand: TButton
+        Left = 0
+        Height = 25
+        Top = 137
+        Width = 225
+        Align = alBottom
+        AutoSize = True
+        BorderSpacing.Top = 6
+        Caption = 'btnAddTrustedCommand'
+        TabOrder = 2
+        OnClick = btnAddTrustedCommandClick
+      end
+    end
+  end
+  object Splitter1: TSplitter
+    Cursor = crVSplit
+    Left = 0
+    Height = 5
+    Top = 162
+    Width = 455
+    Align = alTop
+    ResizeAnchor = akTop
+  end
+  object lblFileDlgFilters: TLabel
+    Left = 0
+    Height = 15
+    Top = 173
+    Width = 455
+    Align = alTop
+    Anchors = [akLeft]
+    BorderSpacing.Top = 6
+    Caption = 'lblFileDlgFilters'
+  end
   object grdFileFilters: TStringGrid
+    AnchorSideLeft.Control = Owner
     AnchorSideTop.Control = lblFileDlgFilters
     AnchorSideTop.Side = asrBottom
+    AnchorSideRight.Control = Owner
+    AnchorSideRight.Side = asrBottom
     AnchorSideBottom.Control = lblStarDirExcludes
-    Left = 8
-    Height = 223
-    Top = 27
-    Width = 440
+    Left = 0
+    Height = 219
+    Top = 194
+    Width = 455
     Anchors = [akTop, akLeft, akRight, akBottom]
     BorderSpacing.Top = 6
     ColCount = 3
@@ -31,27 +179,19 @@ object FileFiltersOptionsFrame: TFileFiltersOptionsFrame
     Options = [goFixedVertLine, goFixedHorzLine, goVertLine, goHorzLine, goRangeSelect, goColSizing, goEditing, goThumbTracking, goSmoothScroll, goFixedRowNumbering]
     PopupMenu = pmGrid
     RowCount = 1
-    TabOrder = 0
+    TabOrder = 2
     OnKeyDown = grdFileFiltersKeyDown
-  end
-  object lblFileDlgFilters: TLabel
-    Left = 6
-    Height = 15
-    Top = 6
-    Width = 85
-    Caption = 'lblFileDlgFilters'
   end
   object lblStarDirExcludes: TLabel
     AnchorSideLeft.Control = Owner
     AnchorSideTop.Side = asrBottom
     AnchorSideBottom.Control = edStarDirExcludes
-    Left = 6
+    Left = 0
     Height = 15
-    Top = 260
-    Width = 100
+    Top = 419
+    Width = 93
     Anchors = [akLeft, akBottom]
-    BorderSpacing.Left = 6
-    BorderSpacing.Top = 10
+    BorderSpacing.Top = 6
     BorderSpacing.Bottom = 6
     Caption = 'lblStarDirExcludes'
   end
@@ -63,19 +203,17 @@ object FileFiltersOptionsFrame: TFileFiltersOptionsFrame
     AnchorSideRight.Side = asrBottom
     AnchorSideBottom.Control = Owner
     AnchorSideBottom.Side = asrBottom
-    Left = 6
-    Height = 32
-    Top = 281
-    Width = 443
+    Left = 0
+    Height = 23
+    Top = 440
+    Width = 455
     Anchors = [akLeft, akRight, akBottom]
-    BorderSpacing.Left = 6
-    BorderSpacing.Right = 6
     BorderSpacing.Bottom = 6
-    TabOrder = 1
+    TabOrder = 3
   end
   object pmGrid: TPopupMenu
     Left = 205
-    Top = 75
+    Top = 245
     object pmiAddRow: TMenuItem
       Caption = 'Add row'
       OnClick = pmiAddRowClick

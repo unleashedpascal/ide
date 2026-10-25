@@ -51,6 +51,7 @@ type
     function fittingSize: NSSize; override;
 
     procedure drawRect(dirtyRect: NSRect); override;
+    procedure resizeSubviewsWithOldSize(oldSize: NSSize); override;
 
     procedure loadView( row: Integer; col: Integer );
       message 'loadView:col:';
@@ -267,6 +268,13 @@ type
 implementation
 
 type
+  { TCocoaTableColumn }
+
+  TCocoaTableColumn = objcclass(NSTableColumn)
+  public
+    procedure setWidth(newValue: CGFloat); override;
+  end;
+
   { TCocoaTableRowView }
 
   TCocoaTableRowView = objcclass(NSTableRowView)
@@ -332,6 +340,18 @@ begin
     visRange := tbl.rowsInRect(tbl.visibleRect());
     Result := visRange.location;
   end;
+end;
+
+{ TCocoaTableColumn }
+
+procedure TCocoaTableColumn.setWidth(newValue: CGFloat);
+begin
+  inherited setWidth(newValue);
+  // the vertical grid lines are separate views of the table view, they are
+  // only moved to the new column positions by a layout pass. This is also
+  // called while the user drags a column divider
+  if Assigned(self.tableView) then
+    self.tableView.setNeedsLayout( True );
 end;
 
 procedure TCocoaTableRowView.drawRect(dirtyRect: NSRect);
@@ -1170,6 +1190,24 @@ begin
   end;
 end;
 
+procedure TCocoaTableListItem.resizeSubviewsWithOldSize(oldSize: NSSize);
+var
+  aFrame: NSRect;
+begin
+  inherited resizeSubviewsWithOldSize(oldSize);
+
+  // while a column is resized, NSTableView resizes the cell but the frame of
+  // the text field is only set again by updateItemLayout() when the rows are
+  // reloaded after the resize: let the text follow the cell until then
+  if NOT Assigned(self.textField) then
+    Exit;
+  aFrame:= self.textField.frame;
+  aFrame.size.width:= self.bounds.size.width - aFrame.origin.x;
+  if aFrame.size.width < CocoaConfigListView.vsReport.column.textFieldMinWidth then
+    aFrame.size.width:= CocoaConfigListView.vsReport.column.textFieldMinWidth;
+  self.textField.setFrame( aFrame );
+end;
+
 procedure TCocoaTableListItem.createTextField;
 var
   fieldControl: NSTextField;
@@ -1534,7 +1572,7 @@ begin
   if (AIndex < 0) or (AIndex > _tableView.tableColumns.count) then
     Exit;
   cocoaTitle := NSStringUTF8(AColumn.Caption);
-  cocoaColumn := NSTableColumn.alloc.initWithIdentifier(cocoaTitle);
+  cocoaColumn := TCocoaTableColumn.alloc.initWithIdentifier(cocoaTitle);
   cocoaColumn.headerCell.setStringValue(cocoaTitle);
   cocoaColumn.setResizingMask(NSTableColumnUserResizingMask);
   _tableView.addTableColumn(cocoaColumn);

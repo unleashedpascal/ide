@@ -13,7 +13,8 @@ uses
   DbgIntfBaseTypes, DbgIntfDebuggerBase,
   FpDbgDisasX86,
   FpDbgClasses, FpDbgCallContextInfo, FpDbgUtil,
-  {$ifdef windows}  FpDbgWinClasses,  {$endif}
+  {$if (defined(windows) and (defined(CPUx86_64) or defined(CPUi386)))}   FpDbgWinX86Classes,  {$endif}
+  {$if (defined(windows) and defined(CPUAARCH64))}   FpDbgWinAarch64Classes,  {$endif}
   {$ifdef darwin}  FpDbgDarwinClasses,  {$endif}
   {$ifdef linux}  FpDbgLinuxClasses, FpDbgLinuxX86Classes, FpDbgLinuxAarch64Classes,  {$endif}
   FpDbgInfo, FpDbgDwarf, FpdMemoryTools, FpErrorMessages,
@@ -336,6 +337,17 @@ type
     function Call(const FunctionAddress: TFpDbgMemLocation; const ABaseContext: TFpDbgLocationContext; const AMemReader: TFpDbgMemReaderBase; const AMemConverter: TFpDbgMemConvertor): TFpDbgInfoCallContext;
     procedure StepOut(AForceStoreStepInfo: Boolean = False);
     function Pause: boolean;
+    { Drop a pause request that was raised but never delivered.
+
+      Pause sets FPauseRequest BEFORE it tests FRunning, so a Pause that
+      arrives once the target has already stopped leaves the flag set with no
+      break-in behind it.  The next ProcessLoop then short-circuits before
+      resuming, and the caller is handed a stop that never moved.  A pause
+      belongs to the run it was aimed at, so a driver that raises pause on a
+      deadline needs a way to retract one that lost the race.
+
+      Returns True if a request was actually pending. }
+    function CancelPauseRequest: boolean;
     function Detach: boolean;
     procedure ProcessLoop;
     procedure SendEvents(out continue: boolean);
@@ -1318,16 +1330,26 @@ begin
 end;
 
 function TDbgControllerStepOutCmd.IsAtHiddenBreak: Boolean;
+var
+  SteppedOut: Boolean;
 begin
+  {$IF (defined(CPUAARCH64))}
+  // We may have been outside the frame. "ret" uses the link register, so stack would not change.
+  SteppedOut := FThread.GetStackPointerRegisterValue >= FHiddenBreakStackPtrAddr;
+  {$ELSE}
+  // Target-dependent: architectures whose "call" keeps the return address in a link
+  // register (RISC-V ra) can return with SP unchanged when stepping out before the
+  // prologue spills it -- accept SP >= recorded there.  x86 keeps strict > : a
+  // conditional jump can land on the hidden-break address without a real return, and
+  // a genuine return always increases SP.
+  if FProcess.StepOutReturnMayKeepStackPointer then
+    SteppedOut := FThread.GetStackPointerRegisterValue >= FHiddenBreakStackPtrAddr
+  else
+    SteppedOut := FThread.GetStackPointerRegisterValue > FHiddenBreakStackPtrAddr;
+  {$ENDIF}
   Result := (FHiddenBreakpoint <> nil) and
             (FThread.GetInstructionPointerRegisterValue = FHiddenBreakAddr) and // FHiddenBreakpoint.HasLocation()
-            {$IF (defined(CPUAARCH64))}
-            // We may have been outside the frame. "ret" uses the link register, so stack would not change.
-            (FThread.GetStackPointerRegisterValue >= FHiddenBreakStackPtrAddr);
-            {$ELSE}
-            (FThread.GetStackPointerRegisterValue > FHiddenBreakStackPtrAddr);
-            {$ENDIF}
-            // if SP > FStackPtrRegVal >> then the brk was hit stepped out (should not happen)
+            SteppedOut;
   debugln(FPDBG_COMMANDS and Result, ['TDbgControllerStepOutCmd.IsAtHiddenBreak: At Hidden break = true']);
 end;
 
@@ -1344,10 +1366,6 @@ begin
   t := FController.CurrentThread;
   Unwinder := t.GetStackUnwinder;
   Unwinder.InitForThread(t);
-
-  // TODO: DWARF-4 has incorrect DFI, returning a bad result
-  Unwinder.SetUnwindFlags([ufSkipArtificialFrames]); // prevent using the asm unwinder
-
   Unwinder.GetTopFrame(CodeAddress, AStackPointerValue, AFramePointerValue, AnEntry);
   Res := Unwinder.Unwind(1, CodeAddress, AStackPointerValue, AFramePointerValue, AnEntry, AnEntry2);
   AnEntry.Free;
@@ -1652,7 +1670,7 @@ begin
 
   if FDefaultContext = nil then begin
     FDefaultContext := TFpDbgSimpleLocationContext.Create(MemManager,
-      FCurrentThread.GetInstructionPointerRegisterValue,
+      FCurrentThread.GetAdjustedInstructionPointerRegisterValue,
       DBGPTRSIZE[CurrentProcess.Mode],
       CurrentThread.ID,
       0
@@ -1833,6 +1851,11 @@ begin
     Result := FCurrentProcess.Pause;
 end;
 
+function TDbgController.CancelPauseRequest: boolean;
+begin
+  Result := InterLockedExchange(FPauseRequest, 0) = 1;
+end;
+
 function TDbgController.Detach: boolean;
 begin
   InterLockedExchange(FDetaching, 1);
@@ -1901,6 +1924,7 @@ begin
     FOnThreadBeforeProcessLoop(Self);
 
   repeat
+    FCurrentProcess.MaybeThreadsClearCallStack;
     ReleaseRefAndNil(FDefaultContext);
     DidContinue := True;
     if assigned(FCurrentProcess) and not assigned(FMainProcess) then begin
@@ -2012,6 +2036,9 @@ begin
                          FCurrentProcess.FormatAddress(FCurrentThread.GetStackBasePointerRegisterValue),
                          dbgs(CurrentProcess.CurrentBreakpoint<>nil)]);
 
+    if FCurrentProcess.PreAttach then
+      continue;
+
     if MaybeDetach then
       break;
 
@@ -2090,6 +2117,7 @@ begin
 
   until AExit or (InterLockedExchangeAdd(FPauseRequest, 0) = 1);
   FCurrentProcess.ProcessBreakpointUpdates;
+  FCurrentProcess.ClearNeedThreadsClearCallStack;
 end;
 
 procedure TDbgController.SendEvents(out continue: boolean);

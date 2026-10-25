@@ -836,17 +836,6 @@ begin
   end;
 end;
 
-{------------------------------------------------------------------------------
-  Function: TFont.GetSize
-  Params: none
-  Returns:  The font size
-
-  Calculates the size based on height
- ------------------------------------------------------------------------------}
-function TFont.GetSize: Integer;
-begin
-  Result := inherited Size;
-end;
 
 {------------------------------------------------------------------------------
   Method: TFont.SetPitch
@@ -956,30 +945,7 @@ begin
     Result := TCanvas(Canvas).GetDefaultColor(dctFont);
 end;
 
-{------------------------------------------------------------------------------
-  Function: TFont.GetName
-  Params: none
-  Returns:  The font name
 
-  Returns the name of the font
- ------------------------------------------------------------------------------}
-function TFont.GetName: string;
-begin
-  Result := inherited Name;
-end;
-
-{------------------------------------------------------------------------------
-  Returns the orientation of the font
-
-  The orientation is defined as the angle, in tenths of degrees,
-  between the X axis of the Canvas and the baseline of the font.
-
-  The property and it's setter/getter pair are compatible with Delphi
- ------------------------------------------------------------------------------}
-function TFont.GetOrientation: Integer;
-begin
-  Result := FOrientation;
-end;
 
 {------------------------------------------------------------------------------
   Method: TFont.SetName
@@ -1008,10 +974,10 @@ end;
  ------------------------------------------------------------------------------}
 procedure TFont.SetOrientation(AValue: Integer);
 begin
-  if FOrientation <> AValue then
+  if GetOrientation <> AValue then
   begin
     FreeReference;
-    FOrientation := AValue;
+    inherited SetOrientation(AValue);
     Changed;
   end;
 end;
@@ -1155,8 +1121,8 @@ begin
   begin
     lfHeight := Height;
     lfWidth := 0;
-    lfEscapement := FOrientation;
-    lfOrientation := FOrientation;
+    lfEscapement := Orientation;
+    lfOrientation := Orientation;
     lfWeight := LF_WEIGHT[fsBold in Style];
     lfItalic := LF_BOOL[fsItalic in Style];
     lfUnderline := LF_BOOL[fsUnderline in Style];
@@ -1335,7 +1301,9 @@ begin
       inherited SetFlags(7, fsUnderline in FStyle);
     if (fsStrikeOut in OldStyle)<>(fsStrikeOut in FStyle) then
       inherited SetFlags(8, fsStrikeOut in FStyle);
-    FOrientation := FontData.Orientation;
+    BeginUpdate; //setting Orientation may call Changed, which is not needed yet
+    Orientation := FontData.Orientation;
+    EndUpDate;
     Changed;
   end;
 end;

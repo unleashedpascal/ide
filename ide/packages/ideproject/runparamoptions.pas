@@ -28,10 +28,10 @@
     command line parameters and working directory.
 
     The options saved in a TRunParamsOptions are stored in the project info file
-    (.lpi) together with the rest of the project.
+    (.lpi) together with the rest of the project or in session file (.lps).
 
     The dialog will be activated by main.pp with the function
-    ShowRunParamsOptsDlg (see below) when the user clicks on the
+    ShowRunParamsOptsDlg when the user clicks on the
     menu->Run->Run Parameters.
 }
 unit RunParamOptions;
@@ -51,7 +51,7 @@ uses
   BaseIDEIntf, ProjectIntf, MacroIntf;
 
 { The xml format version:
-    When the format changes (new values, changed formats) we can distinguish old
+    When the format changes (new values, changed types) we can distinguish old
     files and are able to convert them.
 }
 const
@@ -106,12 +106,11 @@ type
     function LegacySave(XMLConfig: TXMLConfig; const Path: string;
       UsePathDelim: TPathDelimSwitch): TModalResult;
     function Save(XMLConfig: TXMLConfig; const Path: string;
-      UsePathDelim: TPathDelimSwitch; const ASaveIn: TRunParamsOptionsModeSave;
-      const ALegacyList: Boolean): TModalResult;
+      UsePathDelim: TPathDelimSwitch; const ASaveIn: TRunParamsOptionsModeSave): TModalResult;
     //function GetActiveMode: TRunParamsOptionsMode;
   end;
 
-function FindTerminalInPath(const ATerm: String = ''): String;
+function FindTerminalInPath(Term: String = ''): String;
 
 implementation
 
@@ -119,13 +118,11 @@ const
   DefaultLauncherTitle = '''Lazarus Run Output''';
   DefaultLauncherApplication = '$(LazarusDir)/tools/runwait.sh $(TargetCmdLine)';
 
-function FindTerminalInPath(const ATerm: String = ''): String;
+function FindTerminalInPath(Term: String = ''): String;
 var
   s: String;
-  Term: String;
 begin
   Result := '';
-  Term := ATerm;
   if Term = '' then
     Term := GetEnvironmentVariableUTF8('TERM');
   {$IFDEF MSWINDOWS}
@@ -276,9 +273,8 @@ begin
     ActiveModeName := Modes[0].Name;
 end;
 
-function TRunParamsOptions.Save(XMLConfig: TXMLConfig; const Path: string;
-  UsePathDelim: TPathDelimSwitch; const ASaveIn: TRunParamsOptionsModeSave;
-  const ALegacyList: Boolean): TModalResult;
+function TRunParamsOptions.Save(XMLConfig: TXMLConfig; const Path: string; UsePathDelim: TPathDelimSwitch;
+  const ASaveIn: TRunParamsOptionsModeSave): TModalResult;
 var
   AMode: TRunParamsOptionsMode;
   I, Cnt: Integer;
@@ -298,7 +294,7 @@ begin
 
     if AMode.SaveIn=ASaveIn then
     begin
-      ModePath := ModesPath+XMLConfig.GetListItemXPath('Mode', Cnt, ALegacyList, False)+'/';
+      ModePath := ModesPath+XMLConfig.GetListItemXPath('Mode', Cnt)+'/';
       Result := AMode.Save(XMLConfig, ModePath, UsePathDelim);
       if Result<>mrOK then
         Exit;
@@ -306,7 +302,6 @@ begin
     end;
   end;
 
-  XMLConfig.SetListItemCount(ModesPath, Cnt, ALegacyList);
   if ASaveIn=rpsLPS then
     XMLConfig.SetValue(Path + 'Modes/ActiveMode', ActiveModeName);
 end;
@@ -375,6 +370,9 @@ begin
   FileNameStdOut := XMLConfig.GetValue(Path + 'local/FileNameStdOut/Value', '');
   FileNameStdErr := XMLConfig.GetValue(Path + 'local/FileNameStdErr/Value', '');
 
+  XMLConfig.GetValue(Path + 'local/ConsoleMode/Value', ord(rpcmOsConsole), FConsoleMode, TypeInfo(TRunParamsConsoleMode));
+  IdeDbgConsoleId := XMLConfig.GetValue(Path + 'local/IdeDbgConsoleId/Value', RunParamsConsoleIdDefault);
+
   // environment options
   LoadUserOverrides(Path + 'environment/UserOverrides/');
   IncludeSystemVariables := XMLConfig.GetValue(
@@ -440,6 +438,9 @@ begin
   XMLConfig.SetDeleteValue(Path + 'local/FileNameStdOut/Value', FileNameStdOut, '');
   XMLConfig.SetDeleteValue(Path + 'local/FileNameStdErr/Value', FileNameStdErr, '');
 
+  XMLConfig.SetDeleteValue(Path + 'local/ConsoleMode/Value', FConsoleMode, ord(rpcmOsConsole), TypeInfo(TRunParamsConsoleMode));
+  XMLConfig.SetDeleteValue(Path + 'local/IdeDbgConsoleId/Value', IdeDbgConsoleId, RunParamsConsoleIdDefault);
+
   Result := mrOk;
 end;
 
@@ -504,6 +505,9 @@ begin
   FileNameStdIn  := XMLConfig.GetValue(Path + 'local/FileNameStdIn/Value',  '');
   FileNameStdOut := XMLConfig.GetValue(Path + 'local/FileNameStdOut/Value', '');
   FileNameStdErr := XMLConfig.GetValue(Path + 'local/FileNameStdErr/Value', '');
+
+  XMLConfig.GetValue(Path + 'local/ConsoleMode/Value', ord(rpcmOsConsole), FConsoleMode, TypeInfo(TRunParamsConsoleMode));
+  IdeDbgConsoleId := XMLConfig.GetValue(Path + 'local/IdeDbgConsoleId/Value', RunParamsConsoleIdDefault);
 
   // environment options
   LoadUserOverrides(Path + 'environment/UserOverrides/');
@@ -571,6 +575,9 @@ begin
   XMLConfig.SetDeleteValue(Path + 'local/FileNameStdIn/Value',  FileNameStdIn,  '');
   XMLConfig.SetDeleteValue(Path + 'local/FileNameStdOut/Value', FileNameStdOut, '');
   XMLConfig.SetDeleteValue(Path + 'local/FileNameStdErr/Value', FileNameStdErr, '');
+
+  XMLConfig.SetDeleteValue(Path + 'local/ConsoleMode/Value', FConsoleMode, ord(rpcmOsConsole), TypeInfo(TRunParamsConsoleMode));
+  XMLConfig.SetDeleteValue(Path + 'local/IdeDbgConsoleId/Value', IdeDbgConsoleId, RunParamsConsoleIdDefault);
 
   // environment options
   SaveUserOverrides(Path + 'environment/UserOverrides/');

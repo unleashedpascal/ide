@@ -3,15 +3,18 @@ object HeapTrcViewForm: THeapTrcViewForm
   Height = 444
   Top = 164
   Width = 637
+  AllowDropFiles = True
   BorderIcons = [biSystemMenu, biMaximize]
   Caption = 'HeapTrcViewForm'
   ClientHeight = 444
   ClientWidth = 637
   FormStyle = fsStayOnTop
-  Position = poScreenCenter
+  KeyPreview = True
   LCLVersion = '4.99.0.0'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnDropFiles = FormDropFiles
+  OnKeyDown = FormKeyDown
   object lblTrcFile: TLabel
     AnchorSideLeft.Control = Owner
     AnchorSideTop.Control = edtTrcFileName
@@ -36,6 +39,8 @@ object HeapTrcViewForm: THeapTrcViewForm
     BorderSpacing.Left = 6
     BorderSpacing.Top = 6
     Caption = 'Update'
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 2
     OnClick = btnUpdateClick
   end
@@ -68,6 +73,8 @@ object HeapTrcViewForm: THeapTrcViewForm
     BorderSpacing.Left = 6
     BorderSpacing.Right = 6
     Caption = '...'
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 1
     OnClick = btnBrowseClick
   end
@@ -108,35 +115,56 @@ object HeapTrcViewForm: THeapTrcViewForm
     object trvTraceInfo: TTreeView
       AnchorSideTop.Side = asrBottom
       Left = 0
-      Height = 278
+      Height = 343
       Top = 6
       Width = 625
       Align = alClient
       BorderSpacing.Top = 6
       HideSelection = False
       ReadOnly = True
+      RowSelect = True
       TabOrder = 0
-      Options = [tvoAutoItemHeight, tvoKeepCollapsedNodes, tvoReadOnly, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips]
+      Options = [tvoAutoItemHeight, tvoKeepCollapsedNodes, tvoReadOnly, tvoRowSelect, tvoShowButtons, tvoShowLines, tvoShowRoot, tvoToolTips, tvoThemedDraw]
       OnDblClick = trvTraceInfoDblClick
+      OnKeyDown = trvTraceInfoKeyDown
     end
-    object memoSummary: TMemo
+    object pnlSummary: TPanel
       Left = 0
-      Height = 81
-      Top = 289
+      Height = 15
+      Top = 355
       Width = 625
       Align = alBottom
-      ReadOnly = True
-      ScrollBars = ssVertical
+      AutoSize = True
+      BorderSpacing.Top = 6
+      BevelOuter = bvNone
+      ChildSizing.HorizontalSpacing = 16
+      ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+      ChildSizing.Layout = cclTopToBottomThenLeftToRight
+      ChildSizing.ControlsPerLine = 1
+      ClientHeight = 15
+      ClientWidth = 625
       TabOrder = 1
-    end
-    object splitter: TSplitter
-      Cursor = crVSplit
-      Left = 0
-      Height = 5
-      Top = 284
-      Width = 625
-      Align = alBottom
-      ResizeAnchor = akBottom
+      object lblLeakingMemSize: TLabel
+        Left = 0
+        Height = 15
+        Top = 0
+        Width = 187
+        Caption = 'Leaking Mem Size: 0'
+      end
+      object lblLeakingBlocksCount: TLabel
+        Left = 203
+        Height = 15
+        Top = 0
+        Width = 205
+        Caption = 'Leaking Blocks Count: 0'
+      end
+      object lblTotalMemAlloc: TLabel
+        Left = 424
+        Height = 15
+        Top = 0
+        Width = 201
+        Caption = 'Total Mem allocated: 0'
+      end
     end
   end
   object btnClipboard: TButton
@@ -150,6 +178,8 @@ object HeapTrcViewForm: THeapTrcViewForm
     AutoSize = True
     BorderSpacing.Left = 6
     Caption = 'Paste Clipboard'
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 3
     OnClick = btnClipboardClick
   end
@@ -164,6 +194,8 @@ object HeapTrcViewForm: THeapTrcViewForm
     Anchors = [akTop, akLeft, akRight]
     BorderSpacing.Around = 6
     ItemHeight = 15
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 0
   end
   object BtnResolve: TButton

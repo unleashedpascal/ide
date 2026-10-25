@@ -251,7 +251,7 @@ const
   ecLineBreak       = 509;  // Break line at current position, move caret to new line
   ecInsertLine      = 510;  // Break line at current position, leave caret
   ecChar            = 511;  // Insert a character at current position
-  ecSmartUnindent   = 512;  // NOT regocniced as command, used for group-undo, set by beautifier
+  ecSmartUnindent   = 512;  // NOT recognized as command, used for group-undo, set by beautifier
   ecDeleteCharNoCrLf= 513;  // Delete char at cursor (i.e. delete key), but do not join lines
   ecDeleteLineKeepX = 514;  // Delete current line
   ecDeleteWordNoCrLf= 515;  // Delete word at cursor (i.e. ctrl+delete shourtcut), but do not join lines
@@ -361,6 +361,7 @@ type
     function GetDisplayName: string; override;
   public
     procedure Assign(Source: TPersistent); override;
+    function IsEqual(AnOtherKeyStroke: TSynEditKeyStroke): boolean;
     // TODO: add ShiftMask optional
     procedure LoadFromStream(AStream: TStream);
     procedure SaveToStream(AStream: TStream);
@@ -388,7 +389,6 @@ type
     FOwner: TPersistent;
     fLastKey: word;
     fLastShiftState: TShiftState;
-    FOnChanged: TNotifyEvent;
     FPluginOffset: Integer;
     FUsePluginOffset: Boolean;
     function GetItem(Index: Integer): TSynEditKeyStroke;
@@ -398,11 +398,12 @@ type
     function FindKeycode2(Code1: word; SS1: TShiftState;
       Code2: word; SS2: TShiftState): integer;
     function FindKeycode2Start(Code: word; SS: TShiftState): integer;
-    procedure DoChanged;
   public
     constructor Create(AOwner: TPersistent);
     function Add: TSynEditKeyStroke;
     procedure Assign(Source: TPersistent); override;
+    function IsEqual(AnOtherKeyStrokes: TSynEditKeyStrokes): Boolean;
+    function IsModified: Boolean;
     function FindCommand(Cmd: TSynEditorCommand): integer;
     function FindCommandAll(Cmd: TSynEditorCommand): TIntegerDynArray;
     function FindKeycode(Code: word; SS: TShiftState): integer;
@@ -416,8 +417,6 @@ type
     procedure LoadFromStream(AStream: TStream);
     procedure ResetDefaults; virtual;
     procedure SaveToStream(AStream: TStream);
-    procedure Update(Item: TCollectionItem); override;
-    procedure Notify(Item: TCollectionItem; Action: TCollectionNotification); override;
   public
     property Items[Index: Integer]: TSynEditKeyStroke read GetItem
       write SetItem; default;
@@ -425,7 +424,18 @@ type
     // only switch on while needed.
     // So streaming will always see the constant, unmodified values
     property UsePluginOffset: Boolean read FUsePluginOffset write FUsePluginOffset;
-    property OnChanged: TNotifyEvent read FOnChanged write FOnChanged;
+  end;
+  TSynEditKeyStrokesClass = class of TSynEditKeyStrokes;
+
+  { TSynEditMainKeyStrokes }
+
+  TSynEditMainKeyStrokes = class(TSynEditKeyStrokes)
+  private
+    FForceSaveToLfm: boolean;
+  protected
+    procedure EndUpdate; override;
+  published
+    property ForceSaveToLfm: boolean read FForceSaveToLfm write FForceSaveToLfm default False;
   end;
 
   TGetEditorCommandValuesProc = procedure(Proc: TGetStrProc);
@@ -753,6 +763,19 @@ begin
     inherited Assign(Source);
 end;
 
+function TSynEditKeyStroke.IsEqual(AnOtherKeyStroke: TSynEditKeyStroke
+  ): boolean;
+begin
+  Result :=
+    (FKey        = AnOtherKeyStroke.FKey) and
+    (FShift      = AnOtherKeyStroke.FShift) and
+    (FKey2       = AnOtherKeyStroke.FKey2) and
+    (FShift2     = AnOtherKeyStroke.FShift2) and
+    (FShiftMask  = AnOtherKeyStroke.FShiftMask) and
+    (FShiftMask2 = AnOtherKeyStroke.FShiftMask2) and
+    (FCommand    = AnOtherKeyStroke.FCommand);
+end;
+
 function TSynEditKeyStroke.GetDisplayName: string;
 begin
   Result := EditorCommandToCodeString(Command) + ' - ' + ShortCutToText(ShortCut);
@@ -789,19 +812,13 @@ end;
 procedure TSynEditKeyStroke.SetKey(const Value: word);
 begin
   if Value <> FKey then
-  begin
     FKey := Value;
-    Changed(False);
-  end;
 end;
 
 procedure TSynEditKeyStroke.SetShift(const Value: TShiftState);
 begin
   if Value <> FShift then
-  begin
     FShift := Value;
-    Changed(False);
-  end;
 end;
 
 procedure TSynEditKeyStroke.SetShortCut(const Value: TShortCut);
@@ -825,26 +842,19 @@ begin
   begin
     Key := NewKey;
     Shift := NewShift;
-    Changed(False);
   end;
 end;
 
 procedure TSynEditKeyStroke.SetKey2(const Value: word);
 begin
   if Value <> FKey2 then
-  begin
     FKey2 := Value;
-    Changed(False);
-  end;
 end;
 
 procedure TSynEditKeyStroke.SetShift2(const Value: TShiftState);
 begin
   if Value <> FShift2 then
-  begin
     FShift2 := Value;
-    Changed(False);
-  end;
 end;
 
 procedure TSynEditKeyStroke.SetShortCut2(const Value: TShortCut);
@@ -868,7 +878,6 @@ begin
   begin
     Key2 := NewKey;
     Shift2 := NewShift;
-    Changed(False);
   end;
 end;
 
@@ -932,10 +941,27 @@ begin
     inherited Assign(Source);
 end;
 
-procedure TSynEditKeyStrokes.DoChanged;
+function TSynEditKeyStrokes.IsEqual(AnOtherKeyStrokes: TSynEditKeyStrokes
+  ): Boolean;
+var
+  i: Integer;
 begin
-  if Assigned(FOnChanged) and (UpdateCount=0) then
-    FOnChanged(Self);
+  Result := Count = AnOtherKeyStrokes.Count;
+  if not Result then
+    exit;
+  for i := 0 to Count - 1 do
+    if not Items[i].IsEqual(AnOtherKeyStrokes.Items[i]) then
+      exit(False);
+end;
+
+function TSynEditKeyStrokes.IsModified: Boolean;
+var
+  t: TSynEditKeyStrokes;
+begin
+  t := TSynEditKeyStrokesClass(ClassType).Create(nil);
+  t.ResetDefaults;
+  Result := not IsEqual(t);
+  t.Destroy;
 end;
 
 constructor TSynEditKeyStrokes.Create(AOwner: TPersistent);
@@ -1139,13 +1165,6 @@ begin
     Dec(Num);
   end;
 end;
-
-procedure TSynEditKeyStrokes.Notify(Item: TCollectionItem; Action: TCollectionNotification);
-begin
-  inherited Notify(Item, Action);
-  DoChanged;
-end;
-
 {end}                                                                           //ac 2000-07-05
 
 procedure TSynEditKeyStrokes.ResetDefaults;
@@ -1163,130 +1182,119 @@ procedure TSynEditKeyStrokes.ResetDefaults;
   end;
 
 begin
-  BeginUpdate;
-  try
-    Clear;
+  Clear;
 
-    AddKey(ecUp, VK_UP, []);
-    AddKey(ecSelUp, VK_UP, [ssShift]);
-    AddKey(ecScrollUp, VK_UP, [ssCtrl]);
-    AddKey(ecDown, VK_DOWN, []);
-    AddKey(ecSelDown, VK_DOWN, [ssShift]);
-    AddKey(ecScrollDown, VK_DOWN, [ssCtrl]);
-    AddKey(ecLeft, VK_LEFT, []);
-    AddKey(ecSelLeft, VK_LEFT, [ssShift]);
-    AddKey(ecWordLeft, VK_LEFT, [ssCtrl]);
-    AddKey(ecSelWordLeft, VK_LEFT, [ssShift,ssCtrl]);
-    AddKey(ecRight, VK_RIGHT, []);
-    AddKey(ecSelRight, VK_RIGHT, [ssShift]);
-    AddKey(ecWordRight, VK_RIGHT, [ssCtrl]);
-    AddKey(ecSelWordRight, VK_RIGHT, [ssShift,ssCtrl]);
-    AddKey(ecPageDown, VK_NEXT, []);
-    AddKey(ecSelPageDown, VK_NEXT, [ssShift]);
-    AddKey(ecPageBottom, VK_NEXT, [ssCtrl]);
-    AddKey(ecSelPageBottom, VK_NEXT, [ssShift,ssCtrl]);
-    AddKey(ecPageUp, VK_PRIOR, []);
-    AddKey(ecSelPageUp, VK_PRIOR, [ssShift]);
-    AddKey(ecPageTop, VK_PRIOR, [ssCtrl]);
-    AddKey(ecSelPageTop, VK_PRIOR, [ssShift,ssCtrl]);
-    AddKey(ecLineStart, VK_HOME, []);
-    AddKey(ecSelLineStart, VK_HOME, [ssShift]);
-    AddKey(ecEditorTop, VK_HOME, [ssCtrl]);
-    AddKey(ecSelEditorTop, VK_HOME, [ssShift,ssCtrl]);
-    AddKey(ecLineEnd, VK_END, []);
-    AddKey(ecSelLineEnd, VK_END, [ssShift]);
-    AddKey(ecEditorBottom, VK_END, [ssCtrl]);
-    AddKey(ecSelEditorBottom, VK_END, [ssShift,ssCtrl]);
-    AddKey(ecToggleMode, VK_INSERT, []);
-    AddKey(ecCopy, VK_INSERT, [ssCtrl]);
-    AddKey(ecPaste, VK_INSERT, [ssShift]);
-    AddKey(ecDeleteChar, VK_DELETE, []);
-    AddKey(ecCut, VK_DELETE, [ssShift]);
-    AddKey(ecDeleteLastChar, VK_BACK, []);
-    AddKey(ecDeleteLastChar, VK_BACK, [ssShift]);                                 //jr 2000-09-23
-    AddKey(ecDeleteLastWord, VK_BACK, [ssCtrl]);
-    AddKey(ecUndo, VK_BACK, [ssAlt]);
-    AddKey(ecRedo, VK_BACK, [ssAlt,ssShift]);
-    AddKey(ecLineBreak, VK_RETURN, []);
-    AddKey(ecSelectAll, ord('A'), [ssCtrl]);
-    AddKey(ecCopy, ord('C'), [ssCtrl]);
-    AddKey(ecBlockIndent, ord('I'), [ssCtrl]);
-    AddKey(ecLineBreak, ord('M'), [ssCtrl]);
-    AddKey(ecInsertLine, ord('N'), [ssCtrl]);
-    AddKey(ecDeleteWord, ord('T'), [ssCtrl]);
-    AddKey(ecBlockUnindent, ord('U'), [ssCtrl]);
-    AddKey(ecPaste, ord('V'), [ssCtrl]);
-    AddKey(ecCut, ord('X'), [ssCtrl]);
-    AddKey(ecDeleteLine, ord('Y'), [ssCtrl]);
-    AddKey(ecDeleteEOL, ord('Y'), [ssCtrl,ssShift]);
-    AddKey(ecUndo, ord('Z'), [ssCtrl]);
-    AddKey(ecRedo, ord('Z'), [ssCtrl,ssShift]);
-    AddKey(ecGotoMarker0, ord('0'), [ssCtrl]);
-    AddKey(ecGotoMarker1, ord('1'), [ssCtrl]);
-    AddKey(ecGotoMarker2, ord('2'), [ssCtrl]);
-    AddKey(ecGotoMarker3, ord('3'), [ssCtrl]);
-    AddKey(ecGotoMarker4, ord('4'), [ssCtrl]);
-    AddKey(ecGotoMarker5, ord('5'), [ssCtrl]);
-    AddKey(ecGotoMarker6, ord('6'), [ssCtrl]);
-    AddKey(ecGotoMarker7, ord('7'), [ssCtrl]);
-    AddKey(ecGotoMarker8, ord('8'), [ssCtrl]);
-    AddKey(ecGotoMarker9, ord('9'), [ssCtrl]);
-    AddKey(ecSetMarker0, ord('0'), [ssCtrl,ssShift]);
-    AddKey(ecSetMarker1, ord('1'), [ssCtrl,ssShift]);
-    AddKey(ecSetMarker2, ord('2'), [ssCtrl,ssShift]);
-    AddKey(ecSetMarker3, ord('3'), [ssCtrl,ssShift]);
-    AddKey(ecSetMarker4, ord('4'), [ssCtrl,ssShift]);
-    AddKey(ecSetMarker5, ord('5'), [ssCtrl,ssShift]);
-    AddKey(ecSetMarker6, ord('6'), [ssCtrl,ssShift]);
-    AddKey(ecSetMarker7, ord('7'), [ssCtrl,ssShift]);
-    AddKey(ecSetMarker8, ord('8'), [ssCtrl,ssShift]);
-    AddKey(ecSetMarker9, ord('9'), [ssCtrl,ssShift]);
-    AddKey(ecFoldLevel1, ord('1'), [ssAlt,ssShift]);
-    AddKey(ecFoldLevel2, ord('2'), [ssAlt,ssShift]);
-    AddKey(ecFoldLevel3, ord('3'), [ssAlt,ssShift]);
-    AddKey(ecFoldLevel4, ord('4'), [ssAlt,ssShift]);
-    AddKey(ecFoldLevel5, ord('5'), [ssAlt,ssShift]);
-    AddKey(ecFoldLevel6, ord('6'), [ssAlt,ssShift]);
-    AddKey(ecFoldLevel7, ord('7'), [ssAlt,ssShift]);
-    AddKey(ecFoldLevel8, ord('8'), [ssAlt,ssShift]);
-    AddKey(ecFoldLevel9, ord('9'), [ssAlt,ssShift]);
-    AddKey(ecFoldLevel0, ord('0'), [ssAlt,ssShift]);
-    AddKey(ecFoldCurrent, ord('-'), [ssAlt,ssShift]);
-    AddKey(ecUnFoldCurrent, ord('+'), [ssAlt,ssShift]);
-    AddKey(EcToggleMarkupWord, ord('M'), [ssAlt]);
-    AddKey(ecNormalSelect, ord('N'), [ssCtrl,ssShift]);
-    AddKey(ecColumnSelect, ord('C'), [ssCtrl,ssShift]);
-    AddKey(ecLineSelect, ord('L'), [ssCtrl,ssShift]);
-    AddKey(ecTab, VK_TAB, []);
-    AddKey(ecShiftTab, VK_TAB, [ssShift]);
-    AddKey(ecMatchBracket, ord('B'), [ssCtrl,ssShift]);
+  AddKey(ecUp, VK_UP, []);
+  AddKey(ecSelUp, VK_UP, [ssShift]);
+  AddKey(ecScrollUp, VK_UP, [ssCtrl]);
+  AddKey(ecDown, VK_DOWN, []);
+  AddKey(ecSelDown, VK_DOWN, [ssShift]);
+  AddKey(ecScrollDown, VK_DOWN, [ssCtrl]);
+  AddKey(ecLeft, VK_LEFT, []);
+  AddKey(ecSelLeft, VK_LEFT, [ssShift]);
+  AddKey(ecWordLeft, VK_LEFT, [ssCtrl]);
+  AddKey(ecSelWordLeft, VK_LEFT, [ssShift,ssCtrl]);
+  AddKey(ecRight, VK_RIGHT, []);
+  AddKey(ecSelRight, VK_RIGHT, [ssShift]);
+  AddKey(ecWordRight, VK_RIGHT, [ssCtrl]);
+  AddKey(ecSelWordRight, VK_RIGHT, [ssShift,ssCtrl]);
+  AddKey(ecPageDown, VK_NEXT, []);
+  AddKey(ecSelPageDown, VK_NEXT, [ssShift]);
+  AddKey(ecPageBottom, VK_NEXT, [ssCtrl]);
+  AddKey(ecSelPageBottom, VK_NEXT, [ssShift,ssCtrl]);
+  AddKey(ecPageUp, VK_PRIOR, []);
+  AddKey(ecSelPageUp, VK_PRIOR, [ssShift]);
+  AddKey(ecPageTop, VK_PRIOR, [ssCtrl]);
+  AddKey(ecSelPageTop, VK_PRIOR, [ssShift,ssCtrl]);
+  AddKey(ecLineStart, VK_HOME, []);
+  AddKey(ecSelLineStart, VK_HOME, [ssShift]);
+  AddKey(ecEditorTop, VK_HOME, [ssCtrl]);
+  AddKey(ecSelEditorTop, VK_HOME, [ssShift,ssCtrl]);
+  AddKey(ecLineEnd, VK_END, []);
+  AddKey(ecSelLineEnd, VK_END, [ssShift]);
+  AddKey(ecEditorBottom, VK_END, [ssCtrl]);
+  AddKey(ecSelEditorBottom, VK_END, [ssShift,ssCtrl]);
+  AddKey(ecToggleMode, VK_INSERT, []);
+  AddKey(ecCopy, VK_INSERT, [ssCtrl]);
+  AddKey(ecPaste, VK_INSERT, [ssShift]);
+  AddKey(ecDeleteChar, VK_DELETE, []);
+  AddKey(ecCut, VK_DELETE, [ssShift]);
+  AddKey(ecDeleteLastChar, VK_BACK, []);
+  AddKey(ecDeleteLastChar, VK_BACK, [ssShift]);                                 //jr 2000-09-23
+  AddKey(ecDeleteLastWord, VK_BACK, [ssCtrl]);
+  AddKey(ecUndo, VK_BACK, [ssAlt]);
+  AddKey(ecRedo, VK_BACK, [ssAlt,ssShift]);
+  AddKey(ecLineBreak, VK_RETURN, []);
+  AddKey(ecSelectAll, ord('A'), [ssCtrl]);
+  AddKey(ecCopy, ord('C'), [ssCtrl]);
+  AddKey(ecBlockIndent, ord('I'), [ssCtrl]);
+  AddKey(ecLineBreak, ord('M'), [ssCtrl]);
+  AddKey(ecInsertLine, ord('N'), [ssCtrl]);
+  AddKey(ecDeleteWord, ord('T'), [ssCtrl]);
+  AddKey(ecBlockUnindent, ord('U'), [ssCtrl]);
+  AddKey(ecPaste, ord('V'), [ssCtrl]);
+  AddKey(ecCut, ord('X'), [ssCtrl]);
+  AddKey(ecDeleteLine, ord('Y'), [ssCtrl]);
+  AddKey(ecDeleteEOL, ord('Y'), [ssCtrl,ssShift]);
+  AddKey(ecUndo, ord('Z'), [ssCtrl]);
+  AddKey(ecRedo, ord('Z'), [ssCtrl,ssShift]);
+  AddKey(ecGotoMarker0, ord('0'), [ssCtrl]);
+  AddKey(ecGotoMarker1, ord('1'), [ssCtrl]);
+  AddKey(ecGotoMarker2, ord('2'), [ssCtrl]);
+  AddKey(ecGotoMarker3, ord('3'), [ssCtrl]);
+  AddKey(ecGotoMarker4, ord('4'), [ssCtrl]);
+  AddKey(ecGotoMarker5, ord('5'), [ssCtrl]);
+  AddKey(ecGotoMarker6, ord('6'), [ssCtrl]);
+  AddKey(ecGotoMarker7, ord('7'), [ssCtrl]);
+  AddKey(ecGotoMarker8, ord('8'), [ssCtrl]);
+  AddKey(ecGotoMarker9, ord('9'), [ssCtrl]);
+  AddKey(ecSetMarker0, ord('0'), [ssCtrl,ssShift]);
+  AddKey(ecSetMarker1, ord('1'), [ssCtrl,ssShift]);
+  AddKey(ecSetMarker2, ord('2'), [ssCtrl,ssShift]);
+  AddKey(ecSetMarker3, ord('3'), [ssCtrl,ssShift]);
+  AddKey(ecSetMarker4, ord('4'), [ssCtrl,ssShift]);
+  AddKey(ecSetMarker5, ord('5'), [ssCtrl,ssShift]);
+  AddKey(ecSetMarker6, ord('6'), [ssCtrl,ssShift]);
+  AddKey(ecSetMarker7, ord('7'), [ssCtrl,ssShift]);
+  AddKey(ecSetMarker8, ord('8'), [ssCtrl,ssShift]);
+  AddKey(ecSetMarker9, ord('9'), [ssCtrl,ssShift]);
+  AddKey(ecFoldLevel1, ord('1'), [ssAlt,ssShift]);
+  AddKey(ecFoldLevel2, ord('2'), [ssAlt,ssShift]);
+  AddKey(ecFoldLevel3, ord('3'), [ssAlt,ssShift]);
+  AddKey(ecFoldLevel4, ord('4'), [ssAlt,ssShift]);
+  AddKey(ecFoldLevel5, ord('5'), [ssAlt,ssShift]);
+  AddKey(ecFoldLevel6, ord('6'), [ssAlt,ssShift]);
+  AddKey(ecFoldLevel7, ord('7'), [ssAlt,ssShift]);
+  AddKey(ecFoldLevel8, ord('8'), [ssAlt,ssShift]);
+  AddKey(ecFoldLevel9, ord('9'), [ssAlt,ssShift]);
+  AddKey(ecFoldLevel0, ord('0'), [ssAlt,ssShift]);
+  AddKey(ecFoldCurrent, ord('-'), [ssAlt,ssShift]);
+  AddKey(ecUnFoldCurrent, ord('+'), [ssAlt,ssShift]);
+  AddKey(EcToggleMarkupWord, ord('M'), [ssAlt]);
+  AddKey(ecNormalSelect, ord('N'), [ssCtrl,ssShift]);
+  AddKey(ecColumnSelect, ord('C'), [ssCtrl,ssShift]);
+  AddKey(ecLineSelect, ord('L'), [ssCtrl,ssShift]);
+  AddKey(ecTab, VK_TAB, []);
+  AddKey(ecShiftTab, VK_TAB, [ssShift]);
+  AddKey(ecMatchBracket, ord('B'), [ssCtrl,ssShift]);
 
-    AddKey(ecColSelUp, VK_UP,    [ssAlt, ssShift]);
-    AddKey(ecColSelDown, VK_DOWN,  [ssAlt, ssShift]);
-    AddKey(ecColSelLeft, VK_LEFT, [ssAlt, ssShift]);
-    AddKey(ecColSelRight, VK_RIGHT, [ssAlt, ssShift]);
-    AddKey(ecColSelPageDown, VK_NEXT, [ssAlt, ssShift]);
-    AddKey(ecColSelPageBottom, VK_NEXT, [ssAlt, ssShift,ssCtrl]);
-    AddKey(ecColSelPageUp, VK_PRIOR, [ssAlt, ssShift]);
-    AddKey(ecColSelPageTop, VK_PRIOR, [ssAlt, ssShift,ssCtrl]);
-    AddKey(ecColSelLineStart, VK_HOME, [ssAlt, ssShift]);
-    AddKey(ecColSelLineEnd, VK_END, [ssAlt, ssShift]);
-    AddKey(ecColSelEditorTop, VK_HOME, [ssAlt, ssShift,ssCtrl]);
-    AddKey(ecColSelEditorBottom, VK_END, [ssAlt, ssShift,ssCtrl]);
-  finally
-    EndUpdate;
-  end;
+  AddKey(ecColSelUp, VK_UP,    [ssAlt, ssShift]);
+  AddKey(ecColSelDown, VK_DOWN,  [ssAlt, ssShift]);
+  AddKey(ecColSelLeft, VK_LEFT, [ssAlt, ssShift]);
+  AddKey(ecColSelRight, VK_RIGHT, [ssAlt, ssShift]);
+  AddKey(ecColSelPageDown, VK_NEXT, [ssAlt, ssShift]);
+  AddKey(ecColSelPageBottom, VK_NEXT, [ssAlt, ssShift,ssCtrl]);
+  AddKey(ecColSelPageUp, VK_PRIOR, [ssAlt, ssShift]);
+  AddKey(ecColSelPageTop, VK_PRIOR, [ssAlt, ssShift,ssCtrl]);
+  AddKey(ecColSelLineStart, VK_HOME, [ssAlt, ssShift]);
+  AddKey(ecColSelLineEnd, VK_END, [ssAlt, ssShift]);
+  AddKey(ecColSelEditorTop, VK_HOME, [ssAlt, ssShift,ssCtrl]);
+  AddKey(ecColSelEditorBottom, VK_END, [ssAlt, ssShift,ssCtrl]);
 end;
 
 procedure TSynEditKeyStrokes.SetItem(Index: Integer; Value: TSynEditKeyStroke);
 begin
   inherited SetItem(Index, Value);
-end;
-
-procedure TSynEditKeyStrokes.Update(Item: TCollectionItem);
-begin
-  inherited Update(Item);
-  DoChanged;
 end;
 
 {begin}                                                                         //ac 2000-07-05
@@ -1299,6 +1307,23 @@ begin
   for i := 0 to Num - 1 do
     Items[i].SaveToStream(AStream);
 end;
+
+{ TSynEditMainKeyStrokes }
+
+procedure TSynEditMainKeyStrokes.EndUpdate;
+begin
+  inherited EndUpdate;
+  if (UpdateCount = 0) and
+     assigned(Owner) and (Owner is TComponent) and
+     assigned(TComponent(Owner).Owner) and
+     (csLoading in TComponent(Owner).Owner.ComponentState)
+  then begin
+    if LCL_SaveBackwardCompatibleLfm then exit;
+    if not IsModified then
+      FForceSaveToLfm := True;
+  end;
+end;
+
 {end}                                                                           //ac 2000-07-05
 
 initialization

@@ -22,6 +22,26 @@ msgstr ""
 msgid "No group"
 msgstr ""
 
+#: idedebuggerstringconstants.brkhandleignorebreakpoints
+msgid "Handle/Ignore breakpoints"
+msgstr ""
+
+#: idedebuggerstringconstants.brkhandleignoreexceptions
+msgid "Handle/Ignore exceptions"
+msgstr ""
+
+#: idedebuggerstringconstants.brkshowbreakpointsandwatchpo
+msgid "Show breakpoints and watchpoints"
+msgstr ""
+
+#: idedebuggerstringconstants.brkshowbreakwatchpointsandex
+msgid "Show break/watchpoints and exception-filter"
+msgstr ""
+
+#: idedebuggerstringconstants.brkshowexceptionfilter
+msgid "Show exception-filter"
+msgstr ""
+
 #: idedebuggerstringconstants.dbgasmwindowlinktarget
 msgid "Link target line"
 msgstr ""
@@ -315,6 +335,10 @@ msgctxt "idedebuggerstringconstants.dispformatcharord"
 msgid "Ordinal"
 msgstr ""
 
+#: idedebuggerstringconstants.dispformatdlgaddrprefix
+msgid "Address marker"
+msgstr ""
+
 #: idedebuggerstringconstants.dispformatdlgarraycombine
 msgid "Combine lengths"
 msgstr ""
@@ -358,6 +382,10 @@ msgstr ""
 
 #: idedebuggerstringconstants.dispformatdlgbtnadrformat
 msgid "Address"
+msgstr ""
+
+#: idedebuggerstringconstants.dispformatdlgbtnadrformatdata
+msgid "Data-address"
 msgstr ""
 
 #: idedebuggerstringconstants.dispformatdlgbtnall
@@ -449,6 +477,10 @@ msgstr ""
 #: idedebuggerstringconstants.dispformatdlgindent
 msgctxt "idedebuggerstringconstants.dispformatdlgindent"
 msgid "Multiline"
+msgstr ""
+
+#: idedebuggerstringconstants.dispformatdlgnumprefix
+msgid "Number marker"
 msgstr ""
 
 #: idedebuggerstringconstants.dispformatenumname
@@ -805,6 +837,37 @@ msgstr ""
 
 #: idedebuggerstringconstants.dlgbackendconvoptdisabled
 msgid "- Disabled -"
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowchangetakeseffect
+msgid "A change takes effect when the next debug session starts."
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindoweditdiv
+msgid "Edit IDE console provider"
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowediting
+#, object-pascal-format
+msgid "Currently editing %s"
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindownone
+msgid "No console window is available."
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowoptions
+msgid "Debug Console Window"
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowrunparamshint
+msgid ""
+"Selects the default Console for showing the target's StdIn/Out in the IDE.\n"
+"Project can override this in their \"Run Parameters\". The default there is \"use IDE default\"."
+msgstr ""
+
+#: idedebuggerstringconstants.dlgdebugconsolewindowselectdiv
+msgid "Select provider for IDE console window"
 msgstr ""
 
 #: idedebuggerstringconstants.dlgdisplayformatdebugoptions
@@ -1274,6 +1337,10 @@ msgstr "可視性"
 msgid "Condition"
 msgstr "条件"
 
+#: idedebuggerstringconstants.lisconsolelocalecho
+msgid "Echo typed input"
+msgstr ""
+
 #: idedebuggerstringconstants.liscopyall
 msgid "Copy All"
 msgstr "すべてコピー"
@@ -1411,6 +1478,10 @@ msgstr "On/Off"
 msgctxt "idedebuggerstringconstants.lisdbgwinpowerhint"
 msgid "Disable/Enable updates for the entire window"
 msgstr "ウィンドウ全体への更新を無効／有効"
+
+#: idedebuggerstringconstants.lisdebugconsolebuiltinname
+msgid "IDE Debug Console"
+msgstr ""
 
 #: idedebuggerstringconstants.lisdebuggerfeedbackerror
 msgid "Debugger Error"
@@ -1902,7 +1973,7 @@ msgid "Assembler"
 msgstr "アセンブラ"
 
 #: idedebuggerstringconstants.lismenuviewbreakpointsandexceptions
-msgid "BreakPoints/Exceptions"
+msgid "Breakpoints/Exceptions"
 msgstr ""
 
 #: idedebuggerstringconstants.lismenuviewcallstack
@@ -2211,6 +2282,10 @@ msgstr ""
 
 #: idedebuggerstringconstants.memviewgroupwordlittleendian
 msgid "Word (Little Endian)"
+msgstr ""
+
+#: idedebuggerstringconstants.mnuconsoleinoutputwindow
+msgid "Console In/Output (Lazarus)"
 msgstr ""
 
 #: idedebuggerstringconstants.optdispguttercustomdisplayformat
