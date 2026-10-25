@@ -30,6 +30,48 @@ type
 // included. False when the symbology cannot hold the text
 function encodeBarcode(const text: string; symbology: TBarcodeSymbology; checksum: boolean; wideRatio: integer; out modules, shown: string): boolean;
 
+// the tables of the symbologies, shared with the reader
+const
+  // the widths of bar, space, bar, space, bar, space of the 107 symbols of
+  // Code 128; the stop symbol has a seventh, a last bar
+  CODE128: array[0..106] of string[7] = (
+    '212222', '222122', '222221', '121223', '121322', '131222', '122213', '122312', '132212', '221213',
+    '221312', '231212', '112232', '122132', '122231', '113222', '123122', '123221', '223211', '221132',
+    '221231', '213212', '223112', '312131', '311222', '321122', '321221', '312212', '322112', '322211',
+    '212123', '212321', '232121', '111323', '131123', '131321', '112313', '132113', '132311', '211313',
+    '231113', '231311', '112133', '112331', '132131', '113123', '113321', '133121', '313121', '211331',
+    '231131', '213113', '213311', '213131', '311123', '311321', '331121', '312113', '312311', '332111',
+    '314111', '221411', '431111', '111224', '111422', '121124', '121421', '141122', '141221', '112214',
+    '112412', '122114', '122411', '142112', '142211', '241211', '221114', '413111', '241112', '134111',
+    '111242', '121142', '121241', '114212', '124112', '124211', '411212', '421112', '421211', '212141',
+    '214121', '412121', '111143', '111341', '131141', '114113', '114311', '411113', '411311', '113141',
+    '114131', '311141', '411131', '211412', '211214', '211232', '2331112');
+  START_A = 103;
+  START_B = 104;
+  START_C = 105;
+  STOP_128 = 106;
+  CODE_A = 101; // in B; in C as well
+  CODE_B = 100; // in A and in C
+  CODE_C = 99;  // in A and in B
+
+  // the seven modules of the digits on the left in odd parity; the even
+  // parity mirrors them, the right side inverts them
+  EAN_L: array[0..9] of string[7] = ('0001101', '0011001', '0010011', '0111101', '0100011', '0110001', '0101111', '0111011', '0110111', '0001011');
+  // the parity of the six left digits of EAN-13, picked by the first digit
+  EAN_PARITY: array[0..9] of string[6] = ('LLLLLL', 'LLGLGG', 'LLGGLG', 'LLGGGL', 'LGLLGG', 'LGGLLG', 'LGGGLL', 'LGLGLG', 'LGLGGL', 'LGGLGL');
+
+  CODE39_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. $/+%*';
+  // bar, space, bar ... of each character, narrow or wide
+  CODE39: array[1..44] of string[9] = (
+    'nnnwwnwnn', 'wnnwnnnnw', 'nnwwnnnnw', 'wnwwnnnnn', 'nnnwwnnnw', 'wnnwwnnnn', 'nnwwwnnnn', 'nnnwnnwnw', 'wnnwnnwnn', 'nnwwnnwnn',
+    'wnnnnwnnw', 'nnwnnwnnw', 'wnwnnwnnn', 'nnnnwwnnw', 'wnnnwwnnn', 'nnwnwwnnn', 'nnnnnwwnw', 'wnnnnwwnn', 'nnwnnwwnn', 'nnnnwwwnn',
+    'wnnnnnnww', 'nnwnnnnww', 'wnwnnnnwn', 'nnnnwnnww', 'wnnnwnnwn', 'nnwnwnnwn', 'nnnnnnwww', 'wnnnnnwwn', 'nnwnnnwwn', 'nnnnwnwwn',
+    'wwnnnnnnw', 'nwwnnnnnw', 'wwwnnnnnn', 'nwnnwnnnw', 'wwnnwnnnn', 'nwwnwnnnn', 'nwnnnnwnw', 'wwnnnnwnn', 'nwwnnnwnn', 'nwnwnwnnn',
+    'nwnwnnnwn', 'nwnnnwnwn', 'nnnwnwnwn', 'nwnnwnwnn');
+
+  // the five elements of a digit of interleaved 2 of 5
+  ITF_DIGITS: array[0..9] of string[5] = ('nnwwn', 'wnnnw', 'nwnnw', 'wwnnn', 'nnwnw', 'wnwnn', 'nwwnn', 'nnnww', 'wnnwn', 'nwnwn');
+
 type
   { TBarcode }
 
@@ -128,47 +170,6 @@ implementation
 
 uses
   Math;
-
-const
-  // the widths of bar, space, bar, space, bar, space of the 107 symbols of
-  // Code 128; the stop symbol has a seventh, a last bar
-  CODE128: array[0..106] of string[7] = (
-    '212222', '222122', '222221', '121223', '121322', '131222', '122213', '122312', '132212', '221213',
-    '221312', '231212', '112232', '122132', '122231', '113222', '123122', '123221', '223211', '221132',
-    '221231', '213212', '223112', '312131', '311222', '321122', '321221', '312212', '322112', '322211',
-    '212123', '212321', '232121', '111323', '131123', '131321', '112313', '132113', '132311', '211313',
-    '231113', '231311', '112133', '112331', '132131', '113123', '113321', '133121', '313121', '211331',
-    '231131', '213113', '213311', '213131', '311123', '311321', '331121', '312113', '312311', '332111',
-    '314111', '221411', '431111', '111224', '111422', '121124', '121421', '141122', '141221', '112214',
-    '112412', '122114', '122411', '142112', '142211', '241211', '221114', '413111', '241112', '134111',
-    '111242', '121142', '121241', '114212', '124112', '124211', '411212', '421112', '421211', '212141',
-    '214121', '412121', '111143', '111341', '131141', '114113', '114311', '411113', '411311', '113141',
-    '114131', '311141', '411131', '211412', '211214', '211232', '2331112');
-  START_A = 103;
-  START_B = 104;
-  START_C = 105;
-  STOP_128 = 106;
-  CODE_A = 101; // in B; in C as well
-  CODE_B = 100; // in A and in C
-  CODE_C = 99;  // in A and in B
-
-  // the seven modules of the digits on the left in odd parity; the even
-  // parity mirrors them, the right side inverts them
-  EAN_L: array[0..9] of string[7] = ('0001101', '0011001', '0010011', '0111101', '0100011', '0110001', '0101111', '0111011', '0110111', '0001011');
-  // the parity of the six left digits of EAN-13, picked by the first digit
-  EAN_PARITY: array[0..9] of string[6] = ('LLLLLL', 'LLGLGG', 'LLGGLG', 'LLGGGL', 'LGLLGG', 'LGGLLG', 'LGGGLL', 'LGLGLG', 'LGLGGL', 'LGGLGL');
-
-  CODE39_CHARS = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-. $/+%*';
-  // bar, space, bar ... of each character, narrow or wide
-  CODE39: array[1..44] of string[9] = (
-    'nnnwwnwnn', 'wnnwnnnnw', 'nnwwnnnnw', 'wnwwnnnnn', 'nnnwwnnnw', 'wnnwwnnnn', 'nnwwwnnnn', 'nnnwnnwnw', 'wnnwnnwnn', 'nnwwnnwnn',
-    'wnnnnwnnw', 'nnwnnwnnw', 'wnwnnwnnn', 'nnnnwwnnw', 'wnnnwwnnn', 'nnwnwwnnn', 'nnnnnwwnw', 'wnnnnwwnn', 'nnwnnwwnn', 'nnnnwwwnn',
-    'wnnnnnnww', 'nnwnnnnww', 'wnwnnnnwn', 'nnnnwnnww', 'wnnnwnnwn', 'nnwnwnnwn', 'nnnnnnwww', 'wnnnnnwwn', 'nnwnnnwwn', 'nnnnwnwwn',
-    'wwnnnnnnw', 'nwwnnnnnw', 'wwwnnnnnn', 'nwnnwnnnw', 'wwnnwnnnn', 'nwwnwnnnn', 'nwnnnnwnw', 'wwnnnnwnn', 'nwwnnnwnn', 'nwnwnwnnn',
-    'nwnwnnnwn', 'nwnnnwnwn', 'nnnwnwnwn', 'nwnnwnwnn');
-
-  // the five elements of a digit of interleaved 2 of 5
-  ITF_DIGITS: array[0..9] of string[5] = ('nnwwn', 'wnnnw', 'nwnnw', 'wwnnn', 'nnwnw', 'wnwnn', 'nwwnn', 'nnnww', 'wnnwn', 'nwnwn');
 
 function allDigits(const s: string): boolean;
 begin

@@ -1,6 +1,6 @@
 # Unleashed Components
 
-99 components for LCL applications, in one package: `components/unleashedcomponents`. They draw through the theme engine, so a `TAppTheme` on the main form recolors all of them together with the native controls, and they are written for Windows and Linux alike, with no platform-specific code paths.
+100 components for LCL applications, in one package: `components/unleashedcomponents`. They draw through the theme engine, so a `TAppTheme` on the main form recolors all of them together with the native controls, and they are written for Windows and Linux alike, with no platform-specific code paths.
 
 Each page below has the properties, the events, the runtime methods, a usage example that compiles as written, and pictures from the demo application: the component as it sits on the form, its states (a drop-down open, a panel folded, a dialog up) and, where it has one, every value of its style property.
 
@@ -49,6 +49,7 @@ Each page below has the properties, the events, the runtime methods, a usage exa
 | [`TMarquee`](marquee.md) | a caption rolling across the control, like a ticker |
 | [`TQRCode`](qrcode.md) | a QR code of Text, drawn to fill the control |
 | [`TBarcode`](barcode.md) | a linear barcode of Text with the text under it |
+| [`TCodeReader`](codereader.md) | reads a QR code or a linear barcode out of a picture: a file, a graphic or a bitmap, as the camera or a scanner saved it, turned any way |
 | [`TCountdown`](countdown.md) | counts down from Duration: a ring or a bar runs out, the time left shows as text, OnFinish fires at zero |
 | [`TChartLite`](chartlite.md) | bars, lines, areas and pies from a few series of numbers: no axes objects, no transformations, a chart in a minute |
 | [`TMarkdownLabel`](markdownlabel.md) | a label that reads Markdown: headings, paragraphs, bullet and numbered lists, quotes, code spans and blocks, rules, bold, italic and links |

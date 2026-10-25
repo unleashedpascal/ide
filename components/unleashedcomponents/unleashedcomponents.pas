@@ -25,7 +25,7 @@ uses
   NotificationCenter, MarkdownLabel, PlotCanvas, CheckComboBox, 
   HeatmapCalendar, HexEditor, DiffView, ImageCropper, FolderTree, FileList, 
   PaintCanvas, GanttChart, NodeEditor, SchedulerView, TreeGrid, DockPanel, 
-  ChatView, LazarusPackageIntf;
+  ChatView, CodeReader, LazarusPackageIntf;
 
 implementation
 
