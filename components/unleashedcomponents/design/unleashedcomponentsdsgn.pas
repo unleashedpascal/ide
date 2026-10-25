@@ -9,7 +9,7 @@ interface
 
 uses
   RegisterUnleashedComponents, AppThemeEditor, SegmentEditor, 
-  LazarusPackageIntf;
+  ChatViewEditor, LazarusPackageIntf;
 
 implementation
 

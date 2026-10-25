@@ -1,6 +1,6 @@
 # Unleashed Components
 
-98 components for LCL applications, in one package: `components/unleashedcomponents`. They draw through the theme engine, so a `TAppTheme` on the main form recolors all of them together with the native controls, and they are written for Windows and Linux alike, with no platform-specific code paths.
+99 components for LCL applications, in one package: `components/unleashedcomponents`. They draw through the theme engine, so a `TAppTheme` on the main form recolors all of them together with the native controls, and they are written for Windows and Linux alike, with no platform-specific code paths.
 
 Each page below has the properties, the events, the runtime methods, a usage example that compiles as written, and pictures from the demo application: the component as it sits on the form, its states (a drop-down open, a panel folded, a dialog up) and, where it has one, every value of its style property.
 
@@ -62,6 +62,7 @@ Each page below has the properties, the events, the runtime methods, a usage exa
 | [`TCalendarView`](calendarview.md) | a calendar drawn in the colors of the theme |
 | [`TImageViewer`](imageviewer.md) | a picture with zoom and pan: the wheel zooms around the mouse, a drag moves the picture, a double click fits it again |
 | [`TLogView`](logview.md) | an append-only log: a line per message with its level in color, the time before it, the newest at the bottom and the view following them |
+| [`TChatView`](chatview.md) | a conversation as bubbles under each other: the own ones on one side, the others on the other with a name, an avatar and a time, days apart by a separator, with a typing bubble at the end |
 | [`TTerminalView`](terminalview.md) | a console: runs a command and shows what it writes, the ANSI colors and styles included, and sends the lines typed into the input line at the bottom to it |
 | [`TJsonTreeView`](jsontreeview.md) | a tree of a JSON document: an object member per node, "key: value" for the leaves, "key {n}" and "key [n]" for the containers |
 | [`TTimelineView`](timelineview.md) | events along a vertical line, each with a dot, a time, a title and a description, newest first or last as sorted |

@@ -62,6 +62,10 @@ type
     function ShownInitials: string;
     // the color a name picks from the palette; the same name, the same color
     class function ColorOfName(const name: string): TColor;
+    // the slot of the palette a name picks, the color of a slot, the slots
+    class function ColorIndexOfName(const name: string): integer;
+    class function PaletteColor(index: integer): TColor;
+    class function PaletteSize: integer;
   published
     property UserName: string index 0 read getText write setText;
     // the letters instead of the ones the name gives
@@ -155,9 +159,24 @@ end;
 
 class function TAvatar.ColorOfName(const name: string): TColor;
 begin
+  result := PALETTE[ColorIndexOfName(name)];
+end;
+
+class function TAvatar.ColorIndexOfName(const name: string): integer;
+begin
   var hash: cardinal := 0;
   for var ch in UTF8LowerCase(name) do hash := (hash*31+ord(ch)) and $FFFFFF;
-  result := PALETTE[hash mod length(PALETTE)];
+  result := hash mod length(PALETTE);
+end;
+
+class function TAvatar.PaletteColor(index: integer): TColor;
+begin
+  result := PALETTE[index mod length(PALETTE)];
+end;
+
+class function TAvatar.PaletteSize: integer;
+begin
+  result := length(PALETTE);
 end;
 
 function TAvatar.hasPicture: boolean;

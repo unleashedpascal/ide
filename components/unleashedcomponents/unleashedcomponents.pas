@@ -24,7 +24,8 @@ uses
   ColorSwatchButton, SettingsStore, KanbanBoard, ShortcutMap, TourGuide, 
   NotificationCenter, MarkdownLabel, PlotCanvas, CheckComboBox, 
   HeatmapCalendar, HexEditor, DiffView, ImageCropper, FolderTree, FileList, 
-  PaintCanvas, GanttChart, NodeEditor, SchedulerView, TreeGrid, DockPanel, LazarusPackageIntf;
+  PaintCanvas, GanttChart, NodeEditor, SchedulerView, TreeGrid, DockPanel, 
+  ChatView, LazarusPackageIntf;
 
 implementation
 

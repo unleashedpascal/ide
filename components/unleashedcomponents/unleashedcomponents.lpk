@@ -421,6 +421,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="dockpanel.pas"/>
         <UnitName Value="DockPanel"/>
       </Item>
+      <Item>
+        <Filename Value="chatview.pas"/>
+        <UnitName Value="ChatView"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
