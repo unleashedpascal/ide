@@ -3,7 +3,7 @@
 A linear barcode of Text with the text under it. The bars fill the width in whole pixels per module where they fit, so scanners read them; ModuleWidth fixes the pixels instead.
 
 - Palette page: Unleashed: Display
-- Unit: `barcode.pas`
+- Unit: `barcodes.pas`
 - Ancestor: `TGraphicControl`
 
 ![TBarcode](img/barcode.png)

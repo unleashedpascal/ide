@@ -16,7 +16,7 @@ unit CodeReader;
 interface
 
 uses
-  Classes, SysUtils, Types, Graphics, QRCode, Barcode;
+  Classes, SysUtils, Types, Graphics, QRCode, Barcodes;
 
 type
   // what the picture held: a QR code, or a linear barcode of one of the

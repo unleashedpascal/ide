@@ -17,7 +17,7 @@ uses
   BackgroundTask, StackPanel, GridPanel, Accordion, BreadcrumbBar, 
   WizardControl, OverlayPanel, Carousel, PageIndicator, AppInstance, 
   CommandPalette, UndoStack, RecentFiles, PopupWindow, CalendarView, 
-  DatePicker, NumberBox, FontComboBox, SevenSegment, StatCard, Avatar, Barcode, 
+  DatePicker, NumberBox, FontComboBox, SevenSegment, StatCard, Avatar, Barcodes, 
   TerminalView, EmptyState, CheckGroupBox, FormLayout, FieldRow, TabStrip, 
   CommandBar, InfoBar, Popover, SplashScreen, ProgressDialog, Animator, 
   Validator, SerialPort, DataTable, PropertyGrid, Countdown, ChartLite, 
