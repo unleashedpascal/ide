@@ -9,7 +9,7 @@
   These notices must be kept in copies and modified versions (MPL-2.0 sec. 3.1);
   add yours below. }
 
-unit NotificationCenter;
+unit NotificationCenters;
 
 {$mode unleashed}
 

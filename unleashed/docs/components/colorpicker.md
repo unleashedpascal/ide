@@ -3,7 +3,7 @@
 A color picked in place: a saturation and value field under a hue bar, an alpha bar when wanted, a row of swatches and the hex code of the result. Every part drags with the mouse; the arrows nudge the field.
 
 - Palette page: Unleashed: Input
-- Unit: `colorpicker.pas`
+- Unit: `colorpickers.pas`
 - Ancestor: `TCustomControl`
 
 ![TColorPicker](img/colorpicker.png)

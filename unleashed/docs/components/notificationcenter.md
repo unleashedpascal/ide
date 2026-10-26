@@ -3,7 +3,7 @@
 The list of what happened: a card per notification with a title, a text, the time it came and a close cross, unread ones marked. Add puts the newest on top, a click reads it, the count of unread ones feeds a badge somewhere else.
 
 - Palette page: Unleashed: Feedback
-- Unit: `notificationcenter.pas`
+- Unit: `notificationcenters.pas`
 - Ancestor: `TScrollingWinControl`
 
 ![TNotificationCenter](img/notificationcenter.png)

@@ -3,7 +3,7 @@
 Reads a QR code or a linear barcode out of a picture: a file, a graphic or a bitmap, as the camera or a scanner saved it, turned any way. The text, the raw bytes and the format come out, a QR code tells how much of its error correction the read spent.
 
 - Palette page: Unleashed: Display
-- Unit: `codereader.pas`
+- Unit: `codereaders.pas`
 - Ancestor: `TComponent`
 
 ![TCodeReader](img/codereader.png)

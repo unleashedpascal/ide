@@ -9,7 +9,7 @@ interface
 
 uses
   AppTheme, RangeSlider, ControlPaint, ToggleSwitch, SearchEdit, SplitButton, 
-  LinkLabel, SegmentedControl, ColorPicker, BusyIndicator, ProgressRing, 
+  LinkLabel, SegmentedControl, ColorPickers, BusyIndicator, ProgressRing, 
   SuggestEdit, Badge, Rating, Led, Sparkline, Marquee, Knob, Gauge, Clock, 
   RichLabel, PasswordEdit, HotKeyEdit, DurationEdit, ImageViewer, QRCode, 
   JsonTreeView, TagEditor, LogView, DropZone, DateRangePicker, TimelineView, 
@@ -22,10 +22,10 @@ uses
   CommandBar, InfoBar, Popover, SplashScreen, ProgressDialog, Animator, 
   Validator, SerialPort, DataTable, PropertyGrid, Countdown, ChartLite, 
   ColorSwatchButton, SettingsStore, KanbanBoard, ShortcutMap, TourGuide, 
-  NotificationCenter, MarkdownLabel, PlotCanvas, CheckComboBox, 
+  NotificationCenters, MarkdownLabel, PlotCanvas, CheckComboBox, 
   HeatmapCalendar, HexEditor, DiffView, ImageCropper, FolderTree, FileList, 
   PaintCanvas, GanttChart, NodeEditor, SchedulerView, TreeGrid, DockPanel, 
-  ChatView, CodeReader, LazarusPackageIntf;
+  ChatView, CodeReaders, LazarusPackageIntf;
 
 implementation
 

@@ -54,8 +54,8 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <UnitName Value="SegmentedControl"/>
       </Item>
       <Item>
-        <Filename Value="colorpicker.pas"/>
-        <UnitName Value="ColorPicker"/>
+        <Filename Value="colorpickers.pas"/>
+        <UnitName Value="ColorPickers"/>
       </Item>
       <Item>
         <Filename Value="busyindicator.pas"/>
@@ -358,8 +358,8 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <UnitName Value="TourGuide"/>
       </Item>
       <Item>
-        <Filename Value="notificationcenter.pas"/>
-        <UnitName Value="NotificationCenter"/>
+        <Filename Value="notificationcenters.pas"/>
+        <UnitName Value="NotificationCenters"/>
       </Item>
       <Item>
         <Filename Value="markdownlabel.pas"/>
@@ -426,8 +426,8 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <UnitName Value="ChatView"/>
       </Item>
       <Item>
-        <Filename Value="codereader.pas"/>
-        <UnitName Value="CodeReader"/>
+        <Filename Value="codereaders.pas"/>
+        <UnitName Value="CodeReaders"/>
       </Item>
     </Files>
     <RequiredPkgs>

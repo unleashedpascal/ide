@@ -16,7 +16,7 @@ unit ColorSwatchButton;
 interface
 
 uses
-  Classes, SysUtils, Types, Controls, Graphics, LCLType, ControlPaint, PopupWindow, ColorPicker;
+  Classes, SysUtils, Types, Controls, Graphics, LCLType, ControlPaint, PopupWindow, ColorPickers;
 
 type
   TSwatchTextMode = (stNone, stHex, stName, stCaption);
