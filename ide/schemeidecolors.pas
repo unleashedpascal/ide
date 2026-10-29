@@ -86,7 +86,7 @@ begin
 end;
 
 // applies the divider types stored under path to the highlighter; true when the scheme carries any
-function pushDividers(cfg: TRttiXMLConfig; const path: string; syn: TSrcIDEHighlighter; const info: TEditorOptionsDividerRecord): boolean;
+function pushDividers(cfg: TRttiXMLConfig; const path: string; syn: TSrcIDEHighlighter; const info: TEditorOptionsDividerRecord; preview: boolean): boolean;
 begin
   result := false;
   for var i := 0 to info.Count-1 do begin
@@ -94,7 +94,7 @@ begin
     var color := TColor(cfg.GetValue(divider+'Color', longint(clNone)));
     if color = clNone then continue;
     var conf := syn.DividerDrawConfig[i];
-    conf.MaxDrawDepth := cfg.GetValue(divider+'MaxDepth', conf.MaxDrawDepth);
+    if preview then conf.MaxDrawDepth := cfg.GetValue(divider+'MaxDepth', conf.MaxDrawDepth);
     conf.TopColor := color;
     conf.NestColor := color;
     result := true;
@@ -179,7 +179,7 @@ begin
   for var h := IdeHighlighterStartId to HighlighterList.Count-1 do begin
     var syn := HighlighterList[h].SynInstance;
     var info := EditorOptionsDividerDefaults[HighlighterList[h].TheType];
-    if (syn = nil) or (info.Count = 0) or not pushDividers(cfg, path, syn, info) then continue;
+    if (syn = nil) or (info.Count = 0) or not pushDividers(cfg, path, syn, info, not store) then continue;
     if store then EditorOpts.WriteHighlighterDivDrawSettings(syn);
     result := true;
   end;
