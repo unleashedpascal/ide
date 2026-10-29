@@ -542,6 +542,7 @@ type
     procedure UnregisterChangedHandler(AnHandler: TNotifyEvent);
     function RegisterAttributeGroup(AName: PString): integer; // pointer to resource string
     procedure InternalAddAttribute(AnAttrGroup: integer; AnHighlighterId: TIdeSyntaxHighlighterID; AStoredName: String; AName: PString;  AFeatures: TColorSchemeAttributeFeatures; ADefaults: TLazCustomEditTextAttribute = nil);
+    procedure AddRegisteredAttributes(AColorScheme: TColorScheme);
     procedure AddAttribute(AnAttrGroup: integer; AnHighlighterId: TIdeSyntaxHighlighterID; AStoredName: String; AName: PString;  AFeatures: TColorSchemeAttributeFeatures; ADefaults: TLazCustomEditTextAttribute = nil);
     procedure AddAttributeFromFactory(AFactory: TColorSchemeFactory; AnHighlighterId: TIdeSyntaxHighlighterID; const AStoredName: string; aXMLConfig: TRttiXMLConfig = nil; APath: String = '');
     function AddHighlighter(AnHighlighter: TLazEditCustomHighlighter; AnIdeInfo: TIdeHighlighterInfo): TIdeSyntaxHighlighterID;
@@ -8830,6 +8831,52 @@ begin
       FColorSchemeAttribAddedEventList[i](Self, AnHighlighterId, AStoredName);
 end;
 
+// a scheme registered after packages added their attributes (a user scheme written at runtime)
+// takes them over from the default scheme, with any values its own xml holds for them
+procedure TColorSchemeFactory.AddRegisteredAttributes(AColorScheme: TColorScheme);
+var
+  h: TSrcIDEHighlighter;
+  i, j, ColSchemeFormatVersion: Integer;
+  RefScheme: TColorScheme;
+  csl, RefCsl: TColorSchemeLanguage;
+  csa, RefCsa: TColorSchemeAttribute;
+  AXmlConf: TRttiXMLConfig;
+begin
+  RefScheme := ColorSchemeGroup[DefaultColorSchemeName];
+  if (RefScheme = nil) and (FMappings.Count > 0) then
+    RefScheme := ColorSchemeGroupAtPos[0];
+  if (RefScheme = nil) or (RefScheme = AColorScheme) then
+    exit;
+
+  ColSchemeFormatVersion := -1;
+  AXmlConf := nil;
+  for i := IdeHighlighterStartId to HighlighterList.Count - 1 do begin
+    h := HighlighterList.SharedSynInstances[i];
+    csl := AColorScheme.ColorSchemeBySynHl[h];
+    RefCsl := RefScheme.ColorSchemeBySynHl[h];
+    if (csl = nil) or (RefCsl = nil) then
+      continue;
+    for j := 0 to RefCsl.AttributeCount - 1 do begin
+      RefCsa := RefCsl.AttributeAtPos[j];
+      if (RefCsa.Group <> agnRegistered) or (csl.FAttributes.IndexOf(RefCsa.StoredName) >= 0) then
+        continue;
+      csa := TColorSchemeAttribute.Create(csl, RefCsa.Caption, RefCsa.StoredName);
+      csa.Assign(RefCsa);
+      csa.InternalSaveDefaultValues;
+      if AXmlConf = nil then
+        AXmlConf := AColorScheme.GetXmlConf;
+      if AXmlConf <> nil then begin
+        if ColSchemeFormatVersion < 0 then
+          ColSchemeFormatVersion := AXmlConf.GetValue(XML_COL_PATH + 'Version', 0);
+        csl.LoadFromXml(AXmlConf, XML_COL_PATH, nil, ColSchemeFormatVersion, '', csa);
+      end;
+      csl.FAttributes.AddObject(RefCsa.StoredName, csa);
+    end;
+  end;
+  if AXmlConf <> nil then
+    AColorScheme.ReleaseXmlConf;
+end;
+
 procedure TColorSchemeFactory.AddAttribute(AnAttrGroup: integer;
   AnHighlighterId: TIdeSyntaxHighlighterID; AStoredName: String; AName: PString;
   AFeatures: TColorSchemeAttributeFeatures; ADefaults: TLazCustomEditTextAttribute);
@@ -9066,6 +9113,7 @@ begin
     AName := AName+'_'+IntToStr(j);
     //DebugLn(['TColorSchemeFactory.RegisterScheme: Adjusting AName to ', AName]);
   end;
+  AddRegisteredAttributes(AColorScheme);
   FMappings.AddObject(AName, AColorScheme);
 end;
 
