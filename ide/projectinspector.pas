@@ -152,9 +152,7 @@ type
     procedure DirectoryHierarchyButtonClick(Sender: TObject);
     procedure FilterEditAfterFilter(Sender: TObject);
     procedure FilterEditKeyDown(Sender: TObject; var Key: Word; {%H-}Shift: TShiftState);
-    procedure FormActivate(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    procedure FormDeactivate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormDropFiles(Sender: TObject; const FileNames: array of String);
     procedure FormResize(Sender: TObject);
@@ -958,6 +956,9 @@ begin
     OPMInterface.AddPackageListNotification(@PackageListAvailable);
   if SourceEditorManagerIntf <> nil then
     SourceEditorManagerIntf.RegisterChangeEvent(semEditorActivate,@ActiveEditorChanged);
+  // wired here, not in OnActivate: a form hosted in a pane has a Parent and
+  // never gets activated. The tree holds the event back while it updates.
+  ItemsTreeView.OnSelectionChanged := @ItemsTreeViewSelectionChanged;
 end;
 
 procedure TProjectInspectorForm.FormDestroy(Sender: TObject);
@@ -966,18 +967,6 @@ begin
     OPMInterface.RemovePackageListNotification(@PackageListAvailable);
   if SourceEditorManagerIntf <> nil then
     SourceEditorManagerIntf.UnRegisterChangeEvent(semEditorActivate,@ActiveEditorChanged);
-end;
-
-procedure TProjectInspectorForm.FormActivate(Sender: TObject);
-begin
-  //DebugLn('* TProjectInspectorForm.FormActivate *');
-  ItemsTreeView.OnSelectionChanged := @ItemsTreeViewSelectionChanged;
-end;
-
-procedure TProjectInspectorForm.FormDeactivate(Sender: TObject);
-begin
-  // Prevent calling handler when the tree gets updated with a project.
-  ItemsTreeView.OnSelectionChanged := Nil;
 end;
 
 procedure TProjectInspectorForm.FormDropFiles(Sender: TObject;

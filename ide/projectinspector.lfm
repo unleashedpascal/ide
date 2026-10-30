@@ -10,9 +10,7 @@ object ProjectInspectorForm: TProjectInspectorForm
   ClientHeight = 485
   ClientWidth = 463
   LCLVersion = '4.99.0.0'
-  OnActivate = FormActivate
   OnCreate = FormCreate
-  OnDeactivate = FormDeactivate
   OnDestroy = FormDestroy
   OnDropFiles = FormDropFiles
   OnResize = FormResize
