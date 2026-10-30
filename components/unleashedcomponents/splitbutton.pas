@@ -160,7 +160,7 @@ uses
 constructor TSplitButton.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  ControlStyle := ControlStyle+[csOpaque, csSetCaption];
+  ControlStyle := ControlStyle+[csOpaque, csSetCaption]-[csClickEvents];
   FImageIndex := -1;
   FLayout := blGlyphLeft;
   FSpacing := 4;
