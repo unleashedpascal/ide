@@ -3905,7 +3905,7 @@ begin
     end;
     // identifier subject or literal subject - peek for `of`/`:`/`,`,
     // skipping past call-args `(...)`, subscripts `[...]`, dotted
-    // member access and operators so subjects like
+    // member access, dereferences and operators so subjects like
     // `match obj.foo(x).bar of` and `match n mod 12 of` resolve
     ReadNextAtom;
     if CurPos.StartPos>SrcLen then exit;
@@ -3926,6 +3926,10 @@ begin
         if CurPos.StartPos>SrcLen then exit;
         if (CurPos.Flag in [cafRoundBracketOpen,cafEdgedBracketOpen])
         or AtomIsOperator then continue;
+        ReadNextAtom;
+        if CurPos.StartPos>SrcLen then exit;
+      end else if AtomIsChar('^') then begin
+        // pointer dereference `p^`, `p^.field`, `a[i]^`
         ReadNextAtom;
         if CurPos.StartPos>SrcLen then exit;
       end else
