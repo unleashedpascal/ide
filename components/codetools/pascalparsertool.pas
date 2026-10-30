@@ -3371,8 +3371,8 @@ begin
     BlockType:=ebtIf
   else if UpAtomIs('CASE') or UpAtomIs('MATCH') then begin
     BlockType:=ebtCase;
-    // match-as-expression with 'else' terminates after the else value just
-    // like case-as-expression (no trailing 'end'); detect both the same way
+    // case- and match-as-expression take a single expression after 'else'
+    // and close with their own 'end'; detect both the same way
     IsExprCase:=(UpAtomIs('CASE') or UpAtomIs('MATCH'))
                 and IsCaseExpression(CurPos.StartPos);
   end
@@ -3474,23 +3474,23 @@ begin
       end else if BlockType=ebtCase then begin
         if IsExprCase then begin
           // case-as-expression with 'else': the else branch is a single
-          // expression and 'end' belongs to the outer block.
-          //   Result := case x of 1: 'a'; else 'b';
-          //   Result := case x of 1: 'a'; else 'b' end;  (end is outer's)
+          // expression, optionally followed by ';', and the 'end' after it
+          // closes the expression.
+          //   Result := case x of 1: 'a'; else 'b' end;
+          //   Result := case x of 1: 'a'; else 'b'; end;
           repeat
             ReadNextAtom;
             if (CurPos.StartPos>SrcLen) then break;
             if (CurPos.Flag=cafSemicolon) then begin
-              // case-expression's else terminates here; '; ' belongs to the
-              // outer assignment statement
-              UndoReadNextAtom;
+              // optional ';' before the closing 'end'; anything else after
+              // it belongs to the outer statement
+              ReadNextAtom;
+              if (CurPos.Flag<>cafEND) then
+                UndoReadNextAtom;
               break;
             end;
-            if (CurPos.Flag=cafEND) then begin
-              // 'end' belongs to the outer block
-              UndoReadNextAtom;
+            if (CurPos.Flag=cafEND) then
               break;
-            end;
             if (CurPos.Flag in [cafRoundBracketOpen,cafEdgedBracketOpen]) then
               ReadTilBracketClose(true);
           until false;
@@ -4343,7 +4343,6 @@ var
   MatchExprDepth: integer;
   IfExprDepth: integer;
   BeginDepth: integer;
-  InCaseElse: boolean;
   // stack of entries: 'C' (case), 'M' (match), 'B' (begin) - newest at the
   // right - so an 'end' read inside a nested case/match/begin block pops
   // the right counter
@@ -4424,7 +4423,6 @@ begin
     MatchExprDepth := 0;
     IfExprDepth := 0;
     BeginDepth := 0;
-    InCaseElse := false;
     ExprStack := '';
     repeat
       ReadNextAtom;
@@ -4485,14 +4483,14 @@ begin
                   continue;
                 end;
               'C':
-                if (CaseExprDepth > 0) and (not InCaseElse) then begin
+                begin
                   dec(CaseExprDepth);
                   SetLength(ExprStack,Length(ExprStack)-1);
                   continue;
                 end;
               end;
             end;
-            if (CaseExprDepth > 0) and (not InCaseElse) then begin
+            if CaseExprDepth > 0 then begin
               dec(CaseExprDepth);
               continue;
             end;
@@ -4500,15 +4498,12 @@ begin
             break;
           end;
         cafSemicolon:
-          // ';' between case-/match-expression branches (depths>0 and not
-          // yet in else) is part of the construct, not the var statement
-          // terminator. case-with-else and match-with-else as expression
-          // have no trailing 'end' - the ';' after the else value ends
-          // both the construct and (if outermost) the var statement.
+          // ';' between case-/match-expression branches (depths>0) or
+          // before their closing 'end' is part of the construct, not the
+          // var statement terminator.
           // statement-expression 'begin..end' branches likewise keep going
           if (BracketDepth = 0)
-          and (((CaseExprDepth = 0) and (MatchExprDepth = 0))
-               or InCaseElse)
+          and (CaseExprDepth = 0) and (MatchExprDepth = 0)
           and (BeginDepth = 0) then break;
       end;
       if (BracketDepth = 0) and (CurPos.Flag = cafWord) then begin
@@ -4526,8 +4521,7 @@ begin
           dec(TryExprDepth);
         end
         // Track statement expression case depth.
-        // case-expression with else has no 'end' (terminates after else expr).
-        // case-expression with full coverage uses 'end' to close.
+        // case-expression always closes with 'end', with or without else.
         else if UpAtomIs('CASE') then begin
           if (LastAtoms.GetPriorAtom.Flag in
               [cafAssignment,cafRoundBracketOpen,cafEdgedBracketOpen,
@@ -4535,7 +4529,6 @@ begin
           or (CaseExprDepth > 0) or (MatchExprDepth > 0) then begin
             inc(CaseExprDepth);
             ExprStack := ExprStack + 'C';
-            InCaseElse := false;
           end;
         end
         // match-expression always closes with 'end' regardless of else/_;
@@ -4565,14 +4558,11 @@ begin
         else if (IfExprDepth > 0) and UpAtomIs('ELSE') then begin
           dec(IfExprDepth);
         end
-        // 'else'/'otherwise' inside case- or match-expression switches to
-        // the catch-all branch. case-with-else and match-with-else have no
-        // trailing 'end' in expression context (FPC pstatmnt.pas) - the
-        // statement-expression terminates at the ';' after the else value
+        // 'else'/'otherwise' inside case- or match-expression starts the
+        // catch-all branch; the expression still closes with its own 'end'
         else if ((CaseExprDepth > 0) or (MatchExprDepth > 0))
-        and (not InCaseElse)
         and (UpAtomIs('ELSE') or UpAtomIs('OTHERWISE')) then begin
-          InCaseElse := true;
+          // belongs to the expression, not a var statement terminator
         end
         // statement-expression 'begin..end' as the var initializer or
         // as the value of a case/match branch: push 'B' so 'end' pops
@@ -4586,9 +4576,9 @@ begin
           inc(BeginDepth);
           ExprStack := ExprStack + 'B';
         end
-        // inside a match-expression or nested begin-expression these
+        // inside a case-/match-expression or nested begin-expression these
         // keywords belong to the body; only the outermost 'end' closes
-        else if (MatchExprDepth = 0) and (BeginDepth = 0)
+        else if (CaseExprDepth = 0) and (MatchExprDepth = 0) and (BeginDepth = 0)
         and (UpAtomIs('END') or UpAtomIs('BEGIN') or UpAtomIs('VAR')
           or UpAtomIs('UNTIL') or UpAtomIs('FINALLY') or UpAtomIs('EXCEPT')
           or UpAtomIs('ELSE') or UpAtomIs('THEN')
