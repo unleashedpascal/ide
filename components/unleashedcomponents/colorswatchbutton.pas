@@ -359,8 +359,12 @@ end;
 
 procedure TColorSwatchButton.pickerChange(Sender: TObject);
 begin
-  FAlpha := FPicker.Alpha;
-  Color := FPicker.SelectedColor;
+  // one OnChange for both: the alpha rides along with the color, and on
+  // its own goes through the setter so the change still fires
+  if FColor <> FPicker.SelectedColor then begin
+    FAlpha := FPicker.Alpha;
+    Color := FPicker.SelectedColor;
+  end else Alpha := FPicker.Alpha;
   if FGrid.Visible then FGrid.Invalidate;
 end;
 
