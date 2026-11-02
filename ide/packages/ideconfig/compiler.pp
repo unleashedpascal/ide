@@ -1122,6 +1122,7 @@ function TCompilerOptReader.ReadVersion(s: string): Boolean;
 const
   VersBegin = 'Free Pascal Compiler version ';
   VersBeginAlt = 'Unleashed Pascal Compiler version ';
+  IdentBegin = 'Unleashed Pascal ';
 var
   Start, V1, V2: Integer;
   VersPfx: String;
@@ -1160,6 +1161,21 @@ begin
         OutputI.Free;
       end;
     end;
+  end
+  else if StartsStr(IdentBegin, s) then
+  begin
+    // this banner names the build (hash-cpu-os), the version comes from -iV
+    fCompilerVersion := Copy(s, Length(IdentBegin)+1, Length(s));
+    OutputI := RunTool(fCompilerExecutable, fParsedTarget + ' -iV');
+    if OutputI <> Nil then
+    try
+      if OutputI.Count > 0 then
+        fCompilerVersion := Trim(OutputI[0]) + ' ' + fCompilerVersion;
+    finally
+      OutputI.Free;
+    end;
+    fIsNewFpc := True;
+    Result := True;
   end;
 end;
 
