@@ -153,9 +153,9 @@ procedure arrowPoints(side: TPopoverPlacement; const b: TRect; at, a: integer; o
 begin
   match side of
     ppAbove: begin
-      tip := Point(at, b.Bottom+a);
-      p1 := Point(at-a, b.Bottom);
-      p2 := Point(at+a, b.Bottom);
+      tip := Point(at, b.Bottom-1+a);
+      p1 := Point(at-a, b.Bottom-1);
+      p2 := Point(at+a, b.Bottom-1);
     end;
     ppRight: begin
       tip := Point(b.Left-a, at);
@@ -163,9 +163,9 @@ begin
       p2 := Point(b.Left, at+a);
     end;
     ppLeft: begin
-      tip := Point(b.Right+a, at);
-      p1 := Point(b.Right, at-a);
-      p2 := Point(b.Right, at+a);
+      tip := Point(b.Right-1+a, at);
+      p1 := Point(b.Right-1, at-a);
+      p2 := Point(b.Right-1, at+a);
     end;
   else
     begin
