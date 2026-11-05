@@ -5629,16 +5629,6 @@ begin
 end;
 
 procedure TObjectInspectorDlg.DefSelectionVisibleInDesigner;
-  procedure ShowPage(const aPage: TTabSheet);
-  begin
-    if aPage.Parent is TPageControl then
-      TPageControl(aPage.Parent).PageIndex := aPage.PageIndex;
-  end;
-  procedure ShowPage(const aPage: TPage);
-  begin
-    if aPage.Parent is TNotebook then
-      TNotebook(aPage.Parent).PageIndex := aPage.PageIndex;
-  end;
 var
   Cnt: TControl;
 begin
@@ -5648,12 +5638,8 @@ begin
   Cnt := TControl(Selection[0]);
   while Cnt<>nil do
   begin
-    if Cnt is TTabSheet then
-      ShowPage(TTabSheet(Cnt))
-    else
-    if Cnt is TPage then
-      ShowPage(TPage(Cnt));
-
+    if Cnt.Parent<>nil then
+      Cnt.Parent.ShowControl(Cnt);
     Cnt := Cnt.Parent;
   end;
 end;
