@@ -1,6 +1,6 @@
 # Unleashed Components
 
-100 components for LCL applications, in one package: `components/unleashedcomponents`. They draw through the theme engine, so a `TAppTheme` on the main form recolors all of them together with the native controls, and they are written for Windows and Linux alike, with no platform-specific code paths.
+101 components for LCL applications, in one package: `components/unleashedcomponents`. They draw through the theme engine, so a `TAppTheme` on the main form recolors all of them together with the native controls, and they are written for Windows and Linux alike, with no platform-specific code paths.
 
 Each page below has the properties, the events, the runtime methods, a usage example that compiles as written, and pictures from the demo application: the component as it sits on the form, its states (a drop-down open, a panel folded, a dialog up) and, where it has one, every value of its style property.
 
@@ -96,6 +96,7 @@ Each page below has the properties, the events, the runtime methods, a usage exa
 | [`TFieldRow`](fieldrow.md) | a caption and the controls it names in one row: the caption, measured with the real font, on the left, the right or above the controls, the controls side by side in the order of their position |
 | [`TSplitView`](splitview.md) | a host for a side pane and the content beside it: drop two containers on it and name one as the PaneControl, the other one fills the rest |
 | [`TDivider`](divider.md) | a line separating two parts of a form, with an optional caption set into it |
+| [`TPageView`](pageview.md) | shows one of its children at a time, filling its whole area: the page PageIndex names; the others stay hidden, in the designer too, where selecting a page in the Object Inspector brings it up |
 | [`TCarousel`](carousel.md) | shows one of its children at a time, as a page: the pages slide sideways on their way in and out, the arrows and the dots move between them, AutoPlay moves on its own |
 | [`TDockPanel`](dockpanel.md) | five zones around a center, each a stack of tabbed panels: a tab brings its panel up, a drag of a tab moves it to another zone, the splitters between the zones resize them, a cross closes |
 

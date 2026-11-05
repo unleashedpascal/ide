@@ -37,6 +37,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="chatvieweditor.pas"/>
         <UnitName Value="ChatViewEditor"/>
       </Item>
+      <Item>
+        <Filename Value="pagevieweditor.pas"/>
+        <UnitName Value="PageViewEditor"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

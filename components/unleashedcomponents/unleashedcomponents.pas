@@ -15,7 +15,7 @@ uses
   JsonTreeView, TagEditor, LogView, DropZone, DateRangePicker, TimelineView, 
   Toast, Divider, CardPanel, ExpanderPanel, SideNav, SplitView, Debouncer, 
   BackgroundTask, StackPanel, GridPanel, Accordion, BreadcrumbBar, 
-  WizardControl, OverlayPanel, Carousel, PageIndicator, AppInstance, 
+  WizardControl, OverlayPanel, Carousel, PageView, PageIndicator, AppInstance, 
   CommandPalette, UndoStack, RecentFiles, PopupWindow, CalendarView, 
   DatePicker, NumberBox, FontComboBox, SevenSegment, StatCard, Avatar, Barcodes, 
   TerminalView, EmptyState, CheckGroupBox, FormLayout, FieldRow, TabStrip, 
