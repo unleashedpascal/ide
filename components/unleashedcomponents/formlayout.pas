@@ -468,8 +468,6 @@ begin
     Canvas.Rectangle(ClientRect);
     Canvas.Pen.Style := psSolid;
   end;
-  var h: integer;
-  layout(false, h);
   applyTextQuality(Canvas);
   var style := Canvas.TextStyle;
   style.Layout := tlCenter;
