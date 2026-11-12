@@ -214,7 +214,7 @@ procedure TPageIndicator.Paint;
 begin
   var back := GetRGBColorResolvingParent;
   var dot := pick(FDotColor, blend(clBtnFace, clBtnShadow, 60));
-  var active := pick(FActiveColor, clHighlight);
+  var active := pick(FActiveColor, markShade(clHighlight, back));
   if not Enabled then active := blend(active, back, 50);
   var cur := current;
   var sp := autofree beginShapes(Canvas, ClientRect, back, FAntialiasing);

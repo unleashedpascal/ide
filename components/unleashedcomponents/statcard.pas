@@ -288,7 +288,7 @@ begin
   var down := pick(FDownColor, if dark then RGBToColor(239, 83, 80) else RGBToColor(198, 40, 40));
   var good := (FDelta > 0) <> FInvertDelta;
   var deltaColor := if FDelta = 0 then ColorToRGB(clGrayText) else (if good then up else down);
-  var trendColor := pick(FTrendColor, clHighlight);
+  var trendColor := pick(FTrendColor, legibleOn(clHighlight, card, 3));
   var title := pick(FTitleColor, blend(card, clWindowText, 65));
   var valueColor := pick(FValueColor, clWindowText);
   if not Enabled then begin

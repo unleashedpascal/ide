@@ -636,7 +636,7 @@ begin
   var grid := pick(FGridColor, blend(plot, clWindowText, 10));
   var axis := pick(FAxisColor, blend(plot, clWindowText, 45));
   var text := pick(FTextColor, clWindowText);
-  var cross := pick(FCrosshairColor, blend(plot, clHighlight, 60));
+  var cross := pick(FCrosshairColor, legibleOn(blend(plot, clHighlight, 60), plot, 2.5));
   var pad := scaled(self, FPadding);
   var tick := scaled(self, FTickLength);
   var lh := lineHeightOf(Font);

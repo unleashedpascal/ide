@@ -301,7 +301,7 @@ begin
   var back := ColorToRGB(clWindow);
   var text := ColorToRGB(clWindowText);
   var dim := ColorToRGB(clGrayText);
-  var accent := ColorToRGB(clHighlight);
+  var accent := markShade(clHighlight, back);
   var sp := autofree beginShapes(Canvas, ClientRect, back, FAntialiasing);
   var pad := scaled(self, 6);
   var header := headerHeightOn(Canvas);

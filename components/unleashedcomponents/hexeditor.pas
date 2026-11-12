@@ -538,7 +538,7 @@ begin
   var selection := pick(FSelectionColor, blend(back, clHighlight, 40));
   // the other pane shows the selection in a muted tone
   var mirror := blend(back, clHighlight, 18);
-  var caretColor := pick(FCursorColor, clHighlight);
+  var caretColor := pick(FCursorColor, legibleOn(clHighlight, back, 3));
   var grid := pick(FGridColor, blend(back, clWindowText, 12));
   var header := blend(back, clWindowText, 7);
   var view := ClientRect;

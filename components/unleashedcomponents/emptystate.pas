@@ -339,10 +339,10 @@ end;
 procedure TEmptyState.Paint;
 begin
   var back := GetRGBColorResolvingParent;
-  var accent := pick(FGlyphColor, clHighlight);
+  var accent := pick(FGlyphColor, legibleOn(clHighlight, back, 3));
   var titleColor := pick(FTitleColor, clWindowText);
   var textColor := pick(FTextColor, blend(back, clWindowText, 60));
-  var buttonColor := pick(FButtonColor, clHighlight);
+  var buttonColor := pick(FButtonColor, legibleOn(clHighlight, back, 3));
   if not Enabled then begin
     accent := blend(accent, back, 55);
     titleColor := ColorToRGB(clGrayText);

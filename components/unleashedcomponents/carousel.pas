@@ -344,7 +344,7 @@ begin
   var back := GetRGBColorResolvingParent;
   var arrow := pick(FArrowColor, clWindowText);
   var dot := pick(FDotColor, blend(clBtnFace, clBtnShadow, 60));
-  var active := pick(FActiveDotColor, clHighlight);
+  var active := pick(FActiveDotColor, markShade(clHighlight, back));
   var sp := autofree beginShapes(Canvas, ClientRect, back, FAntialiasing);
   paintRoundRect(sp, ClientRect, 0, back, clNone);
   var n := PageCount;

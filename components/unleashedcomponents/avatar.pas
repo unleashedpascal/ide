@@ -235,8 +235,8 @@ begin
   var polygonal := FShape in [asHexagon, asDiamond, asSquircle, asShield];
   var sp := autofree beginShapes(Canvas, ClientRect, back, FAntialiasing);
   if ring > 0 then
-    if polygonal then sp.FillPolygon(outlineOf(box, false), pick(FBorderColor, clHighlight))
-    else paintRoundRect(sp, box, (if radius > 0 then radius+ring else 0), pick(FBorderColor, clHighlight), clNone);
+    if polygonal then sp.FillPolygon(outlineOf(box, false), pick(FBorderColor, markShade(clHighlight, back)))
+    else paintRoundRect(sp, box, (if radius > 0 then radius+ring else 0), pick(FBorderColor, markShade(clHighlight, back)), clNone);
   if hasPicture then begin
     // the middle of the picture in the proportions of the face covers it,
     // then the corners outside the shape take the ring or the background
@@ -261,7 +261,7 @@ begin
       var shape := if polygonal then outlineOf(face, true)
         else if FShape = asCircle then ellipseOutline((face.Left+face.Right)/2, (face.Top+face.Bottom)/2, face.Width/2, face.Height/2, true)
         else roundRectOutline(face.Left, face.Top, face.Right, face.Bottom, radius, true);
-      sp.FillOutlines([frame, shape], if ring > 0 then pick(FBorderColor, clHighlight) else back);
+      sp.FillOutlines([frame, shape], if ring > 0 then pick(FBorderColor, markShade(clHighlight, back)) else back);
     end;
   end else if polygonal then sp.FillPolygon(outlineOf(face, false), fill)
   else paintRoundRect(sp, face, radius, fill, clNone);

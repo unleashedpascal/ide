@@ -273,7 +273,7 @@ begin
       detail := if active then tbPushButtonPressed else if FHot and hoverEnabled then tbPushButtonHot else tbPushButtonNormal;
     end;
   end else if not Enabled and not FFlat then begin
-    if themeActive then paintRoundRect(sp, r, scaled(self, FCornerRadius), ColorToRGB(clBtnFace), ColorToRGB(cl3DLight))
+    if themeActive then paintRoundRect(sp, r, scaled(self, FCornerRadius), ColorToRGB(clBtnFace), ColorToRGB(clBtnHighlight))
     else begin
       native := true;
       detail := tbPushButtonDisabled;

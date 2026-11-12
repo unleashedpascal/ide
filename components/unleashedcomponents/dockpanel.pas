@@ -740,7 +740,7 @@ begin
         ClientRect
       end;
     end;
-    sp.DashRoundRect(r.Left+1, r.Top+1, r.Right-1, r.Bottom-1, scaled(self, FCornerRadius), 2, 6, 4, ColorToRGB(clHighlight));
+    sp.DashRoundRect(r.Left+1, r.Top+1, r.Right-1, r.Bottom-1, scaled(self, FCornerRadius), 2, 6, 4, markShade(clHighlight, GetRGBColorResolvingParent));
     sp.FillRect(r, TSmoothPaint.PackColor(clHighlight) and $00FFFFFF or ($30 shl 24));
   end;
   sp.Flush;

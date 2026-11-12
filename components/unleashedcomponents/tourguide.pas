@@ -229,7 +229,7 @@ begin
   var g := FGuide;
   var surface := pick(g.FSurfaceColor, clWindow);
   var border := pick(g.FBorderColor, blend(surface, clWindowText, 25));
-  var accent := pick(g.FAccentColor, clHighlight);
+  var accent := pick(g.FAccentColor, markShade(clHighlight, surface));
   var title := pick(g.FTitleColor, clWindowText);
   var text := pick(g.FTextColor, blend(clWindowText, clWindow, 25));
   var radius := ControlPaint.scaled(self, g.FCornerRadius);

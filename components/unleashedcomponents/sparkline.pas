@@ -299,7 +299,7 @@ end;
 
 procedure TSparkline.Paint;
 begin
-  var line := pick(FLineColor, clHighlight);
+  var line := pick(FLineColor, legibleOn(clHighlight, GetRGBColorResolvingParent, 3));
   var fill := pick(FFillColor, blend(GetRGBColorResolvingParent, line, 30));
   var dot := pick(FDotColor, clHotLight);
   var base := pick(FBaselineColor, clGrayText);

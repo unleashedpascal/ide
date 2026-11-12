@@ -363,7 +363,8 @@ begin
   end;
   var plain := if FTextColor <> clDefault then ColorToRGB(FTextColor) else ColorToRGB(if Font.Color = clDefault then clWindowText else Font.Color);
   if not Enabled then plain := ColorToRGB(clGrayText);
-  var link := pick(FLinkColor, clHotLight);
+  // a link is text: it reads like text on the surface
+  var link := pick(FLinkColor, legibleOn(clHotLight, GetRGBColorResolvingParent, 4.5));
   var hotLink := pick(FHoverLinkColor, blend(link, clWindowText, 30));
   Canvas.Brush.Style := bsClear;
   // the ellipsis takes the place of the last run of the first line that

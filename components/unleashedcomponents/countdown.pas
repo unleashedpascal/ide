@@ -259,8 +259,8 @@ begin
   var back := GetRGBColorResolvingParent;
   var left := remainingNow;
   var warn := (FWarnAt > 0) and (left <= FWarnAt);
-  var ring := if warn then pick(FWarnColor, $3539E5) else pick(FRingColor, clHighlight);
-  var track := pick(FTrackColor, blend(clBtnFace, clBtnShadow, 35));
+  var track := pick(FTrackColor, trackShade(GetRGBColorResolvingParent));
+  var ring := if warn then pick(FWarnColor, $3539E5) else pick(FRingColor, valueShade(clHighlight, track));
   var text := pick(FTextColor, clWindowText);
   if not Enabled then begin
     ring := blend(ring, back, 50);

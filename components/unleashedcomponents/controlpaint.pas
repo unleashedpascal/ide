@@ -136,8 +136,23 @@ function ringEnabled: boolean;
 function pick(color, fallback: TColor): TColor;
 // `a` moved `percent` of the way toward `b`
 function blend(a, b: TColor; percent: integer): TColor;
-// text that reads on `fill`: the window text on a light fill, white on a dark one
+// text that reads on `fill`: white on a dark fill, the window text on a light
+// one, black when the window text of a dark theme is light itself
 function contrastText(fill: TColor): TColor;
+// `color` lighter on a dark `surface` or darker on a light one until the two
+// stand `least` apart in contrast (1 equal, 21 black on white); a color
+// already that far stays as it is. Keeps a part visible on any theme and
+// without one
+function legibleOn(color, surface: TColor; least: double): TColor;
+// a track, a groove or a ring under a value: the surface moved toward the
+// text far enough to stand off it
+function trackShade(surface: TColor): TColor;
+// a value drawn over `track` (a fill, a range, a lit segment): `color` moved
+// as far from the track as a mark has to stand
+function valueShade(color, track: TColor): TColor;
+// a mark that alone carries a state on `surface` (the current tab, a check,
+// the active dot): `color` moved as far from it as such a mark has to stand
+function markShade(color, surface: TColor): TColor;
 // the fill is on the dark side
 function isDark(color: TColor): boolean;
 // a pixel size at the control's DPI
@@ -198,7 +213,7 @@ procedure paintNow(control: TWinControl);
 implementation
 
 uses
-  Math, LCLIntf, IntfGraphics, GraphType, FPImage, Forms, ThemesPalette, ThemesEngine;
+  Math, LCLIntf, IntfGraphics, GraphType, FPImage, Forms, ThemesPalette, ThemesEngine, ThemesIcons;
 
 // -- the rasterizer ----------------------
 
@@ -1069,7 +1084,48 @@ end;
 
 function contrastText(fill: TColor): TColor;
 begin
-  result := if isDark(fill) then clWhite else ColorToRGB(clWindowText);
+  if isDark(fill) then exit(clWhite);
+  result := ColorToRGB(clWindowText);
+  if not isDark(result) then result := clBlack;
+end;
+
+function legibleOn(color, surface: TColor; least: double): TColor;
+begin
+  result := ColorToRGB(color);
+  surface := ColorToRGB(surface);
+  if contrastRatio(result, surface) >= least then exit;
+  // only the lightness moves, so an accent keeps its hue and its strength
+  var h, s, l: single;
+  rgbToHsl(Red(result), Green(result), Blue(result), h, s, l);
+  var up := isDark(surface);
+  for var i := 1 to 100 do begin
+    var r, g, b: byte;
+    hslToRgb(h, s, if up then l+(1-l)*i/100 else l*(1-i/100), r, g, b);
+    result := RGBToColor(r, g, b);
+    if contrastRatio(result, surface) >= least then exit;
+  end;
+end;
+
+function trackShade(surface: TColor): TColor;
+begin
+  // toward the text rather than darker or lighter: a tinted surface gets a
+  // neutral track, apart from the tinted values on it
+  surface := ColorToRGB(surface);
+  var text := contrastText(surface);
+  for var percent := 1 to 100 do begin
+    result := mix(surface, text, percent);
+    if contrastRatio(result, surface) >= 1.6 then exit;
+  end;
+end;
+
+function valueShade(color, track: TColor): TColor;
+begin
+  result := legibleOn(color, track, 2.5);
+end;
+
+function markShade(color, surface: TColor): TColor;
+begin
+  result := legibleOn(color, surface, 3);
 end;
 
 function scaled(control: TControl; size: integer): integer;

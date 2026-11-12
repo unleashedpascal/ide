@@ -495,8 +495,8 @@ end;
 procedure TWizardControl.Paint;
 begin
   var back := GetRGBColorResolvingParent;
-  var accent := pick(FAccentColor, clHighlight);
-  var done := pick(FDoneColor, clHighlight);
+  var accent := pick(FAccentColor, markShade(clHighlight, back));
+  var done := pick(FDoneColor, markShade(clHighlight, back));
   var line := pick(FLineColor, blend(clBtnFace, clBtnShadow, 50));
   var text := ColorToRGB(if Enabled then clWindowText else clGrayText);
   var dim := ColorToRGB(clGrayText);

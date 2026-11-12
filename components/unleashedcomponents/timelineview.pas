@@ -459,7 +459,7 @@ begin
     if (bottom < view.Top) or (top > view.Bottom) then continue;
     var left := if (FLayout = tlAlternate) and (i mod 2 = 1) then lx-dot-pad-tw else (if FLayout = tlAlternate then lx+dot+pad else lx+dot div 2+scaled(self, 8));
     if FOrder[i] = FSelected then paintRoundRect(sp, Rect(left-scaled(self, 4), top-scaled(self, 2), left+tw+scaled(self, 4), bottom+scaled(self, 2)), scaled(self, 4), selectedFill, clNone);
-    var dotColor := pick(item.Color, clHighlight);
+    var dotColor := pick(item.Color, markShade(clHighlight, GetRGBColorResolvingParent));
     var dy := top+dot div 2;
     match FDotStyle of
       tdRing: paintCircle(sp, lx, dy, dot div 2, GetRGBColorResolvingParent, dotColor, Max(scaled(self, 2), 2));

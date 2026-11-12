@@ -447,7 +447,8 @@ begin
   applyTextQuality(Canvas);
   var back := GetRGBColorResolvingParent;
   var textColor := pick(FTextColor, clWindowText);
-  var linkColor := pick(FLinkColor, clHotLight);
+  // a link is text: it reads like text on the surface
+  var linkColor := pick(FLinkColor, legibleOn(clHotLight, back, 4.5));
   var hoverLink := pick(FHoverLinkColor, blend(linkColor, clWindowText, 35));
   var codeColor := pick(FCodeColor, blend(clWindowText, clHighlight, 30));
   var codeBack := pick(FCodeBackColor, blend(back, clWindowText, 8));

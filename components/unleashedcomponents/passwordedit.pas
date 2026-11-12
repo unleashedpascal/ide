@@ -350,8 +350,9 @@ begin
     var segments := 4;
     var gap := scaled(self, 2);
     var segW := (bar.Width-gap*(segments-1)) div segments;
-    var fairColor := pick(FFairColor, clHotLight);
-    var goodColor := pick(FGoodColor, clHighlight);
+    var track := trackShade(GetRGBColorResolvingParent);
+    var fairColor := pick(FFairColor, valueShade(clHotLight, track));
+    var goodColor := pick(FGoodColor, valueShade(clHighlight, track));
     var colorOf := match level of
       psWeak: ColorToRGB(FWeakColor);
       psFair: fairColor;
@@ -363,7 +364,7 @@ begin
     for var i := 0 to segments-1 do begin
       var x := bar.Left+i*(segW+gap);
       var lit := i < ord(level);
-      paintRoundRect(sp, Rect(x, bar.Top, x+segW, bar.Bottom), 1, (if lit then colorOf else blend(clBtnFace, clBtnShadow, 30)), clNone);
+      paintRoundRect(sp, Rect(x, bar.Top, x+segW, bar.Bottom), 1, (if lit then colorOf else track), clNone);
     end;
   end;
 end;

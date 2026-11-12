@@ -482,7 +482,7 @@ end;
 procedure TTabStrip.Paint;
 begin
   var back := GetRGBColorResolvingParent;
-  var accent := pick(FAccentColor, clHighlight);
+  var accent := pick(FAccentColor, markShade(clHighlight, back));
   var tabColor := pick(FTabColor, blend(back, clWindowText, 6));
   var activeColor := pick(FActiveTabColor, match FStyle of
     tssUnderline, tssOutline: back;

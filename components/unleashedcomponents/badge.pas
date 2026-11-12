@@ -281,7 +281,7 @@ end;
 procedure TBadge.Paint;
 begin
   if not FDot and (FText = '') and (FValue = 0) and not FShowZero then exit;
-  var fill := pick(FBadgeColor, clHighlight);
+  var fill := pick(FBadgeColor, markShade(clHighlight, GetRGBColorResolvingParent));
   var textColor := pick(FTextColor, contrastText(fill));
   var border := if FBorderColor = clNone then clNone else pick(FBorderColor, GetRGBColorResolvingParent);
   if not Enabled then fill := blend(fill, clBtnFace, 50);

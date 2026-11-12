@@ -227,7 +227,7 @@ end;
 procedure TSevenSegment.Paint;
 begin
   var bg := GetRGBColorResolvingParent;
-  var onColor := pick(FColorOn, clHighlight);
+  var onColor := pick(FColorOn, legibleOn(clHighlight, bg, 3));
   var offColor := pick(FColorOff, blend(bg, onColor, 12));
   if not Enabled then onColor := blend(onColor, bg, 55);
   var sp := autofree beginShapes(Canvas, ClientRect, bg, FAntialiasing);

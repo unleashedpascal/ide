@@ -229,12 +229,12 @@ end;
 procedure TToggleSwitch.Paint;
 begin
   var back := GetRGBColorResolvingParent;
-  var onColor := pick(FOnColor, clHighlight);
+  var onColor := pick(FOnColor, legibleOn(clHighlight, back, 3));
   // off: the track a step from the surface and the thumb a step further,
   // so both show on a dark theme too
-  var offColor := pick(FOffColor, blend(back, clWindowText, 18));
+  var offColor := pick(FOffColor, trackShade(back));
   var thumb := pick(FThumbColor, (if isDark(back) then blend(back, clWindowText, 60) else ColorToRGB(clWindow)));
-  var border := pick(FBorderColor, blend(back, clWindowText, 35));
+  var border := pick(FBorderColor, legibleOn(blend(back, clWindowText, 35), back, 3));
   if not Enabled then begin
     onColor := blend(onColor, clBtnFace, 50);
     offColor := blend(offColor, clBtnFace, 50);
@@ -243,6 +243,8 @@ begin
   var r := switchRect;
   var fill := blend(offColor, onColor, Round(FPos*100));
   if Enabled and hoverEnabled and (FHot or FPressed) then fill := blend(fill, clWindowText, (if FPressed then 20 else 10));
+  // the thumb on the lit track keeps apart from it
+  if FChecked and (FThumbColor = clDefault) then thumb := legibleOn(thumb, fill, 2.5);
   // the thumb runs inside a margin so it never touches the pill border
   var margin := Math.Max(scaled(self, 2), 2);
   var d := r.Height-margin*2;

@@ -290,7 +290,7 @@ end;
 procedure TDropZone.Paint;
 begin
   var frame := pick(FFrameColor, clBtnShadow);
-  var hotFrame := pick(FHoverFrameColor, clHighlight);
+  var hotFrame := pick(FHoverFrameColor, legibleOn(clHighlight, GetRGBColorResolvingParent, 3));
   var fill := pick(FFillColor, blend(GetRGBColorResolvingParent, clWindow, 40));
   var textColor := pick(FTextColor, clGrayText);
   var lit := Enabled and hoverEnabled and (FHot or FDropping);

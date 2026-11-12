@@ -217,8 +217,8 @@ end;
 
 procedure TBusyIndicator.Paint;
 begin
-  var accent := pick(FColor, clHighlight);
-  var track := pick(FTrackColor, blend(clBtnFace, clBtnShadow, 35));
+  var track := pick(FTrackColor, trackShade(GetRGBColorResolvingParent));
+  var accent := pick(FColor, valueShade(clHighlight, track));
   if not Enabled then accent := blend(accent, clBtnFace, 50);
   var sp := autofree beginShapes(Canvas, ClientRect, GetRGBColorResolvingParent, FAntialiasing);
   var showGlyph := FActive or not FHideWhenInactive;

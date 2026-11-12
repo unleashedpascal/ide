@@ -323,7 +323,7 @@ end;
 
 procedure TGauge.Paint;
 begin
-  var arcColor := pick(FArcColor, blend(clBtnFace, clBtnShadow, 40));
+  var arcColor := pick(FArcColor, trackShade(GetRGBColorResolvingParent));
   var needle := pick(FNeedleColor, clWindowText);
   var tickColor := pick(FTickColor, clGrayText);
   var textColor := pick(FTextColor, clWindowText);
@@ -352,7 +352,7 @@ begin
     end;
   end;
   // the value on the arc itself: a filled part or lit segments
-  var accent := ColorToRGB(clHighlight);
+  var accent := valueShade(clHighlight, arcColor);
   if not Enabled then accent := blend(accent, clBtnFace, 50);
   match FStyle of
     gsFilled: begin

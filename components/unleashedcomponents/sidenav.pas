@@ -464,11 +464,12 @@ end;
 
 procedure TSideNav.Paint;
 begin
-  var back := pick(FBackColor, blend(clBtnFace, clBtnShadow, 8));
+  // the column of the entries stands off the form on a dark theme too
+  var back := pick(FBackColor, legibleOn(blend(clBtnFace, clBtnShadow, 8), GetRGBColorResolvingParent, 1.2));
   var text := pick(FTextColor, clWindowText);
-  var accent := pick(FSelectedColor, clHighlight);
+  var accent := pick(FSelectedColor, markShade(clHighlight, back));
   var selectedText := pick(FSelectedTextColor, (if FSelection in [nsPill, nsFill] then contrastText(accent) else text));
-  var badgeFill := pick(FBadgeColor, clHighlight);
+  var badgeFill := pick(FBadgeColor, markShade(clHighlight, back));
   var radius := scaled(self, FCornerRadius);
   var pad := scaled(self, FPadding);
   var icon := iconPx;

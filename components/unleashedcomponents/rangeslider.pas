@@ -354,8 +354,8 @@ end;
 
 procedure TRangeSlider.Paint;
 begin
-  var track := pick(FTrackColor, blend(clBtnFace, clBtnShadow, 50));
-  var range := pick(FRangeColor, clHighlight);
+  var track := pick(FTrackColor, trackShade(GetRGBColorResolvingParent));
+  var range := pick(FRangeColor, valueShade(clHighlight, track));
   var thumb := pick(FThumbColor, clWindow);
   var thumbBorder := pick(FThumbBorderColor, clBtnShadow);
   var tick := pick(FTickColor, clGrayText);

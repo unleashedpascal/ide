@@ -246,7 +246,7 @@ procedure TFontList.Paint;
 begin
   var back := ColorToRGB(clWindow);
   var text := ColorToRGB(clWindowText);
-  var accent := ColorToRGB(clHighlight);
+  var accent := markShade(clHighlight, back);
   var h := rowHeight;
   var sp := autofree beginShapes(Canvas, ClientRect, back, FBox.FAntialiasing);
   paintRoundRect(sp, ClientRect, 0, back, clNone);

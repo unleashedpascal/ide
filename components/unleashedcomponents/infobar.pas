@@ -184,7 +184,7 @@ begin
     isWarning: if dark then RGBToColor(255, 183, 77) else RGBToColor(191, 120, 0);
     isError: if dark then RGBToColor(239, 83, 80) else RGBToColor(198, 40, 40);
   else
-    ColorToRGB(clHighlight)
+    markShade(clHighlight, back)
   end);
 end;
 

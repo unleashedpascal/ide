@@ -223,8 +223,8 @@ end;
 procedure TKnob.Paint;
 begin
   var face := pick(FKnobColor, cl3DLight);
-  var arc := pick(FArcColor, clHighlight);
-  var track := pick(FTrackColor, blend(clBtnFace, clBtnShadow, 40));
+  var track := pick(FTrackColor, trackShade(GetRGBColorResolvingParent));
+  var arc := pick(FArcColor, valueShade(clHighlight, track));
   var marker := pick(FMarkerColor, clWindowText);
   var border := pick(FBorderColor, clBtnShadow);
   if Focused and ringEnabled then border := ringColor;

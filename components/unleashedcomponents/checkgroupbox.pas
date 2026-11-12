@@ -264,7 +264,7 @@ begin
   var back := GetRGBColorResolvingParent;
   var border := pick(FBorderColor, blend(clBtnFace, clBtnShadow, 50));
   var text := pick(FCaptionColor, clWindowText);
-  var accent := pick(FCheckColor, clHighlight);
+  var accent := pick(FCheckColor, markShade(clHighlight, back));
   if not Enabled then begin
     text := ColorToRGB(clGrayText);
     accent := blend(accent, back, 55);

@@ -652,7 +652,7 @@ begin
   var back := ColorToRGB(Color);
   var text := ColorToRGB(if Enabled then clWindowText else clGrayText);
   var dim := ColorToRGB(clGrayText);
-  var accent := pick(FAccentColor, clHighlight);
+  var accent := pick(FAccentColor, markShade(clHighlight, back));
   var todayRing := pick(FTodayColor, accent);
   var markDot := pick(FMarkColor, accent);
   var weekend := pick(FWeekendColor, blend(clWindowText, clRed, 55));

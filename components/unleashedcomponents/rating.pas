@@ -324,7 +324,7 @@ procedure TRating.paintItem(sp: TSmoothPaint; const r: TRect; fill, border: TCol
   end;
 
 begin
-  var inactive := pick(FInactiveColor, blend(clBtnFace, clBtnShadow, 60));
+  var inactive := pick(FInactiveColor, legibleOn(blend(clBtnFace, clBtnShadow, 60), GetRGBColorResolvingParent, 1.6));
   // the check keeps its mark readable on the dim fill
   if FShape = rsCheck then inactive := blend(inactive, clBtnFace, 30);
   shape(r, inactive, clNone);
@@ -349,8 +349,9 @@ begin
   else
     clHighlight
   end;
-  var active := pick(FActiveColor, natural);
-  var hoverFill := pick(FHoverColor, blend(active, clWhite, 40));
+  var back := GetRGBColorResolvingParent;
+  var active := pick(FActiveColor, legibleOn(natural, back, 2));
+  var hoverFill := pick(FHoverColor, legibleOn(blend(active, back, 35), back, 1.8));
   if not Enabled then active := blend(active, clBtnFace, 50);
   var outline := if FBorderWidth > 0 then pick(FBorderColor, blend(active, clBlack, 30)) else clNone;
   var sp := autofree beginShapes(Canvas, ClientRect, GetRGBColorResolvingParent, FAntialiasing);

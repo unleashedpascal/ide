@@ -466,7 +466,7 @@ procedure TCommandBar.Paint;
 begin
   layout;
   var back := GetRGBColorResolvingParent;
-  var accent := pick(FAccentColor, clHighlight);
+  var accent := pick(FAccentColor, markShade(clHighlight, back));
   var text := pick(FTextColor, clWindowText);
   var radius := scaled(self, FCornerRadius);
   var sp := autofree beginShapes(Canvas, ClientRect, back, FAntialiasing);

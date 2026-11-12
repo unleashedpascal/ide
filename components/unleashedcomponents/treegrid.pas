@@ -1072,7 +1072,7 @@ begin
     if FShowCheckBoxes then begin
       var size := rh-scaled(self, 10);
       var box := Rect(x+scaled(self, 2), top+scaled(self, 5), x+scaled(self, 2)+size, top+scaled(self, 5)+size);
-      var accent := ColorToRGB(clHighlight);
+      var accent := markShade(clHighlight, back);
       match node.Check of
         tcChecked: begin
           paintRoundRect(sp, box, scaled(self, 2), accent, accent);

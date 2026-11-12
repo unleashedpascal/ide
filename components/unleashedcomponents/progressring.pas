@@ -200,8 +200,8 @@ end;
 
 procedure TProgressRing.Paint;
 begin
-  var ring := pick(FColor, clHighlight);
-  var track := pick(FTrackColor, blend(clBtnFace, clBtnShadow, 35));
+  var track := pick(FTrackColor, trackShade(GetRGBColorResolvingParent));
+  var ring := pick(FColor, valueShade(clHighlight, track));
   var textColor := pick(FTextColor, clWindowText);
   if not Enabled then begin
     ring := blend(ring, clBtnFace, 50);

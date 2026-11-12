@@ -642,7 +642,8 @@ begin
   FPreview.Canvas.Brush.Color := clBtnFace;
   FPreview.Canvas.FillRect(r);
   InflateRect(r, -1, -1);
-  paintMockup(FPreview.Canvas, r, palette);
+  // the shades as the engine puts them on screen
+  paintMockup(FPreview.Canvas, r, legiblePalette(palette));
 end;
 
 { TAppThemeComponentEditor }

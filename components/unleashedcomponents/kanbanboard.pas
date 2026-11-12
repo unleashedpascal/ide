@@ -695,7 +695,8 @@ end;
 procedure TKanbanBoard.Paint;
 begin
   var board := pick(FBoardColor, blend(clBtnFace, clWindow, 30));
-  var columnBack := pick(FColumnColor, blend(clBtnFace, clBtnShadow, 15));
+  // an empty column still shows as one
+  var columnBack := pick(FColumnColor, legibleOn(blend(clBtnFace, clBtnShadow, 15), board, 1.3));
   var cardBack := pick(FCardColor, clWindow);
   var border := pick(FBorderColor, blend(clBtnFace, clBtnText, 20));
   var titleColor := pick(FTitleColor, clWindowText);

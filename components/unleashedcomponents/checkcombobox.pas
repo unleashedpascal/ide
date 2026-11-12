@@ -188,7 +188,7 @@ begin
   var size := lineHeightOf(Font);
   var pad := scaled(self, 8);
   var radius := scaled(self, 3);
-  var accent := ColorToRGB(clHighlight);
+  var accent := markShade(clHighlight, clWindow);
   var offset := if FOwner.FShowSelectAll then 1 else 0;
   var n := FOwner.FItems.Count+offset;
   for var i := 0 to n-1 do begin

@@ -226,7 +226,7 @@ end;
 procedure TDatePickerFooter.Paint;
 begin
   var back := ColorToRGB(clWindow);
-  var accent := ColorToRGB(clHighlight);
+  var accent := markShade(clHighlight, back);
   var sp := autofree beginShapes(Canvas, ClientRect, back, FPicker.FAntialiasing);
   paintRoundRect(sp, ClientRect, 0, back, clNone);
   paintLine(sp, scaled(self, 6), 0, ClientWidth-scaled(self, 6), 0, blend(back, clWindowText, 15), 1);

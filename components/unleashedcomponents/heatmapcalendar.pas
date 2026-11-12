@@ -386,10 +386,11 @@ end;
 function THeatmapCalendar.levelColor(level: integer): TColor;
 begin
   var back := GetRGBColorResolvingParent;
-  var empty := pick(FEmptyColor, blend(back, clWindowText, 8));
+  // the empty days still show as cells, the lowest level stands off them
+  var empty := pick(FEmptyColor, legibleOn(blend(back, clWindowText, 8), back, 1.3));
   if level <= 0 then exit(empty);
-  var low := pick(FLowColor, blend(clHighlight, back, 60));
-  var high := pick(FHighColor, clHighlight);
+  var high := pick(FHighColor, legibleOn(clHighlight, back, 3));
+  var low := pick(FLowColor, legibleOn(blend(high, back, 60), back, 1.6));
   result := if FLevels <= 1 then high else blend(low, high, (level-1)*100 div (FLevels-1));
 end;
 

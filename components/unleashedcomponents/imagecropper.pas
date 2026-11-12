@@ -540,7 +540,8 @@ end;
 
 procedure TImageCropper.Paint;
 begin
-  var back := pick(FBackColor, blend(clBtnFace, clBlack, 20));
+  // the area under the picture stands off the form also on a dark theme
+  var back := pick(FBackColor, legibleOn(blend(clBtnFace, clBlack, 20), GetRGBColorResolvingParent, 1.3));
   var frameColor := pick(FFrameColor, clWhite);
   var dim := pick(FDimColor, clBlack);
   var handleColor := pick(FHandleColor, clWhite);

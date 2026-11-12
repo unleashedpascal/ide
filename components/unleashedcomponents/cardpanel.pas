@@ -192,7 +192,7 @@ begin
   if FStyle = cpAccent then begin
     // the strip keeps the rounded top and a flat bottom
     var strip := Max(scaled(self, 4), 3);
-    paintRoundRect(sp, Rect(body.Left, body.Top, body.Right, body.Top+strip+radius), radius, ColorToRGB(clHighlight), clNone);
+    paintRoundRect(sp, Rect(body.Left, body.Top, body.Right, body.Top+strip+radius), radius, markShade(clHighlight, GetRGBColorResolvingParent), clNone);
     paintRoundRect(sp, Rect(body.Left, body.Top+strip, body.Right, body.Top+strip+radius), 0, (if h > 0 then header else card), clNone);
   end;
   if border <> clNone then paintRoundRect(sp, body, radius, clNone, border, Max(FBorderWidth, 1));

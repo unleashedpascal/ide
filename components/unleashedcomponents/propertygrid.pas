@@ -662,8 +662,9 @@ begin
       var size := rh-scaled(self, 10);
       var box := Rect(split+pad, top+scaled(self, 5), split+pad+size, top+scaled(self, 5)+size);
       var on := row.value = 'True';
-      paintRoundRect(sp, box, scaled(self, 2), (if on then ColorToRGB(clHighlight) else back), (if on then ColorToRGB(clHighlight) else blend(back, clWindowText, 40)));
-      if on then paintCheck(sp, box, size*7 div 10, contrastText(clHighlight), Max(size div 7, 2));
+      var mark := markShade(clHighlight, back);
+      paintRoundRect(sp, box, scaled(self, 2), (if on then mark else back), (if on then mark else legibleOn(blend(back, clWindowText, 40), back, 3)));
+      if on then paintCheck(sp, box, size*7 div 10, contrastText(mark), Max(size div 7, 2));
     end;
   end;
   if FShowGridLines then sp.FillRect(Rect(split, view.Top, split+1, view.Bottom), grid);

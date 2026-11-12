@@ -284,8 +284,9 @@ begin
   var s := splitterRect;
   FPainted := s;
   if (FShown <= 0) or (FSplitterWidth <= 0) then exit;
-  var line := pick(FSplitterColor, blend(clBtnFace, clBtnShadow, 40));
-  if (FHotSplitter or FDragging) and FResizable and hoverEnabled then line := ColorToRGB(clHighlight);
+  // the splitter drags: it shows like the outline of a control
+  var line := pick(FSplitterColor, legibleOn(blend(clBtnFace, clBtnShadow, 40), back, 2));
+  if (FHotSplitter or FDragging) and FResizable and hoverEnabled then line := markShade(clHighlight, back);
   Canvas.Brush.Color := line;
   Canvas.FillRect(s);
 end;
