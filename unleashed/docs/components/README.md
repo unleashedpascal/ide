@@ -1,6 +1,6 @@
 # Unleashed Components
 
-102 components for LCL applications, in one package: `components/unleashedcomponents`. They draw through the theme engine, so a `TAppTheme` on the main form recolors all of them together with the native controls, and they are written for Windows and Linux alike, with no platform-specific code paths.
+103 components for LCL applications, in one package: `components/unleashedcomponents`. They draw through the theme engine, so a `TAppTheme` on the main form recolors all of them together with the native controls, and they are written for Windows and Linux alike, with no platform-specific code paths.
 
 Each page below has the properties, the events, the runtime methods, a usage example that compiles as written, and pictures from the demo application: the component as it sits on the form, its states (a drop-down open, a panel folded, a dialog up) and, where it has one, every value of its style property.
 
@@ -87,6 +87,7 @@ Each page below has the properties, the events, the runtime methods, a usage exa
 
 | Component | What it is |
 |---|---|
+| [`TContentPanel`](contentpanel.md) | a plain box with the knobs a panel lacks: the children placed as a group at the left, the center or the right and the top, the middle or the bottom, a padding, rounded corners, a frame, or no background of its own |
 | [`TCardPanel`](cardpanel.md) | a container drawn as a card: rounded, framed, with a soft shadow and a header strip carrying the caption |
 | [`TExpanderPanel`](expanderpanel.md) | a container folding down to its header: a click on the header, Space or Enter shows or hides the children |
 | [`TAccordion`](accordion.md) | stacks the expander panels dropped on it and, unless MultiOpen is set, keeps one of them open: opening a panel folds the others |

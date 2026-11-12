@@ -437,6 +437,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="codereaders.pas"/>
         <UnitName Value="CodeReaders"/>
       </Item>
+      <Item>
+        <Filename Value="contentpanel.pas"/>
+        <UnitName Value="ContentPanel"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
