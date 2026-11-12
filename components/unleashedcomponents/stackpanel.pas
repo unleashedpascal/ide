@@ -16,7 +16,7 @@ unit StackPanel;
 interface
 
 uses
-  Classes, SysUtils, Types, Controls, Graphics, ControlPaint;
+  Classes, SysUtils, Types, Controls, Graphics, LMessages, ControlPaint;
 
 type
   TStackOrientation = (soVertical, soHorizontal);
@@ -40,6 +40,9 @@ type
     FSpacing, FPadding: integer;
     FAutoSizeStack, FReverse, FFillLast: boolean;
     FLaying: boolean;
+    FStale: boolean; // the children were not placed while the panel was hidden
+    procedure CMShowingChanged(var Message: TLMessage); message CM_SHOWINGCHANGED;
+    procedure placeLater(data: PtrInt);
     procedure setOrientation(value: TStackOrientation);
     procedure setCrossAlign(value: TStackCrossAlign);
     procedure setMetric(index: integer; value: integer);
@@ -56,6 +59,7 @@ type
     class function GetControlClassDefaultSize: TSize; override;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
   published
     property Orientation: TStackOrientation read FOrientation write setOrientation default soVertical;
     property CrossAlign: TStackCrossAlign read FCrossAlign write setCrossAlign default saStretch;
@@ -100,7 +104,7 @@ type
 implementation
 
 uses
-  Math;
+  Math, Forms;
 
 constructor TStackPanel.Create(AOwner: TComponent);
 begin
@@ -111,6 +115,12 @@ begin
   FPadding := 6;
   ParentColor := true;
   with GetControlClassDefaultSize do SetInitialBounds(0, 0, cx, cy);
+end;
+
+destructor TStackPanel.Destroy;
+begin
+  Application.RemoveAsyncCalls(self);
+  inherited Destroy;
 end;
 
 class function TStackPanel.GetControlClassDefaultSize: TSize;
@@ -139,9 +149,29 @@ begin
   if FOrientation = soVertical then result.Sort(@byTop) else result.Sort(@byLeft);
 end;
 
+// a panel that was hidden places its children when it shows
+procedure TStackPanel.CMShowingChanged(var Message: TLMessage);
+begin
+  inherited;
+  if FStale and HandleObjectShouldBeVisible then ReAlign;
+end;
+
+procedure TStackPanel.placeLater(data: PtrInt);
+begin
+  if FStale and HandleObjectShouldBeVisible then ReAlign;
+end;
+
 procedure TStackPanel.AlignControls(AControl: TControl; var ARect: TRect);
 begin
   if FLaying or (csDestroying in ComponentState) then exit;
+  if not (csDesigning in ComponentState) and not HandleObjectShouldBeVisible then begin
+    var form := GetParentForm(self);
+    if (form <> nil) and form.Showing then begin
+      FStale := true;
+      exit;
+    end;
+  end;
+  FStale := false;
   FLaying := true;
   var list := ordered;
   try
@@ -239,6 +269,8 @@ end;
 
 procedure TStackPanel.Paint;
 begin
+  // shown without the notice of it: the children take their places after this paint
+  if FStale then Application.QueueAsyncCall(@placeLater, 0);
   Canvas.Brush.Style := bsSolid;
   Canvas.Brush.Color := GetRGBColorResolvingParent;
   Canvas.FillRect(ClientRect);

@@ -16,7 +16,7 @@ unit GridPanel;
 interface
 
 uses
-  Classes, SysUtils, Types, Controls, Graphics, ControlPaint;
+  Classes, SysUtils, Types, Controls, Graphics, LMessages, ControlPaint;
 
 type
   // how a child sits in its cell
@@ -34,6 +34,9 @@ type
     FHorizontalAlign, FVerticalAlign: TGridCellAlign;
     FShowGrid: boolean;
     FLaying: boolean;
+    FStale: boolean; // the children were not placed while the panel was hidden
+    procedure CMShowingChanged(var Message: TLMessage); message CM_SHOWINGCHANGED;
+    procedure placeLater(data: PtrInt);
     procedure setMetric(index: integer; value: integer);
     function getMetric(index: integer): integer;
     procedure setWeights(index: integer; const value: string);
@@ -51,6 +54,7 @@ type
     class function GetControlClassDefaultSize: TSize; override;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     // the cell a child sits in
     function CellOf(child: TControl; out column, row: integer): boolean;
   published
@@ -100,7 +104,7 @@ type
 implementation
 
 uses
-  Math;
+  Math, Forms;
 
 constructor TGridPanel.Create(AOwner: TComponent);
 begin
@@ -113,6 +117,12 @@ begin
   FPadding := 6;
   ParentColor := true;
   with GetControlClassDefaultSize do SetInitialBounds(0, 0, cx, cy);
+end;
+
+destructor TGridPanel.Destroy;
+begin
+  Application.RemoveAsyncCalls(self);
+  inherited Destroy;
 end;
 
 class function TGridPanel.GetControlClassDefaultSize: TSize;
@@ -172,9 +182,29 @@ begin
   result[count] := pos-gap;
 end;
 
+// a panel that was hidden places its children when it shows
+procedure TGridPanel.CMShowingChanged(var Message: TLMessage);
+begin
+  inherited;
+  if FStale and HandleObjectShouldBeVisible then ReAlign;
+end;
+
+procedure TGridPanel.placeLater(data: PtrInt);
+begin
+  if FStale and HandleObjectShouldBeVisible then ReAlign;
+end;
+
 procedure TGridPanel.AlignControls(AControl: TControl; var ARect: TRect);
 begin
   if FLaying or (csDestroying in ComponentState) then exit;
+  if not (csDesigning in ComponentState) and not HandleObjectShouldBeVisible then begin
+    var form := GetParentForm(self);
+    if (form <> nil) and form.Showing then begin
+      FStale := true;
+      exit;
+    end;
+  end;
+  FStale := false;
   FLaying := true;
   var list := ordered;
   try
@@ -235,6 +265,8 @@ end;
 
 procedure TGridPanel.Paint;
 begin
+  // shown without the notice of it: the children take their places after this paint
+  if FStale then Application.QueueAsyncCall(@placeLater, 0);
   Canvas.Brush.Style := bsSolid;
   Canvas.Brush.Color := GetRGBColorResolvingParent;
   Canvas.FillRect(ClientRect);
