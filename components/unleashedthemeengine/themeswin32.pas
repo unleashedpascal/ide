@@ -344,10 +344,10 @@ begin
   if pressed and (hot = 1) then fillRect(dc, first, pal[COLOR_BTNSHADOW]);
   if pressed and (hot = 5) then fillRect(dc, second, pal[COLOR_BTNSHADOW]);
   var arrow := pal[COLOR_GRAYTEXT];
-  if (info.rgstate[1] and STATE_SYSTEM_UNAVAILABLE) <> 0 then arrow := pal[COLOR_3DLIGHT] else if hot = 1 then arrow := hoverShade(pal, pal[COLOR_GRAYTEXT], pal[COLOR_BTNTEXT]);
+  if (info.rgstate[1] and STATE_SYSTEM_UNAVAILABLE) <> 0 then arrow := pal[COLOR_BTNHIGHLIGHT] else if hot = 1 then arrow := hoverShade(pal, pal[COLOR_GRAYTEXT], pal[COLOR_BTNTEXT]);
   drawArrow(dc, first, firstDir, arrow);
   arrow := pal[COLOR_GRAYTEXT];
-  if (info.rgstate[5] and STATE_SYSTEM_UNAVAILABLE) <> 0 then arrow := pal[COLOR_3DLIGHT] else if hot = 5 then arrow := hoverShade(pal, pal[COLOR_GRAYTEXT], pal[COLOR_BTNTEXT]);
+  if (info.rgstate[5] and STATE_SYSTEM_UNAVAILABLE) <> 0 then arrow := pal[COLOR_BTNHIGHLIGHT] else if hot = 5 then arrow := hoverShade(pal, pal[COLOR_GRAYTEXT], pal[COLOR_BTNTEXT]);
   drawArrow(dc, second, secondDir, arrow);
   // the thumb offsets count from the start of the bar
   if ((info.rgstate[3] and (STATE_SYSTEM_UNAVAILABLE or STATE_SYSTEM_INVISIBLE)) <> 0) or (info.xyThumbBottom <= info.xyThumbTop) then exit;
@@ -651,7 +651,7 @@ begin
     MENU_POPUPITEM: fillRect(dc, r, if state in [MPI_HOT, MPI_DISABLEDHOT] then pal[COLOR_MENUHILIGHT] else pal[COLOR_MENU]);
     MENU_POPUPBORDERS: begin
       fillRect(dc, r, pal[COLOR_MENU]);
-      frameRect(dc, r, pal[COLOR_3DLIGHT]);
+      frameRect(dc, r, pal[COLOR_BTNHIGHLIGHT]);
     end;
     MENU_POPUPSEPARATOR: begin
       var y := (r.Top+r.Bottom) div 2;
@@ -721,7 +721,7 @@ begin
       var fill := pal[COLOR_WINDOW];
       if selected then fill := pal[COLOR_BTNFACE] else if effects.Hover and (state = TIS_HOT) then fill := hoverFill(pal, fill);
       fillRect(dc, r, fill);
-      var border := pal[COLOR_3DLIGHT];
+      var border := pal[COLOR_BTNHIGHLIGHT];
       var wnd: HWND;
       var item: TRect;
       var index := tabItemAt(dc, r, wnd, item);
@@ -755,17 +755,17 @@ end;
 procedure markBoxColors(slot: integer; out fill, border, glyph: TColor);
 begin
   fill := pal[COLOR_WINDOW];
-  border := pal[COLOR_BTNHIGHLIGHT];
+  border := pal[COLOR_BTNSHADOW];
   glyph := pal[COLOR_BTNTEXT];
   match slot of
-    1: if effects.Hover then border := hoverShade(pal, pal[COLOR_BTNHIGHLIGHT], pal[COLOR_BTNSHADOW]);
+    1: if effects.Hover then border := hoverShade(pal, pal[COLOR_BTNSHADOW], pal[COLOR_WINDOWFRAME]);
     2: begin
       fill := pal[COLOR_3DLIGHT];
       border := pal[COLOR_WINDOWFRAME];
     end;
     3: begin
       fill := pal[COLOR_BTNFACE];
-      border := pal[COLOR_3DLIGHT];
+      border := pal[COLOR_BTNHIGHLIGHT];
       glyph := pal[COLOR_GRAYTEXT];
     end;
   end;
@@ -821,7 +821,7 @@ begin
     end;
     PBS_DISABLED: begin
       fill := pal[COLOR_BTNFACE];
-      border := pal[COLOR_3DLIGHT];
+      border := pal[COLOR_BTNHIGHLIGHT];
     end;
   end;
   // with the rings off the button marked Default in the form keeps its ring,
@@ -844,9 +844,9 @@ begin
   match part of
     CP_BORDER: begin
       var fill := pal[COLOR_WINDOW];
-      var frame := pal[COLOR_3DLIGHT];
+      var frame := pal[COLOR_BTNHIGHLIGHT];
       match state of
-        CBB_HOT: if effects.Hover then frame := hoverShade(pal, pal[COLOR_3DLIGHT], pal[COLOR_BTNSHADOW]);
+        CBB_HOT: if effects.Hover then frame := hoverShade(pal, pal[COLOR_BTNHIGHLIGHT], pal[COLOR_BTNSHADOW]);
         CBB_FOCUSED: if effects.Active then frame := focusColor(pal);
         CBB_DISABLED: fill := pal[COLOR_BTNFACE];
       end;
@@ -855,7 +855,18 @@ begin
       fillRect(dc, r, fill);
       frameRect(dc, r, frame);
     end;
-    CP_READONLY, CP_BACKGROUND, CP_TRANSPARENTBACKGROUND: fillRect(dc, r, if state = CBRO_DISABLED then pal[COLOR_BTNFACE] else pal[COLOR_WINDOW]);
+    // a drop down list is all face: it carries the outline of a box with an edit
+    CP_READONLY: begin
+      var frame := pal[COLOR_BTNHIGHLIGHT];
+      match state of
+        CBRO_HOT: if effects.Hover then frame := hoverShade(pal, pal[COLOR_BTNHIGHLIGHT], pal[COLOR_BTNSHADOW]);
+        CBRO_PRESSED: frame := pal[COLOR_BTNSHADOW];
+      end;
+      if effects.Active and (state <> CBRO_DISABLED) and paintedFocused(dc) then frame := focusColor(pal);
+      fillRect(dc, r, if state = CBRO_DISABLED then pal[COLOR_BTNFACE] else pal[COLOR_WINDOW]);
+      frameRect(dc, r, frame);
+    end;
+    CP_BACKGROUND, CP_TRANSPARENTBACKGROUND: fillRect(dc, r, if state = CBRO_DISABLED then pal[COLOR_BTNFACE] else pal[COLOR_WINDOW]);
     // the drop down button: a hover fill and a stronger glyph under the mouse,
     // a sunken fill while pressed, a faded glyph when disabled
     CP_DROPDOWNBUTTON, CP_DROPDOWNBUTTONRIGHT, CP_DROPDOWNBUTTONLEFT: begin
@@ -874,7 +885,7 @@ begin
         end;
         CBXS_DISABLED: begin
           fill := pal[COLOR_BTNFACE];
-          glyph := pal[COLOR_3DLIGHT];
+          glyph := pal[COLOR_BTNHIGHLIGHT];
         end;
       end;
       fillRect(dc, inner, fill);
@@ -894,7 +905,7 @@ begin
     BP_GROUPBOX: begin
       SelectObject(dc, GetStockObject(DC_PEN));
       SelectObject(dc, GetStockObject(NULL_BRUSH));
-      SetDCPenColor(dc, pal[COLOR_3DLIGHT]);
+      SetDCPenColor(dc, pal[COLOR_BTNHIGHLIGHT]);
       Windows.RoundRect(dc, r.Left, r.Top, r.Right-1, r.Bottom-1, 4, 4);
     end;
     _: result := false;
@@ -957,9 +968,9 @@ function drawEditPart(dc: HDC; part, state: integer; const r: TRect): boolean;
 begin
   result := part in [EP_EDITBORDER_NOSCROLL, EP_EDITBORDER_HSCROLL, EP_EDITBORDER_VSCROLL, EP_EDITBORDER_HVSCROLL];
   if not result then exit;
-  var frame := pal[COLOR_3DLIGHT];
+  var frame := pal[COLOR_BTNHIGHLIGHT];
   if effects.Active and ((state = EPSN_FOCUSED) or ((state <> EPSN_DISABLED) and paintedFocused(dc))) then frame := focusColor(pal)
-  else if effects.Hover and (state = EPSN_HOT) then frame := hoverShade(pal, pal[COLOR_3DLIGHT], pal[COLOR_BTNSHADOW]);
+  else if effects.Hover and (state = EPSN_HOT) then frame := hoverShade(pal, pal[COLOR_BTNHIGHLIGHT], pal[COLOR_BTNSHADOW]);
   frameRect(dc, r, frame);
   var inner := r;
   InflateRect(inner, -1, -1);
@@ -972,9 +983,9 @@ begin
   match part of
     PP_BAR, PP_BARVERT, PP_TRANSPARENTBAR, PP_TRANSPARENTBARVERT: begin
       fillRect(dc, r, pal[COLOR_WINDOW]);
-      frameRect(dc, r, pal[COLOR_3DLIGHT]);
+      frameRect(dc, r, pal[COLOR_BTNHIGHLIGHT]);
     end;
-    PP_FILL, PP_FILLVERT, PP_CHUNK, PP_CHUNKVERT: fillRect(dc, r, pal[COLOR_HIGHLIGHT]);
+    PP_FILL, PP_FILLVERT, PP_CHUNK, PP_CHUNKVERT: fillRect(dc, r, pal[COLOR_HOTLIGHT]);
     // the glow sliding over the fill stays off
     PP_MOVEOVERLAY, PP_MOVEOVERLAYVERT: ;
     _: result := false;
@@ -1000,14 +1011,14 @@ begin
   match part of
     TKP_TRACK, TKP_TRACKVERT: begin
       fillRect(dc, r, pal[COLOR_WINDOW]);
-      frameRect(dc, r, pal[COLOR_3DLIGHT]);
+      frameRect(dc, r, pal[COLOR_BTNHIGHLIGHT]);
     end;
     TKP_THUMB, TKP_THUMBBOTTOM, TKP_THUMBTOP, TKP_THUMBVERT, TKP_THUMBLEFT, TKP_THUMBRIGHT: begin
-      var color := pal[COLOR_BTNHIGHLIGHT];
+      var color := pal[COLOR_BTNSHADOW];
       var ring := color;
       match state of
         TUS_HOT: if effects.Hover then begin
-          color := hoverShade(pal, pal[COLOR_BTNHIGHLIGHT], pal[COLOR_GRAYTEXT]);
+          color := hoverShade(pal, pal[COLOR_BTNSHADOW], pal[COLOR_WINDOWFRAME]);
           ring := color;
         end;
         TUS_PRESSED: begin
@@ -1016,7 +1027,7 @@ begin
         end;
         TUS_FOCUSED: if effects.Active then ring := focusColor(pal);
         TUS_DISABLED: begin
-          color := pal[COLOR_3DLIGHT];
+          color := pal[COLOR_BTNHIGHLIGHT];
           ring := color;
         end;
       end;
@@ -1312,14 +1323,14 @@ begin
 end;
 
 // Windows frames a popup menu with the same gray in every look; the frame
-// takes the subtle palette line instead, the system shadow stays
+// takes the outline of the palette instead, the system shadow stays
 procedure paintMenuFrame(wnd: HWND; dc: HDC);
 begin
   var win: TRect;
   GetWindowRect(wnd, win);
   var own := dc = 0;
   if own then dc := GetWindowDC(wnd);
-  frameRect(dc, Rect(0, 0, win.Right-win.Left, win.Bottom-win.Top), pal[COLOR_3DLIGHT]);
+  frameRect(dc, Rect(0, 0, win.Right-win.Left, win.Bottom-win.Top), pal[COLOR_BTNHIGHLIGHT]);
   if own then ReleaseDC(wnd, dc);
 end;
 
@@ -1556,7 +1567,7 @@ begin
   GetWindowRect(wnd, @win);
   OffsetRect(win, -win.Left, -win.Top);
   var state := edgeState(wnd, focus);
-  var outer := pal[COLOR_3DLIGHT];
+  var outer := pal[COLOR_BTNHIGHLIGHT];
   if (state and (1 shl 26)) <> 0 then outer := focusColor(pal)
   else if (state and (1 shl 25)) <> 0 then outer := pal[COLOR_BTNSHADOW];
   var dc := GetWindowDC(wnd);

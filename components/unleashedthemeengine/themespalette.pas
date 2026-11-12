@@ -72,11 +72,19 @@ function hoverShade(const pal: TPalette; normal, strong: TColor): TColor;
 // `normal` moved toward the text by the hover strength: the fill of a part
 // under the mouse
 function hoverFill(const pal: TPalette; normal: TColor): TColor;
+// the contrast ratio of two colors, 1 for equal ones up to 21 for black on white
+function contrastRatio(a, b: TColor): double;
+// the palette with the neutral shades, the disabled text and the selection
+// moved toward the text until they read on the window and the button face
+function legiblePalette(const pal: TPalette): TPalette;
 
 const
   DEFAULT_HOVER = 20;
 
 implementation
+
+uses
+  Math;
 
 // RRGGBB literal to TColor
 function rgb(hex: cardinal): TColor;
@@ -117,6 +125,72 @@ end;
 function hoverFill(const pal: TPalette; normal: TColor): TColor;
 begin
   result := mix(ColorToRGB(normal), ColorToRGB(pal[COLOR_BTNTEXT]), hoverStrength(pal));
+end;
+
+function luminance(c: TColor): double;
+
+  function channel(v: byte): double;
+  begin
+    var s := v/255;
+    result := if s <= 0.04045 then s/12.92 else Power((s+0.055)/1.055, 2.4);
+  end;
+
+begin
+  c := ColorToRGB(c);
+  result := 0.2126*channel(Red(c))+0.7152*channel(Green(c))+0.0722*channel(Blue(c));
+end;
+
+function contrastRatio(a, b: TColor): double;
+begin
+  var la := luminance(a);
+  var lb := luminance(b);
+  result := (Max(la, lb)+0.05)/(Min(la, lb)+0.05);
+end;
+
+function legiblePalette(const pal: TPalette): TPalette;
+
+  // `slot` moved toward the text until it reads at `least` on every surface
+  procedure lift(slot: integer; least: double);
+  begin
+    var from := ColorToRGB(result[slot]);
+    var text := ColorToRGB(result[COLOR_BTNTEXT]);
+    for var percent := 0 to 100 do begin
+      var c := mix(from, text, percent);
+      if (contrastRatio(c, result[COLOR_WINDOW]) >= least) and (contrastRatio(c, result[COLOR_BTNFACE]) >= least) then begin
+        result[slot] := c;
+        exit;
+      end;
+    end;
+    result[slot] := text;
+  end;
+
+  // the selection the same way, but only as far as its own text still reads on it
+  procedure liftSelection(least: double);
+  begin
+    var from := ColorToRGB(result[COLOR_HIGHLIGHT]);
+    var text := ColorToRGB(result[COLOR_BTNTEXT]);
+    var onTop := ColorToRGB(result[COLOR_HIGHLIGHTTEXT]);
+    for var percent := 0 to 100 do begin
+      var c := mix(from, text, percent);
+      if contrastRatio(c, onTop) < 4.5 then exit;
+      result[COLOR_HIGHLIGHT] := c;
+      if (contrastRatio(c, result[COLOR_WINDOW]) >= least) and (contrastRatio(c, result[COLOR_BTNFACE]) >= least) then exit;
+    end;
+  end;
+
+begin
+  result := pal;
+  // the fill of a button and the faint rules, the outline of a field or a
+  // button, the outline of a check mark or under the mouse, the outline of a
+  // pressed control
+  lift(COLOR_3DLIGHT, 1.3);
+  lift(COLOR_BTNHIGHLIGHT, 2);
+  lift(COLOR_BTNSHADOW, 3);
+  lift(COLOR_WINDOWFRAME, 4.5);
+  lift(COLOR_3DDKSHADOW, 4.5);
+  lift(COLOR_GRAYTEXT, 3);
+  // the selection doubles as the color of a value: a filled range, a bar
+  liftSelection(3);
 end;
 
 function lightPalette: TPalette;

@@ -197,7 +197,8 @@ begin
     // the corner where the two bars meet
     s('scrolledwindow junction')+' { background-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-image: none; }'+
     s('scale trough, progressbar trough')+' { background-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-color: '+shadow+'; background-image: none; }'+
-    s('scale highlight, progressbar progress')+' { background-color: '+highlight+'; border-color: '+highlight+'; background-image: none; }'+
+    s('scale highlight')+' { background-color: '+highlight+'; border-color: '+highlight+'; background-image: none; }'+
+    s('progressbar progress')+' { background-color: '+hex(pal[COLOR_HOTLIGHT])+'; border-color: '+hex(pal[COLOR_HOTLIGHT])+'; background-image: none; }'+
     // separators and tooltips
     s('separator, paned > separator')+' { background-color: '+shadow+'; background-image: none; }'+
     s('tooltip, tooltip.background, tooltip *')+' { background-color: '+hex(pal[COLOR_INFOBK])+'; color: '+hex(pal[COLOR_INFOTEXT])+'; '+

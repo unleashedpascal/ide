@@ -61,10 +61,10 @@ var
 
 procedure applyTheme(const pal: TPalette);
 begin
-  current := pal;
+  current := legiblePalette(pal);
   active := true;
   {$if defined(LCLWin32) or defined(LCLGtk3)}
-  applyPalette(pal);
+  applyPalette(current);
   {$endif}
 end;
 
