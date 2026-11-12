@@ -9,7 +9,7 @@ interface
 
 uses
   AppTheme, RangeSlider, ControlPaint, ToggleSwitch, SearchEdit, SplitButton, 
-  LinkLabel, SegmentedControl, ColorPickers, BusyIndicator, ProgressRing, 
+  LinkLabel, SegmentedControl, ColorPickers, BusyIndicator, ProgressRing, ProgressLine, 
   SuggestEdit, Badge, Rating, Led, Sparkline, Marquee, Knob, Gauge, Clock, 
   RichLabel, PasswordEdit, HotKeyEdit, DurationEdit, ImageViewer, QRCode, 
   JsonTreeView, TagEditor, LogView, DropZone, DateRangePicker, TimelineView, 

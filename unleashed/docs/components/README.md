@@ -1,6 +1,6 @@
 # Unleashed Components
 
-101 components for LCL applications, in one package: `components/unleashedcomponents`. They draw through the theme engine, so a `TAppTheme` on the main form recolors all of them together with the native controls, and they are written for Windows and Linux alike, with no platform-specific code paths.
+102 components for LCL applications, in one package: `components/unleashedcomponents`. They draw through the theme engine, so a `TAppTheme` on the main form recolors all of them together with the native controls, and they are written for Windows and Linux alike, with no platform-specific code paths.
 
 Each page below has the properties, the events, the runtime methods, a usage example that compiles as written, and pictures from the demo application: the component as it sits on the form, its states (a drop-down open, a panel folded, a dialog up) and, where it has one, every value of its style property.
 
@@ -39,6 +39,7 @@ Each page below has the properties, the events, the runtime methods, a usage exa
 | [`TLed`](led.md) | an indicator light: on, off or blinking, with a caption beside it |
 | [`TSevenSegment`](sevensegment.md) | a seven segment display: digits, the hex letters and the letters the segments can form, a decimal point after any digit and colons between them |
 | [`TProgressRing`](progressring.md) | progress as an arc closing a ring, the number in the middle |
+| [`TProgressLine`](progressline.md) | progress as a bar filling from one end, the number over it; the part still to do can keep moving while the position holds |
 | [`TBusyIndicator`](busyindicator.md) | an activity marker for a wait of unknown length |
 | [`TGauge`](gauge.md) | a dial: an arc scale from StartAngle through SweepAngle, colored zones on it, a needle at the value and the number below |
 | [`TSparkline`](sparkline.md) | a tiny chart without axes: a line, a filled area or bars over the last MaxPoints values |

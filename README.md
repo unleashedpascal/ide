@@ -62,7 +62,7 @@ The `UnleashedComponents` package adds seven pages to the palette. Every compone
 | Page | Components |
 |---|---|
 | **Input** | `TAppTheme`, `TSearchEdit`, `TSuggestEdit`, `TPasswordEdit`, `TNumberBox`, `THotKeyEdit`, `TDurationEdit`, `TDatePicker`, `TDateRangePicker`, `TTagEditor`, `TColorPicker`, `TFontComboBox`, `TRangeSlider`, `TToggleSwitch`, `TSegmentedControl`, `TKnob`, `TRating`, `TSplitButton`, `TDropZone`, `TColorSwatchButton`, `TCheckComboBox` |
-| **Display** | `TBadge`, `TAvatar`, `TLed`, `TSevenSegment`, `TProgressRing`, `TBusyIndicator`, `TGauge`, `TSparkline`, `TStatCard`, `TClock`, `TRichLabel`, `TLinkLabel`, `TMarquee`, `TQRCode`, `TBarcode`, `TCountdown`, `TChartLite`, `TMarkdownLabel`, `TPlotCanvas`, `THeatmapCalendar` |
+| **Display** | `TBadge`, `TAvatar`, `TLed`, `TSevenSegment`, `TProgressRing`, `TProgressLine`, `TBusyIndicator`, `TGauge`, `TSparkline`, `TStatCard`, `TClock`, `TRichLabel`, `TLinkLabel`, `TMarquee`, `TQRCode`, `TBarcode`, `TCountdown`, `TChartLite`, `TMarkdownLabel`, `TPlotCanvas`, `THeatmapCalendar` |
 | **Views** | `TCalendarView`, `TImageViewer`, `TLogView`, `TTerminalView`, `TJsonTreeView`, `TTimelineView`, `TEmptyState`, `TDataTable`, `TPropertyGrid`, `TKanbanBoard`, `THexEditor`, `TDiffView`, `TImageCropper`, `TFolderTree`, `TFileList`, `TPaintCanvas`, `TGanttChart`, `TNodeEditor`, `TSchedulerView`, `TTreeGrid` |
 | **Layout** | `TCardPanel`, `TExpanderPanel`, `TAccordion`, `TCheckGroupBox`, `TStackPanel`, `TGridPanel`, `TFormLayout`, `TSplitView`, `TDivider`, `TCarousel`, `TDockPanel` |
 | **Navigation** | `TSideNav`, `TTabStrip`, `TCommandBar`, `TBreadcrumbBar`, `TWizardControl`, `TPageIndicator`, `TCommandPalette` |
