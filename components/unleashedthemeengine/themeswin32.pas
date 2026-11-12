@@ -467,6 +467,60 @@ begin
   end;
 end;
 
+var
+  // the top level windows whose painting is held while a palette goes on
+  frozen: array of HWND = nil;
+
+function freezeTopLevel(wnd: HWND; lParam: LPARAM): BOOL; stdcall;
+begin
+  result := true;
+  if not isTagged(wnd) or not IsWindowVisible(wnd) then exit;
+  SendMessage(wnd, WM_SETREDRAW, 0, 0);
+  frozen += [wnd];
+end;
+
+// holds the painting of every window on screen until thawWindows
+procedure freezeWindows;
+begin
+  frozen := [];
+  EnumThreadWindows(GetCurrentThreadId, @freezeTopLevel, 0);
+end;
+
+// a held window reads as hidden to IsWindowVisible
+function windowShown(wnd: HWND): boolean;
+begin
+  result := IsWindowVisible(wnd);
+  if not result then for var w in frozen do if w = wnd then exit(true);
+end;
+
+function isFrozen(wnd: HWND): boolean;
+begin
+  result := false;
+  for var w in frozen do if w = wnd then exit(true);
+end;
+
+// lets the held windows paint again and repaints each as one composited
+// frame; the list stays for the caller, which clears it
+procedure thawWindows;
+begin
+  for var wnd in frozen do begin
+    if not IsWindow(wnd) then continue;
+    var ex := GetWindowLongPtrW(wnd, GWL_EXSTYLE);
+    var composite := (ex and WS_EX_COMPOSITED) = 0;
+    if composite then begin
+      SetWindowLongPtrW(wnd, GWL_EXSTYLE, ex or WS_EX_COMPOSITED);
+      SetWindowPos(wnd, 0, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOZORDER or SWP_NOACTIVATE or SWP_FRAMECHANGED or SWP_NOREDRAW);
+    end;
+    SendMessage(wnd, WM_SETREDRAW, 1, 0);
+    RedrawWindow(wnd, nil, 0, RDW_INVALIDATE or RDW_ERASE or RDW_FRAME or RDW_ALLCHILDREN or RDW_UPDATENOW);
+    if GetMenu(wnd) <> 0 then DrawMenuBar(wnd);
+    if composite then begin
+      SetWindowLongPtrW(wnd, GWL_EXSTYLE, ex);
+      SetWindowPos(wnd, 0, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOZORDER or SWP_NOACTIVATE or SWP_FRAMECHANGED or SWP_NOREDRAW);
+    end;
+  end;
+end;
+
 function ours(wnd: HWND): boolean;
 begin
   result := (wnd = 0) or ((foreignCreations = 0) and ((ownCreations > 0) or isTagged(wnd)));
@@ -2140,7 +2194,7 @@ begin
     var menu := GetMenu(wnd);
     if menu <> 0 then setMenuBackground(menu, dark);
     // a window still under construction picks the frame up when it shows
-    if IsWindowVisible(wnd) then begin
+    if windowShown(wnd) then begin
       SetWindowPos(wnd, 0, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOZORDER or SWP_NOACTIVATE or SWP_FRAMECHANGED);
       // DWM repaints the caption only on an activation change, so toggle it
       // and settle on the real state
@@ -2284,7 +2338,7 @@ end;
 function redrawTopLevel(wnd: HWND; lParam: LPARAM): BOOL; stdcall;
 begin
   result := true;
-  if not isTagged(wnd) then exit;
+  if not isTagged(wnd) or isFrozen(wnd) then exit;
   RedrawWindow(wnd, nil, 0, RDW_INVALIDATE or RDW_ERASE or RDW_FRAME or RDW_ALLCHILDREN or RDW_UPDATENOW);
   if GetMenu(wnd) <> 0 then DrawMenuBar(wnd);
 end;
@@ -2317,7 +2371,9 @@ begin
     var form := Screen.CustomForms[i];
     if not (csDesigning in form.ComponentState) then refreshControl(form);
   end;
+  thawWindows;
   EnumThreadWindows(GetCurrentThreadId, @redrawTopLevel, 0);
+  frozen := [];
 end;
 
 // -- hook installation ----------------------------------------------------
@@ -2535,6 +2591,7 @@ end;
 procedure applyPalette(const newPal: TPalette);
 begin
   ensureHooks;
+  freezeWindows;
   pal := newPal;
   var r, g, b: byte;
   RedGreenBlue(pal[COLOR_BTNFACE], r, g, b);
@@ -2558,6 +2615,7 @@ end;
 procedure dropPalette;
 begin
   if not active then exit;
+  freezeWindows;
   active := false;
   darkLook := false;
   setAppMode(false);
