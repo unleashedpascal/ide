@@ -23,7 +23,8 @@ type
   TToastKind = (tkInfo, tkSuccess, tkWarning, tkError, tkPlain);
   // where the notices stack up
   TToastPosition = (tpTopLeft, tpTopCenter, tpTopRight, tpBottomLeft, tpBottomCenter, tpBottomRight, tpCenter);
-  // the area the position refers to: the screen, or the form owning the component
+  // the area the position refers to: the screen, or the form owning the component;
+  // notices in the form follow it when it moves or changes its size
   TToastAnchor = (taScreen, taOwnerForm);
   // where the color of the kind shows: a strip along one edge, the whole
   // border, a tint of the surface, or only the icon
@@ -81,11 +82,15 @@ type
 
   // shows notices in a corner of the screen or of its form: a title, a text,
   // an icon after the kind, a close button and a bar running out with the
-  // time left. The notices stack and fade in and out
+  // time left. The notices stack and fade in and out; in the form they move
+  // with it
   TToast = class(TComponent)
   private
     FWindows: TList;
     FTimer: TTimer;
+    FPlaced: TRect; // the area the notices were placed in last
+    FFollowing: TCustomForm; // the form whose moves the notices follow
+    FRestack: boolean; // the stack changed under the mouse and waits for it to leave
     FFont: TFont;
     FPosition: TToastPosition;
     FAnchor: TToastAnchor;
@@ -96,6 +101,10 @@ type
     FAntialiasing: TAntialiasSetting;
     FOnClick, FOnClosed: TToastEvent;
     FOnClose: TToastCloseEvent;
+    procedure follow(form: TCustomForm);
+    function held: boolean;
+    procedure restack;
+    procedure formMoved(Sender: TObject);
     procedure setFont(value: TFont);
     procedure setMetric(index: integer; value: integer);
     function getMetric(index: integer): integer;
@@ -158,7 +167,8 @@ type
     property ClickToClose: boolean index 4 read getFlag write setFlag default true;
     // the newest notice sits next to the edge, the older ones move away
     property NewestFirst: boolean index 5 read getFlag write setFlag default true;
-    // the time stands still while the mouse is on the notice
+    // the time stands still while the mouse is on the notice, and the stack
+    // keeps its places until the mouse leaves
     property PauseOnHover: boolean index 6 read getFlag write setFlag default true;
     property Font: TFont read FFont write setFont;
     // clDefault takes the colors of the theme
@@ -183,7 +193,7 @@ type
 implementation
 
 uses
-  Math, LCLIntf;
+  Math, LCLIntf, PopupWindow;
 
 const
   // a color no notice paints, so the corners carrying it can be see-through
@@ -447,6 +457,7 @@ begin
     FShown += GetTickCount64-FPaused;
     FPaused := 0;
   end;
+  if FOwnerToast.FRestack then FOwnerToast.restack;
   if FHotClose then begin
     FHotClose := false;
     Invalidate;
@@ -498,6 +509,7 @@ end;
 
 destructor TToast.Destroy;
 begin
+  follow(nil);
   FTimer.Enabled := false;
   for var i := FWindows.Count-1 downto 0 do TToastWindow(FWindows[i]).Free;
   FWindows.Free;
@@ -520,7 +532,7 @@ begin
   w.Font := FFont;
   w.Color := pick(FSurfaceColor, blend(clWindow, clBtnFace, 40));
   FWindows.Add(w);
-  arrange;
+  restack;
   syncTimer;
 end;
 
@@ -592,11 +604,59 @@ begin
   result := h+pad*2+(if FShowProgress and (FDuration > 0) then ControlPaint.scaled(w, 6) else 0);
 end;
 
+// the notices of a form hear of its every move, so they go with it at once
+procedure TToast.follow(form: TCustomForm);
+begin
+  if form = FFollowing then exit;
+  unwatchFormBounds(FFollowing, @formMoved);
+  FFollowing := form;
+  watchFormBounds(form, @formMoved);
+end;
+
+procedure TToast.formMoved(Sender: TObject);
+begin
+  if FWindows.Count = 0 then exit;
+  var r := area;
+  if EqualRect(r, FPlaced) then exit;
+  // a move shifts them as they stand; a new size places them again
+  if (r.Width <> FPlaced.Width) or (r.Height <> FPlaced.Height) then begin
+    arrange;
+    exit;
+  end;
+  var dx := r.Left-FPlaced.Left;
+  var dy := r.Top-FPlaced.Top;
+  FPlaced := r;
+  for var i := 0 to FWindows.Count-1 do begin
+    var w := TToastWindow(FWindows[i]);
+    w.SetBounds(w.Left+dx, w.Top+dy, w.Width, w.Height);
+  end;
+end;
+
+// a notice under the mouse waits there
+function TToast.held: boolean;
+begin
+  result := false;
+  if not FPauseOnHover then exit;
+  for var i := 0 to FWindows.Count-1 do begin
+    var w := TToastWindow(FWindows[i]);
+    if w.Visible and (w.FPaused <> 0) and not w.FClosing then exit(true);
+  end;
+end;
+
+// arranges the stack once no notice is under the mouse
+procedure TToast.restack;
+begin
+  FRestack := held;
+  if not FRestack then arrange;
+end;
+
 // every notice gets its place in the stack; the ones past MaxVisible wait
 // hidden until a place frees up
 procedure TToast.arrange;
 begin
+  follow(if (FAnchor = taOwnerForm) and (Owner is TCustomForm) then TCustomForm(Owner) else nil);
   var r := area;
+  FPlaced := r;
   var heights: array of integer;
   SetLength(heights, FWindows.Count);
   var total := 0;
@@ -652,6 +712,8 @@ end;
 
 procedure TToast.tick(Sender: TObject);
 begin
+  // a move made by code reaches the window after the form heard of it
+  if (FAnchor = taOwnerForm) and not EqualRect(area, FPlaced) then formMoved(nil);
   var now := GetTickCount64;
   var step := if FAnimated and (FFadeTime > 0) then Max(FOpacity*integer(FTimer.Interval) div FFadeTime, 1) else FOpacity;
   var gone := false;
@@ -682,7 +744,7 @@ begin
       if not w.FClosing then w.FShown := now;
     end else if FShowProgress and (FDuration > 0) then w.Invalidate;
   end;
-  if gone then arrange;
+  if gone then restack;
   syncTimer;
 end;
 

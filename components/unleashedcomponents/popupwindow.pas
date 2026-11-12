@@ -24,14 +24,15 @@ type
   // a window that drops from a control and never takes the activation, so
   // the control keeps the keyboard and its form keeps its look. A click
   // anywhere else, a switch to another application or the form of the
-  // anchor moving fire OnDismiss; without a handler the popup just closes
+  // anchor moving fire OnDismiss; without a handler the popup just closes.
+  // With OnAnchorMoved set, the form moving fires that one instead
   TDropPopup = class(THintWindow)
   private
     FAnchor: TControl;
     FAnchorForm: TCustomForm;
     FWatching, FFramed: boolean;
     FBorderColor: TColor;
-    FOnDismiss: TNotifyEvent;
+    FOnDismiss, FOnAnchorMoved: TNotifyEvent;
     procedure userInput(Sender: TObject; var Msg: TLMessage);
     procedure appDeactivate(Sender: TObject);
     procedure formMoved(Sender: TObject);
@@ -62,12 +63,81 @@ type
     // clDefault takes the color of the theme
     property BorderColor: TColor read FBorderColor write FBorderColor;
     property OnDismiss: TNotifyEvent read FOnDismiss write FOnDismiss;
+    // the form of the anchor moved or changed its size; a popup that follows
+    // its anchor places itself again here instead of closing
+    property OnAnchorMoved: TNotifyEvent read FOnAnchorMoved write FOnAnchorMoved;
   end;
+
+// `handler` runs inside the message that moved or resized `form`, so what
+// follows the form stays on it at every step of a drag; the handlers of
+// OnChangeBounds come only once the layout of the form has settled
+procedure watchFormBounds(form: TCustomForm; handler: TNotifyEvent);
+procedure unwatchFormBounds(form: TCustomForm; handler: TNotifyEvent);
 
 implementation
 
 uses
-  Math, ControlPaint;
+  Math, LazMethodList, ControlPaint;
+
+type
+  // sits in front of the window procedure of its form for as long as the
+  // form lives, and tells the listeners of every move and resize
+  TFormBoundsWatch = class(TComponent)
+  private
+    FForm: TCustomForm;
+    FNext: TWndMethod;
+    FHandlers: TMethodList;
+    procedure proc(var msg: TLMessage);
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+  end;
+
+constructor TFormBoundsWatch.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FForm := AOwner as TCustomForm;
+  FHandlers := TMethodList.Create;
+  FNext := FForm.WindowProc;
+  FForm.WindowProc := @proc;
+end;
+
+destructor TFormBoundsWatch.Destroy;
+begin
+  // components go in the reverse order of their creation, so whoever stepped
+  // in front later has stepped back by now
+  if TMethod(FForm.WindowProc).Data = pointer(self) then FForm.WindowProc := FNext;
+  FHandlers.Free;
+  inherited Destroy;
+end;
+
+procedure TFormBoundsWatch.proc(var msg: TLMessage);
+begin
+  FNext(msg);
+  if (msg.Msg = LM_MOVE) or (msg.Msg = LM_SIZE) then FHandlers.CallNotifyEvents(FForm);
+end;
+
+function watchOf(form: TCustomForm; make: boolean): TFormBoundsWatch;
+begin
+  for var i := 0 to form.ComponentCount-1 do
+    if form.Components[i] is TFormBoundsWatch then exit(TFormBoundsWatch(form.Components[i]));
+  result := if make then TFormBoundsWatch.Create(form) else nil;
+end;
+
+procedure watchFormBounds(form: TCustomForm; handler: TNotifyEvent);
+begin
+  if (form = nil) or (csDestroying in form.ComponentState) then exit;
+  var watch := watchOf(form, true);
+  watch.FHandlers.Remove(TMethod(handler));
+  watch.FHandlers.Add(TMethod(handler));
+end;
+
+procedure unwatchFormBounds(form: TCustomForm; handler: TNotifyEvent);
+begin
+  if form = nil then exit;
+  var watch := watchOf(form, false);
+  if watch <> nil then watch.FHandlers.Remove(TMethod(handler));
+end;
 
 constructor TDropPopup.Create(AOwner: TComponent);
 begin
@@ -169,11 +239,11 @@ begin
     Application.AddOnUserInputHandler(@userInput);
     Application.AddOnDeactivateHandler(@appDeactivate);
     FAnchorForm := if FAnchor <> nil then GetParentForm(FAnchor) else nil;
-    if FAnchorForm <> nil then FAnchorForm.AddHandlerOnChangeBounds(@formMoved);
+    watchFormBounds(FAnchorForm, @formMoved);
   end else begin
     Application.RemoveOnUserInputHandler(@userInput);
     Application.RemoveOnDeactivateHandler(@appDeactivate);
-    if FAnchorForm <> nil then FAnchorForm.RemoveHandlerOnChangeBounds(@formMoved);
+    unwatchFormBounds(FAnchorForm, @formMoved);
     FAnchorForm := nil;
   end;
 end;
@@ -207,7 +277,8 @@ end;
 
 procedure TDropPopup.formMoved(Sender: TObject);
 begin
-  if Visible then dismiss;
+  if not Visible then exit;
+  if Assigned(FOnAnchorMoved) then FOnAnchorMoved(self) else dismiss;
 end;
 
 procedure TDropPopup.dismiss;

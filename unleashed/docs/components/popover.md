@@ -1,6 +1,6 @@
 # TPopover
 
-A bubble with an arrow pointing at a control: a title and text, or a control of the form shown inside it. It never takes the focus from the form; a click elsewhere, Escape or a switch to another application closes it, unless LightDismiss is off.
+A bubble with an arrow pointing at a control: a title and text, or a control of the form shown inside it. It never takes the focus from the form; a click elsewhere, Escape or a switch to another application closes it, unless LightDismiss is off. It moves with the form of its target.
 
 - Palette page: Unleashed: Feedback
 - Unit: `popover.pas`

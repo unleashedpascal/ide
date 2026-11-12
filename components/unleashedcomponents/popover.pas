@@ -49,7 +49,8 @@ type
   // a bubble with an arrow pointing at a control: a title and text, or a
   // control of the form shown inside it. It never takes the focus from the
   // form; a click elsewhere, Escape or a switch to another application
-  // closes it, unless LightDismiss is off
+  // closes it, unless LightDismiss is off. It moves with the form of its
+  // target
   TPopover = class(TComponent)
   private
     FTitle, FText: string;
@@ -68,6 +69,8 @@ type
     procedure setFont(value: TFont);
     procedure keyBefore(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure windowDismiss(Sender: TObject);
+    procedure windowFollow(Sender: TObject);
+    procedure place(target: TControl);
     function wrap(canvas: TCanvas; const text: string; width: integer): TStringArray;
     procedure measure(out w, h: integer);
     procedure restoreContent;
@@ -374,12 +377,21 @@ begin
   if FWindow = nil then begin
     FWindow := TPopoverWindow.CreateFor(self);
     FWindow.OnDismiss := @windowDismiss;
+    FWindow.OnAnchorMoved := @windowFollow;
   end;
   if FTarget <> target then begin
     if FTarget <> nil then FTarget.RemoveFreeNotification(self);
     FTarget := target;
     FTarget.FreeNotification(self);
   end;
+  place(target);
+  if FLightDismiss then Application.AddOnKeyDownBeforeHandler(@keyBefore);
+  if Assigned(FOnShow) then FOnShow(self);
+end;
+
+// the bubble at the target, on the side with room for it, the content inside
+procedure TPopover.place(target: TControl);
+begin
   FWindow.HandleNeeded;
   FWindow.Font := FFont;
   var w, h: integer;
@@ -439,8 +451,6 @@ begin
     FContent.SetBounds(b.Left+pad, b.Top+pad+(if FShowCloseButton then ControlPaint.scaled(FWindow, 14) else 0), FContent.Width, FContent.Height);
     FContent.Visible := true;
   end;
-  if FLightDismiss then Application.AddOnKeyDownBeforeHandler(@keyBefore);
-  if Assigned(FOnShow) then FOnShow(self);
 end;
 
 procedure TPopover.restoreContent;
@@ -459,10 +469,16 @@ begin
   if Assigned(FOnClose) then FOnClose(self);
 end;
 
-// a click elsewhere, a switch away or the form moving
+// a click elsewhere or a switch away
 procedure TPopover.windowDismiss(Sender: TObject);
 begin
   if FLightDismiss then Close;
+end;
+
+// the form of the target moved: the bubble goes with it
+procedure TPopover.windowFollow(Sender: TObject);
+begin
+  if IsOpen and (FTarget <> nil) then place(FTarget);
 end;
 
 procedure TPopover.keyBefore(Sender: TObject; var Key: Word; Shift: TShiftState);

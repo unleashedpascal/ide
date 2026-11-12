@@ -33,7 +33,7 @@ end;
 | Property | Type | Default | Notes |
 |---|---|---|---|
 | `Position` | `TToastPosition` | `tpBottomRight` | where the notices stack up |
-| `Anchor` | `TToastAnchor` | `taScreen` | the area the position refers to: the screen, or the form owning the component |
+| `Anchor` | `TToastAnchor` | `taScreen` | the area the position refers to: the screen, or the form owning the component; notices in the form follow it when it moves or changes its size |
 | `Duration` | `integer` | `4000` | milliseconds a notice stays; 0 keeps it until closed |
 | `Width` | `integer` | `320` | the width in pixels |
 | `Margin` | `integer` | `16` | from the edge of the area |
@@ -53,7 +53,7 @@ end;
 | `Animated` | `boolean` | `true` | changes are animated |
 | `ClickToClose` | `boolean` | `true` | a click anywhere on the notice closes it, after OnClick |
 | `NewestFirst` | `boolean` | `true` | the newest notice sits next to the edge, the older ones move away |
-| `PauseOnHover` | `boolean` | `true` | the time stands still while the mouse is on the notice |
+| `PauseOnHover` | `boolean` | `true` | the time stands still while the mouse is on the notice, and the stack keeps its places: the notice does not slide away when another one leaves |
 | `Font` | `TFont` |  | the font of the text |
 | `SurfaceColor` | `TColor` | `clDefault` | clDefault takes the colors of the theme |
 | `BorderColor` | `TColor` | `clDefault` | clDefault takes the color of the theme |
@@ -96,7 +96,7 @@ Available in code, not in the Object Inspector.
 |---|---|---|
 | `TToastKind` | `tkInfo`, `tkSuccess`, `tkWarning`, `tkError`, `tkPlain` | the icon and the accent of a notice; tkPlain carries neither |
 | `TToastPosition` | `tpTopLeft`, `tpTopCenter`, `tpTopRight`, `tpBottomLeft`, `tpBottomCenter`, `tpBottomRight`, `tpCenter` | where the notices stack up |
-| `TToastAnchor` | `taScreen`, `taOwnerForm` | the area the position refers to: the screen, or the form owning the component |
+| `TToastAnchor` | `taScreen`, `taOwnerForm` | the area the position refers to: the screen, or the form owning the component; notices in the form follow it when it moves or changes its size |
 | `TToastAccentStyle` | `acLeftStrip`, `acTopStrip`, `acRightStrip`, `acBottomStrip`, `acBorder`, `acTint`, `acNone` | where the color of the kind shows: a strip along one edge, the whole border, a tint of the surface, or only the icon |
 
 ## In pictures
