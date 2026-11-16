@@ -1,6 +1,6 @@
 # Unleashed Components
 
-103 components for LCL applications, in one package: `components/unleashedcomponents`. They draw through the theme engine, so a `TAppTheme` on the main form recolors all of them together with the native controls, and they are written for Windows and Linux alike, with no platform-specific code paths.
+104 components for LCL applications, in one package: `components/unleashedcomponents`. They draw through the theme engine, so a `TAppTheme` on the main form recolors all of them together with the native controls, and they are written for Windows and Linux alike, with no platform-specific code paths.
 
 Each page below has the properties, the events, the runtime methods, a usage example that compiles as written, and pictures from the demo application: the component as it sits on the form, its states (a drop-down open, a panel folded, a dialog up) and, where it has one, every value of its style property.
 
@@ -126,6 +126,7 @@ Each page below has the properties, the events, the runtime methods, a usage exa
 | [`TProgressDialog`](progressdialog.md) | a window with a bar for work that takes a while, driven by the code doing it: Start, then Position or Step as the work goes, then Finish |
 | [`TTourGuide`](tourguide.md) | a guided tour of a form: one callout per step, each pointing at a control, with Next, Back and Skip |
 | [`TNotificationCenter`](notificationcenter.md) | the list of what happened: a card per notification with a title, a text, the time it came and a close cross, unread ones marked |
+| [`TIconBadge`](iconbadge.md) | paints a badge over the icon of the application, so it shows on the taskbar button, and over a tray icon when one is linked: a dot, a counter, a short text, a frame or a progress bar, still or animated |
 
 ## System
 

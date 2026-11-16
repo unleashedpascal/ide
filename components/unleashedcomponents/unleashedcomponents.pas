@@ -25,7 +25,7 @@ uses
   PlotCanvas, MultiSelectComboBox, HeatmapCalendar, HexEditor, DiffView, 
   ImageCropper, FolderTree, FileList, PaintCanvas, GanttChart, NodeEditor, 
   SchedulerView, TreeGrid, DockPanel, ChatView, CodeReaders, ThemeSwitch, 
-  ContentPanel, LazarusPackageIntf;
+  ContentPanel, IconBadge, LazarusPackageIntf;
 
 implementation
 

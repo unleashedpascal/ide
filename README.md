@@ -66,7 +66,7 @@ The `UnleashedComponents` package adds seven pages to the palette. Every compone
 | **Views** | `TCalendarView`, `TImageViewer`, `TLogView`, `TTerminalView`, `TJsonTreeView`, `TTimelineView`, `TEmptyState`, `TDataTable`, `TPropertyGrid`, `TKanbanBoard`, `THexEditor`, `TDiffView`, `TImageCropper`, `TFolderTree`, `TFileList`, `TPaintCanvas`, `TGanttChart`, `TNodeEditor`, `TSchedulerView`, `TTreeGrid` |
 | **Layout** | `TContentPanel`, `TCardPanel`, `TExpanderPanel`, `TAccordion`, `TCheckGroupBox`, `TStackPanel`, `TGridPanel`, `TFormLayout`, `TSplitView`, `TDivider`, `TCarousel`, `TDockPanel` |
 | **Navigation** | `TSideNav`, `TTabStrip`, `TCommandBar`, `TBreadcrumbBar`, `TWizardControl`, `TPageIndicator`, `TCommandPalette` |
-| **Feedback** | `TToast`, `TInfoBar`, `TPopover`, `TOverlayPanel`, `TSplashScreen`, `TProgressDialog`, `TTourGuide`, `TNotificationCenter` |
+| **Feedback** | `TToast`, `TInfoBar`, `TPopover`, `TOverlayPanel`, `TSplashScreen`, `TProgressDialog`, `TTourGuide`, `TNotificationCenter`, `TIconBadge` |
 | **System** | `TAnimator`, `TValidator`, `TDebouncer`, `TBackgroundTask`, `TUndoStack`, `TRecentFiles`, `TSingleInstance`, `TSerialPort`, `TSettingsStore`, `TShortcutMap` |
 
 Each component has its own page with the properties, the events, the runtime methods, a usage example that compiles as written and a picture from the demo application: [unleashed/docs/components/README.md](unleashed/docs/components/README.md).

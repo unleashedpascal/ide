@@ -441,6 +441,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="contentpanel.pas"/>
         <UnitName Value="ContentPanel"/>
       </Item>
+      <Item>
+        <Filename Value="iconbadge.pas"/>
+        <UnitName Value="IconBadge"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>
