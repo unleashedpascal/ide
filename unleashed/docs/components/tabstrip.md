@@ -42,14 +42,14 @@ end;
 |---|---|---|---|
 | `Tabs` | `TTabStripItems` |  |  |
 | `TabIndex` | `integer` | `-1` |  |
-| `Style` | `TTabStripStyle` | `tssUnderline` | the look of the tabs: an underline under the active one, pills, boxes open at the bottom, framed cards, buttons, a frame around the active one |
+| `Style` | `TTabStripStyle` | `tssUnderline` | the look of the tabs: an underline under the active one, pills, boxes open at the bottom, framed cards, buttons, a frame around the active one, the square tabs of a page control, slanted tabs that overlap |
 | `CloseButtons` | `TTabCloseButtons` | `tcbHover` |  |
 | `ShowAddButton` | `boolean` | `false` | a plus after the tabs; OnAddClick does the rest |
 | `AllowReorder` | `boolean` | `true` | a drag moves a tab |
 | `MinTabWidth` | `integer` | `60` |  |
 | `MaxTabWidth` | `integer` | `200` | 0 lets a tab grow with its caption |
 | `TabPadding` | `integer` | `12` |  |
-| `Spacing` | `integer` | `2` | the gap between the parts |
+| `Spacing` | `integer` | `2` | the gap between the tabs; the classic tabs always touch |
 | `CornerRadius` | `integer` | `6` | the rounding of the corners, in pixels |
 | `ImagesWidth` | `integer` | `0` | the width of the picture to pick from a multi-resolution list, 0 for the first |
 | `Images` | `TCustomImageList` |  | the image list the pictures come from |
@@ -108,7 +108,7 @@ Available in code, not in the Object Inspector.
 
 | Type | Values | Notes |
 |---|---|---|
-| `TTabStripStyle` | `tssUnderline`, `tssPills`, `tssBoxes`, `tssCards`, `tssButtons`, `tssOutline` | the look of the tabs: an underline under the active one, pills, boxes open at the bottom, framed cards, buttons, a frame around the active one |
+| `TTabStripStyle` | `tssUnderline`, `tssPills`, `tssBoxes`, `tssCards`, `tssButtons`, `tssOutline`, `tssClassic`, `tssTrapezoid` | the look of the tabs: an underline under the active one, pills, boxes open at the bottom, framed cards, buttons, a frame around the active one, the square tabs of a page control, slanted tabs that overlap |
 | `TTabCloseButtons` | `tcbNone`, `tcbActive`, `tcbHover`, `tcbAll` |  |
 
 ## Custom drawing

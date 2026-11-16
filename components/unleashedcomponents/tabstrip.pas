@@ -21,8 +21,9 @@ uses
 type
   TTabStrip = class;
   // the look of the tabs: an underline under the active one, pills, boxes
-  // open at the bottom, framed cards, buttons, a frame around the active one
-  TTabStripStyle = (tssUnderline, tssPills, tssBoxes, tssCards, tssButtons, tssOutline);
+  // open at the bottom, framed cards, buttons, a frame around the active one,
+  // the square tabs of a page control, slanted tabs that overlap
+  TTabStripStyle = (tssUnderline, tssPills, tssBoxes, tssCards, tssButtons, tssOutline, tssClassic, tssTrapezoid);
   TTabCloseButtons = (tcbNone, tcbActive, tcbHover, tcbAll);
   TTabCloseEvent = procedure(Sender: TObject; index: integer; var canClose: boolean) of object;
   TTabMovedEvent = procedure(Sender: TObject; fromIndex, toIndex: integer) of object;
@@ -106,6 +107,9 @@ type
     procedure setImages(value: TCustomImageList);
     procedure setAntialiasing(value: TAntialiasSetting);
     function tabWidth(index: integer): integer;
+    function gap: integer;
+    function overhang: integer;
+    function lowered: integer;
     function arrowsShown: boolean;
     function tabsArea: TRect;
     function tabRect(index: integer): TRect;
@@ -156,6 +160,7 @@ type
     // 0 lets a tab grow with its caption
     property MaxTabWidth: integer index 1 read getMetric write setMetric default 200;
     property TabPadding: integer index 2 read getMetric write setMetric default 12;
+    // the gap between the tabs; the classic tabs always touch
     property Spacing: integer index 3 read getMetric write setMetric default 2;
     property CornerRadius: integer index 4 read getMetric write setMetric default 6;
     property ImagesWidth: integer index 5 read getMetric write setMetric default 0;
@@ -358,9 +363,38 @@ end;
 
 // -- geometry ----------------------
 
+// the width of the slanted sides of a trapezoid tab
+const
+  TAB_SLANT = 14;
+
+// a tab with slanted sides and rounded corners, open at the bottom, where
+// the feet flare out onto the line under the row
+function slantedTab(left, top, right, bottom, slant, radius: single): TOutline;
+begin
+  result := [];
+  // a quadratic curve from a to b, bent towards the corner c
+  var bend := procedure(ax, ay, cx, cy, bx, by: single; var into: TOutline)
+  begin
+    for var n := 0 to 4 do begin
+      var t := n/4;
+      into += [PointF(sqr(1-t)*ax+2*t*(1-t)*cx+sqr(t)*bx, sqr(1-t)*ay+2*t*(1-t)*cy+sqr(t)*by)];
+    end;
+  end;
+  var half := slant/2;
+  var len := sqrt(sqr(slant)+sqr(bottom-top));
+  var ux := slant/len*radius;
+  var uy := (bottom-top)/len*radius;
+  bend(left-half-radius, bottom, left-half, bottom, left-half+ux, bottom-uy, result);
+  bend(left+half-ux, top+uy, left+half, top, left+half+radius, top, result);
+  bend(right-half-radius, top, right-half, top, right-half+ux, top+uy, result);
+  bend(right+half-ux, bottom-uy, right+half, bottom, right+half+radius, bottom, result);
+end;
+
 function TTabStrip.tabWidth(index: integer): integer;
 begin
+  // measured in bold, so a tab keeps its width when it gets active
   Canvas.Font := Font;
+  Canvas.Font.Style := Font.Style+[fsBold];
   var t := FTabs[index];
   var w := Canvas.TextWidth(t.FCaption)+2*scaled(self, FTabPadding);
   if (FImages <> nil) and (t.FImageIndex >= 0) then w += FImages.ResolutionForControl[FImagesWidth, self].Width+scaled(self, 6);
@@ -370,10 +404,34 @@ begin
   result := w;
 end;
 
+function TTabStrip.gap: integer;
+begin
+  result := if FStyle = tssClassic then 0 else scaled(self, FSpacing);
+end;
+
+// the room at each end of the row: a margin that keeps the tabs off the
+// edge, and how far the shape of a tab reaches past its rectangle
+function TTabStrip.overhang: integer;
+begin
+  result := scaled(self, 4)+match FStyle of
+    tssClassic: scaled(self, 2);
+    tssTrapezoid: scaled(self, TAB_SLANT) div 2+Min(scaled(self, FCornerRadius), scaled(self, TAB_SLANT) div 2);
+  else
+    0
+  end;
+end;
+
+// how far the shape of a tab starts under the top of its rectangle; the
+// caption, the icon and the cross are centered in what is left
+function TTabStrip.lowered: integer;
+begin
+  result := if FStyle in [tssBoxes, tssCards, tssClassic, tssTrapezoid] then scaled(self, 3) else 0;
+end;
+
 function TTabStrip.contentWidth: integer;
 begin
-  result := 0;
-  for var i := 0 to FTabs.Count-1 do result += tabWidth(i)+scaled(self, FSpacing);
+  result := 2*overhang;
+  for var i := 0 to FTabs.Count-1 do result += tabWidth(i)+gap;
 end;
 
 function TTabStrip.arrowsShown: boolean;
@@ -393,8 +451,8 @@ end;
 
 function TTabStrip.tabRect(index: integer): TRect;
 begin
-  var x := -FScroll;
-  for var i := 0 to index-1 do x += tabWidth(i)+scaled(self, FSpacing);
+  var x := overhang-FScroll;
+  for var i := 0 to index-1 do x += tabWidth(i)+gap;
   var inset := if FStyle = tssPills then scaled(self, 4) else 0;
   result := Rect(x, inset, x+tabWidth(index), ClientHeight-inset);
 end;
@@ -404,7 +462,8 @@ begin
   var r := tabRect(index);
   var size := scaled(self, 16);
   var right := r.Right-scaled(self, 6);
-  result := Rect(right-size, (r.Top+r.Bottom-size) div 2, right, (r.Top+r.Bottom-size) div 2+size);
+  var top := (r.Top+lowered+r.Bottom-size) div 2;
+  result := Rect(right-size, top, right, top+size);
 end;
 
 function TTabStrip.addRect: TRect;
@@ -485,7 +544,7 @@ begin
   var accent := pick(FAccentColor, markShade(clHighlight, back));
   var tabColor := pick(FTabColor, blend(back, clWindowText, 6));
   var activeColor := pick(FActiveTabColor, match FStyle of
-    tssUnderline, tssOutline: back;
+    tssUnderline, tssOutline, tssClassic, tssTrapezoid: back;
     tssButtons: accent;
   else
     blend(back, clWindowText, 14)
@@ -496,8 +555,13 @@ begin
   var radius := scaled(self, FCornerRadius);
   var area := tabsArea;
   var sp := autofree beginShapes(Canvas, ClientRect, back, FAntialiasing);
-  if FStyle = tssUnderline then paintLine(sp, 0, ClientHeight-1, ClientWidth, ClientHeight-1, blend(back, clWindowText, 14), 1);
-  for var i := 0 to FTabs.Count-1 do begin
+  // the line under the row
+  var lined := FStyle in [tssUnderline, tssClassic, tssTrapezoid];
+  if lined then paintLine(sp, 0, ClientHeight-1, ClientWidth, ClientHeight-1, (if FStyle = tssUnderline then blend(back, clWindowText, 14) else outline), 1);
+  var hasActive := (FTabIndex >= 0) and (FTabIndex < FTabs.Count);
+  for var n := 0 to FTabs.Count-1 do begin
+    // the active tab comes last, over its neighbours
+    var i := if not hasActive then n else if n = FTabs.Count-1 then FTabIndex else if n >= FTabIndex then n+1 else n;
     var r := tabRect(i);
     if (r.Right <= 0) or (r.Left >= area.Right) then continue;
     var active := i = FTabIndex;
@@ -531,6 +595,20 @@ begin
         if active then paintRoundRect(sp, box, radius, activeColor, accent, Max(scaled(self, 1), 1))
         else if hot then paintRoundRect(sp, box, radius, hoverColor(back), clNone);
       end;
+      // square tabs that share their frames and stand on the line; the
+      // active one is taller, wider and open to the content
+      tssClassic: if active then paintRoundRect(sp, Rect(r.Left-scaled(self, 2), r.Top+scaled(self, 1), r.Right+1+scaled(self, 2), r.Bottom+2), 0, activeColor, outline)
+        else paintRoundRect(sp, Rect(r.Left, r.Top+scaled(self, 3), r.Right+1, r.Bottom), 0, (if hot then hoverColor(tabColor) else tabColor), outline);
+      // slanted sides that lean over the neighbours; the active tab lies on
+      // top and is open to the content
+      tssTrapezoid: begin
+        var top := r.Top+scaled(self, 3);
+        var slant := scaled(self, TAB_SLANT);
+        var bent := Min(radius, slant div 2);
+        var fill := if active then activeColor else if hot then hoverColor(tabColor) else tabColor;
+        sp.FillPolygon(slantedTab(r.Left, top, r.Right, (if active then r.Bottom else r.Bottom-1), slant, bent), fill);
+        sp.StrokePolyline(slantedTab(r.Left+0.5, top+0.5, r.Right-0.5, r.Bottom-0.5, slant, bent), 1, outline);
+      end;
     else
       begin
         if hot and not active then paintRoundRect(sp, Rect(r.Left, r.Top+scaled(self, 3), r.Right, r.Bottom-scaled(self, 3)), radius, hoverColor(back), clNone);
@@ -550,7 +628,7 @@ begin
   end;
   // the arrows and the plus sit on the background, over the tabs scrolled
   // under them
-  if arrowsShown or FShowAddButton then paintRoundRect(sp, Rect(area.Right, 0, ClientWidth, ClientHeight-(if FStyle = tssUnderline then 1 else 0)), 0, back, clNone);
+  if arrowsShown or FShowAddButton then paintRoundRect(sp, Rect(area.Right, 0, ClientWidth, ClientHeight-(if lined then 1 else 0)), 0, back, clNone);
   if arrowsShown then begin
     var l := leftArrowRect;
     var rr := rightArrowRect;
@@ -605,16 +683,15 @@ begin
     var x := r.Left+scaled(self, FTabPadding);
     if (FImages <> nil) and (t.FImageIndex >= 0) and (t.FImageIndex < FImages.Count) then begin
       var res := FImages.ResolutionForControl[FImagesWidth, self];
-      if x+res.Width <= area.Right then res.Draw(Canvas, x, (r.Top+r.Bottom-res.Height) div 2, t.FImageIndex, t.FEnabled and Enabled);
+      if x+res.Width <= area.Right then res.Draw(Canvas, x, (r.Top+lowered+r.Bottom-res.Height) div 2, t.FImageIndex, t.FEnabled and Enabled);
       x += res.Width+scaled(self, 6);
     end;
     var right := r.Right-scaled(self, FTabPadding);
     if t.FClosable and (FCloseButtons <> tcbNone) or t.FModified then right := closeRect(i).Left-scaled(self, 4);
-    var box := Rect(x, r.Top, Min(right, area.Right), r.Bottom);
+    var box := Rect(x, r.Top+lowered, Min(right, area.Right), r.Bottom);
     Canvas.Font := Font;
     if i = FTabIndex then Canvas.Font.Style := Font.Style+[fsBold];
     Canvas.Font.Color := if not (t.FEnabled and Enabled) then ColorToRGB(clGrayText) else if (i = FTabIndex) and (FStyle = tssButtons) then contrastText(activeColor) else if i = FTabIndex then text else dim;
-    // the bold active caption keeps the width of the regular one
     if box.Right > box.Left then Canvas.TextRect(box, box.Left, box.Top, t.FCaption, style);
   end;
   Canvas.Font := Font;
@@ -874,7 +951,7 @@ procedure TTabStrip.setStyle(value: TTabStripStyle);
 begin
   if FStyle = value then exit;
   FStyle := value;
-  Invalidate;
+  tabsChanged;
 end;
 
 procedure TTabStrip.setCloseButtons(value: TTabCloseButtons);
