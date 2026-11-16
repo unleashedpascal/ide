@@ -112,7 +112,7 @@ begin
   var full := Abs(Red(text)-Red(face))+Abs(Green(text)-Green(face))+Abs(Blue(text)-Blue(face));
   if full = 0 then exit(DEFAULT_HOVER);
   var part := Abs(Red(hover)-Red(face))+Abs(Green(hover)-Green(face))+Abs(Blue(hover)-Blue(face));
-  result := part*100 div full;
+  result := (part*100+full div 2) div full;
 end;
 
 function hoverShade(const pal: TPalette; normal, strong: TColor): TColor;
