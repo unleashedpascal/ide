@@ -374,8 +374,8 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <UnitName Value="PlotCanvas"/>
       </Item>
       <Item>
-        <Filename Value="checkcombobox.pas"/>
-        <UnitName Value="CheckComboBox"/>
+        <Filename Value="multiselectcombobox.pas"/>
+        <UnitName Value="MultiSelectComboBox"/>
       </Item>
       <Item>
         <Filename Value="heatmapcalendar.pas"/>

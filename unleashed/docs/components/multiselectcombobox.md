@@ -1,19 +1,19 @@
-# TCheckComboBox
+# TMultiSelectComboBox
 
 A combo box that takes more than one choice: the drop-down lists the items with a check box each, the box shows the chosen ones as a list, a count or a caption of its own.
 
 - Palette page: Unleashed: Input
-- Unit: `checkcombobox.pas`
+- Unit: `multiselectcombobox.pas`
 - Ancestor: `TCustomControl`
 
-![TCheckComboBox](img/checkcombobox.png)
+![TMultiSelectComboBox](img/multiselectcombobox.png)
 
 ## Usage
 
 ```pascal
 procedure TForm1.FormCreate(Sender: TObject);
 begin
-  var days := TCheckComboBox.Create(Self);
+  var days := TMultiSelectComboBox.Create(Self);
   days.Parent := Self;
   days.Width := 220;
   days.Items.AddStrings(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']);
@@ -26,7 +26,7 @@ end;
 
 procedure TForm1.daysChange(Sender: TObject);
 begin
-  Caption := Format('%d checked', [TCheckComboBox(Sender).CheckedCount]);
+  Caption := Format('%d checked', [TMultiSelectComboBox(Sender).CheckedCount]);
 end;
 ```
 
@@ -88,4 +88,4 @@ Available in code, not in the Object Inspector.
 
 **Open: a check box per entry, the (All) box on top.**
 
-![TCheckComboBox](img/checkcombobox_1.png)
+![TMultiSelectComboBox](img/multiselectcombobox_1.png)

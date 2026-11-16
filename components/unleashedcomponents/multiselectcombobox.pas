@@ -9,7 +9,7 @@
   These notices must be kept in copies and modified versions (MPL-2.0 sec. 3.1);
   add yours below. }
 
-unit CheckComboBox;
+unit MultiSelectComboBox;
 
 {$mode unleashed}
 
@@ -19,7 +19,7 @@ uses
   Classes, SysUtils, Types, Controls, Graphics, LCLType, ControlPaint, PopupWindow;
 
 type
-  TCheckComboBox = class;
+  TMultiSelectComboBox = class;
   TCheckSummary = (csList, csCount, csCaption);
   TCheckItemEvent = procedure(Sender: TObject; index: integer; checked: boolean) of object;
 
@@ -28,7 +28,7 @@ type
   // the rows of the drop-down: a check box and a caption each
   TCheckList = class(TCustomControl)
   private
-    FOwner: TCheckComboBox;
+    FOwner: TMultiSelectComboBox;
     FHot: integer;
     function rowAt(y: integer): integer;
     function rowPx: integer;
@@ -39,12 +39,12 @@ type
     procedure MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer); override;
   end;
 
-  { TCheckComboBox }
+  { TMultiSelectComboBox }
 
   // a combo box that takes more than one choice: the drop-down lists the
   // items with a check box each, the box shows the chosen ones as a list,
   // a count or a caption of its own
-  TCheckComboBox = class(TCustomControl)
+  TMultiSelectComboBox = class(TCustomControl)
   private
     FItems: TStrings;
     FChecked: array of boolean;
@@ -250,9 +250,9 @@ begin
   FOwner.toggle(row);
 end;
 
-{ TCheckComboBox }
+{ TMultiSelectComboBox }
 
-constructor TCheckComboBox.Create(AOwner: TComponent);
+constructor TMultiSelectComboBox.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   ControlStyle := ControlStyle+[csOpaque]-[csAcceptsControls, csSetCaption];
@@ -274,14 +274,14 @@ begin
   with GetControlClassDefaultSize do SetInitialBounds(0, 0, cx, cy);
 end;
 
-destructor TCheckComboBox.Destroy;
+destructor TMultiSelectComboBox.Destroy;
 begin
   FreeAndNil(FPopup);
   FItems.Free;
   inherited Destroy;
 end;
 
-class function TCheckComboBox.GetControlClassDefaultSize: TSize;
+class function TMultiSelectComboBox.GetControlClassDefaultSize: TSize;
 begin
   result.cx := 160;
   result.cy := 26;
@@ -289,7 +289,7 @@ end;
 
 // -- the items ----------------------
 
-procedure TCheckComboBox.itemsChanged(Sender: TObject);
+procedure TMultiSelectComboBox.itemsChanged(Sender: TObject);
 begin
   // the checks follow the items by position; new items start clear
   var old := FChecked;
@@ -299,12 +299,12 @@ begin
   Invalidate;
 end;
 
-function TCheckComboBox.getChecked(index: integer): boolean;
+function TMultiSelectComboBox.getChecked(index: integer): boolean;
 begin
   result := (index >= 0) and (index < length(FChecked)) and FChecked[index];
 end;
 
-procedure TCheckComboBox.setChecked(index: integer; value: boolean);
+procedure TMultiSelectComboBox.setChecked(index: integer; value: boolean);
 begin
   if (index < 0) or (index >= FItems.Count) then exit;
   if length(FChecked) <> FItems.Count then SetLength(FChecked, FItems.Count);
@@ -317,7 +317,7 @@ begin
   if Assigned(FOnChange) then FOnChange(self);
 end;
 
-procedure TCheckComboBox.toggle(index: integer);
+procedure TMultiSelectComboBox.toggle(index: integer);
 begin
   if FReadOnly then exit;
   if FShowSelectAll then begin
@@ -330,7 +330,7 @@ begin
   Checked[index] := not Checked[index];
 end;
 
-procedure TCheckComboBox.CheckAll(value: boolean);
+procedure TMultiSelectComboBox.CheckAll(value: boolean);
 begin
   var changed := false;
   SetLength(FChecked, FItems.Count);
@@ -345,18 +345,18 @@ begin
   if not (csLoading in ComponentState) and Assigned(FOnChange) then FOnChange(self);
 end;
 
-function TCheckComboBox.CheckedCount: integer;
+function TMultiSelectComboBox.CheckedCount: integer;
 begin
   result := 0;
   for var i := 0 to Min(high(FChecked), FItems.Count-1) do if FChecked[i] then inc(result);
 end;
 
-procedure TCheckComboBox.GetChecked(list: TList);
+procedure TMultiSelectComboBox.GetChecked(list: TList);
 begin
   for var i := 0 to Min(high(FChecked), FItems.Count-1) do if FChecked[i] then list.Add(Pointer(PtrInt(i)));
 end;
 
-function TCheckComboBox.getCheckedText: string;
+function TMultiSelectComboBox.getCheckedText: string;
 begin
   result := '';
   for var i := 0 to Min(high(FChecked), FItems.Count-1) do if FChecked[i] then begin
@@ -365,7 +365,7 @@ begin
   end;
 end;
 
-procedure TCheckComboBox.setCheckedText(const value: string);
+procedure TMultiSelectComboBox.setCheckedText(const value: string);
 begin
   SetLength(FChecked, FItems.Count);
   for var i := 0 to high(FChecked) do FChecked[i] := false;
@@ -380,7 +380,7 @@ begin
   Invalidate;
 end;
 
-function TCheckComboBox.summaryText: string;
+function TMultiSelectComboBox.summaryText: string;
 begin
   var count := CheckedCount;
   if count = 0 then exit(FEmptyText);
@@ -394,7 +394,7 @@ end;
 
 // -- drop down ----------------------
 
-procedure TCheckComboBox.buildPopup;
+procedure TMultiSelectComboBox.buildPopup;
 begin
   if FPopup <> nil then exit;
   FPopup := TDropPopup.Create(self);
@@ -405,7 +405,7 @@ begin
   FList.Parent := FPopup;
 end;
 
-procedure TCheckComboBox.DropDown;
+procedure TMultiSelectComboBox.DropDown;
 begin
   if (csDesigning in ComponentState) or not Enabled or DroppedDown then exit;
   buildPopup;
@@ -421,7 +421,7 @@ begin
   if Assigned(FOnDropDown) then FOnDropDown(self);
 end;
 
-procedure TCheckComboBox.CloseUp;
+procedure TMultiSelectComboBox.CloseUp;
 begin
   if not DroppedDown then exit;
   FPopup.Close;
@@ -430,12 +430,12 @@ begin
   if Assigned(FOnCloseUp) then FOnCloseUp(self);
 end;
 
-function TCheckComboBox.DroppedDown: boolean;
+function TMultiSelectComboBox.DroppedDown: boolean;
 begin
   result := (FPopup <> nil) and FPopup.Visible;
 end;
 
-procedure TCheckComboBox.popupDismiss(Sender: TObject);
+procedure TMultiSelectComboBox.popupDismiss(Sender: TObject);
 begin
   FPopup.Close;
   FDown := false;
@@ -445,7 +445,7 @@ end;
 
 // -- painting ----------------------
 
-procedure TCheckComboBox.Paint;
+procedure TMultiSelectComboBox.Paint;
 begin
   var back := pick(FBackColor, clWindow);
   var border := pick(FBorderColor, blend(back, clWindowText, 35));
@@ -476,7 +476,7 @@ begin
   Canvas.Brush.Style := bsSolid;
 end;
 
-procedure TCheckComboBox.CalculatePreferredSize(var PreferredWidth, PreferredHeight: integer; WithThemeSpace: Boolean);
+procedure TMultiSelectComboBox.CalculatePreferredSize(var PreferredWidth, PreferredHeight: integer; WithThemeSpace: Boolean);
 begin
   applyTextQuality(Canvas);
   PreferredHeight := Max(Canvas.TextHeight('Hg')+scaled(self, 10), scaled(self, 24));
@@ -485,7 +485,7 @@ end;
 
 // -- input ----------------------
 
-procedure TCheckComboBox.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TMultiSelectComboBox.MouseDown(Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   inherited MouseDown(Button, Shift, X, Y);
   if Button <> mbLeft then exit;
@@ -493,21 +493,21 @@ begin
   if DroppedDown then CloseUp else DropDown;
 end;
 
-procedure TCheckComboBox.MouseEnter;
+procedure TMultiSelectComboBox.MouseEnter;
 begin
   inherited MouseEnter;
   FHot := true;
   Invalidate;
 end;
 
-procedure TCheckComboBox.MouseLeave;
+procedure TMultiSelectComboBox.MouseLeave;
 begin
   inherited MouseLeave;
   FHot := false;
   Invalidate;
 end;
 
-procedure TCheckComboBox.KeyDown(var Key: Word; Shift: TShiftState);
+procedure TMultiSelectComboBox.KeyDown(var Key: Word; Shift: TShiftState);
 begin
   inherited KeyDown(Key, Shift);
   var rows := FItems.Count+(if FShowSelectAll then 1 else 0);
@@ -535,13 +535,13 @@ begin
   end;
 end;
 
-procedure TCheckComboBox.DoEnter;
+procedure TMultiSelectComboBox.DoEnter;
 begin
   inherited DoEnter;
   Invalidate;
 end;
 
-procedure TCheckComboBox.DoExit;
+procedure TMultiSelectComboBox.DoExit;
 begin
   inherited DoExit;
   Invalidate;
@@ -549,19 +549,19 @@ end;
 
 // -- properties ----------------------
 
-procedure TCheckComboBox.setItems(value: TStrings);
+procedure TMultiSelectComboBox.setItems(value: TStrings);
 begin
   FItems.Assign(value);
 end;
 
-procedure TCheckComboBox.setSummary(value: TCheckSummary);
+procedure TMultiSelectComboBox.setSummary(value: TCheckSummary);
 begin
   if FSummary = value then exit;
   FSummary := value;
   Invalidate;
 end;
 
-function TCheckComboBox.getText(index: integer): string;
+function TMultiSelectComboBox.getText(index: integer): string;
 begin
   result := match index of
     0: FDelimiter;
@@ -571,7 +571,7 @@ begin
   end;
 end;
 
-procedure TCheckComboBox.setText(index: integer; const value: string);
+procedure TMultiSelectComboBox.setText(index: integer; const value: string);
 begin
   if getText(index) = value then exit;
   match index of
@@ -583,12 +583,12 @@ begin
   Invalidate;
 end;
 
-function TCheckComboBox.getFlag(index: integer): boolean;
+function TMultiSelectComboBox.getFlag(index: integer): boolean;
 begin
   result := if index = 0 then FShowSelectAll else FReadOnly;
 end;
 
-procedure TCheckComboBox.setFlag(index: integer; value: boolean);
+procedure TMultiSelectComboBox.setFlag(index: integer; value: boolean);
 begin
   if getFlag(index) = value then exit;
   if index = 0 then FShowSelectAll := value else FReadOnly := value;
@@ -596,7 +596,7 @@ begin
   Invalidate;
 end;
 
-function TCheckComboBox.getMetric(index: integer): integer;
+function TMultiSelectComboBox.getMetric(index: integer): integer;
 begin
   result := match index of
     0: FCornerRadius;
@@ -606,7 +606,7 @@ begin
   end;
 end;
 
-procedure TCheckComboBox.setMetric(index: integer; value: integer);
+procedure TMultiSelectComboBox.setMetric(index: integer; value: integer);
 begin
   if value < 0 then value := 0;
   if index = 2 then value := Max(value, 1);
@@ -620,7 +620,7 @@ begin
   Invalidate;
 end;
 
-function TCheckComboBox.getPartColor(index: integer): TColor;
+function TMultiSelectComboBox.getPartColor(index: integer): TColor;
 begin
   result := match index of
     0: FBorderColor;
@@ -630,7 +630,7 @@ begin
   end;
 end;
 
-procedure TCheckComboBox.setPartColor(index: integer; value: TColor);
+procedure TMultiSelectComboBox.setPartColor(index: integer; value: TColor);
 begin
   if getPartColor(index) = value then exit;
   match index of
@@ -642,7 +642,7 @@ begin
   Invalidate;
 end;
 
-procedure TCheckComboBox.setAntialiasing(value: TAntialiasSetting);
+procedure TMultiSelectComboBox.setAntialiasing(value: TAntialiasSetting);
 begin
   if FAntialiasing = value then exit;
   FAntialiasing := value;

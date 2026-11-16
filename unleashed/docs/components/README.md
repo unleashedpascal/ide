@@ -29,7 +29,7 @@ Each page below has the properties, the events, the runtime methods, a usage exa
 | [`TSplitButton`](splitbutton.md) | a push button with a menu arrow at its end |
 | [`TDropZone`](dropzone.md) | a target for files dragged from the desktop: a dashed frame with a hint, lit while a drop is possible |
 | [`TColorSwatchButton`](colorswatchbutton.md) | a button that shows a color and drops a palette of swatches, a picker or both to change it |
-| [`TCheckComboBox`](checkcombobox.md) | a combo box that takes more than one choice: the drop-down lists the items with a check box each, the box shows the chosen ones as a list, a count or a caption of its own |
+| [`TMultiSelectComboBox`](multiselectcombobox.md) | a combo box that takes more than one choice: the drop-down lists the items with a check box each, the box shows the chosen ones as a list, a count or a caption of its own |
 
 ## Display
 

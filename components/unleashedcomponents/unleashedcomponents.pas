@@ -22,7 +22,7 @@ uses
   SplashScreen, ProgressDialog, Animator, Validator, SerialPort, DataTable, 
   PropertyGrid, Countdown, ChartLite, ColorSwatchButton, SettingsStore, 
   KanbanBoard, ShortcutMap, TourGuide, NotificationCenters, MarkdownLabel, 
-  PlotCanvas, CheckComboBox, HeatmapCalendar, HexEditor, DiffView, 
+  PlotCanvas, MultiSelectComboBox, HeatmapCalendar, HexEditor, DiffView, 
   ImageCropper, FolderTree, FileList, PaintCanvas, GanttChart, NodeEditor, 
   SchedulerView, TreeGrid, DockPanel, ChatView, CodeReaders, ThemeSwitch, 
   ContentPanel, LazarusPackageIntf;
