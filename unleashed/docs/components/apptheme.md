@@ -1,6 +1,6 @@
 # TAppTheme
 
-Puts a color theme on every window of the application, native controls included, and keeps it on the windows made later. One per application, a second one raises as it applies; dropped on the main form it takes effect as the form loads. At design time it changes nothing, the designed forms keep the stock look.
+Puts a color theme on every window of the application, native controls included, and keeps it on the windows made later. One per application, a second one raises as it applies, and the designer refuses a second one on a form; dropped on the main form it takes effect as the form loads. At design time it changes nothing, the designed forms keep the stock look.
 
 - Palette page: Unleashed: Input
 - Unit: `apptheme.pas`

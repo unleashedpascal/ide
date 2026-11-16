@@ -182,9 +182,9 @@ type
 
   // puts a color theme on every window of the application, native controls
   // included, and keeps it on the windows made later. One per application,
-  // a second one raises as it applies; dropped on the main form it takes
-  // effect as the form loads. At design time it changes nothing, the designed
-  // forms keep the stock look
+  // a second one raises as it applies, and the designer refuses a second one
+  // on a form; dropped on the main form it takes effect as the form loads.
+  // At design time it changes nothing, the designed forms keep the stock look
   TAppTheme = class(TComponent)
   private
     FActive: boolean;
@@ -252,6 +252,9 @@ implementation
 
 uses
   LCLType, LCLIntf, ThemesEngine;
+
+resourcestring
+  ERROR_SECOND_THEME = 'This form has %s already. A form takes one TAppTheme, which themes the whole application.';
 
 var
   theInstance: TAppTheme = nil;
@@ -542,6 +545,10 @@ end;
 
 constructor TAppTheme.Create(AOwner: TComponent);
 begin
+  // the designer refuses a second theme on a form
+  if (AOwner <> nil) and (csDesigning in AOwner.ComponentState) and not (csLoading in AOwner.ComponentState) then
+    for var i := 0 to AOwner.ComponentCount-1 do
+      if AOwner.Components[i] is TAppTheme then raise EComponentError.CreateFmt(ERROR_SECOND_THEME, [AOwner.Components[i].Name]);
   inherited Create(AOwner);
   // designed forms may each carry one; the live application gets one only,
   // checked when it applies
