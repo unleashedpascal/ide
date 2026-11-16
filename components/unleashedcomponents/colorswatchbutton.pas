@@ -200,7 +200,7 @@ begin
     var border := blend(back, clWindowText, 30);
     if ColorToRGB(c) = ColorToRGB(FOwner.FColor) then border := ColorToRGB(clHighlight);
     if i = FHot then r.Inflate(1, 1);
-    paintRoundRect(sp, r, radius, ColorToRGB(c), border, (if (i = FHot) or (border = ColorToRGB(clHighlight)) then 2 else 1));
+    paintRoundRect(sp, r, radius, ColorToRGB(c), border, (if ((i = FHot) and hoverEnabled) or (border = ColorToRGB(clHighlight)) then 2 else 1));
   end;
   sp.Flush;
 end;

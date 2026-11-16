@@ -242,7 +242,7 @@ begin
   end;
   var r := switchRect;
   var fill := blend(offColor, onColor, Round(FPos*100));
-  if Enabled and hoverEnabled and (FHot or FPressed) then fill := blend(fill, clWindowText, (if FPressed then 20 else 10));
+  if Enabled and hoverEnabled and (FHot or FPressed) then fill := hoverBlend(fill, clWindowText, (if FPressed then 20 else 10));
   // the thumb on the lit track keeps apart from it
   if FChecked and (FThumbColor = clDefault) then thumb := legibleOn(thumb, fill, 2.5);
   // the thumb runs inside a margin so it never touches the pill border

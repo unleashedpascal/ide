@@ -449,7 +449,7 @@ begin
   var textColor := pick(FTextColor, clWindowText);
   // a link is text: it reads like text on the surface
   var linkColor := pick(FLinkColor, legibleOn(clHotLight, back, 4.5));
-  var hoverLink := pick(FHoverLinkColor, blend(linkColor, clWindowText, 35));
+  var hoverLink := if hoverEnabled then pick(FHoverLinkColor, hoverBlend(linkColor, clWindowText, 35)) else linkColor;
   var codeColor := pick(FCodeColor, blend(clWindowText, clHighlight, 30));
   var codeBack := pick(FCodeBackColor, blend(back, clWindowText, 8));
   var quoteColor := pick(FQuoteColor, blend(clWindowText, back, 35));

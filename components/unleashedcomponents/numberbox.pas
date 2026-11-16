@@ -570,7 +570,7 @@ begin
       var r := buttonRect(index);
       var hot := Enabled and not ReadOnly and hoverEnabled and ((FHotButton = index) or (FPressedButton = index));
       if hot then paintRoundRect(sp, r, scaled(self, 3), (if FPressedButton = index then blend(hoverColor(field), clWindowText, 12) else hoverColor(field)), clNone);
-      var color := if hot then ColorToRGB(clWindowText) else glyph;
+      var color := if hot then hoverShade(glyph, clWindowText) else glyph;
       if FSpinStyle = nsUpDown then paintChevron(sp, r, (if index = BTN_UP then cdUp else cdDown), Max(scaled(self, 7), 5), color)
       else begin
         var cx := (r.Left+r.Right) div 2;

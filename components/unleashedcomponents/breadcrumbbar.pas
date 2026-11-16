@@ -416,7 +416,7 @@ begin
     end;
     var isLast := i = FItems.Count-1;
     Canvas.Font.Style := if isLast then Font.Style+[fsBold] else Font.Style;
-    var color := if not Enabled then ColorToRGB(clGrayText) else if isLast then last else if (i = FHot) and hoverEnabled then ColorToRGB(clWindowText) else text;
+    var color := if not Enabled then ColorToRGB(clGrayText) else if isLast then last else if (i = FHot) and hoverEnabled then hoverShade(text, clWindowText) else text;
     paintCenteredText(Canvas, Rect(x, 0, r.Right-scaled(self, FPadding), ClientHeight), item.Caption, color);
     if (glyph <> '') and not isLast then paintCenteredText(Canvas, Rect(r.Right, 0, rects[i+1].Left, ClientHeight), glyph, sepColor);
   end;

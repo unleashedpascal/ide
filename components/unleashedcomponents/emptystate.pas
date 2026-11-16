@@ -364,7 +364,7 @@ begin
   if buttonBox.Width > 0 then begin
     var fill := buttonColor;
     if FPressed and hoverEnabled then fill := blend(buttonColor, clBlack, 18)
-    else if FHot and hoverEnabled then fill := blend(buttonColor, clWhite, 14);
+    else if FHot and hoverEnabled then fill := hoverBlend(buttonColor, clWhite, 14);
     paintRoundRect(sp, buttonBox, buttonBox.Height div 2, fill, (if Focused and ringEnabled then ringColor else clNone));
   end;
   sp.Flush;

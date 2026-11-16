@@ -259,8 +259,8 @@ begin
       var face := pick(FButtonColor, cl3DLight);
       var border := ColorToRGB(clBtnHighlight);
       if hoverEnabled and FHot and not active then begin
-        face := if FButtonColor = clDefault then ColorToRGB(clBtnHighlight) else blend(face, clWindowText, 10);
-        border := ColorToRGB(clBtnShadow);
+        face := if FButtonColor = clDefault then hoverShade(face, clBtnHighlight) else hoverBlend(face, clWindowText, 10);
+        border := hoverShade(border, clBtnShadow);
       end;
       if active then begin
         face := if FButtonColor = clDefault then ColorToRGB(clBtnShadow) else blend(face, clWindowText, 20);

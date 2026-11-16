@@ -54,8 +54,9 @@ type
     // lightness of the fields (edits, lists, pages) against the surface in
     // percent points: positive brighter, negative deeper
     property FieldLightness: integer index 0 read getShift write setShift;
-    // share of the text blended into the surface under the mouse, percent
-    property HoverStrength: integer index 1 read getShift write setShift;
+    // the same value as Effects.HoverStrength, read from the forms saved
+    // with it here
+    property HoverStrength: integer index 1 read getShift write setShift stored false;
   end;
 
   { TIconFitting }
@@ -93,15 +94,23 @@ type
   private
     FOwner: TAppTheme;
     FEffects: TThemeEffects;
+    FHoverStrength: integer;
+    function getHover: boolean;
     procedure setHover(value: boolean);
+    procedure setHoverStrength(value: integer);
     procedure setActive(value: boolean);
   public
     constructor Create(owner: TAppTheme);
     procedure Assign(Source: TPersistent); override;
     property Effects: TThemeEffects read FEffects write FEffects;
   published
-    // the controls answer the mouse over them; off, only menus do
-    property Hover: boolean read FEffects.Hover write setHover default true;
+    // how strongly the controls answer the mouse, 0 to 100: 20 is the look
+    // of the theme, more goes further, 0 leaves them still and only menus
+    // answer. Works on every preset and on a custom look
+    property HoverStrength: integer read FHoverStrength write setHoverStrength default 20;
+    // HoverStrength above zero, read from the forms saved with it: off sets
+    // the strength to zero, on brings a zero back to 20
+    property Hover: boolean read getHover write setHover stored false;
     // the focused control shows the focus on its border; off, a control looks the same
     // with and without the focus
     property Active: boolean read FEffects.Active write setActive default true;
@@ -324,13 +333,18 @@ end;
 
 function TThemeColors.getShift(index: integer): integer;
 begin
-  result := if index = 0 then FSeed.FieldLightness else FSeed.HoverStrength;
+  result := if index = 0 then FSeed.FieldLightness else FOwner.FEffects.FHoverStrength;
 end;
 
 procedure TThemeColors.setShift(index: integer; value: integer);
 begin
-  if getShift(index) = value then exit;
-  if index = 0 then FSeed.FieldLightness := value else FSeed.HoverStrength := value;
+  // the hover strength belongs to every look, so it leaves the preset alone
+  if index = 1 then begin
+    FOwner.FEffects.HoverStrength := value;
+    exit;
+  end;
+  if FSeed.FieldLightness = value then exit;
+  FSeed.FieldLightness := value;
   FOwner.customChanged;
 end;
 
@@ -389,20 +403,34 @@ begin
   inherited Create;
   FOwner := owner;
   FEffects := DefaultEffects;
+  FHoverStrength := DEFAULT_HOVER;
 end;
 
 procedure TThemeEffectSettings.Assign(Source: TPersistent);
 begin
   if Source is TThemeEffectSettings then begin
     FEffects := TThemeEffectSettings(Source).FEffects;
+    FHoverStrength := TThemeEffectSettings(Source).FHoverStrength;
     FOwner.Apply;
   end else inherited Assign(Source);
 end;
 
+function TThemeEffectSettings.getHover: boolean;
+begin
+  result := FHoverStrength > 0;
+end;
+
 procedure TThemeEffectSettings.setHover(value: boolean);
 begin
-  if FEffects.Hover = value then exit;
-  FEffects.Hover := value;
+  if getHover = value then exit;
+  setHoverStrength(if value then DEFAULT_HOVER else 0);
+end;
+
+procedure TThemeEffectSettings.setHoverStrength(value: integer);
+begin
+  value := if value < 0 then 0 else if value > 100 then 100 else value;
+  if FHoverStrength = value then exit;
+  FHoverStrength := value;
   FOwner.Apply;
 end;
 
@@ -607,6 +635,8 @@ begin
   if not FActive or (FPreset = tpNone) then exit(systemPalette);
   result := if FPreset = tpCustom then buildPalette(FCustom.FSeed) else presetPalette(resolved);
   result := adjustPalette(result, FShift.FHue, FShift.FSaturation, FShift.FLightness);
+  // the fill under the mouse: the surface this far on the way to the text
+  result[COLOR_HOVER] := mix(result[COLOR_BTNFACE], result[COLOR_BTNTEXT], FEffects.FHoverStrength);
 end;
 
 function TAppTheme.IsDark: boolean;
@@ -621,7 +651,11 @@ begin
   if theInstance <> self then raise EComponentError.Create('Only one TAppTheme per application');
   applyScrolling;
   applyRendering;
-  setThemeEffects(FEffects.FEffects);
+  // nothing answers the mouse at a strength of zero
+  var effects := FEffects.FEffects;
+  effects.Hover := FEffects.FHoverStrength > 0;
+  setThemeEffects(effects);
+  useHoverStrength(FEffects.FHoverStrength);
   if FActive and (FPreset <> tpNone) then applyTheme(Palette) else dropTheme;
   useIconFit(FIconFit.FFit);
   themeIcons(clBtnFace);

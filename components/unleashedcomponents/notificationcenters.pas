@@ -547,7 +547,7 @@ begin
       var size := scaled(self, 16);
       item.FCloseRect := Rect(item.FRect.Right-pad-size, item.FRect.Top+pad-scaled(self, 2), item.FRect.Right-pad, item.FRect.Top+pad-scaled(self, 2)+size);
       if item.Unread then item.FCloseRect.Offset(-scaled(self, 14), 0);
-      if (item = FHot) and (FHotPart = 1) then paintCircle(sp, (item.FCloseRect.Left+item.FCloseRect.Right) div 2, (item.FCloseRect.Top+item.FCloseRect.Bottom) div 2, size div 2, blend(fill, clWindowText, 15), clNone);
+      if (item = FHot) and (FHotPart = 1) and hoverEnabled then paintCircle(sp, (item.FCloseRect.Left+item.FCloseRect.Right) div 2, (item.FCloseRect.Top+item.FCloseRect.Bottom) div 2, size div 2, hoverBlend(fill, clWindowText, 15), clNone);
       paintCross(sp, item.FCloseRect, scaled(self, 8), timeColor, scaled(self, 1));
     end;
   end;

@@ -353,13 +353,13 @@ begin
       var r := arrowRect(right);
       var hot := (FHot = (if right then HOT_RIGHT else HOT_LEFT)) and hoverEnabled;
       var dimmed := not FLoop and ((right and (FPageIndex >= n-1)) or (not right and (FPageIndex <= 0)));
-      paintCircle(sp, (r.Left+r.Right) div 2, (r.Top+r.Bottom) div 2, r.Width div 2, blend(back, arrow, (if hot then 25 else 12)), clNone);
+      paintCircle(sp, (r.Left+r.Right) div 2, (r.Top+r.Bottom) div 2, r.Width div 2, blend(back, arrow, 12+(if hot then hoverAmount(13) else 0)), clNone);
       paintChevron(sp, r, (if right then cdRight else cdLeft), Max(r.Width div 3, 6), (if dimmed then blend(arrow, back, 60) else arrow));
     end;
   if FShowDots then
     for var i := 0 to n-1 do begin
       var r := dotRect(i);
-      var color := if i = FPageIndex then active else if (i = FHot) and hoverEnabled then blend(dot, active, 50) else dot;
+      var color := if i = FPageIndex then active else if (i = FHot) and hoverEnabled then hoverBlend(dot, active, 50) else dot;
       paintCircle(sp, (r.Left+r.Right) div 2, (r.Top+r.Bottom) div 2, r.Width div 2, color, clNone);
     end;
   if Focused and ringEnabled then paintRing(sp, ClientRect, scaled(self, 4));

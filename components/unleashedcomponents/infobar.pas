@@ -318,12 +318,12 @@ begin
   end;
   var a := actionRect;
   if a.Width > 0 then begin
-    var buttonFill := if (FPressed = 1) and hoverEnabled then blend(back, accent, 40) else if (FHot = 1) and hoverEnabled then blend(back, accent, 30) else blend(back, accent, 22);
+    var buttonFill := if (FPressed = 1) and hoverEnabled then blend(back, accent, 40) else if (FHot = 1) and hoverEnabled then blend(back, accent, 22+hoverAmount(8)) else blend(back, accent, 22);
     paintRoundRect(sp, a, scaled(self, 4), buttonFill, (if Focused and ringEnabled then ringColor else blend(back, accent, 55)));
   end;
   var c := closeRect;
   if c.Width > 0 then begin
-    if (FHot = 2) and hoverEnabled then paintRoundRect(sp, c, scaled(self, 4), blend(fill, text, 12), clNone);
+    if (FHot = 2) and hoverEnabled then paintRoundRect(sp, c, scaled(self, 4), hoverBlend(fill, text, 12), clNone);
     paintCross(sp, c, scaled(self, 9), blend(fill, text, 70), Max(scaled(self, 1), 1));
   end;
   sp.Flush;

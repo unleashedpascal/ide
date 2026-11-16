@@ -359,7 +359,7 @@ begin
   var fill := active;
   if Enabled and hoverEnabled and (FHover >= 0) and not FReadOnly then begin
     shown := FHover;
-    fill := hoverFill;
+    fill := hoverShade(active, hoverFill);
   end;
   var custom := Assigned(FOnDrawItem);
   if not custom then

@@ -347,7 +347,7 @@ begin
       var r := spinRect(up);
       var hot := hoverEnabled and Enabled and (FHotSpin = (if up then 1 else 2));
       if hot then paintRoundRect(sp, r, scaled(self, 2), hoverColor(field), clNone);
-      paintChevron(sp, r, (if up then cdUp else cdDown), Max(scaled(self, 7), 5), (if hot then ColorToRGB(clWindowText) else glyph));
+      paintChevron(sp, r, (if up then cdUp else cdDown), Max(scaled(self, 7), 5), (if hot then hoverShade(glyph, clWindowText) else glyph));
     end;
   end;
   sp.Flush;

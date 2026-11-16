@@ -412,7 +412,7 @@ begin
     var value := GetValue(d);
     var level := levelOf(value);
     var fill := levelColor(level);
-    if Trunc(d) = hot then fill := blend(fill, clWindowText, 25);
+    if (Trunc(d) = hot) and hoverEnabled then fill := hoverBlend(fill, clWindowText, 25);
     var edge := if (level = 0) and FShowEmptyOutline then outline else clNone;
     if Trunc(d) = hot then edge := ColorToRGB(clWindowText);
     match FCellShape of

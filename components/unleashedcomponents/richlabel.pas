@@ -365,7 +365,7 @@ begin
   if not Enabled then plain := ColorToRGB(clGrayText);
   // a link is text: it reads like text on the surface
   var link := pick(FLinkColor, legibleOn(clHotLight, GetRGBColorResolvingParent, 4.5));
-  var hotLink := pick(FHoverLinkColor, blend(link, clWindowText, 30));
+  var hotLink := if hoverEnabled then pick(FHoverLinkColor, hoverBlend(link, clWindowText, 30)) else link;
   Canvas.Brush.Style := bsClear;
   // the ellipsis takes the place of the last run of the first line that
   // reaches past the right edge

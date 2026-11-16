@@ -2150,7 +2150,7 @@ begin
     end;
     var fill := BubbleColorOf(m);
     var txt := TextColorOf(m);
-    if (i = FHot) and hoverEnabled then fill := blend(fill, contrastText(fill), 6);
+    if (i = FHot) and hoverEnabled then fill := hoverBlend(fill, contrastText(fill), 6);
     if not Enabled then fill := blend(fill, back, 40);
     var outline := bubbleOutlineOf(m);
     sp.FillPolygon(outline, fill);

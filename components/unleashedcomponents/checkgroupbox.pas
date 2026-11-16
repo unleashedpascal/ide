@@ -286,7 +286,7 @@ begin
   var box := Rect(h.Left+scaled(self, 2), mid-size div 2, h.Left+scaled(self, 2)+size, mid-size div 2+size);
   var cr := Max(size div 5, 2);
   if FChecked then begin
-    var fill := if FHot and Enabled and hoverEnabled then blend(accent, clWhite, 14) else accent;
+    var fill := if FHot and Enabled and hoverEnabled then hoverBlend(accent, clWhite, 14) else accent;
     paintRoundRect(sp, box, cr, fill, (if Focused and ringEnabled then ringColor else clNone));
     paintCheck(sp, box, size*7 div 10, contrastText(accent), Max(size div 7, 2));
   end else begin

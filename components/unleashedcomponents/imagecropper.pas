@@ -586,7 +586,7 @@ begin
       end;
     for var h in [chTopLeft, chTopRight, chBottomLeft, chBottomRight, chLeft, chRight, chTop, chBottom] do begin
       var r := handleRect(h, frame);
-      paintRoundRect(sp, r, 1, (if h = FHot then ColorToRGB(clHighlight) else handleColor), dim, 1);
+      paintRoundRect(sp, r, 1, (if (h = FHot) and hoverEnabled then hoverShade(handleColor, clHighlight) else handleColor), dim, 1);
     end;
   end;
   sp.Flush;

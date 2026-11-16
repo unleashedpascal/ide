@@ -273,7 +273,7 @@ begin
   var nextText := if last then g.FFinishCaption else g.FNextCaption;
   var nextW := textWidthOf(Font, nextText)+ControlPaint.scaled(self, 24);
   FButtons[1] := Rect(card.Right-pad-nextW, by, card.Right-pad, by+bh);
-  paintRoundRect(sp, FButtons[1], ControlPaint.scaled(self, 4), (if FHot = 1 then blend(accent, clWhite, 15) else accent), clNone);
+  paintRoundRect(sp, FButtons[1], ControlPaint.scaled(self, 4), (if (FHot = 1) and hoverEnabled then hoverBlend(accent, clWhite, 15) else accent), clNone);
   var x := FButtons[1].Left-ControlPaint.scaled(self, 6);
   if g.FShowBack and (g.stepShown(g.FCurrent, false) >= 0) then begin
     var backW := textWidthOf(Font, g.FBackCaption)+ControlPaint.scaled(self, 20);

@@ -520,7 +520,7 @@ begin
       var hot := (i = FHot) and FClickableSteps and hoverEnabled and isDone;
       var fill := if isDone then done else if isCurrent then accent else back;
       var ring := if isDone or isCurrent then clNone else (if FSteps[i].Enabled then line else blend(line, back, 50));
-      if hot then fill := blend(fill, clWhite, 20);
+      if hot then fill := hoverBlend(fill, clWhite, 20);
       match FHeaderStyle of
         // a thick bar with a small mark per step, filled up to the current one
         whBar: begin

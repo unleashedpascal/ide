@@ -222,7 +222,7 @@ begin
   if not custom then
     for var i := 0 to count-1 do begin
       var r := dotRect(i);
-      var color := if i = cur then active else if (i = FHot) and hoverEnabled then blend(dot, active, 50) else dot;
+      var color := if i = cur then active else if (i = FHot) and hoverEnabled then hoverBlend(dot, active, 50) else dot;
       var cx := (r.Left+r.Right)/2;
       var cy := (r.Top+r.Bottom)/2;
       match FStyle of

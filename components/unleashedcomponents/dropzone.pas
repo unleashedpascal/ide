@@ -295,9 +295,10 @@ begin
   var textColor := pick(FTextColor, clGrayText);
   var lit := Enabled and hoverEnabled and (FHot or FDropping);
   if lit then begin
-    frame := hotFrame;
-    fill := blend(fill, hotFrame, 10);
-    textColor := ColorToRGB(clWindowText);
+    // a file over the zone lights it fully, the mouse as far as a hover goes
+    frame := if FDropping then hotFrame else hoverShade(frame, hotFrame);
+    fill := blend(fill, hotFrame, (if FDropping then 10 else hoverAmount(10)));
+    textColor := if FDropping then ColorToRGB(clWindowText) else hoverShade(textColor, clWindowText);
   end;
   var sp := autofree beginShapes(Canvas, ClientRect, GetRGBColorResolvingParent, FAntialiasing);
   var r := ClientRect;

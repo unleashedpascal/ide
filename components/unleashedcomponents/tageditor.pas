@@ -357,7 +357,7 @@ begin
     end;
     if FShowClose and not FReadOnly then begin
       var c := closeRect(i);
-      if Enabled and hoverEnabled and (i = FHotClose) then paintCircle(sp, (c.Left+c.Right) div 2, (c.Top+c.Bottom) div 2, c.Width div 2+1, blend(fill, clWhite, 30), clNone);
+      if Enabled and hoverEnabled and (i = FHotClose) then paintCircle(sp, (c.Left+c.Right) div 2, (c.Top+c.Bottom) div 2, c.Width div 2+1, hoverBlend(fill, clWhite, 30), clNone);
       paintCross(sp, c, Max(c.Width div 2, 4), closeColor);
     end;
   end;

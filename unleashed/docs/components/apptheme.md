@@ -14,7 +14,7 @@ begin
   // one per application, dropped on the main form or made here
   var theme := TAppTheme.Create(Self);
   theme.Preset := tpOcean;
-  theme.Effects.Hover := true;
+  theme.Effects.HoverStrength := 30;
   theme.Shift.Lightness := -10;
   theme.OnChange := @themeChange;
 end;
@@ -70,7 +70,7 @@ The seed of a custom look; a change switches the owner to tpCustom.
 | `Link` | `TColor` |  | links and the strip of the active tab |
 | `Mark` | `TColor` |  | a changed or unsaved item |
 | `FieldLightness` | `integer` |  | lightness of the fields (edits, lists, pages) against the surface in percent points: positive brighter, negative deeper |
-| `HoverStrength` | `integer` |  | share of the text blended into the surface under the mouse, percent |
+| `HoverStrength` | `integer` |  | the same value as Effects.HoverStrength, read from the forms saved with it here; not stored |
 
 | Property | Type | Notes |
 |---|---|---|
@@ -99,7 +99,8 @@ The feedback the controls paint on top of the palette.
 
 | Property | Type | Default | Notes |
 |---|---|---|---|
-| `Hover` | `boolean read FEffects.Hover` | `true` | the controls answer the mouse over them; off, only menus do |
+| `HoverStrength` | `integer` | `20` | how strongly the controls answer the mouse, 0 to 100: 20 is the look of the theme, more goes further, 0 leaves them still and only menus answer. Works on every preset and on a custom look |
+| `Hover` | `boolean` |  | HoverStrength above zero, read from the forms saved with it: off sets the strength to zero, on brings a zero back to 20; not stored |
 | `Active` | `boolean read FEffects.Active` | `true` | the focused control shows the focus on its border; off, a control looks the same with and without the focus |
 
 | Property | Type | Notes |
@@ -144,6 +145,6 @@ How the controls of this package draw: the smoothing of their shapes and the qua
 
 ## In pictures
 
-**The bar of the demo application that drives its TAppTheme: the preset, the hover and focus ring effects, smooth wheel scrolling and its speed, the shift of hue, saturation and lightness, the lightness of the fields, the hover strength, the shape antialiasing and the text quality.**
+**The bar of the demo application that drives its TAppTheme: the preset, the focus ring effect, smooth wheel scrolling and its speed, the shift of hue, saturation and lightness, the lightness of the fields, the hover strength, the shape antialiasing and the text quality.**
 
 ![TAppTheme](img/apptheme_0.png)

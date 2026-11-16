@@ -586,7 +586,7 @@ begin
     var sweep := 360*v/total;
     var fill := PALETTE[p mod length(PALETTE)];
     var hot := (FHot >= 0) and (FHot < length(FHits)) and (FHits[FHot].index = p);
-    if hot then fill := blend(fill, clWhite, 20);
+    if hot and hoverEnabled then fill := hoverBlend(fill, clWhite, 20);
     // the slice as a polygon: the center and the arc
     var steps := Max(Round(sweep/4), 2);
     var poly: array of TPointF;
@@ -794,7 +794,7 @@ begin
             var r := Rect(x1, Min(y1, y2), x1+Round(barW)-(if FKind = ckBars then 1 else 0), Max(y1, y2)+1);
             if r.Height < 2 then r.Bottom := r.Top+2;
             var fill := seriesColor(s);
-            if (FHot >= 0) and (FHot < length(FHits)) and (FHits[FHot].series = s) and (FHits[FHot].index = p) then fill := blend(fill, clWhite, 20);
+            if (FHot >= 0) and (FHot < length(FHits)) and (FHits[FHot].series = s) and (FHits[FHot].index = p) and hoverEnabled then fill := hoverBlend(fill, clWhite, 20);
             paintRoundRect(sp, r, scaled(self, FCornerRadius), fill, clNone);
             SetLength(FHits, length(FHits)+1);
             FHits[high(FHits)] := Default(THit);

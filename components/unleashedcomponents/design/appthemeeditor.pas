@@ -29,6 +29,7 @@ type
   private
     FPreset: TThemePreset;
     FSeed: TThemeSeed;
+    FHoverStrength: integer; // of every look, not a part of the seed
     FColor: integer; // seed color under the sliders: 0 surface .. 4 mark
     FFilling: boolean; // the controls are being set from the seed, not by the user
     FPresetBox: TComboBox;
@@ -50,6 +51,7 @@ type
     procedure colorChanged(Sender: TObject);
     procedure sliderChanged(Sender: TObject);
     procedure shiftChanged(Sender: TObject);
+    procedure hoverChanged(Sender: TObject);
     procedure tuneChanged(Sender: TObject);
     // the palette of the preset or the seed before the whole-theme moves
     function basePalette: TPalette;
@@ -64,6 +66,7 @@ type
     function palette: TPalette;
     property Preset: TThemePreset read FPreset write FPreset;
     property Seed: TThemeSeed read FSeed write FSeed;
+    property HoverStrength: integer read FHoverStrength write FHoverStrength;
     function HueShift: integer;
     function SaturationShift: integer;
     function LightnessShift: integer;
@@ -287,6 +290,7 @@ constructor TAppThemeEditorForm.CreateNew(AOwner: TComponent; Num: Integer);
 begin
   inherited CreateNew(AOwner, Num);
   FPreset := tpSystem;
+  FHoverStrength := DEFAULT_HOVER;
   FSeed := seedOf(lightPalette);
   build;
 end;
@@ -424,12 +428,12 @@ begin
   FSat := addSlider(left, LABEL_SATURATION, 0, 100, FSatValue);
   FLight := addSlider(left, LABEL_LIGHTNESS, 0, 100, FLightValue);
   FWindow := addSlider(left, LABEL_WINDOW, -30, 30, FWindowValue);
-  FHover := addSlider(left, LABEL_HOVER, 0, 40, FHoverValue);
+  FHover := addSlider(left, LABEL_HOVER, 0, 100, FHoverValue);
   FHue.OnChange := @sliderChanged;
   FSat.OnChange := @sliderChanged;
   FLight.OnChange := @sliderChanged;
   FWindow.OnChange := @shiftChanged;
-  FHover.OnChange := @shiftChanged;
+  FHover.OnChange := @hoverChanged;
 
   FPreview := TPaintBox.Create(self);
   FPreview.Parent := self;
@@ -441,6 +445,7 @@ end;
 function TAppThemeEditorForm.palette: TPalette;
 begin
   result := adjustPalette(basePalette, FTuneHue.Position, FTuneSat.Position, FTuneLight.Position);
+  result[COLOR_HOVER] := mix(result[COLOR_BTNFACE], result[COLOR_BTNTEXT], FHoverStrength);
 end;
 
 function TAppThemeEditorForm.HueShift: integer;
@@ -530,7 +535,7 @@ begin
     FSat.Position := round(s*100);
     FLight.Position := round(l*100);
     FWindow.Position := FSeed.FieldLightness;
-    FHover.Position := FSeed.HoverStrength;
+    FHover.Position := FHoverStrength;
     FHueValue.Caption := IntToStr(FHue.Position);
     FSatValue.Caption := IntToStr(FSat.Position)+'%';
     FLightValue.Caption := IntToStr(FLight.Position)+'%';
@@ -596,10 +601,17 @@ procedure TAppThemeEditorForm.shiftChanged(Sender: TObject);
 begin
   if FFilling then exit;
   FSeed.FieldLightness := FWindow.Position;
-  FSeed.HoverStrength := FHover.Position;
   FWindowValue.Caption := IntToStr(FWindow.Position);
-  FHoverValue.Caption := IntToStr(FHover.Position)+'%';
   wentCustom;
+end;
+
+// the hover strength works on every preset, so the preset stays
+procedure TAppThemeEditorForm.hoverChanged(Sender: TObject);
+begin
+  if FFilling then exit;
+  FHoverStrength := FHover.Position;
+  FHoverValue.Caption := IntToStr(FHover.Position)+'%';
+  FPreview.Invalidate;
 end;
 
 procedure TAppThemeEditorForm.pickChanged(Sender: TObject);
@@ -664,6 +676,7 @@ begin
   var dlg := autofree TAppThemeEditorForm.CreateNew(nil);
   dlg.Preset := theme.Preset;
   dlg.Seed := theme.Custom.Seed;
+  dlg.HoverStrength := theme.Effects.HoverStrength;
   dlg.SetShifts(theme.Shift.Hue, theme.Shift.Saturation, theme.Shift.Lightness);
   dlg.fillControls;
   if dlg.ShowModal <> mrOK then exit;
@@ -674,6 +687,7 @@ begin
   theme.Shift.Hue := dlg.HueShift;
   theme.Shift.Saturation := dlg.SaturationShift;
   theme.Shift.Lightness := dlg.LightnessShift;
+  theme.Effects.HoverStrength := dlg.HoverStrength;
   Modified;
 end;
 

@@ -329,7 +329,7 @@ begin
     var size := iconSizePx;
     var cx := (r.Left+r.Right) div 2;
     var cy := (r.Top+r.Bottom) div 2;
-    var glyph := if Enabled and hoverEnabled and FHotReveal then blend(icon, clWindowText, 50) else icon;
+    var glyph := if Enabled and hoverEnabled and FHotReveal then hoverBlend(icon, clWindowText, 50) else icon;
     // an eye: two arcs and the pupil; a stroke through it while revealed
     var w := size div 2;
     var h := Max(size div 4, 2);

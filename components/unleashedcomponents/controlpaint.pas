@@ -128,8 +128,20 @@ function hoverColor(surface: TColor = clBtnFace): TColor;
 function hoverShade(normal, strong: TColor): TColor;
 // the ring of the focused control
 function ringColor: TColor;
-// the controls answer the mouse over them; a theme can switch that off
+// the controls answer the mouse over them; a theme can switch that off,
+// and a hover strength of zero does the same
 function hoverEnabled: boolean;
+// how strongly the controls answer the mouse, in percent: 20 is the look of
+// the theme, 0 leaves them still, more goes further
+function hoverLevel: integer;
+// a share that a hover adds at the usual strength, at the strength of now:
+// for the steps a control paints with numbers of its own
+function hoverAmount(percent: integer): integer;
+// `color` moved toward `toward` by a hover: `percent` of the way at the
+// usual strength, less or more as the strength goes
+function hoverBlend(color, toward: TColor; percent: integer): TColor;
+// the hover strength of the controls while no theme is on; TAppTheme sets it
+procedure useHoverStrength(value: integer);
 // the focused control carries a ring; a theme can switch that off
 function ringEnabled: boolean;
 // `color` unless it is clDefault, then `fallback`; both resolved to RGB
@@ -1041,14 +1053,40 @@ end;
 
 // -- colors ----------------------
 
+var
+  // the hover strength without a theme
+  plainHover: integer = DEFAULT_HOVER;
+
+procedure useHoverStrength(value: integer);
+begin
+  plainHover := EnsureRange(value, 0, 100);
+end;
+
+function hoverLevel: integer;
+begin
+  result := if themeActive then ThemesPalette.hoverStrength(currentPalette) else plainHover;
+end;
+
+function hoverAmount(percent: integer): integer;
+begin
+  result := Min(100, percent*hoverLevel div DEFAULT_HOVER);
+end;
+
+function hoverBlend(color, toward: TColor; percent: integer): TColor;
+begin
+  result := blend(color, toward, hoverAmount(percent));
+end;
+
 function hoverColor(surface: TColor): TColor;
 begin
-  result := if themeActive then ThemesPalette.hoverFill(currentPalette, surface) else blend(surface, clWindowText, 20);
+  result := if themeActive then ThemesPalette.hoverFill(currentPalette, surface) else blend(surface, clWindowText, plainHover);
 end;
 
 function hoverShade(normal, strong: TColor): TColor;
 begin
-  result := if themeActive then ThemesPalette.hoverShade(currentPalette, normal, strong) else ColorToRGB(strong);
+  if themeActive then exit(ThemesPalette.hoverShade(currentPalette, normal, strong));
+  // the whole way at the usual strength, on toward the text past it
+  result := if plainHover <= DEFAULT_HOVER then blend(normal, strong, plainHover*100 div DEFAULT_HOVER) else blend(strong, clWindowText, (plainHover-DEFAULT_HOVER)*100 div (100-DEFAULT_HOVER));
 end;
 
 function ringColor: TColor;
@@ -1058,7 +1096,7 @@ end;
 
 function hoverEnabled: boolean;
 begin
-  result := (not themeActive) or themeEffects.Hover;
+  result := (hoverLevel > 0) and ((not themeActive) or themeEffects.Hover);
 end;
 
 function ringEnabled: boolean;

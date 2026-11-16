@@ -693,7 +693,7 @@ begin
     if item.Closable and FAllowClose then begin
       var c := Rect(r.Right-closeW-scaled(self, 4), r.Top+(r.Height-closeW) div 2, r.Right-scaled(self, 4), r.Top+(r.Height+closeW) div 2);
       if item = FHotClose then paintRoundRect(sp, c, scaled(self, 3), hoverColor(fill), clNone);
-      paintCross(sp, c, scaled(self, 7), blend(pick(FTabTextColor, clBtnText), fill, (if item = FHotClose then 0 else 35)), 1);
+      paintCross(sp, c, scaled(self, 7), blend(pick(FTabTextColor, clBtnText), fill, 35-(if (item = FHotClose) and hoverEnabled then Min(35, hoverAmount(35)) else 0)), 1);
     end;
     x += w+scaled(self, 2);
   end;

@@ -775,7 +775,7 @@ begin
     if e.AllDay or e.FRect.IsEmpty then continue;
     var c := toneOf(e);
     var fill := blend(c, back, (if e = FSelected then 0 else 25));
-    if (e = FHot) and hoverEnabled and (e <> FSelected) then fill := blend(c, back, 10);
+    if (e = FHot) and hoverEnabled and (e <> FSelected) then fill := hoverBlend(c, back, 10);
     paintRoundRect(sp, e.FRect, scaled(self, FCornerRadius), fill, (if e = FSelected then ColorToRGB(clWindowText) else blend(c, clWindowText, 20)), (if e = FSelected then 2 else 1));
     sp.FillRoundRect(e.FRect.Left+2, e.FRect.Top+3, e.FRect.Left+5, e.FRect.Bottom-3, 1.5, blend(c, clWindowText, 35));
   end;
