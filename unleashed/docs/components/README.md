@@ -1,6 +1,6 @@
 # Unleashed Components
 
-104 components for LCL applications, in one package: `components/unleashedcomponents`. They draw through the theme engine, so a `TAppTheme` on the main form recolors all of them together with the native controls, and they are written for Windows and Linux alike, with no platform-specific code paths.
+103 components for LCL applications, in one package: `components/unleashedcomponents`. They draw through the theme engine, so a `TAppTheme` on the main form recolors all of them together with the native controls, and they are written for Windows and Linux alike, with no platform-specific code paths.
 
 Each page below has the properties, the events, the runtime methods, a usage example that compiles as written, and pictures from the demo application: the component as it sits on the form, its states (a drop-down open, a panel folded, a dialog up) and, where it has one, every value of its style property.
 
@@ -47,7 +47,6 @@ Each page below has the properties, the events, the runtime methods, a usage exa
 | [`TStatCard`](statcard.md) | a card with one figure: a title, the value in large type, its change with an arrow, a line under it and a small chart of the trend |
 | [`TClock`](clock.md) | a clock face or a digital readout |
 | [`TRichLabel`](richlabel.md) | a label with styled runs inside one caption: <b>, <i>, <u>, <s> for bold, italic, underlined and struck text, <c=#RRGGBB> or <c=clRed> for a color, <size=N> for a point size, <br> for a line break, <a href="url"> for a link |
-| [`TLinkLabel`](linklabel.md) | a label whose caption holds links: the text between <a href="..."> and </a> shows as a link and opens its target when clicked, unless OnLinkClick handles it |
 | [`TMarquee`](marquee.md) | a caption rolling across the control, like a ticker |
 | [`TQRCode`](qrcode.md) | a QR code of Text, drawn to fill the control |
 | [`TBarcode`](barcode.md) | a linear barcode of Text with the text under it |

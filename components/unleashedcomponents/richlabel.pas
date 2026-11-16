@@ -22,6 +22,8 @@ type
 
   { TRichLabel }
 
+  // when a link is underlined
+  TLinkUnderline = (luAlways, luHover, luNever);
   TLinkClickEvent = procedure(Sender: TObject; const href: string) of object;
 
   // a label with styled runs inside one caption: <b>, <i>, <u>, <s> for
@@ -42,12 +44,14 @@ type
       end;
     var
     FRuns: array of TRun;
-    FWordWrap, FTransparent, FEndEllipsis, FOpenLinks: boolean;
+    FWordWrap, FTransparent, FEndEllipsis, FOpenLinks, FTrackVisited: boolean;
+    FLinkUnderline: TLinkUnderline;
     FAlignment: TAlignment;
     FLayout: TTextLayout;
     FLineSpacing: integer;
-    FTextColor, FLinkColor, FHoverLinkColor: TColor;
+    FTextColor, FLinkColor, FHoverLinkColor, FVisitedLinkColor: TColor;
     FHotLink: string;
+    FVisited: TStringList;
     FOnLinkClick: TLinkClickEvent;
     procedure setFlag(index: integer; value: boolean);
     function getFlag(index: integer): boolean;
@@ -59,6 +63,7 @@ type
     procedure setAlignment(value: TAlignment);
     procedure setLayout(value: TTextLayout);
     procedure setLineSpacing(value: integer);
+    procedure setLinkUnderline(value: TLinkUnderline);
     procedure parse;
     procedure applyFont(const run: TRun);
     function measure(width: integer; out lines: integer): integer;
@@ -74,8 +79,16 @@ type
     class function GetControlClassDefaultSize: TSize; override;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     // the caption without its tags
     function PlainText: string;
+    // the links of the caption in order
+    function LinkCount: integer;
+    function Links(index: integer): string;
+    // the link was followed; VisitedLinkColor shows it
+    function Visited(const href: string): boolean;
+    procedure MarkVisited(const href: string);
+    procedure ClearVisited;
   published
     property Caption;
     property WordWrap: boolean read FWordWrap write setWordWrap default false;
@@ -88,10 +101,14 @@ type
     property EndEllipsis: boolean index 0 read getFlag write setFlag default false;
     // a click on a link opens it in the browser, before OnLinkClick
     property OpenLinks: boolean index 1 read getFlag write setFlag default true;
+    // a followed link turns VisitedLinkColor
+    property TrackVisited: boolean index 2 read getFlag write setFlag default false;
+    property LinkUnderline: TLinkUnderline read FLinkUnderline write setLinkUnderline default luAlways;
     // clDefault takes the font color, or the text color of the theme
     property TextColor: TColor index 0 read getPartColor write setPartColor default clDefault;
     property LinkColor: TColor index 1 read getPartColor write setPartColor default clDefault;
     property HoverLinkColor: TColor index 2 read getPartColor write setPartColor default clDefault;
+    property VisitedLinkColor: TColor index 3 read getPartColor write setPartColor default clDefault;
     property OnLinkClick: TLinkClickEvent read FOnLinkClick write FOnLinkClick;
     property Align;
     property Anchors;
@@ -134,9 +151,18 @@ begin
   FTextColor := clDefault;
   FLinkColor := clDefault;
   FHoverLinkColor := clDefault;
+  FVisitedLinkColor := clDefault;
+  FVisited := TStringList.Create;
+  FVisited.CaseSensitive := false;
   ParentColor := true;
   AutoSize := true;
   with GetControlClassDefaultSize do SetInitialBounds(0, 0, cx, cy);
+end;
+
+destructor TRichLabel.Destroy;
+begin
+  FVisited.Free;
+  inherited Destroy;
 end;
 
 class function TRichLabel.GetControlClassDefaultSize: TSize;
@@ -366,6 +392,7 @@ begin
   // a link is text: it reads like text on the surface
   var link := pick(FLinkColor, legibleOn(clHotLight, GetRGBColorResolvingParent, 4.5));
   var hotLink := if hoverEnabled then pick(FHoverLinkColor, hoverBlend(link, clWindowText, 30)) else link;
+  var visitedLink := pick(FVisitedLinkColor, blend(link, clGrayText, 50));
   Canvas.Brush.Style := bsClear;
   // the ellipsis takes the place of the last run of the first line that
   // reaches past the right edge
@@ -377,8 +404,9 @@ begin
     if r.Left >= ClientWidth then continue;
     applyFont(FRuns[i]);
     if FRuns[i].href <> '' then begin
-      Canvas.Font.Style := Canvas.Font.Style+[fsUnderline];
-      Canvas.Font.Color := if not Enabled then plain else if FRuns[i].href = FHotLink then hotLink else link;
+      var hot := FRuns[i].href = FHotLink;
+      if (FLinkUnderline = luAlways) or ((FLinkUnderline = luHover) and hot) then Canvas.Font.Style := Canvas.Font.Style+[fsUnderline];
+      Canvas.Font.Color := if not Enabled then plain else if hot then hotLink else if FTrackVisited and Visited(FRuns[i].href) then visitedLink else link;
     end else Canvas.Font.Color := if (FRuns[i].color = clDefault) or not Enabled then plain else ColorToRGB(FRuns[i].color);
     var piece := FRuns[i].text;
     if (dots > 0) and (r.Right > ClientWidth) then begin
@@ -450,6 +478,7 @@ begin
   if href = '' then exit;
   if FOpenLinks then OpenURL(href);
   if Assigned(FOnLinkClick) then FOnLinkClick(self, href);
+  if FTrackVisited then MarkVisited(href);
 end;
 
 procedure TRichLabel.TextChanged;
@@ -477,6 +506,50 @@ begin
     InvalidatePreferredSize;
     AdjustSize;
   end;
+end;
+
+// -- links ----------------------
+
+function TRichLabel.LinkCount: integer;
+begin
+  if FRuns = nil then parse;
+  result := 0;
+  var last := '';
+  for var i := 0 to high(FRuns) do if (FRuns[i].href <> '') and (FRuns[i].href <> last) then begin
+    inc(result);
+    last := FRuns[i].href;
+  end;
+end;
+
+function TRichLabel.Links(index: integer): string;
+begin
+  if FRuns = nil then parse;
+  result := '';
+  var n := -1;
+  var last := '';
+  for var i := 0 to high(FRuns) do if (FRuns[i].href <> '') and (FRuns[i].href <> last) then begin
+    inc(n);
+    last := FRuns[i].href;
+    if n = index then exit(last);
+  end;
+end;
+
+function TRichLabel.Visited(const href: string): boolean;
+begin
+  result := FVisited.IndexOf(href) >= 0;
+end;
+
+procedure TRichLabel.MarkVisited(const href: string);
+begin
+  if Visited(href) then exit;
+  FVisited.Add(href);
+  Invalidate;
+end;
+
+procedure TRichLabel.ClearVisited;
+begin
+  FVisited.Clear;
+  Invalidate;
 end;
 
 // -- properties ----------------------
@@ -513,13 +586,23 @@ end;
 
 function TRichLabel.getFlag(index: integer): boolean;
 begin
-  result := if index = 0 then FEndEllipsis else FOpenLinks;
+  result := match index of
+    0: FEndEllipsis;
+    1: FOpenLinks;
+  else
+    FTrackVisited
+  end;
 end;
 
 procedure TRichLabel.setFlag(index: integer; value: boolean);
 begin
   if getFlag(index) = value then exit;
-  if index = 0 then FEndEllipsis := value else FOpenLinks := value;
+  match index of
+    0: FEndEllipsis := value;
+    1: FOpenLinks := value;
+  else
+    FTrackVisited := value;
+  end;
   Invalidate;
 end;
 
@@ -528,8 +611,9 @@ begin
   result := match index of
     0: FTextColor;
     1: FLinkColor;
+    2: FHoverLinkColor;
   else
-    FHoverLinkColor
+    FVisitedLinkColor
   end;
 end;
 
@@ -539,9 +623,17 @@ begin
   match index of
     0: FTextColor := value;
     1: FLinkColor := value;
+    2: FHoverLinkColor := value;
   else
-    FHoverLinkColor := value;
+    FVisitedLinkColor := value;
   end;
+  Invalidate;
+end;
+
+procedure TRichLabel.setLinkUnderline(value: TLinkUnderline);
+begin
+  if FLinkUnderline = value then exit;
+  FLinkUnderline := value;
   Invalidate;
 end;
 

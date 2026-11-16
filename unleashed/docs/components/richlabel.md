@@ -38,9 +38,12 @@ end;
 | `LineSpacing` | `integer` | `0` | extra pixels between lines |
 | `EndEllipsis` | `boolean` | `false` | a caption that does not fit ends in an ellipsis instead of being cut |
 | `OpenLinks` | `boolean` | `true` | a click on a link opens it in the browser, before OnLinkClick |
+| `TrackVisited` | `boolean` | `false` | a followed link turns VisitedLinkColor |
+| `LinkUnderline` | `TLinkUnderline` | `luAlways` | when a link is underlined |
 | `TextColor` | `TColor` | `clDefault` | clDefault takes the font color, or the text color of the theme |
 | `LinkColor` | `TColor` | `clDefault` | clDefault takes the color of the theme |
 | `HoverLinkColor` | `TColor` | `clDefault` |  |
+| `VisitedLinkColor` | `TColor` | `clDefault` |  |
 
 Also the standard properties of a control, re-published: `Caption`, `Align`, `Anchors`, `AutoSize`, `BorderSpacing`, `Color`, `Constraints`, `Enabled`, `Font`, `Hint`, `ParentColor`, `ParentFont`, `ParentShowHint`, `PopupMenu`, `ShowHint`, `Visible`, `OnClick`, `OnContextPopup`, `OnDblClick`, `OnMouseDown`, `OnMouseEnter`, `OnMouseLeave`, `OnMouseMove`, `OnMouseUp`, `OnResize`.
 
@@ -48,7 +51,7 @@ Also the standard properties of a control, re-published: `Caption`, `Align`, `An
 
 | Event | Handler | Notes |
 |---|---|---|
-| `OnLinkClick` | `procedure(Sender: TObject; const link: string; var handled: boolean)` | a click on a link |
+| `OnLinkClick` | `procedure(Sender: TObject; const href: string)` | a click on a link |
 
 ## Runtime
 
@@ -57,3 +60,14 @@ Available in code, not in the Object Inspector.
 | Method | Notes |
 |---|---|
 | `PlainText: string` | the caption without its tags |
+| `LinkCount: integer` | the links of the caption in order |
+| `Links(index: integer): string` |  |
+| `Visited(const href: string): boolean` | the link was followed; VisitedLinkColor shows it |
+| `MarkVisited(const href: string)` |  |
+| `ClearVisited` |  |
+
+## Types
+
+| Type | Values | Notes |
+|---|---|---|
+| `TLinkUnderline` | `luAlways`, `luHover`, `luNever` | when a link is underlined |

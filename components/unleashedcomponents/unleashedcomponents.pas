@@ -9,23 +9,23 @@ interface
 
 uses
   AppTheme, RangeSlider, ControlPaint, ToggleSwitch, SearchEdit, SplitButton, 
-  LinkLabel, SegmentedControl, ColorPickers, BusyIndicator, ProgressRing, ProgressLine, 
-  SuggestEdit, Badge, Rating, Led, Sparkline, Marquee, Knob, Gauge, Clock, 
-  RichLabel, PasswordEdit, HotKeyEdit, DurationEdit, ImageViewer, QRCode, 
-  JsonTreeView, TagEditor, LogView, DropZone, DateRangePicker, TimelineView, 
-  Toast, Divider, CardPanel, ExpanderPanel, SideNav, SplitView, Debouncer, 
-  BackgroundTask, StackPanel, GridPanel, Accordion, BreadcrumbBar, 
-  WizardControl, OverlayPanel, Carousel, PageView, PageIndicator, AppInstance, 
-  CommandPalette, UndoStack, RecentFiles, PopupWindow, CalendarView, 
-  DatePicker, NumberBox, FontComboBox, SevenSegment, StatCard, Avatar, Barcodes, 
-  TerminalView, EmptyState, CheckGroupBox, FormLayout, FieldRow, TabStrip, 
-  CommandBar, InfoBar, Popover, SplashScreen, ProgressDialog, Animator, 
-  Validator, SerialPort, DataTable, PropertyGrid, Countdown, ChartLite, 
-  ColorSwatchButton, SettingsStore, KanbanBoard, ShortcutMap, TourGuide, 
-  NotificationCenters, MarkdownLabel, PlotCanvas, CheckComboBox, 
-  HeatmapCalendar, HexEditor, DiffView, ImageCropper, FolderTree, FileList, 
-  PaintCanvas, GanttChart, NodeEditor, SchedulerView, TreeGrid, DockPanel, 
-  ChatView, CodeReaders, ThemeSwitch, ContentPanel, LazarusPackageIntf;
+  SegmentedControl, ColorPickers, BusyIndicator, ProgressRing, ProgressLine, SuggestEdit, 
+  Badge, Rating, Led, Sparkline, Marquee, Knob, Gauge, Clock, RichLabel, 
+  PasswordEdit, HotKeyEdit, DurationEdit, ImageViewer, QRCode, JsonTreeView, 
+  TagEditor, LogView, DropZone, DateRangePicker, TimelineView, Toast, Divider, 
+  CardPanel, ExpanderPanel, SideNav, SplitView, Debouncer, BackgroundTask, 
+  StackPanel, GridPanel, Accordion, BreadcrumbBar, WizardControl, OverlayPanel, 
+  Carousel, PageView, PageIndicator, AppInstance, CommandPalette, UndoStack, 
+  RecentFiles, PopupWindow, CalendarView, DatePicker, NumberBox, FontComboBox, 
+  SevenSegment, StatCard, Avatar, Barcodes, TerminalView, EmptyState, 
+  CheckGroupBox, FormLayout, FieldRow, TabStrip, CommandBar, InfoBar, Popover, 
+  SplashScreen, ProgressDialog, Animator, Validator, SerialPort, DataTable, 
+  PropertyGrid, Countdown, ChartLite, ColorSwatchButton, SettingsStore, 
+  KanbanBoard, ShortcutMap, TourGuide, NotificationCenters, MarkdownLabel, 
+  PlotCanvas, CheckComboBox, HeatmapCalendar, HexEditor, DiffView, 
+  ImageCropper, FolderTree, FileList, PaintCanvas, GanttChart, NodeEditor, 
+  SchedulerView, TreeGrid, DockPanel, ChatView, CodeReaders, ThemeSwitch, 
+  ContentPanel, LazarusPackageIntf;
 
 implementation
 
