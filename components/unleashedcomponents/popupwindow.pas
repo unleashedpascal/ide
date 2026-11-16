@@ -159,6 +159,8 @@ begin
   inherited CreateWnd;
   // a click into the popup must not take the activation from the form
   keepInactive(Handle);
+  // a repaint of the popup would wipe the controls on it otherwise
+  clipChildren(Handle);
 end;
 
 // the stock version focuses the first child, which drags the keyboard and

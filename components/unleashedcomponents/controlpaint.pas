@@ -213,6 +213,9 @@ function monospaceFontName: string;
 // a popup window the clicks never activate, so the form behind keeps its
 // look and the focus; nothing to do outside Windows
 procedure keepInactive(wnd: HWND);
+// a window that paints around its child windows instead of over them; a
+// hint window of Windows comes without that, the other windows have it
+procedure clipChildren(wnd: HWND);
 // a translucent top level window whose pixels of `keyColor` are see-through;
 // a layered window ignores its region, so the key cuts its corners instead.
 // Call it again after every change of the alpha, the LCL resets the key.
@@ -1281,6 +1284,14 @@ begin
   {$ifdef WINDOWS}
   // GWL_EXSTYLE and WS_EX_NOACTIVATE
   setWindowLongPtr(wnd, -20, getWindowLongPtr(wnd, -20) or $08000000);
+  {$endif}
+end;
+
+procedure clipChildren(wnd: HWND);
+begin
+  {$ifdef WINDOWS}
+  // GWL_STYLE and WS_CLIPCHILDREN
+  setWindowLongPtr(wnd, -16, getWindowLongPtr(wnd, -16) or $02000000);
   {$endif}
 end;
 
