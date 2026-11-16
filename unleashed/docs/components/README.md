@@ -1,6 +1,6 @@
 # Unleashed Components
 
-103 components for LCL applications, in one package: `components/unleashedcomponents`. They draw through the theme engine, so a `TAppTheme` on the main form recolors all of them together with the native controls, and they are written for Windows and Linux alike, with no platform-specific code paths.
+104 components for LCL applications, in one package: `components/unleashedcomponents`. They draw through the theme engine, so a `TAppTheme` on the main form recolors all of them together with the native controls, and they are written for Windows and Linux alike, with no platform-specific code paths.
 
 Each page below has the properties, the events, the runtime methods, a usage example that compiles as written, and pictures from the demo application: the component as it sits on the form, its states (a drop-down open, a panel folded, a dialog up) and, where it has one, every value of its style property.
 
@@ -9,6 +9,7 @@ Each page below has the properties, the events, the runtime methods, a usage exa
 | Component | What it is |
 |---|---|
 | [`TAppTheme`](apptheme.md) | puts a color theme on every window of the application, native controls included, and keeps it on the windows made later |
+| [`TThemeSwitch`](themeswitch.md) | switches the theme of the application between the themes chosen for it: a switch, a bar, buttons or a drop down, each theme with its icon |
 | [`TSearchEdit`](searchedit.md) | a search field: a magnifier, the text, a cross that clears it |
 | [`TSuggestEdit`](suggestedit.md) | an edit with a list of suggestions dropping under it as the user types: the matches from Items, or whatever OnGetSuggestions fills in |
 | [`TPasswordEdit`](passwordedit.md) | a password field with an eye that reveals the text, a strength bar and a caps lock warning |

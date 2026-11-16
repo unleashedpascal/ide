@@ -16,7 +16,7 @@ unit AppTheme;
 interface
 
 uses
-  Classes, SysUtils, Graphics, Forms, ThemesPalette, ThemesSeed, ThemesIcons, ControlPaint;
+  Classes, SysUtils, Graphics, Forms, LazMethodList, ThemesPalette, ThemesSeed, ThemesIcons, ControlPaint;
 
 type
   // tpNone keeps the stock look of the widgetset; tpSystem picks the light or
@@ -196,6 +196,7 @@ type
   // At design time it changes nothing, the designed forms keep the stock look
   TAppTheme = class(TComponent)
   private
+    FListeners: TMethodList;
     FActive: boolean;
     FPreset: TThemePreset;
     FCustom: TThemeColors;
@@ -237,6 +238,10 @@ type
     class function Supported: boolean;
     // the one instance of the application, nil before it is created
     class function Instance: TAppTheme;
+    // a handler called after every change of the choice, next to OnChange;
+    // in the designer too, where the look on screen stays the stock one
+    procedure AddHandlerChange(handler: TNotifyEvent);
+    procedure RemoveHandlerChange(handler: TNotifyEvent);
   published
     // false keeps the stock look whatever the preset says
     property Active: boolean read FActive write setActive default true;
@@ -256,6 +261,8 @@ type
 
 // the palette of a fixed preset; tpNone, tpSystem and tpCustom give the light one
 function presetPalette(preset: TThemePreset): TPalette;
+// the name of a preset as a user of the application reads it
+function presetCaption(preset: TThemePreset): string;
 
 implementation
 
@@ -264,9 +271,37 @@ uses
 
 resourcestring
   ERROR_SECOND_THEME = 'This form has %s already. A form takes one TAppTheme, which themes the whole application.';
+  CAPTION_CLASSIC = 'Classic';
+  CAPTION_SYSTEM = 'System';
+  CAPTION_LIGHT = 'Light';
+  CAPTION_DARK = 'Dark';
+  CAPTION_OCEAN = 'Ocean';
+  CAPTION_FROST = 'Frost';
+  CAPTION_PAPER = 'Paper';
+  CAPTION_EMBER = 'Ember';
+  CAPTION_MIDNIGHT = 'Midnight';
+  CAPTION_DUSK = 'Dusk';
+  CAPTION_CUSTOM = 'Custom';
 
 var
   theInstance: TAppTheme = nil;
+
+function presetCaption(preset: TThemePreset): string;
+begin
+  match preset of
+    tpNone: result := CAPTION_CLASSIC;
+    tpSystem: result := CAPTION_SYSTEM;
+    tpLight: result := CAPTION_LIGHT;
+    tpDark: result := CAPTION_DARK;
+    tpOcean: result := CAPTION_OCEAN;
+    tpFrost: result := CAPTION_FROST;
+    tpPaper: result := CAPTION_PAPER;
+    tpEmber: result := CAPTION_EMBER;
+    tpMidnight: result := CAPTION_MIDNIGHT;
+    tpDusk: result := CAPTION_DUSK;
+    _: result := CAPTION_CUSTOM;
+  end;
+end;
 
 function presetPalette(preset: TThemePreset): TPalette;
 begin
@@ -602,6 +637,7 @@ begin
   FShift.Free;
   FScrolling.Free;
   FRendering.Free;
+  FreeAndNil(FListeners);
   if not (csDesigning in ComponentState) then Screen.RemoveHandlerNewFormCreated(@formCreated);
   inherited Destroy;
 end;
@@ -609,6 +645,19 @@ end;
 class function TAppTheme.Instance: TAppTheme;
 begin
   result := theInstance;
+end;
+
+// the list comes to life on the first handler, which may be added while the
+// theme is still in its constructor
+procedure TAppTheme.AddHandlerChange(handler: TNotifyEvent);
+begin
+  if FListeners = nil then FListeners := TMethodList.Create;
+  FListeners.Add(TMethod(handler));
+end;
+
+procedure TAppTheme.RemoveHandlerChange(handler: TNotifyEvent);
+begin
+  if FListeners <> nil then FListeners.Remove(TMethod(handler));
 end;
 
 class function TAppTheme.Supported: boolean;
@@ -646,8 +695,11 @@ end;
 
 procedure TAppTheme.Apply;
 begin
-  if csDesigning in ComponentState then exit;
   if csLoading in ComponentState then exit;
+  if csDesigning in ComponentState then begin
+    if FListeners <> nil then FListeners.CallNotifyEvents(self);
+    exit;
+  end;
   if theInstance <> self then raise EComponentError.Create('Only one TAppTheme per application');
   applyScrolling;
   applyRendering;
@@ -662,6 +714,7 @@ begin
   // the desktop switch between light and dark is followed only by the live
   // application; the IDE keeps its own handler
   onSystemThemeChange := @instanceSystemChanged;
+  if FListeners <> nil then FListeners.CallNotifyEvents(self);
   if Assigned(FOnChange) then FOnChange(self);
 end;
 

@@ -41,6 +41,10 @@ Mozilla Public License, v. 2.0 (SPDX-License-Identifier: MPL-2.0). The full text
         <Filename Value="pagevieweditor.pas"/>
         <UnitName Value="PageViewEditor"/>
       </Item>
+      <Item>
+        <Filename Value="themeswitcheditor.pas"/>
+        <UnitName Value="ThemeSwitchEditor"/>
+      </Item>
     </Files>
     <RequiredPkgs>
       <Item>

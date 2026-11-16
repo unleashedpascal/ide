@@ -32,7 +32,7 @@ implementation
 {$R ../unleashedcomponents.res}
 
 uses
-  Classes, TypInfo, ComponentReg, ComponentEditors, PropEdits, AppTheme, AppThemeEditor, RangeSlider, ToggleSwitch, SearchEdit, SplitButton, LinkLabel, SegmentedControl, SegmentEditor, ChatViewEditor, ColorPickers, BusyIndicator, ProgressRing, ProgressLine, SuggestEdit, Badge, Rating, Led, Sparkline, Marquee, Knob, Gauge, Clock, RichLabel, PasswordEdit, HotKeyEdit, DurationEdit, ImageViewer, QRCode, JsonTreeView, TagEditor, LogView, DropZone, DateRangePicker, TimelineView, Toast, Divider, CardPanel, ExpanderPanel, SideNav, SplitView, Debouncer, BackgroundTask, StackPanel, GridPanel, Accordion, BreadcrumbBar, WizardControl, OverlayPanel, Carousel, PageView, PageViewEditor, PageIndicator, AppInstance, CommandPalette, UndoStack, RecentFiles, CalendarView, DatePicker, NumberBox, FontComboBox, SevenSegment, StatCard, Avatar, Barcodes, TerminalView, EmptyState, CheckGroupBox, FormLayout, FieldRow, TabStrip, CommandBar, InfoBar, Popover, SplashScreen, ProgressDialog, Animator, Validator, SerialPort, DataTable, PropertyGrid, Countdown, ChartLite, ColorSwatchButton, SettingsStore, KanbanBoard, ShortcutMap, TourGuide, NotificationCenters, MarkdownLabel, PlotCanvas, CheckComboBox, HeatmapCalendar, HexEditor, DiffView, ImageCropper, FolderTree, FileList, PaintCanvas, GanttChart, NodeEditor, SchedulerView, TreeGrid, DockPanel, ChatView, CodeReaders, ContentPanel;
+  Classes, TypInfo, ComponentReg, ComponentEditors, PropEdits, AppTheme, AppThemeEditor, ThemeSwitch, ThemeSwitchEditor, RangeSlider, ToggleSwitch, SearchEdit, SplitButton, LinkLabel, SegmentedControl, SegmentEditor, ChatViewEditor, ColorPickers, BusyIndicator, ProgressRing, ProgressLine, SuggestEdit, Badge, Rating, Led, Sparkline, Marquee, Knob, Gauge, Clock, RichLabel, PasswordEdit, HotKeyEdit, DurationEdit, ImageViewer, QRCode, JsonTreeView, TagEditor, LogView, DropZone, DateRangePicker, TimelineView, Toast, Divider, CardPanel, ExpanderPanel, SideNav, SplitView, Debouncer, BackgroundTask, StackPanel, GridPanel, Accordion, BreadcrumbBar, WizardControl, OverlayPanel, Carousel, PageView, PageViewEditor, PageIndicator, AppInstance, CommandPalette, UndoStack, RecentFiles, CalendarView, DatePicker, NumberBox, FontComboBox, SevenSegment, StatCard, Avatar, Barcodes, TerminalView, EmptyState, CheckGroupBox, FormLayout, FieldRow, TabStrip, CommandBar, InfoBar, Popover, SplashScreen, ProgressDialog, Animator, Validator, SerialPort, DataTable, PropertyGrid, Countdown, ChartLite, ColorSwatchButton, SettingsStore, KanbanBoard, ShortcutMap, TourGuide, NotificationCenters, MarkdownLabel, PlotCanvas, CheckComboBox, HeatmapCalendar, HexEditor, DiffView, ImageCropper, FolderTree, FileList, PaintCanvas, GanttChart, NodeEditor, SchedulerView, TreeGrid, DockPanel, ChatView, CodeReaders, ContentPanel;
 
 const
   PAGES: array[0..6] of string = (PAGE_INPUT, PAGE_DISPLAY, PAGE_VIEWS, PAGE_LAYOUT, PAGE_NAVIGATION, PAGE_FEEDBACK, PAGE_SYSTEM);
@@ -40,7 +40,7 @@ const
 procedure Register;
 begin
   // the theme of the whole application leads the first page
-  RegisterComponents(PAGE_INPUT, [TAppTheme, TSearchEdit, TSuggestEdit, TPasswordEdit, TNumberBox, THotKeyEdit, TDurationEdit, TDatePicker, TDateRangePicker, TTagEditor, TColorPicker, TFontComboBox, TRangeSlider, TToggleSwitch, TSegmentedControl, TKnob, TRating, TSplitButton, TDropZone, TColorSwatchButton, TCheckComboBox]);
+  RegisterComponents(PAGE_INPUT, [TAppTheme, TThemeSwitch, TSearchEdit, TSuggestEdit, TPasswordEdit, TNumberBox, THotKeyEdit, TDurationEdit, TDatePicker, TDateRangePicker, TTagEditor, TColorPicker, TFontComboBox, TRangeSlider, TToggleSwitch, TSegmentedControl, TKnob, TRating, TSplitButton, TDropZone, TColorSwatchButton, TCheckComboBox]);
   RegisterComponents(PAGE_DISPLAY, [TBadge, TAvatar, TLed, TSevenSegment, TProgressRing, TProgressLine, TBusyIndicator, TGauge, TSparkline, TStatCard, TClock, TRichLabel, TLinkLabel, TMarquee, TQRCode, TBarcode, TCodeReader, TCountdown, TChartLite, TMarkdownLabel, TPlotCanvas, THeatmapCalendar]);
   RegisterComponents(PAGE_VIEWS, [TCalendarView, TImageViewer, TLogView, TChatView, TTerminalView, TJsonTreeView, TTimelineView, TEmptyState, TDataTable, TPropertyGrid, TKanbanBoard, THexEditor, TDiffView, TImageCropper, TFolderTree, TFileList, TPaintCanvas, TGanttChart, TNodeEditor, TSchedulerView, TTreeGrid]);
   RegisterComponents(PAGE_LAYOUT, [TContentPanel, TCardPanel, TExpanderPanel, TAccordion, TCheckGroupBox, TStackPanel, TGridPanel, TFormLayout, TFieldRow, TSplitView, TDivider, TPageView, TCarousel, TDockPanel]);
@@ -48,12 +48,15 @@ begin
   RegisterComponents(PAGE_FEEDBACK, [TToast, TInfoBar, TPopover, TOverlayPanel, TSplashScreen, TProgressDialog, TTourGuide, TNotificationCenter]);
   RegisterComponents(PAGE_SYSTEM, [TAnimator, TValidator, TDebouncer, TBackgroundTask, TUndoStack, TRecentFiles, TSingleInstance, TSerialPort, TSettingsStore, TShortcutMap]);
   RegisterComponentEditor(TAppTheme, TAppThemeComponentEditor);
+  RegisterComponentEditor(TThemeSwitch, TThemeSwitchComponentEditor);
   RegisterComponentEditor(TSegmentedControl, TSegmentedControlEditor);
   RegisterComponentEditor(TPageView, TPageViewEditor);
   RegisterComponentEditor(TPageSheet, TPageSheetEditor);
   // the pages come from the menu of the view, not from the palette
   RegisterNoIcon([TPageSheet]);
   RegisterPropertyEditor(TypeInfo(boolean), TChatColors, 'Auto', TChatAutoColorsEditor);
+  RegisterPropertyEditor(TypeInfo(TThemeSwitchItems), TThemeSwitch, 'Themes', TThemeSwitchThemesEditor);
+  RegisterPropertyEditor(TypeInfo(TThemeGlyph), TThemeSwitchItem, 'Glyph', TThemeGlyphPropertyEditor);
   for var page in PAGES do IDEComponentPalette.AnchorPage(page, 'Common Controls');
 end;
 

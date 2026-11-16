@@ -55,6 +55,8 @@ Available in code, not in the Object Inspector.
 | `IsDark: boolean` | the look on screen is dark |
 | `Supported: boolean` | the widgetset has a theme engine; elsewhere only the icons are fitted |
 | `Instance: TAppTheme` | the one instance of the application, nil before it is created |
+| `AddHandlerChange(handler: TNotifyEvent)` | a handler called after every change of the choice, next to OnChange; in the designer too, where the look on screen stays the stock one |
+| `RemoveHandlerChange(handler: TNotifyEvent)` |  |
 
 ## Companion classes
 
