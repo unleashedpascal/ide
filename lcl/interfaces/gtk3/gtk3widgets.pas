@@ -1864,6 +1864,10 @@ begin
   end;
 end;
 
+var
+  // the control the wheel event in flight was last delivered to
+  WheelEventControl: TWinControl = nil;
+
 class function TGtk3Widget.ScrollEvent(AWidget: PGtkWidget; AEvent: PGdkEvent; AData: GPointer): GBoolean; cdecl;
 var
   AWinControl: TWinControl;
@@ -1881,7 +1885,10 @@ begin
 
   AWinControl := TGtk3Widget(AData).LCLObject;
 
-  if AEvent^.scroll.send_event = NO_PROPAGATION_TO_PARENT then
+  // a wheel the child control left unhandled goes on to its parent, as with
+  // the other widgetsets, but each control gets it once
+  if (AEvent^.scroll.send_event = NO_PROPAGATION_TO_PARENT) and
+    (WheelEventControl = AWinControl) then
     exit;
 
   MappedXY := Point(Round(AEvent^.Scroll.X),Round(AEvent^.scroll.Y));
@@ -1896,6 +1903,9 @@ begin
 
   //writeln('TGtk3Widget.ScrollEvent ',AEvent^.scroll.direction,' ',MappedXY.X,' ',MappedXY.Y,' ',FloatToStr(AEvent^.scroll.delta_x),' ',FloatToStr(AEvent^.scroll.delta_y));
   TGtk3Widget(AData).OffsetMousePos(AEvent^.scroll.x_root, AEvent^.scroll.y_root, @MappedXY);
+  // passed on from a child, the event position is relative to the child
+  if (AEvent^.scroll.send_event = NO_PROPAGATION_TO_PARENT) and Assigned(AWinControl) then
+    MappedXY := AWinControl.ScreenToClient(Point(Round(AEvent^.scroll.x_root), Round(AEvent^.scroll.y_root)));
 
   FillChar(MessE{%H-},SizeOf(MessE),0);
   MessE.Msg := LM_MOUSEWHEEL;
@@ -1947,6 +1957,7 @@ begin
   if AEvent^.scroll.direction = GDK_SCROLL_SMOOTH then
     TGtk3Widget(AData).FSmoothScrollNative := not Result;
   AEvent^.scroll.send_event := NO_PROPAGATION_TO_PARENT;
+  WheelEventControl := AWinControl;
 
   //DebugLn('Gtk3ScrollEvent for ', dbgsName(TGtk3Widget(AData).LCLObject),' Result ',dbgs(Result));
 end;
@@ -14575,6 +14586,20 @@ begin
   g_signal_connect_data(FCentralWidget,'size-allocate',TGCallback(@ScrolledLayoutSizeAllocate), Self, nil, G_CONNECT_DEFAULT);
 end;
 
+// with no scroll bar shown the wheel belongs to the parent control: the
+// external policy would let gtk scroll the hidden adjustments and eat it
+function CustomControlScrollEvent(AWidget: PGtkWidget; {%H-}AEvent: PGdkEvent;
+  {%H-}AData: gpointer): gboolean; cdecl;
+var
+  HPolicy, VPolicy: TGtkPolicyType;
+begin
+  Result := False;
+  PGtkScrolledWindow(AWidget)^.get_policy(@HPolicy, @VPolicy);
+  if ((HPolicy = GTK_POLICY_NEVER) or (HPolicy = GTK_POLICY_EXTERNAL)) and
+    ((VPolicy = GTK_POLICY_NEVER) or (VPolicy = GTK_POLICY_EXTERNAL)) then
+    g_signal_stop_emission_by_name(PGObject(AWidget), 'scroll-event');
+end;
+
 function TGtk3CustomControl.CreateWidget(const Params: TCreateParams): PGtkWidget;
 var
   HBar, VBar: PGtkWidget;
@@ -14599,6 +14624,7 @@ begin
   PGtkScrolledWindow(Result)^.add(FCentralWidget);
 
   PGtkScrolledWindow(Result)^.set_policy(GTK_POLICY_EXTERNAL, GTK_POLICY_EXTERNAL);
+  g_signal_connect_data(Result, 'scroll-event', TGCallback(@CustomControlScrollEvent), nil, nil, G_CONNECT_DEFAULT);
 
   Result^.set_can_focus(False);
   FCentralWidget^.set_can_focus(True);
