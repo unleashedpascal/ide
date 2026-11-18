@@ -123,6 +123,7 @@ begin
   var focusRule := if effects.Active then '' else '/* active off */';
   var hover := hex(pal[COLOR_HOVER]);
   var gray := hex(pal[COLOR_GRAYTEXT]);
+  var thumbHover := hex(hoverShade(pal, pal[COLOR_BTNSHADOW], pal[COLOR_WINDOWFRAME]));
   var menuBack := hex(pal[COLOR_MENU]);
   var menuText := hex(pal[COLOR_MENUTEXT]);
   result :=
@@ -160,7 +161,7 @@ begin
     ' { background-color: '+face+'; color: '+fore+'; border-color: '+shadow+'; background-image: none; }'+
     // buttons and tabs
     s('button, button.text-button, button.image-button, button.flat, spinbutton button, combobox button, '+
-    'notebook > header tab, toolbar button, scale slider')+
+    'notebook > header tab, toolbar button')+
     ' { background-color: '+face+'; color: '+fore+'; border-color: '+shadow+'; '+
     '  background-image: none; box-shadow: none; text-shadow: none; -gtk-icon-shadow: none; }'+
     (if effects.Hover then s('button:hover, notebook > header tab:hover, toolbar button:hover')+' { background-color: '+hover+'; border-color: '+hex(pal[COLOR_WINDOWFRAME])+'; }' else hoverRule)+
@@ -196,8 +197,17 @@ begin
     s('scrollbar slider:active')+' { background-color: '+gray+'; }'+
     // the corner where the two bars meet
     s('scrolledwindow junction')+' { background-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-image: none; }'+
-    s('scale trough, progressbar trough')+' { background-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-color: '+shadow+'; background-image: none; }'+
-    s('scale highlight')+' { background-color: '+highlight+'; border-color: '+highlight+'; background-image: none; }'+
+    s('progressbar trough')+' { background-color: '+hex(pal[COLOR_SCROLLBAR])+'; border-color: '+shadow+'; background-image: none; }'+
+    // a track bar as the win32 engine paints it: a framed track with no fill
+    // and a thumb in the shadow color, the accent while it is dragged
+    s('scale trough')+' { background-color: '+base+'; border-color: '+hex(pal[COLOR_BTNHIGHLIGHT])+'; background-image: none; box-shadow: none; }'+
+    s('scale highlight')+' { background-color: transparent; border-color: transparent; background-image: none; box-shadow: none; }'+
+    s('scale slider')+' { background-color: '+shadow+'; border-color: '+shadow+'; background-image: none; box-shadow: none; outline-width: 0; }'+
+    (if effects.Hover then s('scale slider:hover')+' { background-color: '+thumbHover+'; border-color: '+thumbHover+'; }' else hoverRule)+
+    s('scale slider:active')+' { background-color: '+hex(pal[COLOR_HOTLIGHT])+'; border-color: '+hex(pal[COLOR_HOTLIGHT])+'; }'+
+    s('scale:disabled slider')+' { background-color: '+hex(pal[COLOR_BTNHIGHLIGHT])+'; border-color: '+hex(pal[COLOR_BTNHIGHLIGHT])+'; }'+
+    (if effects.Active then s('scale:focus slider')+' { border-color: '+focus+'; }' else focusRule)+
+    s('scale mark indicator')+' { background-color: '+gray+'; color: '+gray+'; background-image: none; box-shadow: none; }'+
     s('progressbar progress')+' { background-color: '+hex(pal[COLOR_HOTLIGHT])+'; border-color: '+hex(pal[COLOR_HOTLIGHT])+'; background-image: none; }'+
     // separators and tooltips
     s('separator, paned > separator')+' { background-color: '+shadow+'; background-image: none; }'+
@@ -235,7 +245,17 @@ begin
     'notebook > header { padding: 0; }'+
     'notebook > header tab { min-height: 0; padding: 2px 8px; }'+
     'menubar > menuitem { padding-top: 2px; padding-bottom: 2px; }'+
-    'menu menuitem { padding-top: 3px; padding-bottom: 3px; }';
+    'menu menuitem { padding-top: 3px; padding-bottom: 3px; }'+
+    // a track bar: a 4 pixel track, an 11 x 20 thumb with slightly rounded
+    // corners standing over it, tick marks 1 x 4; the negative margin lets the
+    // thumb overhang the track without making it taller
+    'scale trough { min-height: 2px; min-width: 2px; padding: 0; border-width: 1px; border-style: solid; border-radius: 0; }'+
+    'scale slider { border-width: 1px; border-style: solid; border-radius: 2px; transition: none; }'+
+    'scale.horizontal slider { min-width: 9px; min-height: 18px; margin: -9px 0; }'+
+    'scale.vertical slider { min-width: 18px; min-height: 9px; margin: 0 -9px; }'+
+    'scale mark indicator { border-radius: 0; }'+
+    'scale.horizontal mark indicator { min-width: 1px; min-height: 4px; }'+
+    'scale.vertical mark indicator { min-width: 4px; min-height: 1px; }';
 end;
 
 // the stock system colors as a palette, for the designed forms
