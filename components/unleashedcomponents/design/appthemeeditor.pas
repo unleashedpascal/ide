@@ -16,57 +16,57 @@ unit AppThemeEditor;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Dialogs, Graphics, ComponentEditors,
-  ThemesPalette, ThemesSeed, AppTheme;
+  Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, ComCtrls, Graphics, ComponentEditors,
+  ThemesPalette, ThemesSeed, AppTheme, ColorSwatchButton;
 
 type
 
   { TAppThemeEditorForm }
 
-  // the look of a TAppTheme on a painted mock window: a preset to start from,
-  // then hue, saturation and lightness of each seed color
+  // the look of a TAppTheme on a painted mock window, set top down: a preset
+  // to start from, the colors the look grows from, then moves of the whole look
   TAppThemeEditorForm = class(TForm)
   private
     FPreset: TThemePreset;
     FSeed: TThemeSeed;
     FHoverStrength: integer; // of every look, not a part of the seed
-    FColor: integer; // seed color under the sliders: 0 surface .. 4 mark
     FFilling: boolean; // the controls are being set from the seed, not by the user
+    FPlaced: integer; // controls aligned to the top so far
     FPresetBox: TComboBox;
-    FColors: TRadioGroup;
-    FPick: TColorButton;
-    FHex: TEdit;
-    FHue, FSat, FLight, FWindow, FHover: TTrackBar;
-    FHueValue, FSatValue, FLightValue, FWindowValue, FHoverValue: TLabel;
+    FSwatches: array[5] of TColorSwatchButton; // surface, text, accent, link, mark
+    FWindow, FHover: TTrackBar;
+    FWindowValue, FHoverValue: TLabel;
     // the whole look: hue turn, saturation and lightness moves
     FTuneHue, FTuneSat, FTuneLight: TTrackBar;
     FTuneHueValue, FTuneSatValue, FTuneLightValue: TLabel;
     FPreview: TPaintBox;
     procedure build;
+    function nextBelow: integer;
+    function addGroup(parent: TWinControl; const title: string): TGroupBox;
     function addSlider(parent: TWinControl; const title: string; lo, hi: integer; out value: TLabel): TTrackBar;
-    function seedColor: TColor;
-    procedure setSeedColor(value: TColor);
+    function seedColor(index: integer): TColor;
+    procedure setSeedColor(index: integer; value: TColor);
     procedure fillControls;
+    procedure showValues;
     procedure presetChanged(Sender: TObject);
-    procedure colorChanged(Sender: TObject);
-    procedure sliderChanged(Sender: TObject);
+    procedure swatchChanged(Sender: TObject);
     procedure shiftChanged(Sender: TObject);
     procedure hoverChanged(Sender: TObject);
     procedure tuneChanged(Sender: TObject);
     // the palette of the preset or the seed before the whole-theme moves
     function basePalette: TPalette;
-    procedure pickChanged(Sender: TObject);
-    procedure hexChanged(Sender: TObject);
     procedure resetClicked(Sender: TObject);
     procedure previewPaint(Sender: TObject);
     procedure wentCustom;
   public
     constructor CreateNew(AOwner: TComponent; Num: Integer = 0); override;
+    // shows the look of the theme; under a fixed preset the colors are the preset's own
+    procedure load(theme: TAppTheme);
     // the preview of the current choice
     function palette: TPalette;
-    property Preset: TThemePreset read FPreset write FPreset;
-    property Seed: TThemeSeed read FSeed write FSeed;
-    property HoverStrength: integer read FHoverStrength write FHoverStrength;
+    property Preset: TThemePreset read FPreset;
+    property Seed: TThemeSeed read FSeed;
+    property HoverStrength: integer read FHoverStrength;
     function HueShift: integer;
     function SaturationShift: integer;
     function LightnessShift: integer;
@@ -94,28 +94,38 @@ uses
 resourcestring
   VERB_EDIT = 'Edit Theme...';
   CAPTION_EDITOR = 'Theme Editor';
-  LABEL_PRESET = 'Preset';
-  LABEL_COLOR = 'Seed color';
-  LABEL_HUE = 'Hue';
-  LABEL_SATURATION = 'Saturation';
-  LABEL_LIGHTNESS = 'Lightness';
-  LABEL_WINDOW = 'Field lightness (edits, lists) against the surface';
-  LABEL_HOVER = 'Hover strength';
-  LABEL_TUNE_HUE = 'Whole theme: hue turn';
-  LABEL_TUNE_SAT = 'Whole theme: saturation';
-  LABEL_TUNE_LIGHT = 'Whole theme: lightness';
-  BUTTON_RESET = 'Reset to preset';
+  GROUP_PRESET = 'Preset';
+  GROUP_COLORS = 'Colors';
+  GROUP_WHOLE = 'Whole theme';
+  LABEL_WINDOW = 'Edits and lists against the background';
+  LABEL_HOVER = 'Hover highlight';
+  LABEL_TUNE_HUE = 'Hue turn';
+  LABEL_TUNE_SAT = 'Saturation';
+  LABEL_TUNE_LIGHT = 'Lightness';
+  HINT_PRESET = 'The look to start from; changing a color below makes it Custom';
+  HINT_WHOLE = 'Moves every color of the theme at once, the preset stays';
+  BUTTON_RESET = 'Reset';
+  HINT_RESET = 'Back to the preset as it comes, with the whole theme moves at zero';
   BUTTON_OK = 'OK';
   BUTTON_CANCEL = 'Cancel';
 
 const
   PRESET_NAMES: array[TThemePreset] of string = ('None', 'Follow system', 'Light', 'Dark', 'Ocean', 'Frost', 'Paper', 'Ember', 'Midnight', 'Dusk', 'Custom');
-  COLOR_NAMES: array[0..4] of string = ('Surface', 'Text', 'Accent', 'Link', 'Mark');
+  COLOR_NAMES: array[5] of string = ('Background', 'Text', 'Selection', 'Links, active tab', 'Changed items');
+  COLOR_HINTS: array[5] of string = (
+    'Forms, panels, buttons and tool bars',
+    'The text on the background',
+    'Selected items in lists, trees and edits',
+    'Links and the strip of the active tab',
+    'An item that was changed or is not saved yet');
+  // the space around the groups and inside them, and between rows of a group
+  MARGIN = 8;
+  ROW_GAP = 6;
   MENU_ITEMS: array[0..3] of string = ('File', 'Edit', 'View', 'Help');
   TAB_NAMES: array[0..2] of string = ('main.pas', 'utils.pas', 'notes.txt');
   BUTTON_CAPTIONS: array[0..2] of string = ('OK', 'Hot', 'Off');
   LINK_TEXT = 'A link in the text';
-  // a control appended below the ones aligned to the top so far
+  // controls aligned to the top start this far down, each one lower than the one before
   BELOW = 10000;
 
 { mock window }
@@ -295,25 +305,49 @@ begin
   build;
 end;
 
+// a Top under every control placed so far: alTop controls added before the
+// form aligns keep the order they were made in, not the reverse
+function TAppThemeEditorForm.nextBelow: integer;
+begin
+  inc(FPlaced);
+  result := BELOW+FPlaced;
+end;
+
+function TAppThemeEditorForm.addGroup(parent: TWinControl; const title: string): TGroupBox;
+begin
+  result := TGroupBox.Create(self);
+  result.Parent := parent;
+  result.Caption := title;
+  result.AutoSize := true;
+  result.ChildSizing.LeftRightSpacing := MARGIN;
+  result.ChildSizing.TopBottomSpacing := MARGIN;
+  // the first group sits at the top of the column, the next ones a margin below
+  if parent.ControlCount > 1 then result.BorderSpacing.Top := MARGIN;
+  result.Top := nextBelow;
+  result.Align := alTop;
+end;
+
+// a titled slider: the title on the left, the value on the right, the bar under them
 function TAppThemeEditorForm.addSlider(parent: TWinControl; const title: string; lo, hi: integer; out value: TLabel): TTrackBar;
 begin
   var box := TPanel.Create(self);
   box.Parent := parent;
   box.BevelOuter := bvNone;
-  box.Height := 50;
-  box.Top := BELOW;
+  box.AutoSize := true;
+  box.BorderSpacing.Top := ROW_GAP;
+  box.Top := nextBelow;
   box.Align := alTop;
   var head := TLabel.Create(self);
   head.Parent := box;
   head.Caption := title;
-  head.Left := 4;
-  head.Top := 2;
+  head.AnchorSideLeft.Control := box;
+  head.AnchorSideTop.Control := box;
   value := TLabel.Create(self);
   value.Parent := box;
   value.Caption := '0';
-  value.AutoSize := false;
-  value.Alignment := taRightJustify;
-  value.SetBounds(box.Width-64, 2, 60, head.Height);
+  value.AnchorSideTop.Control := box;
+  value.AnchorSideRight.Control := box;
+  value.AnchorSideRight.Side := asrBottom;
   value.Anchors := [akTop, akRight];
   result := TTrackBar.Create(self);
   result.Parent := box;
@@ -322,7 +356,13 @@ begin
   result.Frequency := Math.Max(1, (hi-lo) div 10);
   result.ShowSelRange := false;
   result.TickStyle := tsNone;
-  result.SetBounds(0, 20, box.Width, 28);
+  result.Height := 21;
+  result.AnchorSideLeft.Control := box;
+  result.AnchorSideTop.Control := head;
+  result.AnchorSideTop.Side := asrBottom;
+  result.AnchorSideRight.Control := box;
+  result.AnchorSideRight.Side := asrBottom;
+  result.BorderSpacing.Top := 2;
   result.Anchors := [akLeft, akTop, akRight];
 end;
 
@@ -331,115 +371,133 @@ begin
   Caption := CAPTION_EDITOR;
   Position := poScreenCenter;
   BorderStyle := bsSizeable;
-  Width := 820;
-  Height := 720;
-  Constraints.MinWidth := 640;
+  Width := 840;
+  Height := 660;
+  Constraints.MinWidth := 680;
   Constraints.MinHeight := 640;
+  ChildSizing.LeftRightSpacing := MARGIN;
+  ChildSizing.TopBottomSpacing := MARGIN;
+  ShowHint := true;
 
-  var left := TPanel.Create(self);
-  left.Parent := self;
-  left.Align := alLeft;
-  left.Width := 300;
-  left.BevelOuter := bvNone;
-  left.BorderSpacing.Around := 8;
-
+  // OK and Cancel on a bar under both columns, at the right
   var buttons := TPanel.Create(self);
-  buttons.Parent := left;
-  buttons.Align := alBottom;
-  buttons.Height := 34;
+  buttons.Parent := self;
   buttons.BevelOuter := bvNone;
-  var ok := TButton.Create(self);
-  ok.Parent := buttons;
-  ok.Caption := BUTTON_OK;
-  ok.ModalResult := mrOK;
-  ok.Default := true;
-  ok.Width := 80;
-  ok.Align := alRight;
-  ok.BorderSpacing.Left := 6;
+  buttons.AutoSize := true;
+  buttons.BorderSpacing.Top := MARGIN;
+  buttons.Align := alBottom;
   var cancel := TButton.Create(self);
   cancel.Parent := buttons;
   cancel.Caption := BUTTON_CANCEL;
   cancel.ModalResult := mrCancel;
   cancel.Cancel := true;
-  cancel.Width := 80;
-  cancel.Left := BELOW; // right of the OK button
-  cancel.Align := alRight;
-  var reset := TButton.Create(self);
-  reset.Parent := buttons;
-  reset.Caption := BUTTON_RESET;
-  reset.AutoSize := true;
-  reset.Align := alLeft;
-  reset.OnClick := @resetClicked;
+  cancel.Width := 88;
+  cancel.AnchorSideTop.Control := buttons;
+  cancel.AnchorSideRight.Control := buttons;
+  cancel.AnchorSideRight.Side := asrBottom;
+  cancel.Anchors := [akTop, akRight];
+  var ok := TButton.Create(self);
+  ok.Parent := buttons;
+  ok.Caption := BUTTON_OK;
+  ok.ModalResult := mrOK;
+  ok.Default := true;
+  ok.Width := 88;
+  ok.AnchorSideTop.Control := buttons;
+  ok.AnchorSideRight.Control := cancel;
+  ok.BorderSpacing.Right := ROW_GAP;
+  ok.Anchors := [akTop, akRight];
 
-  var presetLabel := TLabel.Create(self);
-  presetLabel.Parent := left;
-  presetLabel.Caption := LABEL_PRESET;
-  presetLabel.BorderSpacing.Left := 4;
-  presetLabel.Top := BELOW;
-  presetLabel.Align := alTop;
-  FPresetBox := TComboBox.Create(self);
-  FPresetBox.Parent := left;
-  FPresetBox.Style := csDropDownList;
-  FPresetBox.BorderSpacing.Top := 2;
-  for var p := low(TThemePreset) to high(TThemePreset) do FPresetBox.Items.Add(PRESET_NAMES[p]);
-  FPresetBox.OnChange := @presetChanged;
-  FPresetBox.Top := BELOW;
-  FPresetBox.Align := alTop;
-
-  FTuneHue := addSlider(left, LABEL_TUNE_HUE, -180, 180, FTuneHueValue);
-  FTuneSat := addSlider(left, LABEL_TUNE_SAT, -100, 100, FTuneSatValue);
-  FTuneLight := addSlider(left, LABEL_TUNE_LIGHT, -50, 50, FTuneLightValue);
-  FTuneHue.OnChange := @tuneChanged;
-  FTuneSat.OnChange := @tuneChanged;
-  FTuneLight.OnChange := @tuneChanged;
-
-  FColors := TRadioGroup.Create(self);
-  FColors.Parent := left;
-  FColors.Caption := LABEL_COLOR;
-  FColors.Columns := 3;
-  FColors.AutoSize := true;
-  FColors.BorderSpacing.Top := 8;
-  for var i := low(COLOR_NAMES) to high(COLOR_NAMES) do FColors.Items.Add(COLOR_NAMES[i]);
-  FColors.OnClick := @colorChanged;
-  FColors.Top := BELOW;
-  FColors.Align := alTop;
-
-  var pickRow := TPanel.Create(self);
-  pickRow.Parent := left;
-  pickRow.Height := 30;
-  pickRow.BevelOuter := bvNone;
-  pickRow.BorderSpacing.Top := 4;
-  pickRow.Top := BELOW;
-  pickRow.Align := alTop;
-  FPick := TColorButton.Create(self);
-  FPick.Parent := pickRow;
-  FPick.Width := 60;
-  FPick.Align := alLeft;
-  FPick.OnColorChanged := @pickChanged;
-  FHex := TEdit.Create(self);
-  FHex.Parent := pickRow;
-  FHex.Width := 90;
-  FHex.BorderSpacing.Left := 6;
-  FHex.Left := BELOW;
-  FHex.Align := alLeft;
-  FHex.OnEditingDone := @hexChanged;
-
-  FHue := addSlider(left, LABEL_HUE, 0, 359, FHueValue);
-  FSat := addSlider(left, LABEL_SATURATION, 0, 100, FSatValue);
-  FLight := addSlider(left, LABEL_LIGHTNESS, 0, 100, FLightValue);
-  FWindow := addSlider(left, LABEL_WINDOW, -30, 30, FWindowValue);
-  FHover := addSlider(left, LABEL_HOVER, 0, 100, FHoverValue);
-  FHue.OnChange := @sliderChanged;
-  FSat.OnChange := @sliderChanged;
-  FLight.OnChange := @sliderChanged;
-  FWindow.OnChange := @shiftChanged;
-  FHover.OnChange := @hoverChanged;
+  var left := TPanel.Create(self);
+  left.Parent := self;
+  left.Align := alLeft;
+  left.Width := 320;
+  left.BevelOuter := bvNone;
+  left.BorderSpacing.Right := MARGIN;
 
   FPreview := TPaintBox.Create(self);
   FPreview.Parent := self;
   FPreview.Align := alClient;
-  FPreview.BorderSpacing.Around := 8;
   FPreview.OnPaint := @previewPaint;
+
+  // 1. the preset: it sets every color, so it comes first
+  var presetGroup := addGroup(left, GROUP_PRESET);
+  presetGroup.Hint := HINT_PRESET;
+  var reset := TButton.Create(self);
+  reset.Parent := presetGroup;
+  reset.Caption := BUTTON_RESET;
+  reset.Hint := HINT_RESET;
+  reset.AutoSize := true;
+  reset.Constraints.MinWidth := 88;
+  reset.OnClick := @resetClicked;
+  FPresetBox := TComboBox.Create(self);
+  FPresetBox.Parent := presetGroup;
+  FPresetBox.Style := csDropDownList;
+  FPresetBox.DropDownCount := ord(high(TThemePreset))+1;
+  for var p := low(TThemePreset) to high(TThemePreset) do FPresetBox.Items.Add(PRESET_NAMES[p]);
+  FPresetBox.OnChange := @presetChanged;
+  FPresetBox.AnchorSideLeft.Control := presetGroup;
+  FPresetBox.AnchorSideTop.Control := presetGroup;
+  FPresetBox.AnchorSideRight.Control := reset;
+  FPresetBox.BorderSpacing.Right := ROW_GAP;
+  FPresetBox.Anchors := [akLeft, akTop, akRight];
+  reset.AnchorSideRight.Control := presetGroup;
+  reset.AnchorSideRight.Side := asrBottom;
+  reset.AnchorVerticalCenterTo(FPresetBox);
+  reset.Anchors := [akTop, akRight];
+
+  // 2. the colors the look grows from, each with its own drop-down picker
+  var colorGroup := addGroup(left, GROUP_COLORS);
+  for var i := 0 to high(FSwatches) do begin
+    var row := TPanel.Create(self);
+    row.Parent := colorGroup;
+    row.BevelOuter := bvNone;
+    row.AutoSize := true;
+    row.BorderSpacing.Top := ROW_GAP;
+    row.Top := nextBelow;
+    row.Align := alTop;
+    var swatch := TColorSwatchButton.Create(self);
+    swatch.Parent := row;
+    swatch.Tag := i;
+    swatch.ShowSwatches := false; // the picker brings swatches of its own
+    swatch.Hint := COLOR_HINTS[i];
+    swatch.Width := 150;
+    swatch.AnchorSideTop.Control := row;
+    swatch.AnchorSideRight.Control := row;
+    swatch.AnchorSideRight.Side := asrBottom;
+    swatch.Anchors := [akTop, akRight];
+    swatch.OnChange := @swatchChanged;
+    FSwatches[i] := swatch;
+    var nameLabel := TLabel.Create(self);
+    nameLabel.Parent := row;
+    nameLabel.Caption := COLOR_NAMES[i];
+    nameLabel.Hint := COLOR_HINTS[i];
+    nameLabel.FocusControl := swatch;
+    nameLabel.AnchorSideLeft.Control := row;
+    nameLabel.AnchorVerticalCenterTo(swatch);
+  end;
+  FWindow := addSlider(colorGroup, LABEL_WINDOW, -30, 30, FWindowValue);
+  FWindow.OnChange := @shiftChanged;
+
+  // 3. moves of the whole look on top of the preset and the colors
+  var wholeGroup := addGroup(left, GROUP_WHOLE);
+  wholeGroup.Hint := HINT_WHOLE;
+  FTuneHue := addSlider(wholeGroup, LABEL_TUNE_HUE, -180, 180, FTuneHueValue);
+  FTuneSat := addSlider(wholeGroup, LABEL_TUNE_SAT, -100, 100, FTuneSatValue);
+  FTuneLight := addSlider(wholeGroup, LABEL_TUNE_LIGHT, -50, 50, FTuneLightValue);
+  FHover := addSlider(wholeGroup, LABEL_HOVER, 0, 100, FHoverValue);
+  FTuneHue.OnChange := @tuneChanged;
+  FTuneSat.OnChange := @tuneChanged;
+  FTuneLight.OnChange := @tuneChanged;
+  FHover.OnChange := @hoverChanged;
+end;
+
+procedure TAppThemeEditorForm.load(theme: TAppTheme);
+begin
+  FPreset := theme.Preset;
+  FSeed := if FPreset = tpCustom then theme.Custom.Seed else seedOf(basePalette);
+  FHoverStrength := theme.Effects.HoverStrength;
+  SetShifts(theme.Shift.Hue, theme.Shift.Saturation, theme.Shift.Lightness);
+  fillControls;
 end;
 
 function TAppThemeEditorForm.palette: TPalette;
@@ -473,11 +531,23 @@ begin
   tuneChanged(nil);
 end;
 
+function signed(value: integer): string;
+begin
+  result := if value > 0 then '+'+IntToStr(value) else IntToStr(value);
+end;
+
+procedure TAppThemeEditorForm.showValues;
+begin
+  FWindowValue.Caption := signed(FWindow.Position);
+  FTuneHueValue.Caption := signed(FTuneHue.Position);
+  FTuneSatValue.Caption := signed(FTuneSat.Position);
+  FTuneLightValue.Caption := signed(FTuneLight.Position);
+  FHoverValue.Caption := IntToStr(FHover.Position)+'%';
+end;
+
 procedure TAppThemeEditorForm.tuneChanged(Sender: TObject);
 begin
-  FTuneHueValue.Caption := IntToStr(FTuneHue.Position);
-  FTuneSatValue.Caption := IntToStr(FTuneSat.Position);
-  FTuneLightValue.Caption := IntToStr(FTuneLight.Position);
+  showValues;
   if not FFilling then FPreview.Invalidate;
 end;
 
@@ -495,9 +565,9 @@ begin
   end;
 end;
 
-function TAppThemeEditorForm.seedColor: TColor;
+function TAppThemeEditorForm.seedColor(index: integer): TColor;
 begin
-  match FColor of
+  match index of
     0: result := FSeed.Surface;
     1: result := FSeed.Text;
     2: result := FSeed.Accent;
@@ -506,9 +576,9 @@ begin
   end;
 end;
 
-procedure TAppThemeEditorForm.setSeedColor(value: TColor);
+procedure TAppThemeEditorForm.setSeedColor(index: integer; value: TColor);
 begin
-  match FColor of
+  match index of
     0: FSeed.Surface := value;
     1: FSeed.Text := value;
     2: FSeed.Accent := value;
@@ -517,39 +587,22 @@ begin
   end;
 end;
 
-// the controls show the preset and the seed; a fixed preset leaves the
-// sliders on the seed it grew from
 procedure TAppThemeEditorForm.fillControls;
 begin
   FFilling := true;
   try
     FPresetBox.ItemIndex := ord(FPreset);
-    if FColors.ItemIndex < 0 then FColors.ItemIndex := 0;
-    FColor := FColors.ItemIndex;
-    var color := ColorToRGB(seedColor);
-    var r, g, b: byte;
-    RedGreenBlue(color, r, g, b);
-    var h, s, l: single;
-    rgbToHsl(r, g, b, h, s, l);
-    FHue.Position := round(h*60) mod 360;
-    FSat.Position := round(s*100);
-    FLight.Position := round(l*100);
+    for var i := 0 to high(FSwatches) do FSwatches[i].Color := ColorToRGB(seedColor(i));
     FWindow.Position := FSeed.FieldLightness;
     FHover.Position := FHoverStrength;
-    FHueValue.Caption := IntToStr(FHue.Position);
-    FSatValue.Caption := IntToStr(FSat.Position)+'%';
-    FLightValue.Caption := IntToStr(FLight.Position)+'%';
-    FWindowValue.Caption := IntToStr(FWindow.Position);
-    FHoverValue.Caption := IntToStr(FHover.Position)+'%';
-    FPick.ButtonColor := color;
-    FHex.Text := '#'+IntToHex(r, 2)+IntToHex(g, 2)+IntToHex(b, 2);
+    showValues;
   finally
     FFilling := false;
   end;
   FPreview.Invalidate;
 end;
 
-// a touched slider makes the look custom
+// a changed color makes the look custom, grown from the colors on screen
 procedure TAppThemeEditorForm.wentCustom;
 begin
   if FPreset <> tpCustom then begin
@@ -569,39 +622,19 @@ begin
   fillControls;
 end;
 
-procedure TAppThemeEditorForm.colorChanged(Sender: TObject);
+procedure TAppThemeEditorForm.swatchChanged(Sender: TObject);
 begin
   if FFilling then exit;
-  fillControls;
-end;
-
-procedure TAppThemeEditorForm.sliderChanged(Sender: TObject);
-begin
-  if FFilling then exit;
-  var r, g, b: byte;
-  hslToRgb(FHue.Position/60, FSat.Position/100, FLight.Position/100, r, g, b);
-  setSeedColor(RGBToColor(r, g, b));
+  var swatch := Sender as TColorSwatchButton;
+  setSeedColor(swatch.Tag, swatch.Color);
   wentCustom;
-  // the labels and the swatch follow; the sliders keep their positions
-  var hue := FHue.Position;
-  var sat := FSat.Position;
-  var light := FLight.Position;
-  fillControls;
-  FFilling := true;
-  FHue.Position := hue;
-  FSat.Position := sat;
-  FLight.Position := light;
-  FHueValue.Caption := IntToStr(hue);
-  FSatValue.Caption := IntToStr(sat)+'%';
-  FLightValue.Caption := IntToStr(light)+'%';
-  FFilling := false;
 end;
 
 procedure TAppThemeEditorForm.shiftChanged(Sender: TObject);
 begin
   if FFilling then exit;
   FSeed.FieldLightness := FWindow.Position;
-  FWindowValue.Caption := IntToStr(FWindow.Position);
+  showValues;
   wentCustom;
 end;
 
@@ -610,31 +643,8 @@ procedure TAppThemeEditorForm.hoverChanged(Sender: TObject);
 begin
   if FFilling then exit;
   FHoverStrength := FHover.Position;
-  FHoverValue.Caption := IntToStr(FHover.Position)+'%';
+  showValues;
   FPreview.Invalidate;
-end;
-
-procedure TAppThemeEditorForm.pickChanged(Sender: TObject);
-begin
-  if FFilling then exit;
-  setSeedColor(FPick.ButtonColor);
-  wentCustom;
-  fillControls;
-end;
-
-procedure TAppThemeEditorForm.hexChanged(Sender: TObject);
-begin
-  if FFilling then exit;
-  var s := Trim(FHex.Text);
-  if (s <> '') and (s[1] = '#') then Delete(s, 1, 1);
-  var value: longint;
-  if (length(s) <> 6) or not TryStrToInt('$'+s, value) then begin
-    fillControls;
-    exit;
-  end;
-  setSeedColor(RGBToColor((value shr 16) and $FF, (value shr 8) and $FF, value and $FF));
-  wentCustom;
-  fillControls;
 end;
 
 procedure TAppThemeEditorForm.resetClicked(Sender: TObject);
@@ -674,11 +684,7 @@ procedure TAppThemeComponentEditor.ExecuteVerb(Index: Integer);
 begin
   var theme := Component as TAppTheme;
   var dlg := autofree TAppThemeEditorForm.CreateNew(nil);
-  dlg.Preset := theme.Preset;
-  dlg.Seed := theme.Custom.Seed;
-  dlg.HoverStrength := theme.Effects.HoverStrength;
-  dlg.SetShifts(theme.Shift.Hue, theme.Shift.Saturation, theme.Shift.Lightness);
-  dlg.fillControls;
+  dlg.load(theme);
   if dlg.ShowModal <> mrOK then exit;
   if dlg.Preset = tpCustom then begin
     theme.Custom.Seed := dlg.Seed;
