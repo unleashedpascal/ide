@@ -46,7 +46,7 @@ Each page below has the properties, the events, the runtime methods, a usage exa
 | [`TSparkline`](sparkline.md) | a tiny chart without axes: a line, a filled area or bars over the last MaxPoints values |
 | [`TStatCard`](statcard.md) | a card with one figure: a title, the value in large type, its change with an arrow, a line under it and a small chart of the trend |
 | [`TClock`](clock.md) | a clock face or a digital readout |
-| [`TRichLabel`](richlabel.md) | a label with styled runs inside one caption: <b>, <i>, <u>, <s> for bold, italic, underlined and struck text, <c=#RRGGBB> or <c=clRed> for a color, <size=N> for a point size, <br> for a line break, <a href="url"> for a link |
+| [`TRichLabel`](richlabel.md) | a label with styled runs inside one caption: `<b>`, `<i>`, `<u>`, `<s>` for bold, italic, underlined and struck text, `<c=#RRGGBB>` or `<c=clRed>` for a color, `<size=N>` for a point size, `<br>` for a line break, `<a href="url">` for a link |
 | [`TMarquee`](marquee.md) | a caption rolling across the control, like a ticker |
 | [`TQRCode`](qrcode.md) | a QR code of Text, drawn to fill the control |
 | [`TBarcode`](barcode.md) | a linear barcode of Text with the text under it |

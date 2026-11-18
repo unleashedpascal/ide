@@ -1,6 +1,6 @@
 # TRichLabel
 
-A label with styled runs inside one caption: <b>, <i>, <u>, <s> for bold, italic, underlined and struck text, <c=#RRGGBB> or <c=clRed> for a color, <size=N> for a point size, <br> for a line break, <a href="url"> for a link; &lt; &gt; &amp; stand for the characters.
+A label with styled runs inside one caption: `<b>`, `<i>`, `<u>`, `<s>` for bold, italic, underlined and struck text, `<c=#RRGGBB>` or `<c=clRed>` for a color, `<size=N>` for a point size, `<br>` for a line break, `<a href="url">` for a link; `&lt;` `&gt;` `&amp;` stand for the characters.
 
 - Palette page: Unleashed: Display
 - Unit: `richlabel.pas`
